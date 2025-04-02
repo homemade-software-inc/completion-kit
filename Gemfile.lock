@@ -2,6 +2,13 @@ PATH
   remote: .
   specs:
     completion_kit (0.1.0)
+      bootstrap (~> 5.2)
+      csv (~> 3.2)
+      faraday (~> 2.7)
+      faraday-retry (~> 2.0)
+      jquery-rails (~> 4.5)
+      rails (>= 7.0.0, < 9.0.0)
+      sassc-rails (~> 2.1)
 
 GEM
   remote: https://rubygems.org/
@@ -264,17 +271,10 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  bootstrap (~> 5.2)
   completion_kit!
-  csv (~> 3.2)
   factory_bot_rails (~> 6.2)
-  faraday (~> 2.7)
-  faraday-retry (~> 2.0)
-  jquery-rails (~> 4.5)
   puma
-  rails (>= 7.0.0, < 9.0.0)
   rspec-rails (~> 6.0)
-  sassc-rails (~> 2.1)
   sqlite3 (~> 1.6)
 
 BUNDLED WITH
