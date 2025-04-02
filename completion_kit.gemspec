@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "sassc-rails", "~> 2.1"
   spec.add_dependency "bootstrap", "~> 5.2"
   spec.add_dependency "jquery-rails", "~> 4.5"
-  
+
   spec.add_development_dependency "sqlite3", "~> 1.6"
   spec.add_development_dependency "rspec-rails", "~> 6.0"
   spec.add_development_dependency "factory_bot_rails", "~> 6.2"
