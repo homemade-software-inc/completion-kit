@@ -1,0 +1,46 @@
+<h1>Test Runs</h1>
+
+<div class="mb-4">
+  <p>Create and manage test runs for your prompt templates.</p>
+  <%= link_to 'New Test Run', new_test_run_path, class: 'btn btn-primary' %>
+  <%= link_to 'Back to Prompts', prompts_path, class: 'btn btn-secondary' %>
+</div>
+
+<% if @test_runs.any? %>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Prompt</th>
+          <th>Created</th>
+          <th>Results</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @test_runs.each do |test_run| %>
+          <tr>
+            <td><%= test_run.name %></td>
+            <td><%= test_run.prompt.name %></td>
+            <td><%= test_run.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+            <td><%= test_run.test_results.count %> results</td>
+            <td>
+              <%= link_to 'View', test_run_path(test_run), class: 'btn btn-sm btn-info' %>
+              <%= link_to 'Edit', edit_test_run_path(test_run), class: 'btn btn-sm btn-warning' %>
+              <%= link_to 'Delete', test_run_path(test_run), 
+                    method: :delete, 
+                    data: { confirm: 'Are you sure?' }, 
+                    class: 'btn btn-sm btn-danger' %>
+              <%= link_to 'Run Tests', run_test_run_path(test_run), method: :post, class: 'btn btn-sm btn-success' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="alert alert-info">
+    <p>No test runs have been created yet. Click "New Test Run" to get started.</p>
+  </div>
+<% end %>

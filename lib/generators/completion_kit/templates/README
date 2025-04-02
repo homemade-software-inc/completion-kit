@@ -1,0 +1,20 @@
+=============================================
+CompletionKit Installation Instructions
+=============================================
+
+Thank you for installing CompletionKit!
+
+To complete the setup:
+
+1. Run database migrations:
+   $ bin/rails db:migrate
+
+2. Configure your API keys in config/initializers/completion_kit.rb
+
+3. Access the CompletionKit interface at:
+   http://your-app-url/completion_kit
+
+For more information, see the full documentation at:
+https://github.com/completionkit/completion_kit
+
+Happy prompt testing!

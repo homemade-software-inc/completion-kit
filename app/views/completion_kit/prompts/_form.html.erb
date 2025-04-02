@@ -1,0 +1,55 @@
+<%# Form partial for prompt creation and editing %>
+<%= form_with(model: prompt, local: true) do |form| %>
+  <% if prompt.errors.any? %>
+    <div class="alert alert-danger">
+      <h4><%= pluralize(prompt.errors.count, "error") %> prohibited this prompt from being saved:</h4>
+      <ul>
+        <% prompt.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-group mb-3">
+    <%= form.label :name, class: "form-label" %>
+    <%= form.text_field :name, class: "form-control", placeholder: "Enter prompt name" %>
+    <small class="form-text text-muted">A descriptive name for your prompt template</small>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.label :description, class: "form-label" %>
+    <%= form.text_area :description, rows: 3, class: "form-control", placeholder: "Describe the purpose of this prompt" %>
+    <small class="form-text text-muted">Explain what this prompt is designed to do</small>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.label :template, class: "form-label" %>
+    <%= form.text_area :template, rows: 8, class: "form-control", placeholder: "Enter your prompt template with {{variable}} placeholders" %>
+    <small class="form-text text-muted">
+      Use {{variable_name}} syntax for variables that will be replaced with CSV data.
+      Example: "Summarize the following text: {{content}}"
+    </small>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.label :llm_model, "LLM Model", class: "form-label" %>
+    <%= form.select :llm_model, 
+      [
+        ["GPT-4", "gpt-4"], 
+        ["GPT-3.5 Turbo", "gpt-3.5-turbo"],
+        ["Claude 3 Opus", "claude-3-opus"],
+        ["Claude 3 Sonnet", "claude-3-sonnet"],
+        ["Llama 3", "llama-3"]
+      ], 
+      {}, 
+      { class: "form-select" } 
+    %>
+    <small class="form-text text-muted">Select the AI model to use for this prompt</small>
+  </div>
+
+  <div class="form-group">
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to 'Cancel', prompts_path, class: "btn btn-secondary" %>
+  </div>
+<% end %>

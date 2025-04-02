@@ -1,0 +1,100 @@
+<h1>Test Run: <%= @test_run.name %></h1>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h5>Test Run Details</h5>
+  </div>
+  <div class="card-body">
+    <div class="mb-3">
+      <strong>Prompt:</strong>
+      <p><%= link_to @test_run.prompt.name, prompt_path(@test_run.prompt) %></p>
+    </div>
+    
+    <div class="mb-3">
+      <strong>LLM Model:</strong>
+      <p><%= @test_run.prompt.llm_model %></p>
+    </div>
+    
+    <div class="mb-3">
+      <strong>Created:</strong>
+      <p><%= @test_run.created_at.strftime("%Y-%m-%d %H:%M") %></p>
+    </div>
+    
+    <div class="mb-3">
+      <strong>CSV Data Sample:</strong>
+      <pre class="p-3 bg-light border rounded"><%= @test_run.csv_data.to_s.lines.first(5).join %><% if @test_run.csv_data.to_s.lines.count > 5 %>...<% end %></pre>
+    </div>
+  </div>
+  <div class="card-footer">
+    <%= link_to 'Run Tests', run_test_run_path(@test_run), method: :post, class: 'btn btn-success' %>
+    <%= link_to 'Edit', edit_test_run_path(@test_run), class: 'btn btn-warning' %>
+    <%= link_to 'Back to Test Runs', test_runs_path, class: 'btn btn-secondary' %>
+  </div>
+</div>
+
+<h2>Test Results</h2>
+
+<% if @test_results.any? %>
+  <div class="mb-3">
+    <div class="btn-group" role="group">
+      <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+        Sort by
+      </button>
+      <ul class="dropdown-menu">
+        <li><%= link_to 'Highest Score First', test_run_path(@test_run, sort: 'score_desc'), class: 'dropdown-item' %></li>
+        <li><%= link_to 'Lowest Score First', test_run_path(@test_run, sort: 'score_asc'), class: 'dropdown-item' %></li>
+        <li><%= link_to 'Newest First', test_run_path(@test_run, sort: 'created_desc'), class: 'dropdown-item' %></li>
+        <li><%= link_to 'Oldest First', test_run_path(@test_run, sort: 'created_asc'), class: 'dropdown-item' %></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row">
+    <% @test_results.each do |result| %>
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Result #<%= result.id %></h5>
+            <span class="badge <%= result.quality_score && result.quality_score >= 70 ? 'bg-success' : 'bg-warning' %>">
+              Score: <%= result.quality_score || 'Pending' %>
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <strong>Input:</strong>
+              <pre class="p-2 bg-light border rounded"><%= result.input_data %></pre>
+            </div>
+            
+            <div class="mb-3">
+              <strong>Output:</strong>
+              <pre class="p-2 bg-light border rounded"><%= result.output_text %></pre>
+            </div>
+            
+            <% if result.expected_output.present? %>
+              <div class="mb-3">
+                <strong>Expected Output:</strong>
+                <pre class="p-2 bg-light border rounded"><%= result.expected_output %></pre>
+              </div>
+            <% end %>
+            
+            <% if result.judge_feedback.present? %>
+              <div class="mb-3">
+                <strong>Judge Feedback:</strong>
+                <div class="p-2 bg-light border rounded">
+                  <%= result.judge_feedback %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          <div class="card-footer">
+            <%= link_to 'View Details', test_run_test_result_path(@test_run, result), class: 'btn btn-sm btn-info' %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="alert alert-info">
+    <p>No test results available yet. Click "Run Tests" to process this test run.</p>
+  </div>
+<% end %>

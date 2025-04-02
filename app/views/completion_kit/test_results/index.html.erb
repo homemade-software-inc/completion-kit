@@ -1,0 +1,99 @@
+<h1>Test Results for <%= @test_run.name %></h1>
+
+<div class="mb-4">
+  <p>View and filter test results for this test run.</p>
+  <%= link_to 'Back to Test Run', test_run_path(@test_run), class: 'btn btn-secondary' %>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h5>Filters and Sorting</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label">Filter by Quality</label>
+          <div class="btn-group" role="group">
+            <%= link_to 'All', test_run_test_results_path(@test_run, filter: 'all', sort: params[:sort]), 
+                  class: "btn btn-outline-secondary #{params[:filter] == 'all' || params[:filter].blank? ? 'active' : ''}" %>
+            <%= link_to 'High', test_run_test_results_path(@test_run, filter: 'high_quality', sort: params[:sort]), 
+                  class: "btn btn-outline-success #{params[:filter] == 'high_quality' ? 'active' : ''}" %>
+            <%= link_to 'Medium', test_run_test_results_path(@test_run, filter: 'medium_quality', sort: params[:sort]), 
+                  class: "btn btn-outline-warning #{params[:filter] == 'medium_quality' ? 'active' : ''}" %>
+            <%= link_to 'Low', test_run_test_results_path(@test_run, filter: 'low_quality', sort: params[:sort]), 
+                  class: "btn btn-outline-danger #{params[:filter] == 'low_quality' ? 'active' : ''}" %>
+            <%= link_to 'No Score', test_run_test_results_path(@test_run, filter: 'no_score', sort: params[:sort]), 
+                  class: "btn btn-outline-secondary #{params[:filter] == 'no_score' ? 'active' : ''}" %>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label">Sort by</label>
+          <div class="btn-group" role="group">
+            <%= link_to 'Highest Score', test_run_test_results_path(@test_run, sort: 'score_desc', filter: params[:filter]), 
+                  class: "btn btn-outline-secondary #{params[:sort] == 'score_desc' || params[:sort].blank? ? 'active' : ''}" %>
+            <%= link_to 'Lowest Score', test_run_test_results_path(@test_run, sort: 'score_asc', filter: params[:filter]), 
+                  class: "btn btn-outline-secondary #{params[:sort] == 'score_asc' ? 'active' : ''}" %>
+            <%= link_to 'Newest', test_run_test_results_path(@test_run, sort: 'created_desc', filter: params[:filter]), 
+                  class: "btn btn-outline-secondary #{params[:sort] == 'created_desc' ? 'active' : ''}" %>
+            <%= link_to 'Oldest', test_run_test_results_path(@test_run, sort: 'created_asc', filter: params[:filter]), 
+                  class: "btn btn-outline-secondary #{params[:sort] == 'created_asc' ? 'active' : ''}" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if @test_results.any? %>
+  <div class="row">
+    <% @test_results.each do |result| %>
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Result #<%= result.id %></h5>
+            <span class="badge <%= result.quality_score && result.quality_score >= 70 ? 'bg-success' : (result.quality_score && result.quality_score >= 40 ? 'bg-warning' : 'bg-danger') %>">
+              Score: <%= result.quality_score || 'Pending' %>
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <strong>Input:</strong>
+              <pre class="p-2 bg-light border rounded"><%= JSON.parse(result.input_data).to_json(pretty: true) rescue result.input_data %></pre>
+            </div>
+            
+            <div class="mb-3">
+              <strong>Output:</strong>
+              <pre class="p-2 bg-light border rounded"><%= result.output_text %></pre>
+            </div>
+            
+            <% if result.expected_output.present? %>
+              <div class="mb-3">
+                <strong>Expected Output:</strong>
+                <pre class="p-2 bg-light border rounded"><%= result.expected_output %></pre>
+              </div>
+            <% end %>
+            
+            <% if result.judge_feedback.present? %>
+              <div class="mb-3">
+                <strong>Judge Feedback:</strong>
+                <div class="p-2 bg-light border rounded">
+                  <%= result.judge_feedback %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          <div class="card-footer">
+            <%= link_to 'View Details', test_run_test_result_path(@test_run, result), class: 'btn btn-sm btn-info' %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="alert alert-info">
+    <p>No test results match the current filters.</p>
+  </div>
+<% end %>

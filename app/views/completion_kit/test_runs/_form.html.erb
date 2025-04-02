@@ -1,0 +1,42 @@
+<%# Form partial for test run creation and editing %>
+<%= form_with(model: test_run, local: true) do |form| %>
+  <% if test_run.errors.any? %>
+    <div class="alert alert-danger">
+      <h4><%= pluralize(test_run.errors.count, "error") %> prohibited this test run from being saved:</h4>
+      <ul>
+        <% test_run.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-group mb-3">
+    <%= form.label :prompt_id, "Prompt Template", class: "form-label" %>
+    <%= form.collection_select :prompt_id, @prompts, :id, :name, { selected: params[:prompt_id] }, { class: "form-select" } %>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.label :name, class: "form-label" %>
+    <%= form.text_field :name, class: "form-control", placeholder: "Enter test run name" %>
+    <small class="form-text text-muted">A descriptive name for this test run</small>
+  </div>
+
+  <div class="form-group mb-3">
+    <%= form.label :csv_data, "CSV Data", class: "form-label" %>
+    <%= form.text_area :csv_data, rows: 10, class: "form-control", placeholder: "Paste your CSV data here" %>
+    <small class="form-text text-muted">
+      <p>CSV format with header row. Column names should match variables in your prompt template.</p>
+      <p>Example for a prompt with {{input}} and {{expected_output}} variables:</p>
+      <pre class="bg-light p-2 border rounded">
+input,expected_output
+"Summarize this paragraph...","A concise summary..."
+"Explain the concept of...","The concept refers to..."</pre>
+    </small>
+  </div>
+
+  <div class="form-group">
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to 'Cancel', test_runs_path, class: "btn btn-secondary" %>
+  </div>
+<% end %>

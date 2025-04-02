@@ -1,0 +1,43 @@
+<h1>Prompts</h1>
+
+<div class="mb-4">
+  <p>Create and manage prompt templates for testing with LLM models.</p>
+  <%= link_to 'New Prompt', new_prompt_path, class: 'btn btn-primary' %>
+</div>
+
+<% if @prompts.any? %>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Model</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @prompts.each do |prompt| %>
+          <tr>
+            <td><%= prompt.name %></td>
+            <td><%= truncate(prompt.description, length: 100) %></td>
+            <td><%= prompt.llm_model %></td>
+            <td>
+              <%= link_to 'View', prompt_path(prompt), class: 'btn btn-sm btn-info' %>
+              <%= link_to 'Edit', edit_prompt_path(prompt), class: 'btn btn-sm btn-warning' %>
+              <%= link_to 'Delete', prompt_path(prompt), 
+                    method: :delete, 
+                    data: { confirm: 'Are you sure?' }, 
+                    class: 'btn btn-sm btn-danger' %>
+              <%= link_to 'New Test Run', new_test_run_path(prompt_id: prompt.id), class: 'btn btn-sm btn-success' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="alert alert-info">
+    <p>No prompts have been created yet. Click "New Prompt" to get started.</p>
+  </div>
+<% end %>

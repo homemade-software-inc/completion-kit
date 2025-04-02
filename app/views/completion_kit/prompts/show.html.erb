@@ -1,0 +1,63 @@
+<h1><%= @prompt.name %></h1>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h5>Prompt Details</h5>
+  </div>
+  <div class="card-body">
+    <div class="mb-3">
+      <strong>Description:</strong>
+      <p><%= @prompt.description %></p>
+    </div>
+    
+    <div class="mb-3">
+      <strong>LLM Model:</strong>
+      <p><%= @prompt.llm_model %></p>
+    </div>
+    
+    <div class="mb-3">
+      <strong>Template:</strong>
+      <pre class="p-3 bg-light border rounded"><%= @prompt.template %></pre>
+      <small class="text-muted">Variables are indicated with {{variable_name}} syntax</small>
+    </div>
+  </div>
+  <div class="card-footer">
+    <%= link_to 'Edit', edit_prompt_path(@prompt), class: 'btn btn-warning' %>
+    <%= link_to 'Back to Prompts', prompts_path, class: 'btn btn-secondary' %>
+    <%= link_to 'New Test Run', new_test_run_path(prompt_id: @prompt.id), class: 'btn btn-success' %>
+  </div>
+</div>
+
+<% if @prompt.test_runs.any? %>
+  <h2>Test Runs</h2>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Created</th>
+          <th>Results</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @prompt.test_runs.each do |test_run| %>
+          <tr>
+            <td><%= test_run.name %></td>
+            <td><%= test_run.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+            <td><%= test_run.test_results.count %> results</td>
+            <td>
+              <%= link_to 'View Results', test_run_path(test_run), class: 'btn btn-sm btn-info' %>
+              <%= link_to 'Run Again', run_test_run_path(test_run), method: :post, class: 'btn btn-sm btn-primary' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="alert alert-info">
+    <p>No test runs have been created for this prompt yet.</p>
+    <p><%= link_to 'Create a Test Run', new_test_run_path(prompt_id: @prompt.id), class: 'btn btn-success' %></p>
+  </div>
+<% end %>

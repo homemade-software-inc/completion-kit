@@ -1,0 +1,76 @@
+<h1>Test Result Details</h1>
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Result #<%= @test_result.id %></h5>
+    <span class="badge <%= @test_result.quality_score && @test_result.quality_score >= 70 ? 'bg-success' : (@test_result.quality_score && @test_result.quality_score >= 40 ? 'bg-warning' : 'bg-danger') %>">
+      Score: <%= @test_result.quality_score || 'Pending' %>
+    </span>
+  </div>
+  <div class="card-body">
+    <div class="mb-3">
+      <strong>Test Run:</strong>
+      <p><%= link_to @test_run.name, test_run_path(@test_run) %></p>
+    </div>
+    
+    <div class="mb-3">
+      <strong>Prompt:</strong>
+      <p><%= link_to @test_run.prompt.name, prompt_path(@test_run.prompt) %></p>
+    </div>
+    
+    <div class="mb-3">
+      <strong>LLM Model:</strong>
+      <p><%= @test_run.prompt.llm_model %></p>
+    </div>
+    
+    <div class="mb-3">
+      <strong>Input Data:</strong>
+      <pre class="p-3 bg-light border rounded"><%= JSON.parse(@test_result.input_data).to_json(pretty: true) rescue @test_result.input_data %></pre>
+    </div>
+    
+    <div class="mb-3">
+      <strong>Output Text:</strong>
+      <pre class="p-3 bg-light border rounded"><%= @test_result.output_text %></pre>
+    </div>
+    
+    <% if @test_result.expected_output.present? %>
+      <div class="mb-3">
+        <strong>Expected Output:</strong>
+        <pre class="p-3 bg-light border rounded"><%= @test_result.expected_output %></pre>
+      </div>
+      
+      <% if @comparison.present? %>
+        <div class="mb-3">
+          <strong>Similarity Score:</strong>
+          <div class="progress">
+            <div class="progress-bar <%= @comparison[:similarity] >= 70 ? 'bg-success' : (@comparison[:similarity] >= 40 ? 'bg-warning' : 'bg-danger') %>" 
+                 role="progressbar" 
+                 style="width: <%= @comparison[:similarity] %>%;" 
+                 aria-valuenow="<%= @comparison[:similarity] %>" 
+                 aria-valuemin="0" 
+                 aria-valuemax="100">
+              <%= @comparison[:similarity] %>%
+            </div>
+          </div>
+          <small class="text-muted">Percentage of matching content between output and expected output</small>
+        </div>
+      <% end %>
+    <% end %>
+    
+    <% if @test_result.judge_feedback.present? %>
+      <div class="mb-3">
+        <strong>Judge Feedback:</strong>
+        <div class="p-3 bg-light border rounded">
+          <%= @test_result.judge_feedback %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <div class="card-footer">
+    <%= link_to 'Back to Test Results', test_run_test_results_path(@test_run), class: 'btn btn-secondary' %>
+    <%= link_to 'Back to Test Run', test_run_path(@test_run), class: 'btn btn-secondary' %>
+    <% if @test_result.quality_score.nil? %>
+      <%= link_to 'Evaluate', evaluate_test_run_path(@test_run), method: :post, class: 'btn btn-primary' %>
+    <% end %>
+  </div>
+</div>

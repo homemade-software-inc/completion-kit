@@ -1,0 +1,15 @@
+current directory: /home/ubuntu/completion_kit/vendor/bundle/ruby/3.0.0/gems/stringio-3.1.6/ext/stringio
+/usr/bin/ruby3.0 -I /usr/lib/ruby/vendor_ruby -r ./siteconf20250401-4608-8li3xi.rb extconf.rb
+creating Makefile
+
+current directory: /home/ubuntu/completion_kit/vendor/bundle/ruby/3.0.0/gems/stringio-3.1.6/ext/stringio
+make DESTDIR\= clean
+
+current directory: /home/ubuntu/completion_kit/vendor/bundle/ruby/3.0.0/gems/stringio-3.1.6/ext/stringio
+make DESTDIR\=
+compiling stringio.c
+linking shared-object stringio.so
+
+current directory: /home/ubuntu/completion_kit/vendor/bundle/ruby/3.0.0/gems/stringio-3.1.6/ext/stringio
+make DESTDIR\= install
+/usr/bin/install -c -m 0755 stringio.so ./.gem.20250401-4608-c3ufu7
