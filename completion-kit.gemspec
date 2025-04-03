@@ -1,18 +1,18 @@
 require_relative "lib/completion_kit/version"
 
 Gem::Specification.new do |spec|
-  spec.name        = "completion_kit"
+  spec.name        = "completion-kit"
   spec.version     = CompletionKit::VERSION
   spec.authors     = ["CompletionKit Team"]
   spec.email       = ["info@completionkit.example.com"]
-  spec.homepage    = "https://github.com/completionkit/completion_kit"
+  spec.homepage    = "https://github.com/completionkit/completion-kit"
   spec.summary     = "A GenAI prompt testing platform for Rails applications."
   spec.description = "CompletionKit is a mountable Rails engine that provides a platform for testing GenAI prompts against CSV data, evaluating outputs using LLM judges, and providing quality metrics for each test."
   spec.license     = "MIT"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/completionkit/completion_kit"
-  spec.metadata["changelog_uri"] = "https://github.com/completionkit/completion_kit/blob/main/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = "https://github.com/completionkit/completion-kit"
+  spec.metadata["changelog_uri"] = "https://github.com/completionkit/completion-kit/blob/main/CHANGELOG.md"
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
     Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]

@@ -25,13 +25,6 @@ module CompletionKit
       end
     end
     
-    initializer "completion_kit.routes" do |app|
-      # Mount routes
-      app.routes.append do
-        mount CompletionKit::Engine => "/completion_kit"
-      end
-    end
-    
     config.generators do |g|
       g.test_framework :rspec
       g.fixture_replacement :factory_bot

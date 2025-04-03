@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    completion_kit (0.1.0)
+    completion-kit (0.1.0)
       bootstrap (~> 5.2)
       csv (~> 3.2)
       faraday (~> 2.7)
@@ -122,7 +122,6 @@ GEM
     faraday-retry (2.3.0)
       faraday (~> 2.0)
     ffi (1.17.1-arm64-darwin)
-    ffi (1.17.1-x86_64-linux-gnu)
     globalid (1.2.1)
       activesupport (>= 6.1)
     i18n (1.14.7)
@@ -271,7 +270,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  completion_kit!
+  completion-kit!
   factory_bot_rails (~> 6.2)
   puma
   rspec-rails (~> 6.0)
