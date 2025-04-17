@@ -2,32 +2,35 @@
 
 # Configure CompletionKit
 CompletionKit.configure do |config|
-  # API Keys for LLM providers
-  # Replace these with your actual API keys or use environment variables
-  
-  # OpenAI API Key (for GPT models)
-  config.openai_api_key = ENV['OPENAI_API_KEY']
-  
-  # Anthropic API Key (for Claude models)
-  config.anthropic_api_key = ENV['ANTHROPIC_API_KEY']
-  
-  # Llama API Key and Endpoint
-  config.llama_api_key = ENV['LLAMA_API_KEY']
-  config.llama_api_endpoint = ENV['LLAMA_API_ENDPOINT']
-  
-  # You can set specific keys directly if needed
-  # config.openai_api_key = 'your-api-key-here'
-end
+  # 1. Environment variables:
+  # config.openai_api_key       = ENV['OPENAI_API_KEY']
+  # config.anthropic_api_key    = ENV['ANTHROPIC_API_KEY']
+  # config.llama_api_key        = ENV['LLAMA_API_KEY']
+  # config.llama_api_endpoint   = ENV['LLAMA_API_ENDPOINT']
 
-# Load keys from .env file if available
-if defined?(Dotenv) && File.exist?(Rails.root.join('.env'))
-  require 'dotenv/load'
-  
-  # Reload configuration after dotenv loads
-  CompletionKit.configure do |config|
-    config.openai_api_key = ENV['OPENAI_API_KEY'] if ENV['OPENAI_API_KEY']
-    config.anthropic_api_key = ENV['ANTHROPIC_API_KEY'] if ENV['ANTHROPIC_API_KEY']
-    config.llama_api_key = ENV['LLAMA_API_KEY'] if ENV['LLAMA_API_KEY']
-    config.llama_api_endpoint = ENV['LLAMA_API_ENDPOINT'] if ENV['LLAMA_API_ENDPOINT']
-  end
+  # 2. Dotenv (.env file):
+  # require 'dotenv/load'
+  # config.openai_api_key = ENV['OPENAI_API_KEY'] if ENV['OPENAI_API_KEY']
+
+  # 3. Rails secrets (config/secrets.yml):
+  # secrets.yml ->
+  # development:
+  #   completion_kit:
+  #     openai_api_key: 'your-api-key'
+  # config.openai_api_key    = Rails.application.secrets.completion_kit[:openai_api_key]
+  # config.anthropic_api_key = Rails.application.secrets.completion_kit[:anthropic_api_key]
+  # config.llama_api_key     = Rails.application.secrets.completion_kit[:llama_api_key]
+  # config.llama_api_endpoint= Rails.application.secrets.completion_kit[:llama_api_endpoint]
+
+  # 4. Rails credentials (config/credentials.yml.enc):
+  # credentials.yml.enc ->
+  # completion_kit:
+  #   openai_api_key: 'your-api-key'
+  # config.openai_api_key    = Rails.application.credentials.completion_kit[:openai_api_key]
+  # config.anthropic_api_key = Rails.application.credentials.completion_kit[:anthropic_api_key]
+  # config.llama_api_key     = Rails.application.credentials.completion_kit[:llama_api_key]
+  # config.llama_api_endpoint= Rails.application.credentials.completion_kit[:llama_api_endpoint]
+
+  # 5. Direct assignment:
+  # config.openai_api_key = 'your-api-key-here'
 end

@@ -77,14 +77,27 @@ OPENAI_API_KEY=sk-your-key-here
 ANTHROPIC_API_KEY=sk-your-anthropic-key
 ```
 
-3. **Direct configuration** in the initializer:
+3. **Direct configuration** in the initializer (config/initializers/completion_kit.rb):
 
-```ruby
-# config/initializers/completion_kit.rb
-CompletionKit.configure do |config|
-  config.openai_api_key = 'your-api-key-here'
-end
-```
+  ```ruby
+  CompletionKit.configure do |config|
+    # Environment variable (recommended)
+    config.openai_api_key = ENV['OPENAI_API_KEY']
+    
+    # Rails secrets (config/secrets.yml):
+    # secrets.yml ->
+    # development:
+    #   completion_kit:
+    #     openai_api_key: 'your-api-key-here'
+    # config.openai_api_key = Rails.application.secrets.completion_kit[:openai_api_key]
+    
+    # Rails credentials (config/credentials.yml.enc):
+    # credentials.yml.enc ->
+    # completion_kit:
+    #   openai_api_key: 'your-api-key-here'
+    # config.openai_api_key = Rails.application.credentials.completion_kit[:openai_api_key]
+  end
+  ```
 
 We recommend using option #2 with a .env file that is ignored by git for development.
 
