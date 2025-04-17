@@ -4,8 +4,7 @@ class CreateCompletionKitTestRuns < ActiveRecord::Migration[7.1]
       t.string :name
       t.text :description
       t.references :prompt, null: false, foreign_key: { to_table: :completion_kit_prompts }
-      t.text :input_data
-      t.text :output_data
+      t.text :csv_data
       t.string :status
       
       t.timestamps

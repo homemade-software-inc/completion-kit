@@ -48,7 +48,7 @@
             <td><%= test_run.test_results.count %> results</td>
             <td>
               <%= link_to 'View Results', test_run_path(test_run), class: 'btn btn-sm btn-info' %>
-              <%= link_to 'Run Again', run_test_run_path(test_run), method: :post, class: 'btn btn-sm btn-primary' %>
+              <%= button_to 'Run Again', run_test_run_path(test_run), method: :post, class: 'btn btn-sm btn-primary' %>
             </td>
           </tr>
         <% end %>

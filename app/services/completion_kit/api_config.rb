@@ -9,18 +9,18 @@ module CompletionKit
       case model_name
       when /^gpt-/
         {
-          api_key: ENV['OPENAI_API_KEY'],
+          api_key: CompletionKit.config.openai_api_key || ENV['OPENAI_API_KEY'],
           provider: 'openai'
         }
       when /^claude-/
         {
-          api_key: ENV['ANTHROPIC_API_KEY'],
+          api_key: CompletionKit.config.anthropic_api_key || ENV['ANTHROPIC_API_KEY'],
           provider: 'anthropic'
         }
       when /^llama-/
         {
-          api_key: ENV['LLAMA_API_KEY'],
-          api_endpoint: ENV['LLAMA_API_ENDPOINT'],
+          api_key: CompletionKit.config.llama_api_key || ENV['LLAMA_API_KEY'],
+          api_endpoint: CompletionKit.config.llama_api_endpoint || ENV['LLAMA_API_ENDPOINT'],
           provider: 'llama'
         }
       else

@@ -59,7 +59,34 @@ ENV['LLAMA_API_KEY'] = 'your_llama_api_key'
 ENV['LLAMA_API_ENDPOINT'] = 'your_llama_api_endpoint'
 ```
 
-Alternatively, you can set these in your application's environment configuration files.
+**IMPORTANT**: To run test runs successfully, you must set at least one API key matching your selected model.
+
+You have several options for configuring API keys:
+
+1. **Environment variables** when starting your Rails server:
+
+```bash
+OPENAI_API_KEY=sk-your-key-here bin/rails server
+```
+
+2. **Using a .env file** in your Rails application root:
+
+```
+# .env file (add to .gitignore to keep keys secure)
+OPENAI_API_KEY=sk-your-key-here
+ANTHROPIC_API_KEY=sk-your-anthropic-key
+```
+
+3. **Direct configuration** in the initializer:
+
+```ruby
+# config/initializers/completion_kit.rb
+CompletionKit.configure do |config|
+  config.openai_api_key = 'your-api-key-here'
+end
+```
+
+We recommend using option #2 with a .env file that is ignored by git for development.
 
 ### Database Migrations
 
