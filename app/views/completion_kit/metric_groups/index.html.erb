@@ -1,0 +1,32 @@
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Metric groups</h1>
+    <p class="ck-lead">Each group is a set of metrics.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "New metric group", new_metric_group_path, class: ck_button_classes(:dark) %>
+    <%= link_to "Metrics", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
+  </div>
+</section>
+
+<% if @metric_groups.any? %>
+  <div class="ck-list">
+    <% @metric_groups.each do |metric_group| %>
+      <section class="ck-card">
+        <div class="ck-split">
+          <div class="ck-stack">
+            <h2 class="ck-card-title"><%= link_to metric_group.name, metric_group_path(metric_group), class: "ck-link" %></h2>
+            <p class="ck-copy"><%= metric_group.description.presence || "No description yet." %></p>
+            <p class="ck-meta-copy"><%= pluralize(metric_group.metrics.count, "metric") %> · used by <%= pluralize(metric_group.prompts.count, "prompt version") %></p>
+          </div>
+          <div class="ck-actions">
+            <%= link_to "Open", metric_group_path(metric_group), class: ck_button_classes(:dark) %>
+            <%= link_to "Edit", edit_metric_group_path(metric_group), class: ck_button_classes(:amber, variant: :outline) %>
+          </div>
+        </div>
+      </section>
+    <% end %>
+  </div>
+<% else %>
+  <div class="ck-empty">No groups yet.</div>
+<% end %>

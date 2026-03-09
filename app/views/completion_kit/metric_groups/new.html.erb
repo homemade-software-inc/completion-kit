@@ -1,0 +1,12 @@
+<section class="ck-page-header">
+  <div>
+    <p class="ck-step">Setup</p>
+    <h1 class="ck-title">New metric group</h1>
+    <p class="ck-lead">Bundle multiple metrics so they can be applied together to a prompt version.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "All groups", metric_groups_path, class: ck_button_classes(:light, variant: :outline) %>
+  </div>
+</section>
+
+<%= render "form", metric_group: @metric_group %>

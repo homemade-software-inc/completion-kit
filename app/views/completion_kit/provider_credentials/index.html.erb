@@ -1,0 +1,36 @@
+<section class="ck-page-header">
+  <div>
+    <p class="ck-step">Provider setup</p>
+    <h1 class="ck-title">Provider credentials</h1>
+    <p class="ck-lead">Store the API credentials used for generation and assessment. Model lists are populated from each provider when credentials are available.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "New provider", new_provider_credential_path, class: ck_button_classes(:dark) %>
+  </div>
+</section>
+
+<% if @provider_credentials.any? %>
+  <div class="ck-list">
+    <% @provider_credentials.each do |provider_credential| %>
+      <section class="ck-card">
+        <div class="ck-split">
+          <div class="ck-stack">
+            <div class="ck-inline">
+              <h2 class="ck-card-title"><%= provider_credential.provider.titleize %></h2>
+              <span class="<%= ck_badge_classes(provider_credential.configured? ? :high : :failed) %>"><%= provider_credential.configured? ? "Configured" : "Needs setup" %></span>
+            </div>
+            <p class="ck-meta-copy"><%= provider_credential.api_endpoint.presence || "Default provider endpoint" %></p>
+            <p class="ck-copy">Available models: <%= provider_credential.available_models.map { |model| model[:id] || model["id"] }.join(", ").presence || "No models returned yet" %></p>
+          </div>
+          <div class="ck-actions">
+            <%= link_to "Edit", edit_provider_credential_path(provider_credential), class: ck_button_classes(:amber, variant: :outline) %>
+          </div>
+        </div>
+      </section>
+    <% end %>
+  </div>
+<% else %>
+  <div class="ck-empty">
+    No provider credentials yet. Add one so Completion Kit can run prompts and AI assessments.
+  </div>
+<% end %>

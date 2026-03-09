@@ -1,10 +1,11 @@
-<h1>Edit Prompt</h1>
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Edit prompt</h1>
+    <p class="ck-lead">Change the prompt, model choices, or review setup. If this version already has runs, saving creates a new draft version instead of rewriting history.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "View prompt", prompt_path(@prompt), class: ck_button_classes(:light, variant: :outline) %>
+  </div>
+</section>
 
-<div class="card">
-  <div class="card-header">
-    <h5>Edit prompt template</h5>
-  </div>
-  <div class="card-body">
-    <%= render 'form', prompt: @prompt %>
-  </div>
-</div>
+<%= render "form", prompt: @prompt %>

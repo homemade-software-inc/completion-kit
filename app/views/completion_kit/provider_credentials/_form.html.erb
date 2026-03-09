@@ -1,0 +1,34 @@
+<%= form_with(model: provider_credential, local: true) do |form| %>
+  <% if provider_credential.errors.any? %>
+    <div class="ck-flash ck-flash--alert">
+      <p class="ck-flash__title"><%= pluralize(provider_credential.errors.count, "problem") %> prevented this provider credential from being saved.</p>
+      <ul class="ck-error-list">
+        <% provider_credential.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="ck-card ck-form-card">
+    <div class="ck-field">
+      <%= form.label :provider, class: "ck-label" %>
+      <%= form.select :provider, CompletionKit::ProviderCredential::PROVIDERS.map { |provider| [provider.titleize, provider] }, {}, { class: "ck-input" } %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :api_key, "API key", class: "ck-label" %>
+      <%= form.text_area :api_key, rows: 3, class: "ck-input ck-input--area ck-input--code", placeholder: "Paste the provider API key" %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :api_endpoint, "API endpoint", class: "ck-label" %>
+      <%= form.text_field :api_endpoint, class: "ck-input", placeholder: "Only needed for llama-compatible or custom endpoints" %>
+    </div>
+
+    <div class="ck-actions">
+      <%= form.submit(provider_credential.persisted? ? "Save provider" : "Create provider", class: ck_button_classes(:dark)) %>
+      <%= link_to "Cancel", provider_credentials_path, class: ck_button_classes(:light, variant: :outline) %>
+    </div>
+  </div>
+<% end %>

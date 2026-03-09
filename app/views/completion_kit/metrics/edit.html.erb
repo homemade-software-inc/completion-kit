@@ -1,0 +1,12 @@
+<section class="ck-page-header">
+  <div>
+    <p class="ck-step">Setup</p>
+    <h1 class="ck-title">Edit metric</h1>
+    <p class="ck-lead">Tighten the guidance and rubric used for this metric.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "View metric", metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
+  </div>
+</section>
+
+<%= render "form", metric: @metric %>

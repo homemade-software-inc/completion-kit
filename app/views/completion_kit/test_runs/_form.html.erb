@@ -1,9 +1,9 @@
 <%# Form partial for test run creation and editing %>
 <%= form_with(model: test_run, local: true) do |form| %>
   <% if test_run.errors.any? %>
-    <div class="alert alert-danger">
-      <h4><%= pluralize(test_run.errors.count, "error") %> prohibited this test run from being saved:</h4>
-      <ul>
+    <div class="ck-flash ck-flash--alert">
+      <p class="ck-flash__title"><%= pluralize(test_run.errors.count, "problem") %> prevented this CSV run from being saved.</p>
+      <ul class="ck-error-list">
         <% test_run.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
@@ -11,32 +11,31 @@
     </div>
   <% end %>
 
-  <div class="form-group mb-3">
-    <%= form.label :prompt_id, "Prompt Template", class: "form-label" %>
-    <%= form.collection_select :prompt_id, @prompts, :id, :name, { selected: params[:prompt_id] }, { class: "form-select" } %>
-  </div>
+  <div class="ck-card ck-form-card">
+    <div class="ck-field">
+      <%= form.label :prompt_id, "Prompt version", class: "ck-label" %>
+      <%= form.collection_select :prompt_id, @prompts, :id, :display_name, { selected: params[:prompt_id] }, { class: "ck-input" } %>
+      <p class="ck-hint">Runs stay attached to the exact prompt version you choose here.</p>
+    </div>
 
-  <div class="form-group mb-3">
-    <%= form.label :name, class: "form-label" %>
-    <%= form.text_field :name, class: "form-control", placeholder: "Enter test run name" %>
-    <small class="form-text text-muted">A descriptive name for this test run</small>
-  </div>
+    <div class="ck-field">
+      <%= form.label :name, "Run name", class: "ck-label" %>
+      <%= form.text_field :name, class: "ck-input", placeholder: "Regression batch for support summaries" %>
+    </div>
 
-  <div class="form-group mb-3">
-    <%= form.label :csv_data, "CSV Data", class: "form-label" %>
-    <%= form.text_area :csv_data, rows: 10, class: "form-control", placeholder: "Paste your CSV data here" %>
-    <small class="form-text text-muted">
-      <p>CSV format with header row. Column names should match variables in your prompt template.</p>
-      <p>Example for a prompt with {{input}} and {{expected_output}} variables:</p>
-      <pre class="bg-light p-2 border rounded">
+    <div class="ck-field">
+      <%= form.label :csv_data, "CSV test cases", class: "ck-label" %>
+      <%= form.text_area :csv_data, rows: 12, class: "ck-input ck-input--area ck-input--code", placeholder: "Paste your CSV here" %>
+      <p class="ck-hint">Header names should match the prompt variables. <code>expected_output</code> is optional.</p>
+      <pre class="ck-code">
 input,expected_output
 "Summarize this paragraph...","A concise summary..."
 "Explain the concept of...","The concept refers to..."</pre>
-    </small>
-  </div>
+    </div>
 
-  <div class="form-group">
-    <%= form.submit class: "btn btn-primary" %>
-    <%= link_to 'Cancel', test_runs_path, class: "btn btn-secondary" %>
+    <div class="ck-actions">
+      <%= form.submit(test_run.persisted? ? "Save CSV run" : "Create CSV run", class: ck_button_classes(:dark)) %>
+      <%= link_to "Cancel", test_runs_path, class: ck_button_classes(:light, variant: :outline) %>
+    </div>
   </div>
 <% end %>

@@ -1,9 +1,8 @@
-<%# Form partial for prompt creation and editing %>
 <%= form_with(model: prompt, local: true) do |form| %>
   <% if prompt.errors.any? %>
-    <div class="alert alert-danger">
-      <h4><%= pluralize(prompt.errors.count, "error") %> prohibited this prompt from being saved:</h4>
-      <ul>
+    <div class="ck-flash ck-flash--alert">
+      <p class="ck-flash__title"><%= pluralize(prompt.errors.count, "problem") %> prevented this prompt from being saved.</p>
+      <ul class="ck-error-list">
         <% prompt.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
@@ -11,45 +10,48 @@
     </div>
   <% end %>
 
-  <div class="form-group mb-3">
-    <%= form.label :name, class: "form-label" %>
-    <%= form.text_field :name, class: "form-control", placeholder: "Enter prompt name" %>
-    <small class="form-text text-muted">A descriptive name for your prompt template</small>
-  </div>
+  <div class="ck-card ck-form-card">
+    <div class="ck-field">
+      <%= form.label :name, "Name", class: "ck-label" %>
+      <%= form.text_field :name, class: "ck-input", placeholder: "Support summary" %>
+    </div>
 
-  <div class="form-group mb-3">
-    <%= form.label :description, class: "form-label" %>
-    <%= form.text_area :description, rows: 3, class: "form-control", placeholder: "Describe the purpose of this prompt" %>
-    <small class="form-text text-muted">Explain what this prompt is designed to do</small>
-  </div>
+    <div class="ck-field">
+      <%= form.label :description, class: "ck-label" %>
+      <%= form.text_area :description, rows: 3, class: "ck-input ck-input--area", placeholder: "Short note about this prompt." %>
+    </div>
 
-  <div class="form-group mb-3">
-    <%= form.label :template, class: "form-label" %>
-    <%= form.text_area :template, rows: 8, class: "form-control", placeholder: "Enter your prompt template with {{variable}} placeholders" %>
-    <small class="form-text text-muted">
-      Use {{variable_name}} syntax for variables that will be replaced with CSV data.
-      Example: "Summarize the following text: {{content}}"
-    </small>
-  </div>
+    <div class="ck-field">
+      <%= form.label :template, "Prompt text", class: "ck-label" %>
+      <%= form.text_area :template, rows: 12, class: "ck-input ck-input--area ck-input--code", placeholder: "Summarize {{content}} for {{audience}}" %>
+      <p class="ck-hint">Use <code>{{variable}}</code>. Match your dataset column names.</p>
+    </div>
 
-  <div class="form-group mb-3">
-    <%= form.label :llm_model, "LLM Model", class: "form-label" %>
-    <%= form.select :llm_model, 
-      [
-        ["GPT-4", "gpt-4"], 
-        ["GPT-3.5 Turbo", "gpt-3.5-turbo"],
-        ["Claude 3 Opus", "claude-3-opus"],
-        ["Claude 3 Sonnet", "claude-3-sonnet"],
-        ["Llama 3", "llama-3"]
-      ], 
-      {}, 
-      { class: "form-select" } 
-    %>
-    <small class="form-text text-muted">Select the AI model to use for this prompt</small>
-  </div>
+    <div class="ck-field">
+      <%= form.label :llm_model, "Generation model", class: "ck-label" %>
+      <%= form.select :llm_model, CompletionKit::Prompt.available_models.map { |model| [model[:name], model[:id]] }, {}, { class: "ck-input" } %>
+    </div>
 
-  <div class="form-group">
-    <%= form.submit class: "btn btn-primary" %>
-    <%= link_to 'Cancel', prompts_path, class: "btn btn-secondary" %>
+    <div class="ck-field">
+      <%= form.label :assessment_model, "Assessment model", class: "ck-label" %>
+      <%= form.select :assessment_model, CompletionKit::Prompt.available_models.map { |model| [model[:name], model[:id]] }, {}, { class: "ck-input" } %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :metric_group_id, "Metric group", class: "ck-label" %>
+      <%= form.collection_select :metric_group_id, @metric_groups, :id, :name, { include_blank: "Choose a metric group" }, { class: "ck-input" } %>
+      <p class="ck-hint">This decides how results are scored.</p>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :review_guidance, "Review notes", class: "ck-label" %>
+      <%= form.text_area :review_guidance, rows: 4, class: "ck-input ck-input--area", placeholder: "Optional notes for scoring this prompt." %>
+      <p class="ck-hint">Optional.</p>
+    </div>
+
+    <div class="ck-actions">
+      <%= form.submit(prompt.persisted? ? "Save prompt" : "Create prompt", class: ck_button_classes(:dark)) %>
+      <%= link_to "Cancel", prompts_path, class: ck_button_classes(:light, variant: :outline) %>
+    </div>
   </div>
 <% end %>

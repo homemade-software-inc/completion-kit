@@ -1,15 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Completion kit</title>
+  <title>CompletionKit</title>
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
-  <%= stylesheet_link_tag    "completion_kit/application", media: "all" %>
+  <%= stylesheet_link_tag "completion_kit/application", media: "all" %>
 </head>
-<body>
+<body class="ck-app">
+  <header class="ck-topbar">
+    <div class="ck-wrap ck-topbar__inner">
+      <div>
+        <%= link_to "Completion Kit", prompts_path, class: "ck-brand" %>
+        <p class="ck-topbar__copy">Create a prompt, attach a dataset, run it, and inspect the results.</p>
+      </div>
 
-<%= yield %>
+      <nav class="ck-nav">
+        <%= link_to "Prompts", prompts_path, class: current_page?(prompts_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Runs", test_runs_path, class: current_page?(test_runs_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Metrics", metrics_path, class: current_page?(metrics_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Metric Groups", metric_groups_path, class: current_page?(metric_groups_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Providers", provider_credentials_path, class: current_page?(provider_credentials_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+      </nav>
+    </div>
+  </header>
 
+  <main class="ck-main">
+    <div class="ck-wrap">
+    <% flash.each do |type, message| %>
+      <div class="ck-flash <%= type.to_s == "notice" ? "ck-flash--notice" : "ck-flash--alert" %>">
+        <%= message %>
+      </div>
+    <% end %>
+
+    <%= yield %>
+    </div>
+  </main>
 </body>
 </html>

@@ -1,76 +1,114 @@
-<h1>Test Result Details</h1>
-
-<div class="card mb-4">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Result #<%= @test_result.id %></h5>
-    <span class="badge <%= @test_result.quality_score && @test_result.quality_score >= 70 ? 'bg-success' : (@test_result.quality_score && @test_result.quality_score >= 40 ? 'bg-warning' : 'bg-danger') %>">
-      Score: <%= @test_result.quality_score || 'Pending' %>
-    </span>
+<section class="ck-page-header">
+  <div>
+    <div class="ck-inline">
+      <h1 class="ck-title">Review result #<%= @test_result.id %></h1>
+      <span class="<%= ck_badge_classes(ck_score_kind(@test_result.quality_score)) %>">
+        <%= @test_result.quality_score ? "Score #{@test_result.quality_score}" : "Pending" %>
+      </span>
+      <% if @test_result.human_score.present? %>
+        <span class="ck-chip ck-chip--soft">Human <%= @test_result.human_score %></span>
+      <% end %>
+    </div>
+    <p class="ck-lead">Review the output and the scores.</p>
+    <p class="ck-meta-copy">Run: <%= link_to @test_run.name, test_run_path(@test_run), class: "ck-link" %> · Prompt: <%= link_to @test_run.prompt.display_name, prompt_path(@test_run.prompt), class: "ck-link" %> · Generate with: <%= @test_run.prompt.llm_model %> · Assess with: <%= @test_run.prompt.assessment_model %></p>
   </div>
-  <div class="card-body">
-    <div class="mb-3">
-      <strong>Test Run:</strong>
-      <p><%= link_to @test_run.name, test_run_path(@test_run) %></p>
-    </div>
-    
-    <div class="mb-3">
-      <strong>Prompt:</strong>
-      <p><%= link_to @test_run.prompt.name, prompt_path(@test_run.prompt) %></p>
-    </div>
-    
-    <div class="mb-3">
-      <strong>LLM Model:</strong>
-      <p><%= @test_run.prompt.llm_model %></p>
-    </div>
-    
-    <div class="mb-3">
-      <strong>Input Data:</strong>
-      <pre class="p-3 bg-light border rounded"><%= JSON.parse(@test_result.input_data).to_json(pretty: true) rescue @test_result.input_data %></pre>
-    </div>
-    
-    <div class="mb-3">
-      <strong>Output Text:</strong>
-      <pre class="p-3 bg-light border rounded"><%= @test_result.output_text %></pre>
-    </div>
-    
-    <% if @test_result.expected_output.present? %>
-      <div class="mb-3">
-        <strong>Expected Output:</strong>
-        <pre class="p-3 bg-light border rounded"><%= @test_result.expected_output %></pre>
-      </div>
-      
+
+  <div class="ck-actions">
+    <%= link_to "Back to results", test_run_test_results_path(@test_run), class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Back to run", test_run_path(@test_run), class: ck_button_classes(:light, variant: :outline) %>
+    <% if @test_result.quality_score.nil? %>
+      <%= button_to "Score outputs", evaluate_test_run_path(@test_run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+    <% end %>
+  </div>
+</section>
+
+<div class="ck-grid ck-grid--two">
+  <section class="ck-card">
+    <p class="ck-kicker">Input row</p>
+    <pre class="ck-code"><%= JSON.parse(@test_result.input_data).to_json(pretty: true) rescue @test_result.input_data %></pre>
+  </section>
+
+  <section class="ck-card">
+    <p class="ck-kicker">Model output</p>
+    <pre class="ck-code"><%= @test_result.output_text %></pre>
+  </section>
+</div>
+
+<div class="ck-grid ck-grid--two ck-grid--spaced">
+  <% if @test_result.expected_output.present? %>
+    <section class="ck-card">
+      <p class="ck-kicker">Expected output</p>
+      <pre class="ck-code"><%= @test_result.expected_output %></pre>
+
       <% if @comparison.present? %>
-        <div class="mb-3">
-          <strong>Similarity Score:</strong>
-          <div class="progress">
-            <div class="progress-bar <%= @comparison[:similarity] >= 70 ? 'bg-success' : (@comparison[:similarity] >= 40 ? 'bg-warning' : 'bg-danger') %>" 
-                 role="progressbar" 
-                 style="width: <%= @comparison[:similarity] %>%;" 
-                 aria-valuenow="<%= @comparison[:similarity] %>" 
-                 aria-valuemin="0" 
-                 aria-valuemax="100">
-              <%= @comparison[:similarity] %>%
-            </div>
-          </div>
-          <small class="text-muted">Percentage of matching content between output and expected output</small>
+        <div class="ck-note-box ck-note-box--strong">
+          <p class="ck-minor-label">Expected-output match</p>
+          <p class="ck-score"><%= @comparison[:similarity] %>%</p>
+          <p class="ck-copy">Simple word-overlap score between the model output and the expected output.</p>
         </div>
       <% end %>
-    <% end %>
-    
-    <% if @test_result.judge_feedback.present? %>
-      <div class="mb-3">
-        <strong>Judge Feedback:</strong>
-        <div class="p-3 bg-light border rounded">
-          <%= @test_result.judge_feedback %>
-        </div>
-      </div>
-    <% end %>
-  </div>
-  <div class="card-footer">
-    <%= link_to 'Back to Test Results', test_run_test_results_path(@test_run), class: 'btn btn-secondary' %>
-    <%= link_to 'Back to Test Run', test_run_path(@test_run), class: 'btn btn-secondary' %>
-    <% if @test_result.quality_score.nil? %>
-      <%= link_to 'Evaluate', evaluate_test_run_path(@test_run), method: :post, class: 'btn btn-primary' %>
-    <% end %>
-  </div>
+    </section>
+  <% end %>
+
+  <section class="ck-card">
+      <p class="ck-kicker">AI review</p>
+    <div class="ck-note-box"><%= @test_result.judge_feedback.presence || "None." %></div>
+  </section>
 </div>
+
+<section class="ck-card ck-card--spaced">
+  <div class="ck-split">
+    <div>
+      <p class="ck-kicker">Human review</p>
+      <h2 class="ck-section-title">Scores by metric</h2>
+    </div>
+  </div>
+
+  <%= form_with model: @test_result, url: human_review_test_run_test_result_path(@test_run, @test_result), method: :patch, local: true do |form| %>
+    <div class="ck-form-card">
+      <% @metric_assessments.each_with_index do |assessment, index| %>
+        <section class="ck-rubric-row ck-rubric-row--display">
+          <div class="ck-rubric-row__range">
+            <span class="ck-rubric-range"><%= assessment.metric_name %></span>
+            <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][id]", assessment.id %>
+            <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][metric_id]", assessment.metric_id %>
+            <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][metric_name]", assessment.metric_name %>
+            <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][guidance_text]", assessment.guidance_text %>
+            <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][rubric_text]", assessment.rubric_text %>
+          </div>
+
+          <div class="ck-rubric-row__fields">
+            <div class="ck-field ck-field--tight">
+              <p class="ck-label">AI score</p>
+              <p class="ck-copy"><%= assessment.ai_score.present? ? assessment.ai_score : "Pending" %></p>
+            </div>
+
+            <div class="ck-field ck-field--tight">
+              <p class="ck-label">AI feedback</p>
+              <div class="ck-note-box"><%= assessment.ai_feedback.presence || "None." %></div>
+            </div>
+
+            <div class="ck-field ck-field--tight">
+              <label class="ck-label" for="metric_assessment_<%= index %>_reviewer">Reviewer name</label>
+              <input id="metric_assessment_<%= index %>_reviewer" name="test_result[metric_assessments_attributes][<%= index %>][human_reviewer_name]" value="<%= assessment.human_reviewer_name %>" class="ck-input">
+            </div>
+
+            <div class="ck-field ck-field--tight">
+              <label class="ck-label" for="metric_assessment_<%= index %>_score">Human score (1-10)</label>
+              <input id="metric_assessment_<%= index %>_score" name="test_result[metric_assessments_attributes][<%= index %>][human_score]" type="number" step="0.1" min="1" max="10" value="<%= assessment.human_score %>" class="ck-input">
+            </div>
+
+            <div class="ck-field ck-field--tight">
+              <label class="ck-label" for="metric_assessment_<%= index %>_feedback">Reviewer notes</label>
+              <textarea id="metric_assessment_<%= index %>_feedback" name="test_result[metric_assessments_attributes][<%= index %>][human_feedback]" rows="4" class="ck-input ck-input--area"><%= assessment.human_feedback %></textarea>
+            </div>
+          </div>
+        </section>
+      <% end %>
+
+      <div class="ck-actions">
+        <%= form.submit "Save human review", class: ck_button_classes(:dark) %>
+      </div>
+    </div>
+  <% end %>
+</section>

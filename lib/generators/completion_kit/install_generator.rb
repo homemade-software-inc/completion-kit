@@ -14,10 +14,6 @@ module CompletionKit
       rake 'completion_kit:install:migrations'
     end
     
-    def add_routes
-      route "mount CompletionKit::Engine => '/completion_kit'"
-    end
-    
     def show_readme
       readme 'README'
     end

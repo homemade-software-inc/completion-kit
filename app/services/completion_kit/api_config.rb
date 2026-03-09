@@ -1,59 +1,67 @@
 module CompletionKit
   class ApiConfig
-    # Configuration class for LLM API credentials
-    
-    # Get the configuration for the specified model
-    # @param model_name [String] The name of the model
-    # @return [Hash] Configuration options for the model
     def self.for_model(model_name)
-      case model_name
-      when /^gpt-/
-        {
-          api_key: CompletionKit.config.openai_api_key || ENV['OPENAI_API_KEY'],
-          provider: 'openai'
-        }
-      when /^claude-/
-        {
-          api_key: CompletionKit.config.anthropic_api_key || ENV['ANTHROPIC_API_KEY'],
-          provider: 'anthropic'
-        }
-      when /^llama-/
-        {
-          api_key: CompletionKit.config.llama_api_key || ENV['LLAMA_API_KEY'],
-          api_endpoint: CompletionKit.config.llama_api_endpoint || ENV['LLAMA_API_ENDPOINT'],
-          provider: 'llama'
-        }
+      provider = provider_for_model(model_name)
+      provider ? for_provider(provider) : {}
+    end
+
+    def self.for_provider(provider_name)
+      provider = provider_name.to_s
+      stored = ProviderCredential.find_by(provider: provider)&.config_hash || {}
+
+      defaults = case provider
+                 when "openai"
+                   { provider: "openai", api_key: CompletionKit.config.openai_api_key || ENV["OPENAI_API_KEY"] }
+                 when "anthropic"
+                   { provider: "anthropic", api_key: CompletionKit.config.anthropic_api_key || ENV["ANTHROPIC_API_KEY"] }
+                 when "llama"
+                   {
+                     provider: "llama",
+                     api_key: CompletionKit.config.llama_api_key || ENV["LLAMA_API_KEY"],
+                     api_endpoint: CompletionKit.config.llama_api_endpoint || ENV["LLAMA_API_ENDPOINT"]
+                   }
+                 else
+                   {}
+                 end
+
+      defaults.merge(stored.compact)
+    end
+
+    def self.provider_for_model(model_name)
+      available_match = available_models.find { |model| model[:id] == model_name.to_s }
+      return available_match[:provider] if available_match
+
+      case model_name.to_s
+      when /\Agpt-/
+        "openai"
+      when /\Aclaude-/
+        "anthropic"
+      when /llama/i
+        "llama"
       else
-        {}
+        nil
       end
     end
-    
-    # Check if the configuration for a model is valid
-    # @param model_name [String] The name of the model
-    # @return [Boolean] True if valid, false otherwise
+
     def self.valid_for_model?(model_name)
       client = LlmClient.for_model(model_name, for_model(model_name))
       client.configured?
     end
-    
-    # Get configuration errors for a model
-    # @param model_name [String] The name of the model
-    # @return [Array<String>] Array of error messages
+
     def self.errors_for_model(model_name)
       client = LlmClient.for_model(model_name, for_model(model_name))
       client.configuration_errors
     end
-    
-    # Get all available models
-    # @return [Array<Hash>] Array of model information hashes
-    def self.available_models
-      [
-        { id: 'gpt-4', name: 'GPT-4', provider: 'openai' },
-        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'openai' },
-        { id: 'claude-3-opus', name: 'Claude 3 Opus', provider: 'anthropic' },
-        { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet', provider: 'anthropic' },
-        { id: 'llama-3', name: 'Llama 3', provider: 'llama' }
-      ]
+
+    def self.available_models(provider: nil)
+      providers = provider.present? ? [provider.to_s] : ProviderCredential::PROVIDERS
+
+      providers.flat_map do |provider_name|
+        client = LlmClient.for_provider(provider_name, for_provider(provider_name))
+        client.available_models.map { |model| model.symbolize_keys.merge(provider: provider_name) }
+      rescue StandardError
+        []
+      end.uniq { |model| model[:id] }
     end
   end
 end

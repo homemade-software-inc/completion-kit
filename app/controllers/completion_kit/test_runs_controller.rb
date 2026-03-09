@@ -3,7 +3,7 @@ module CompletionKit
     before_action :set_test_run, only: [:show, :edit, :update, :destroy, :run, :evaluate]
     
     def index
-      @test_runs = TestRun.all
+      @test_runs = TestRun.includes(:prompt, :test_results).order(created_at: :desc)
     end
     
     def show
@@ -24,38 +24,35 @@ module CompletionKit
     end
     
     def new
-      @test_run = TestRun.new
-      @prompts = Prompt.all
+      @test_run = TestRun.new(prompt_id: params[:prompt_id])
+      @prompts = Prompt.order(:name)
     end
     
     def edit
-      @prompts = Prompt.all
+      @prompts = Prompt.order(:name)
     end
     
     def create
       @test_run = TestRun.new(test_run_params)
+      @prompts = Prompt.order(:name)
       
       # Validate CSV data before saving
-      if @test_run.valid? && CsvProcessor.process(@test_run).present?
-        if @test_run.save
-          redirect_to test_runs_path, notice: 'Test run was successfully created.'
-        else
-          @prompts = Prompt.all
-          render :new
-        end
+      if @test_run.valid? && @test_run.process_csv_data && @test_run.save
+        redirect_to test_runs_path, notice: 'Test run was successfully created.'
       else
-        @prompts = Prompt.all
-        render :new
+        render :new, status: :unprocessable_entity
       end
     end
     
     def update
+      @prompts = Prompt.order(:name)
+      @test_run.assign_attributes(test_run_params)
+
       # Validate CSV data before updating
-      if @test_run.update(test_run_params) && CsvProcessor.process(@test_run).present?
+      if @test_run.valid? && @test_run.process_csv_data && @test_run.save
         redirect_to test_runs_path, notice: 'Test run was successfully updated.'
       else
-        @prompts = Prompt.all
-        render :edit
+        render :edit, status: :unprocessable_entity
       end
     end
     
@@ -65,21 +62,15 @@ module CompletionKit
     end
     
     def run
-      if @test_run.process_csv_data && @test_run.run_tests
+      if @test_run.run_tests
         redirect_to @test_run, notice: 'Test run has been processed successfully.'
       else
-        redirect_to @test_run, alert: 'Failed to process test run. Please check the configuration and try again.'
+        redirect_to @test_run, alert: @test_run.errors.full_messages.to_sentence.presence || 'Failed to process test run. Please check the configuration and try again.'
       end
     end
     
     def evaluate
-      results_count = 0
-      
-      @test_run.test_results.each do |result|
-        if result.evaluate_quality
-          results_count += 1
-        end
-      end
+      results_count = @test_run.evaluate_results
       
       if results_count > 0
         redirect_to @test_run, notice: "Successfully evaluated #{results_count} test results."

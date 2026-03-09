@@ -1,0 +1,62 @@
+<%= form_with(model: metric, local: true) do |form| %>
+  <% if metric.errors.any? %>
+    <div class="ck-flash ck-flash--alert">
+      <p class="ck-flash__title"><%= pluralize(metric.errors.count, "problem") %> prevented this metric from being saved.</p>
+      <ul class="ck-error-list">
+        <% metric.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="ck-card ck-form-card">
+    <div class="ck-field">
+      <%= form.label :name, "Metric name", class: "ck-label" %>
+      <%= form.text_field :name, class: "ck-input", placeholder: "Helpfulness" %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :description, class: "ck-label" %>
+      <%= form.text_area :description, rows: 3, class: "ck-input ck-input--area", placeholder: "What this metric measures." %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :guidance_text, "Assessment guidance", class: "ck-label" %>
+      <%= form.text_area :guidance_text, rows: 4, class: "ck-input ck-input--area", placeholder: "Tell the evaluator what matters for this metric." %>
+    </div>
+
+    <div class="ck-field ck-field--spacious">
+      <p class="ck-label">Rubric</p>
+      <p class="ck-hint">Each metric owns its own five-band rubric.</p>
+
+      <div class="ck-rubric-builder">
+        <% metric.rubric_bands_for_form.each_with_index do |band, index| %>
+          <div class="ck-rubric-row">
+            <div class="ck-rubric-row__range">
+              <span class="ck-rubric-range"><%= band["range"] %></span>
+              <input type="hidden" name="metric[rubric_bands][<%= index %>][range]" value="<%= band["range"] %>">
+            </div>
+
+            <div class="ck-rubric-row__fields">
+              <div class="ck-field ck-field--tight">
+                <label class="ck-label" for="metric_rubric_bands_<%= index %>_criteria">Criteria</label>
+                <textarea id="metric_rubric_bands_<%= index %>_criteria" name="metric[rubric_bands][<%= index %>][criteria]" rows="3" class="ck-input ck-input--area"><%= band["criteria"] %></textarea>
+              </div>
+
+              <div class="ck-field ck-field--tight">
+                <label class="ck-label" for="metric_rubric_bands_<%= index %>_reason">Reasoning cue</label>
+                <textarea id="metric_rubric_bands_<%= index %>_reason" name="metric[rubric_bands][<%= index %>][reason]" rows="3" class="ck-input ck-input--area"><%= band["reason"] %></textarea>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="ck-actions">
+      <%= form.submit(metric.persisted? ? "Save metric" : "Create metric", class: ck_button_classes(:dark)) %>
+      <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
+    </div>
+  </div>
+<% end %>

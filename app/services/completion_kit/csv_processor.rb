@@ -22,7 +22,7 @@ module CompletionKit
         end
         
         # Validate that we have all required variables from the prompt template
-        validate_variables(test_run, rows.first.keys)
+        return [] unless validate_variables(test_run, rows.first.keys)
         
         rows
       rescue CSV::MalformedCSVError => e
@@ -35,10 +35,10 @@ module CompletionKit
     # @param prompt [Prompt] The prompt template
     # @return [Array<String>] Array of variable names
     def self.extract_variables(prompt)
-      return [] if prompt.template.blank?
+      return [] if prompt.nil? || prompt.template.blank?
       
       # Extract all {{variable}} patterns from the template
-      prompt.template.scan(/\{\{([^}]+)\}\}/).flatten.uniq
+      prompt.template.scan(/\{\{([^}]+)\}\}/).flatten.map(&:strip).uniq
     end
     
     # Validate that CSV headers include all variables from the prompt template
@@ -65,7 +65,7 @@ module CompletionKit
       result = prompt.template.dup
       
       variables.each do |name, value|
-        result.gsub!(/\{\{#{name}\}\}/, value.to_s)
+        result.gsub!(/\{\{\s*#{Regexp.escape(name.to_s)}\s*\}\}/, value.to_s)
       end
       
       result

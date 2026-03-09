@@ -1,0 +1,12 @@
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+!/tmp/pids/
+!/tmp/pids/.keep
+!/tmp/storage/
+!/tmp/storage/.keep
+/storage/*
+!/storage/.keep
+/db/*.sqlite3
+/db/*.sqlite3-*

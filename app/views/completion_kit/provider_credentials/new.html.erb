@@ -1,0 +1,12 @@
+<section class="ck-page-header">
+  <div>
+    <p class="ck-step">Provider setup</p>
+    <h1 class="ck-title">New provider credential</h1>
+    <p class="ck-lead">Add the API details for a provider used for generation, assessment, or both.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "All providers", provider_credentials_path, class: ck_button_classes(:light, variant: :outline) %>
+  </div>
+</section>
+
+<%= render "form", provider_credential: @provider_credential %>

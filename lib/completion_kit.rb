@@ -15,9 +15,9 @@ module CompletionKit
       @llama_api_endpoint = ENV['LLAMA_API_ENDPOINT']
       
       # Judge configuration
-      @judge_model = 'gpt-4'
-      @high_quality_threshold = 80
-      @medium_quality_threshold = 50
+      @judge_model = "gpt-4.1"
+      @high_quality_threshold = 8
+      @medium_quality_threshold = 5
     end
   end
   
@@ -29,6 +29,38 @@ module CompletionKit
     
     def configure
       yield(config) if block_given?
+    end
+
+    def current_prompt(identifier)
+      Prompt.current_for(identifier)
+    end
+
+    def current_prompt_payload(identifier)
+      prompt = current_prompt(identifier)
+
+      {
+        name: prompt.name,
+        family_key: prompt.family_key,
+        version_number: prompt.version_number,
+        template: prompt.template,
+        generation_model: prompt.llm_model,
+        assessment_model: prompt.assessment_model,
+        review_guidance: prompt.effective_review_guidance,
+        metric_group: prompt.metric_group&.name,
+        metrics: prompt.assessment_metrics.map do |metric|
+          {
+            name: metric.name,
+            guidance_text: metric.guidance_text,
+            rubric_text: metric.rubric_text,
+            rubric_bands: metric.respond_to?(:rubric_bands_for_form) ? metric.rubric_bands_for_form : metric.rubric_bands
+          }
+        end
+      }
+    end
+
+    def render_current_prompt(identifier, variables = {})
+      prompt = current_prompt(identifier)
+      CsvProcessor.apply_variables(prompt, variables.stringify_keys)
     end
   end
 end

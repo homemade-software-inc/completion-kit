@@ -1,10 +1,11 @@
-<h1>Edit Test Run</h1>
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Edit run</h1>
+    <p class="ck-lead">Change the prompt or dataset.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "View run", test_run_path(@test_run), class: ck_button_classes(:light, variant: :outline) %>
+  </div>
+</section>
 
-<div class="card">
-  <div class="card-header">
-    <h5>Edit test run</h5>
-  </div>
-  <div class="card-body">
-    <%= render 'form', test_run: @test_run %>
-  </div>
-</div>
+<%= render "form", test_run: @test_run %>

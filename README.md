@@ -1,155 +1,211 @@
 # CompletionKit
 
-CompletionKit is a GenAI prompt testing platform that can be mounted as a Rails engine in Rails 7 and 8 applications. It provides a comprehensive solution for testing and evaluating LLM prompts with variable data.
+CompletionKit is a mountable Rails engine for testing prompt templates against CSV datasets inside a host Rails app. It gives you a small UI for managing prompts, running prompt batches against supported LLM providers, and reviewing scored results.
 
-## Features
+## What It Does
 
-- Create prompt templates with variable placeholders
-- Upload CSV data with values for those variables
-- Run tests against various LLM models (OpenAI, Anthropic, Llama)
-- Evaluate the quality of outputs using an LLM judge
-- Sort and filter test results by quality score
-- Compare outputs with expected results
+- Create and edit prompt templates with `{{variable}}` placeholders
+- Create CSV-backed test runs for those prompts
+- Execute prompt batches against OpenAI, Anthropic, or Llama-compatible providers
+- Store generated outputs per row as test results
+- Evaluate outputs with an LLM judge
+- Review result detail pages with score, feedback, sorting, filtering, and expected-output comparison
+
+## Requirements
+
+- Ruby 3.3
+- Rails 7.x or 8.x
+- A host app database supported by Active Record
+- At least one configured LLM provider API key for the model you want to run
 
 ## Installation
 
-Add this line to your application's Gemfile:
+### 1. Add the gem
+
+In your host app `Gemfile`:
 
 ```ruby
-gem 'completion_kit'
+gem "completion-kit"
 ```
 
-And then execute:
+Then install dependencies:
 
 ```bash
-$ bundle install
+bundle install
 ```
 
-Or install it yourself as:
+If you want to install the gem directly:
 
 ```bash
-$ gem install completion_kit
+gem install completion-kit
 ```
 
-## Configuration
+### 2. Install the engine into your app
 
-### Mount the Engine
+Preferred setup:
 
-Add the following to your `config/routes.rb` file:
+```bash
+bin/rails generate completion_kit:install
+```
+
+That generator adds the initializer template, mounts the engine route, and installs the engine migrations into the host app.
+
+Manual fallback:
 
 ```ruby
+# config/routes.rb
 Rails.application.routes.draw do
   mount CompletionKit::Engine => "/completion_kit"
 end
 ```
 
-### API Keys
+### 3. Run migrations
 
-CompletionKit requires API keys for the LLM providers you want to use. Set these in your environment variables:
+If you used the generator, it already copied the migrations. Otherwise:
+
+```bash
+bin/rails completion_kit:install:migrations
+```
+
+Then migrate:
+
+```bash
+bin/rails db:migrate
+```
+
+### 4. Configure provider credentials
+
+CompletionKit reads provider credentials from either the initializer or environment variables.
+
+Supported environment variables:
+
+```bash
+OPENAI_API_KEY=...
+ANTHROPIC_API_KEY=...
+LLAMA_API_KEY=...
+LLAMA_API_ENDPOINT=...
+```
+
+Initializer example:
 
 ```ruby
-# For OpenAI (GPT models)
-ENV['OPENAI_API_KEY'] = 'your_openai_api_key'
+# config/initializers/completion_kit.rb
+CompletionKit.configure do |config|
+  config.openai_api_key = ENV["OPENAI_API_KEY"]
+  config.anthropic_api_key = ENV["ANTHROPIC_API_KEY"]
+  config.llama_api_key = ENV["LLAMA_API_KEY"]
+  config.llama_api_endpoint = ENV["LLAMA_API_ENDPOINT"]
 
-# For Anthropic (Claude models)
-ENV['ANTHROPIC_API_KEY'] = 'your_anthropic_api_key'
-
-# For Llama models
-ENV['LLAMA_API_KEY'] = 'your_llama_api_key'
-ENV['LLAMA_API_ENDPOINT'] = 'your_llama_api_endpoint'
-```
-
-**IMPORTANT**: To run test runs successfully, you must set at least one API key matching your selected model.
-
-You have several options for configuring API keys:
-
-1. **Environment variables** when starting your Rails server:
-
-```bash
-OPENAI_API_KEY=sk-your-key-here bin/rails server
-```
-
-2. **Using a .env file** in your Rails application root:
-
-```
-# .env file (add to .gitignore to keep keys secure)
-OPENAI_API_KEY=sk-your-key-here
-ANTHROPIC_API_KEY=sk-your-anthropic-key
-```
-
-3. **Direct configuration** in the initializer (config/initializers/completion_kit.rb):
-
-  ```ruby
-  CompletionKit.configure do |config|
-    # Environment variable (recommended)
-    config.openai_api_key = ENV['OPENAI_API_KEY']
-    
-    # Rails secrets (config/secrets.yml):
-    # secrets.yml ->
-    # development:
-    #   completion_kit:
-    #     openai_api_key: 'your-api-key-here'
-    # config.openai_api_key = Rails.application.secrets.completion_kit[:openai_api_key]
-    
-    # Rails credentials (config/credentials.yml.enc):
-    # credentials.yml.enc ->
-    # completion_kit:
-    #   openai_api_key: 'your-api-key-here'
-    # config.openai_api_key = Rails.application.credentials.completion_kit[:openai_api_key]
-  end
-  ```
-
-We recommend using option #2 with a .env file that is ignored by git for development.
-
-### Database Migrations
-
-Run the migrations to set up the necessary database tables:
-
-```bash
-$ bin/rails completion_kit:install:migrations
-$ bin/rails db:migrate
+  config.judge_model = "gpt-4"
+  config.high_quality_threshold = 80
+  config.medium_quality_threshold = 50
+end
 ```
 
 ## Usage
 
-### Creating Prompts
+### Create a prompt
 
-1. Navigate to `/completion_kit/prompts`
-2. Click "New Prompt"
-3. Fill in the prompt template using `{{variable}}` syntax for placeholders
-4. Select the LLM model to use
-5. Save the prompt
+1. Visit `/completion_kit/prompts`
+2. Create a prompt with a name, description, model, and template
+3. Use `{{variable}}` placeholders for fields that will come from CSV data
 
-### Running Tests
+Example template:
 
-1. Navigate to a prompt's detail page
-2. Click "New Test Run"
-3. Upload CSV data with columns matching the variable names in your prompt
-4. Run the tests
-5. View and evaluate the results
+```text
+Summarize this text for {{audience}}:
 
-### CSV Format
-
-Your CSV data should include columns that match the variable names in your prompt template. For example:
-
-```
-input,expected_output
-"Summarize this paragraph...","A concise summary..."
-"Explain the concept of...","The concept refers to..."
+{{content}}
 ```
 
-The `expected_output` column is optional but recommended for better evaluation.
+### Create a test run
+
+1. Open a prompt
+2. Create a new test run
+3. Paste CSV data into the test run form
+4. Make sure CSV headers match the prompt variables
+
+Example CSV:
+
+```csv
+content,audience,expected_output
+"Release notes for v1.2","developers","A concise developer-facing summary"
+"Quarterly results memo","executives","A short executive summary"
+```
+
+The `expected_output` column is optional, but it improves result comparison and evaluation.
+
+### Run and evaluate
+
+1. Run the test batch from the test run page
+2. Review generated outputs per row
+3. Evaluate results with the configured judge model
+4. Sort and filter by quality score or creation time
+
+## Models and Providers
+
+The current engine UI exposes these model families:
+
+- OpenAI: `gpt-4`, `gpt-3.5-turbo`
+- Anthropic: `claude-3-opus`, `claude-3-sonnet`
+- Llama: `llama-3`
+
+Provider client adapters live inside the engine and use Faraday for HTTP requests.
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests.
+Install dependencies:
 
-To install this gem onto your local machine, run `bundle exec rake install`.
+```bash
+bundle install
+```
 
-## Contributing
+Run the test suite:
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/completionkit/completion_kit.
+```bash
+bundle exec rspec
+```
+
+Or via rake:
+
+```bash
+bundle exec rake spec
+```
+
+### Coverage
+
+The test suite is gated by SimpleCov with:
+
+- 100% line coverage
+- 100% branch coverage
+
+Coverage output is written to:
+
+```text
+coverage/index.html
+```
+
+### Demo App
+
+A local host app for manual testing lives in:
+
+```text
+examples/demo_app
+```
+
+To boot it:
+
+```bash
+cd examples/demo_app
+bundle install --local
+bin/rails db:migrate db:seed
+bin/rails server
+```
+
+## CI
+
+GitHub Actions runs the same coverage-gated spec suite on `push` and `pull_request`, and uploads the generated `coverage/` directory as a build artifact.
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+CompletionKit is released under the [MIT License](https://opensource.org/licenses/MIT).

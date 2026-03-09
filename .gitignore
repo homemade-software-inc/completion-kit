@@ -4,4 +4,6 @@
 /pkg/
 /tmp/
 /vendor/bundle/
+/vendor/cache/
+/coverage/
 .idea/

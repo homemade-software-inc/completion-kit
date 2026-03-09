@@ -1,0 +1,73 @@
+<section class="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(21rem,0.8fr)]">
+  <div class="space-y-8">
+    <div class="inline-flex items-center gap-3 rounded-full border border-stone-900/10 bg-white px-4 py-2 shadow-sm">
+      <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+      <span class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-600">Local Engine Sandbox</span>
+    </div>
+
+    <div class="space-y-6">
+      <p class="max-w-xl text-sm font-semibold uppercase tracking-[0.34em] text-stone-500">
+        Mount. Seed. Break. Improve.
+      </p>
+      <h1 class="max-w-4xl text-6xl font-black tracking-[-0.06em] text-stone-950 sm:text-7xl lg:text-[5.5rem]">
+        A sharper way to test the engine in a real Rails app.
+      </h1>
+      <p class="max-w-2xl text-lg leading-8 text-stone-700 sm:text-xl">
+        This host app exists for one job: make it obvious whether CompletionKit feels credible when mounted for real. It seeds a prompt, a CSV-backed run, and gives you a clean launch surface into the engine.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Launch Engine UI", "/completion_kit", class: "inline-flex items-center rounded-full bg-stone-950 px-6 py-3 text-sm font-semibold text-white shadow-xl shadow-stone-950/15 transition hover:-translate-y-0.5 hover:bg-orange-700" %>
+      <%= link_to "View Prompts", "/completion_kit/prompts", class: "inline-flex items-center rounded-full border border-stone-900/10 bg-white px-6 py-3 text-sm font-semibold text-stone-900 transition hover:border-stone-900 hover:bg-stone-950 hover:text-white" %>
+      <%= link_to "View Test Runs", "/completion_kit/test_runs", class: "inline-flex items-center rounded-full border border-stone-900/10 bg-white px-6 py-3 text-sm font-semibold text-stone-900 transition hover:border-stone-900 hover:bg-stone-950 hover:text-white" %>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="rounded-[1.75rem] border border-stone-900/10 bg-white p-5 shadow-sm">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-stone-500">Seeded Prompts</p>
+        <p class="mt-3 text-5xl font-black tracking-tight text-stone-950"><%= @prompt_count %></p>
+      </div>
+      <div class="rounded-[1.75rem] border border-stone-900/10 bg-white p-5 shadow-sm">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-stone-500">Seeded Test Runs</p>
+        <p class="mt-3 text-5xl font-black tracking-tight text-stone-950"><%= @test_run_count %></p>
+      </div>
+      <div class="rounded-[1.75rem] border border-stone-900/10 bg-gradient-to-br from-stone-950 to-stone-800 p-5 text-white shadow-lg shadow-stone-950/10">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-stone-300">Primary Path</p>
+        <p class="mt-3 text-xl font-semibold tracking-tight">Create prompt → run CSV → evaluate results</p>
+      </div>
+    </div>
+  </div>
+
+  <aside class="space-y-5">
+    <div class="overflow-hidden rounded-[2rem] border border-stone-900/10 bg-stone-950 text-white shadow-2xl shadow-stone-950/15">
+      <div class="border-b border-white/10 px-6 py-5">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.3em] text-orange-300">Smoke Test Plan</p>
+        <h2 class="mt-3 text-2xl font-semibold tracking-tight">What to click first</h2>
+      </div>
+      <ol class="space-y-4 px-6 py-6 text-sm leading-7 text-stone-200">
+        <li><span class="font-semibold text-white">1.</span> Open the engine UI and inspect the seeded prompt.</li>
+        <li><span class="font-semibold text-white">2.</span> Open the seeded draft test run and verify the CSV is visible.</li>
+        <li><span class="font-semibold text-white">3.</span> Add a provider API key and run the batch.</li>
+        <li><span class="font-semibold text-white">4.</span> Evaluate results and inspect sorting, filtering, and detail pages.</li>
+      </ol>
+    </div>
+
+    <div class="rounded-[2rem] border border-orange-200 bg-orange-100/80 p-6 shadow-sm">
+      <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-orange-700">Provider Setup</p>
+      <p class="mt-3 text-sm leading-7 text-stone-800">
+        Configure a provider key in
+        <code class="rounded bg-white px-1.5 py-1 text-[12px] text-stone-900">config/initializers/completion_kit.rb</code>
+        or via environment variables before running a batch.
+      </p>
+    </div>
+
+    <div class="rounded-[2rem] border border-stone-900/10 bg-white p-6 shadow-sm">
+      <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-stone-500">Seeded Fixture</p>
+      <p class="mt-3 text-xl font-semibold tracking-tight text-stone-950">Support Ticket Summarizer</p>
+      <p class="mt-2 text-sm leading-7 text-stone-700">
+        The seeded run uses two realistic support-ticket examples so you can validate the full flow without creating data by hand.
+      </p>
+    </div>
+  </aside>
+</section>
