@@ -1,5 +1,8 @@
 # CompletionKit
 
+[![CI](https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/homemade-software-inc/completion-kit/graph/badge.svg)](https://codecov.io/gh/homemade-software-inc/completion-kit)
+
 CompletionKit is a mountable Rails engine for testing prompt templates against CSV datasets inside a host Rails app. It gives you a small UI for managing prompts, running prompt batches against supported LLM providers, and reviewing scored results.
 
 ## What It Does
