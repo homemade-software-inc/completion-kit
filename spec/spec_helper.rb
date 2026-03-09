@@ -13,6 +13,7 @@ SimpleCov.start do
   add_filter "/pkg/"
   add_filter "/app/assets/"
   add_filter "/app/views/"
+  add_filter "/lib/tasks/"
   add_filter "/lib/generators/completion_kit/templates/"
 
   add_group "Controllers", "app/controllers"

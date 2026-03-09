@@ -13,8 +13,8 @@ require "action_mailer/railtie"
 require "sprockets/railtie"
 require "rspec/rails"
 require "factory_bot_rails"
-require "completion_kit"
 require_relative "spec_helper"
+require "completion_kit"
 
 class CompletionKitSpecApp < Rails::Application
   config.root = DUMMY_APP_ROOT

@@ -71,8 +71,7 @@ module CompletionKit
 
     def metric_key_or_name_clause(key)
       metric = Metric.find_by(key: key.to_s)
-      return { metric_id: metric.id } if metric
-      { metric_name: key.to_s }
+      { metric_id: metric.id }
     end
 
     def error_result(message)

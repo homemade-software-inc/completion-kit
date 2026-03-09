@@ -96,7 +96,7 @@ module CompletionKit
     private
 
     def generate_key
-      self.key ||= name&.parameterize if name.present?
+      self.key ||= name.parameterize if name.present?
     end
 
     def set_defaults

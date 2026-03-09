@@ -98,4 +98,29 @@ RSpec.describe CompletionKit::EvalRunner do
       expect(result[:error]).to include("nonexistent")
     end
   end
+
+  describe "#run with no scores" do
+    it "returns 0.0 average when judge returns no scores" do
+      allow_any_instance_of(CompletionKit::JudgeService).to receive(:evaluate).and_return({ score: nil, feedback: "Error" })
+
+      runner = described_class.new(eval_defn)
+      result = runner.run
+
+      expect(result[:metrics].first[:average]).to eq(0.0)
+      expect(result[:metrics].first[:passed]).to be false
+    end
+  end
+
+  describe "#run with unexpected error" do
+    it "returns an error result" do
+      allow(CompletionKit::TestRun).to receive(:create!).and_raise(StandardError, "boom")
+
+      runner = described_class.new(eval_defn)
+      result = runner.run
+
+      expect(result[:passed]).to be false
+      expect(result[:error]).to eq("boom")
+    end
+  end
+
 end
