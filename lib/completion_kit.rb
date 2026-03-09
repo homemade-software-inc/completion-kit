@@ -1,5 +1,6 @@
 require "completion_kit/version"
 require "completion_kit/engine"
+require "completion_kit/eval_definition"
 
 module CompletionKit
   # Configuration for the CompletionKit module
@@ -61,6 +62,20 @@ module CompletionKit
     def render_current_prompt(identifier, variables = {})
       prompt = current_prompt(identifier)
       CsvProcessor.apply_variables(prompt, variables.stringify_keys)
+    end
+
+    def registered_evals
+      @registered_evals ||= []
+    end
+
+    def define_eval(name, &block)
+      defn = EvalDefinition.new(name)
+      block.call(defn)
+      registered_evals << defn
+    end
+
+    def clear_evals!
+      @registered_evals = []
     end
   end
 end
