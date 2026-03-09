@@ -123,6 +123,7 @@ GEM
     faraday-retry (2.3.0)
       faraday (~> 2.0)
     ffi (1.17.1-arm64-darwin)
+    ffi (1.17.1-x86_64-linux-gnu)
     globalid (1.2.1)
       activesupport (>= 6.1)
     i18n (1.14.7)
@@ -161,7 +162,7 @@ GEM
       timeout
     net-smtp (0.5.1)
       net-protocol
-    nio4r (2.7.4)
+    nio4r (2.7.5)
     nokogiri (1.17.2-arm64-darwin)
       racc (~> 1.4)
     nokogiri (1.17.2-x86_64-linux)
@@ -173,7 +174,7 @@ GEM
     psych (5.2.3)
       date
       stringio
-    puma (6.6.0)
+    puma (7.2.0)
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (3.1.12)
