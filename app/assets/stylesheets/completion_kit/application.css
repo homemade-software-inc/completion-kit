@@ -110,6 +110,11 @@ form.button_to {
   align-items: center;
 }
 
+.ck-toolbar__spacer {
+  flex: 1;
+  min-width: 1rem;
+}
+
 .ck-main {
   padding: 2rem 0 4rem;
 }

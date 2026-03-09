@@ -5,9 +5,6 @@
   </div>
   <div class="ck-actions">
     <%= link_to "New prompt", new_prompt_path, class: ck_button_classes(:dark) %>
-    <%= link_to "Metrics", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
-    <%= link_to "Metric groups", metric_groups_path, class: ck_button_classes(:light, variant: :outline) %>
-    <%= link_to "Runs", test_runs_path, class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 
@@ -21,33 +18,21 @@
               <h2 class="ck-card-title"><%= link_to prompt.name, prompt_path(prompt), class: "ck-link" %></h2>
               <span class="ck-chip"><%= prompt.version_label %></span>
               <span class="ck-chip"><%= prompt.llm_model %></span>
-              <span class="ck-chip ck-chip--soft">Assess with <%= prompt.assessment_model %></span>
             </div>
 
-            <p class="ck-copy"><%= prompt.description.presence || "No description yet. Add one so other people know what this prompt is for." %></p>
+            <p class="ck-copy"><%= prompt.description.presence || "No description." %></p>
 
-            <div class="ck-chip-row">
-              <% prompt.variables.each do |variable| %>
-                <span class="ck-chip ck-chip--soft"><%= variable %></span>
-              <% end %>
-            </div>
-
-            <% if prompt.variables.empty? %>
-              <p class="ck-note">No <code>{{variables}}</code> yet. Add them if you want each CSV row to change the prompt input.</p>
-            <% else %>
-              <p class="ck-note">CSV headers should match these variable names.</p>
+            <% if prompt.variables.any? %>
+              <div class="ck-chip-row">
+                <% prompt.variables.each do |variable| %>
+                  <span class="ck-chip ck-chip--soft"><%= variable %></span>
+                <% end %>
+              </div>
             <% end %>
-
-            <p class="ck-note">
-              Metric group:
-              <strong><%= prompt.metric_group&.name || "Legacy single-metric fallback" %></strong>
-            </p>
           </div>
 
           <div class="ck-actions">
             <%= link_to "Open", prompt_path(prompt), class: ck_button_classes(:dark) %>
-            <%= link_to "Edit", edit_prompt_path(prompt), class: ck_button_classes(:amber, variant: :outline) %>
-            <%= link_to "New CSV run", new_test_run_path(prompt_id: prompt.id), class: ck_button_classes(:green) %>
             <%= button_to "Delete", prompt_path(prompt), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: ck_button_classes(:red, variant: :outline), form_class: "inline-block" %>
           </div>
         </div>

@@ -3,13 +3,12 @@
     <div class="ck-inline">
       <h1 class="ck-title"><%= @prompt.display_name %></h1>
       <span class="ck-chip"><%= @prompt.llm_model %></span>
-      <span class="ck-chip ck-chip--soft">Assess with <%= @prompt.assessment_model %></span>
       <% if @prompt.current? %>
         <span class="<%= ck_badge_classes(:high) %>">Current</span>
       <% end %>
     </div>
     <p class="ck-lead"><%= @prompt.description.presence || "No description." %></p>
-    <p class="ck-meta-copy">Metric group: <%= @prompt.metric_group&.name || "Legacy single-metric fallback" %> · Published: <%= @prompt.published_at&.strftime("%Y-%m-%d %H:%M") || "Draft" %></p>
+    <p class="ck-meta-copy">Assess with <%= @prompt.assessment_model %> · Metric group: <%= @prompt.metric_group&.name || "None" %> · Published: <%= @prompt.published_at&.strftime("%Y-%m-%d %H:%M") || "Draft" %></p>
   </div>
 
   <div class="ck-actions">
@@ -19,76 +18,44 @@
     <% unless @prompt.current? %>
       <%= button_to "Publish current", publish_prompt_path(@prompt), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
     <% end %>
-    <%= link_to "All prompts", prompts_path, class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 
 <section class="ck-grid ck-grid--sidebar">
-    <div class="ck-card">
+  <div class="ck-card">
     <p class="ck-kicker">Prompt</p>
     <pre class="ck-code ck-code--dark"><%= @prompt.template %></pre>
   </div>
 
-  <div class="ck-grid">
-    <div class="ck-card">
-      <p class="ck-kicker">Variables</p>
+  <div class="ck-card">
+    <p class="ck-kicker">Details</p>
+
+    <% if @prompt.variables.any? %>
+      <p class="ck-minor-label">Variables</p>
       <div class="ck-chip-row">
-      <% if @prompt.variables.any? %>
         <% @prompt.variables.each do |variable| %>
           <span class="ck-chip ck-chip--soft"><%= variable %></span>
         <% end %>
-      <% else %>
-        <p class="ck-copy">No variables.</p>
-      <% end %>
       </div>
-    </div>
+    <% end %>
 
-    <div class="ck-card">
-      <p class="ck-kicker">Models</p>
-      <p class="ck-copy">Generation model: <strong><%= @prompt.llm_model %></strong></p>
-      <p class="ck-copy">Assessment model: <strong><%= @prompt.assessment_model %></strong></p>
-      <p class="ck-copy">Metric group: <strong><%= @prompt.metric_group&.name || "Legacy single-metric fallback" %></strong></p>
-    </div>
-
-    <div class="ck-card">
-      <p class="ck-kicker">Review notes</p>
-      <div class="ck-note-box"><%= @prompt.effective_review_guidance.presence || "None." %></div>
-    </div>
-
-    <div class="ck-card">
-      <p class="ck-kicker">Next</p>
-      <p class="ck-copy">Create a run for this prompt.</p>
-      <div class="ck-actions">
-        <%= link_to "Create run", new_test_run_path(prompt_id: @prompt.id), class: ck_button_classes(:green) %>
-      </div>
-    </div>
+    <% if @prompt.effective_review_guidance.present? %>
+      <p class="ck-minor-label">Review notes</p>
+      <div class="ck-note-box"><%= @prompt.effective_review_guidance %></div>
+    <% end %>
   </div>
 </section>
 
+<% if @prompt.assessment_metrics.any? %>
 <section class="ck-card ck-card--spaced">
-  <div class="ck-split">
-    <div>
-      <p class="ck-kicker">Metrics</p>
-      <h2 class="ck-section-title">Scoring</h2>
-    </div>
-    <div class="ck-actions">
-      <%= link_to "Metrics", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
-      <%= link_to "Groups", metric_groups_path, class: ck_button_classes(:light, variant: :outline) %>
-    </div>
-  </div>
+  <p class="ck-kicker">Metrics</p>
 
   <div class="ck-list ck-list--compact">
     <% @prompt.assessment_metrics.each do |metric| %>
       <div class="ck-item">
         <div class="ck-stack">
-          <p class="ck-item-title"><%= metric.name %></p>
+          <p class="ck-item-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></p>
           <p class="ck-copy"><%= metric.description.presence || "No description." %></p>
-          <div class="ck-note-box"><%= metric.guidance_text.presence || "No notes." %></div>
-        </div>
-        <div class="ck-actions">
-          <% if metric.respond_to?(:persisted?) && metric.persisted? %>
-            <%= link_to "Open metric", metric_path(metric), class: ck_button_classes(:dark) %>
-          <% end %>
         </div>
       </div>
 
@@ -114,61 +81,43 @@
     <% end %>
   </div>
 </section>
+<% end %>
 
+<% if @family_versions.length > 1 %>
 <section class="ck-card ck-card--spaced">
-  <div class="ck-split">
-    <div>
-      <p class="ck-kicker">Versions</p>
-      <h2 class="ck-section-title">History</h2>
-    </div>
-  </div>
+  <p class="ck-kicker">Versions</p>
 
-  <% if @family_versions.any? %>
-    <div class="ck-list ck-list--compact">
-      <% @family_versions.each do |version| %>
-        <div class="ck-item">
-          <div>
-            <p class="ck-item-title"><%= version.display_name %></p>
-            <p class="ck-meta-copy"><%= version.llm_model %> · assess with <%= version.assessment_model %> · <%= pluralize(version.test_runs.count, "run") %></p>
-          </div>
-          <div class="ck-actions">
-            <%= link_to "Open", prompt_path(version), class: ck_button_classes(:dark) %>
-            <% unless version.current? %>
-              <%= button_to "Publish", publish_prompt_path(version), method: :post, class: ck_button_classes(:blue, variant: :outline), form_class: "inline-block" %>
-            <% end %>
-          </div>
+  <div class="ck-list ck-list--compact">
+    <% @family_versions.each do |version| %>
+      <div class="ck-item">
+        <div>
+          <p class="ck-item-title"><%= link_to version.display_name, prompt_path(version), class: "ck-link" %></p>
+          <p class="ck-meta-copy"><%= version.llm_model %> · <%= pluralize(version.test_runs.count, "run") %></p>
         </div>
-      <% end %>
-    </div>
-  <% else %>
-    <p class="ck-copy">No other versions.</p>
-  <% end %>
+        <div class="ck-actions">
+          <% unless version.current? %>
+            <%= button_to "Publish", publish_prompt_path(version), method: :post, class: ck_button_classes(:blue, variant: :outline), form_class: "inline-block" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
 </section>
+<% end %>
 
+<% if @prompt.test_runs.any? %>
 <section class="ck-card ck-card--spaced">
-  <div class="ck-split">
-    <div>
-      <p class="ck-kicker">Runs</p>
-      <h2 class="ck-section-title">Results using this prompt</h2>
-    </div>
-    <%= link_to "Create run", new_test_run_path(prompt_id: @prompt.id), class: ck_button_classes(:green) %>
-  </div>
+  <p class="ck-kicker">Runs</p>
 
-  <% if @prompt.test_runs.any? %>
-    <div class="ck-list ck-list--compact">
-      <% @prompt.test_runs.order(created_at: :desc).each do |test_run| %>
-        <div class="ck-item">
-          <div>
-            <p class="ck-item-title"><%= test_run.name %></p>
-            <p class="ck-meta-copy"><%= test_run.created_at.strftime("%Y-%m-%d %H:%M") %> · <%= pluralize(test_run.test_results.count, "result") %> · status <%= test_run.status %></p>
-          </div>
-          <div class="ck-actions">
-            <%= link_to "Open", test_run_path(test_run), class: ck_button_classes(:dark) %>
-          </div>
+  <div class="ck-list ck-list--compact">
+    <% @prompt.test_runs.order(created_at: :desc).each do |test_run| %>
+      <div class="ck-item">
+        <div>
+          <p class="ck-item-title"><%= link_to test_run.name, test_run_path(test_run), class: "ck-link" %></p>
+          <p class="ck-meta-copy"><%= test_run.created_at.strftime("%Y-%m-%d %H:%M") %> · <%= pluralize(test_run.test_results.count, "result") %> · <%= test_run.status %></p>
         </div>
-      <% end %>
-    </div>
-  <% else %>
-    <p class="ck-copy">No runs yet.</p>
-  <% end %>
+      </div>
+    <% end %>
+  </div>
 </section>
+<% end %>

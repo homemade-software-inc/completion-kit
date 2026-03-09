@@ -5,7 +5,6 @@
   </div>
   <div class="ck-actions">
     <%= link_to "New run", new_test_run_path, class: ck_button_classes(:dark) %>
-    <%= link_to "Prompts", prompts_path, class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 
@@ -25,8 +24,6 @@
 
           <div class="ck-actions">
             <%= link_to "Open", test_run_path(test_run), class: ck_button_classes(:dark) %>
-            <%= link_to "Edit", edit_test_run_path(test_run), class: ck_button_classes(:amber, variant: :outline) %>
-            <%= button_to "Run", run_test_run_path(test_run), method: :post, class: ck_button_classes(:green), form_class: "inline-block" %>
             <%= button_to "Delete", test_run_path(test_run), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: ck_button_classes(:red, variant: :outline), form_class: "inline-block" %>
           </div>
         </div>

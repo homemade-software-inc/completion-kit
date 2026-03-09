@@ -144,13 +144,9 @@ The `expected_output` column is optional, but it improves result comparison and 
 
 ## Models and Providers
 
-The current engine UI exposes these model families:
+CompletionKit discovers available models dynamically from each configured provider's API. When a provider API key is set, the engine queries the provider's model listing endpoint and populates the model dropdowns automatically. If the API is unreachable, it falls back to a small static list per provider.
 
-- OpenAI: `gpt-4`, `gpt-3.5-turbo`
-- Anthropic: `claude-3-opus`, `claude-3-sonnet`
-- Llama: `llama-3`
-
-Provider client adapters live inside the engine and use Faraday for HTTP requests.
+Supported providers: **OpenAI**, **Anthropic**, and **Llama-compatible** (any OpenAI-compatible endpoint). Provider client adapters live inside the engine and use Faraday for HTTP requests.
 
 ## Development
 

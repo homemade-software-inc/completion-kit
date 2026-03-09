@@ -1,11 +1,4 @@
 <% unscored_count = @test_run.test_results.where(quality_score: nil).count %>
-<% next_step = if @test_results.empty?
-                 "Generate outputs."
-               elsif unscored_count.positive?
-                 "Run AI review."
-               else
-                 "Open results."
-               end %>
 
 <section class="ck-page-header">
   <div>
@@ -13,8 +6,7 @@
       <h1 class="ck-title"><%= @test_run.name %></h1>
       <span class="<%= ck_badge_classes(@test_run.status.to_s.to_sym) %>"><%= @test_run.status %></span>
     </div>
-    <p class="ck-lead"><%= next_step %></p>
-    <p class="ck-meta-copy">Prompt: <%= link_to @test_run.prompt.display_name, prompt_path(@test_run.prompt), class: "ck-link" %> · Generate with: <%= @test_run.prompt.llm_model %> · Assess with: <%= @test_run.prompt.assessment_model %> · Created: <%= @test_run.created_at.strftime("%Y-%m-%d %H:%M") %></p>
+    <p class="ck-meta-copy">Prompt: <%= link_to @test_run.prompt.display_name, prompt_path(@test_run.prompt), class: "ck-link" %> · <%= @test_run.prompt.llm_model %> · <%= @test_run.created_at.strftime("%Y-%m-%d %H:%M") %></p>
   </div>
 
   <div class="ck-actions">
@@ -24,33 +16,32 @@
       <%= link_to "Open results", test_run_test_results_path(@test_run), class: ck_button_classes(:blue, variant: :outline) %>
     <% end %>
     <%= link_to "Edit", edit_test_run_path(@test_run), class: ck_button_classes(:amber, variant: :outline) %>
-    <%= link_to "All runs", test_runs_path, class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 
 <section class="ck-grid ck-grid--sidebar">
-    <div class="ck-card">
+  <div class="ck-card">
     <p class="ck-kicker">Dataset</p>
     <pre class="ck-code ck-code--dark"><%= @test_run.csv_data.to_s.lines.first(10).join %><% if @test_run.csv_data.to_s.lines.count > 10 %>...<% end %></pre>
   </div>
 
   <div class="ck-card">
-    <p class="ck-kicker">Run summary</p>
+    <p class="ck-kicker">Summary</p>
     <dl class="ck-stat-list">
       <div class="ck-stat-row">
         <dt>CSV rows</dt>
         <dd><%= [@test_run.csv_data.to_s.lines.count - 1, 0].max %></dd>
       </div>
       <div class="ck-stat-row">
-        <dt>Outputs created</dt>
+        <dt>Outputs</dt>
         <dd><%= @test_run.test_results.count %></dd>
       </div>
       <div class="ck-stat-row">
-        <dt>Scored outputs</dt>
+        <dt>Scored</dt>
         <dd><%= @test_run.test_results.where.not(quality_score: nil).count %></dd>
       </div>
       <div class="ck-stat-row">
-        <dt>Unscored outputs</dt>
+        <dt>Unscored</dt>
         <dd><%= unscored_count %></dd>
       </div>
     </dl>
@@ -60,53 +51,37 @@
 <% if @test_results.any? %>
   <section class="ck-card ck-card--spaced">
     <div class="ck-split">
-      <div>
-        <p class="ck-kicker">Outputs</p>
-        <h2 class="ck-section-title">Results</h2>
-      </div>
+      <p class="ck-kicker">Results</p>
       <div class="ck-toolbar">
         <%= link_to "Best first", test_run_path(@test_run, sort: "score_desc"), class: params[:sort].blank? || params[:sort] == "score_desc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
         <%= link_to "Worst first", test_run_path(@test_run, sort: "score_asc"), class: params[:sort] == "score_asc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Newest", test_run_path(@test_run, sort: "created_desc"), class: params[:sort] == "created_desc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Oldest", test_run_path(@test_run, sort: "created_asc"), class: params[:sort] == "created_asc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
       </div>
     </div>
 
-  <div class="ck-grid ck-grid--cards">
-    <% @test_results.each do |result| %>
-      <article class="ck-result-card">
-        <div class="ck-split ck-split--tight">
-          <h3 class="ck-card-title">Result #<%= result.id %></h3>
-          <span class="<%= ck_badge_classes(ck_score_kind(result.quality_score)) %>">
-            <%= result.quality_score ? "Score #{result.quality_score}" : "Pending" %>
-          </span>
-        </div>
-
-        <div class="ck-stack">
-          <div>
-            <p class="ck-minor-label">Input row</p>
-            <pre class="ck-code"><%= result.input_data %></pre>
+    <div class="ck-grid ck-grid--cards">
+      <% @test_results.each do |result| %>
+        <article class="ck-result-card">
+          <div class="ck-split ck-split--tight">
+            <h3 class="ck-card-title"><%= link_to "Result ##{result.id}", test_run_test_result_path(@test_run, result), class: "ck-link" %></h3>
+            <span class="<%= ck_badge_classes(ck_score_kind(result.quality_score)) %>">
+              <%= result.quality_score ? "Score #{result.quality_score}" : "Pending" %>
+            </span>
           </div>
 
-          <div>
-            <p class="ck-minor-label">Model output</p>
-            <pre class="ck-code"><%= result.output_text %></pre>
-          </div>
-
-          <% if result.judge_feedback.present? %>
+          <div class="ck-stack">
             <div>
-              <p class="ck-minor-label">AI review</p>
-              <div class="ck-note-box"><%= truncate(result.judge_feedback, length: 180) %></div>
+              <p class="ck-minor-label">Input row</p>
+              <pre class="ck-code"><%= result.input_data %></pre>
             </div>
-          <% end %>
-        </div>
 
-        <div class="ck-actions">
-          <%= link_to "View details", test_run_test_result_path(@test_run, result), class: ck_button_classes(:blue, variant: :outline) %>
-        </div>
-      </article>
-    <% end %>
-  </div>
+            <div>
+              <p class="ck-minor-label">Model output</p>
+              <pre class="ck-code"><%= result.output_text %></pre>
+            </div>
+          </div>
+        </article>
+      <% end %>
+    </div>
   </section>
 <% else %>
   <div class="ck-empty ck-empty--spaced">

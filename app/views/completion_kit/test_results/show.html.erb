@@ -1,7 +1,7 @@
 <section class="ck-page-header">
   <div>
     <div class="ck-inline">
-      <h1 class="ck-title">Review result #<%= @test_result.id %></h1>
+      <h1 class="ck-title">Result #<%= @test_result.id %></h1>
       <span class="<%= ck_badge_classes(ck_score_kind(@test_result.quality_score)) %>">
         <%= @test_result.quality_score ? "Score #{@test_result.quality_score}" : "Pending" %>
       </span>
@@ -9,60 +9,52 @@
         <span class="ck-chip ck-chip--soft">Human <%= @test_result.human_score %></span>
       <% end %>
     </div>
-    <p class="ck-lead">Review the output and the scores.</p>
-    <p class="ck-meta-copy">Run: <%= link_to @test_run.name, test_run_path(@test_run), class: "ck-link" %> · Prompt: <%= link_to @test_run.prompt.display_name, prompt_path(@test_run.prompt), class: "ck-link" %> · Generate with: <%= @test_run.prompt.llm_model %> · Assess with: <%= @test_run.prompt.assessment_model %></p>
+    <p class="ck-meta-copy">
+      <%= link_to @test_run.name, test_run_path(@test_run), class: "ck-link" %> · <%= link_to @test_run.prompt.display_name, prompt_path(@test_run.prompt), class: "ck-link" %> · <%= @test_run.prompt.llm_model %>
+    </p>
   </div>
 
   <div class="ck-actions">
     <%= link_to "Back to results", test_run_test_results_path(@test_run), class: ck_button_classes(:light, variant: :outline) %>
-    <%= link_to "Back to run", test_run_path(@test_run), class: ck_button_classes(:light, variant: :outline) %>
     <% if @test_result.quality_score.nil? %>
       <%= button_to "Score outputs", evaluate_test_run_path(@test_run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
     <% end %>
   </div>
 </section>
 
-<div class="ck-grid ck-grid--two">
-  <section class="ck-card">
-    <p class="ck-kicker">Input row</p>
-    <pre class="ck-code"><%= JSON.parse(@test_result.input_data).to_json(pretty: true) rescue @test_result.input_data %></pre>
-  </section>
+<section class="ck-card">
+  <div class="ck-stack">
+    <div>
+      <p class="ck-minor-label">Input row</p>
+      <pre class="ck-code"><%= JSON.parse(@test_result.input_data).to_json(pretty: true) rescue @test_result.input_data %></pre>
+    </div>
 
-  <section class="ck-card">
-    <p class="ck-kicker">Model output</p>
-    <pre class="ck-code"><%= @test_result.output_text %></pre>
-  </section>
-</div>
+    <div>
+      <p class="ck-minor-label">Model output</p>
+      <pre class="ck-code"><%= @test_result.output_text %></pre>
+    </div>
 
-<div class="ck-grid ck-grid--two ck-grid--spaced">
-  <% if @test_result.expected_output.present? %>
-    <section class="ck-card">
-      <p class="ck-kicker">Expected output</p>
-      <pre class="ck-code"><%= @test_result.expected_output %></pre>
+    <% if @test_result.expected_output.present? %>
+      <div>
+        <p class="ck-minor-label">Expected output</p>
+        <pre class="ck-code"><%= @test_result.expected_output %></pre>
+        <% if @comparison.present? %>
+          <p class="ck-meta-copy">Word-overlap match: <strong><%= @comparison[:similarity] %>%</strong></p>
+        <% end %>
+      </div>
+    <% end %>
 
-      <% if @comparison.present? %>
-        <div class="ck-note-box ck-note-box--strong">
-          <p class="ck-minor-label">Expected-output match</p>
-          <p class="ck-score"><%= @comparison[:similarity] %>%</p>
-          <p class="ck-copy">Simple word-overlap score between the model output and the expected output.</p>
-        </div>
-      <% end %>
-    </section>
-  <% end %>
-
-  <section class="ck-card">
-      <p class="ck-kicker">AI review</p>
-    <div class="ck-note-box"><%= @test_result.judge_feedback.presence || "None." %></div>
-  </section>
-</div>
+    <% if @test_result.judge_feedback.present? %>
+      <div>
+        <p class="ck-minor-label">AI review</p>
+        <div class="ck-note-box"><%= @test_result.judge_feedback %></div>
+      </div>
+    <% end %>
+  </div>
+</section>
 
 <section class="ck-card ck-card--spaced">
-  <div class="ck-split">
-    <div>
-      <p class="ck-kicker">Human review</p>
-      <h2 class="ck-section-title">Scores by metric</h2>
-    </div>
-  </div>
+  <p class="ck-kicker">Human review</p>
 
   <%= form_with model: @test_result, url: human_review_test_run_test_result_path(@test_run, @test_result), method: :patch, local: true do |form| %>
     <div class="ck-form-card">
@@ -89,18 +81,13 @@
             </div>
 
             <div class="ck-field ck-field--tight">
-              <label class="ck-label" for="metric_assessment_<%= index %>_reviewer">Reviewer name</label>
-              <input id="metric_assessment_<%= index %>_reviewer" name="test_result[metric_assessments_attributes][<%= index %>][human_reviewer_name]" value="<%= assessment.human_reviewer_name %>" class="ck-input">
-            </div>
-
-            <div class="ck-field ck-field--tight">
               <label class="ck-label" for="metric_assessment_<%= index %>_score">Human score (1-10)</label>
               <input id="metric_assessment_<%= index %>_score" name="test_result[metric_assessments_attributes][<%= index %>][human_score]" type="number" step="0.1" min="1" max="10" value="<%= assessment.human_score %>" class="ck-input">
             </div>
 
             <div class="ck-field ck-field--tight">
-              <label class="ck-label" for="metric_assessment_<%= index %>_feedback">Reviewer notes</label>
-              <textarea id="metric_assessment_<%= index %>_feedback" name="test_result[metric_assessments_attributes][<%= index %>][human_feedback]" rows="4" class="ck-input ck-input--area"><%= assessment.human_feedback %></textarea>
+              <label class="ck-label" for="metric_assessment_<%= index %>_feedback">Notes</label>
+              <textarea id="metric_assessment_<%= index %>_feedback" name="test_result[metric_assessments_attributes][<%= index %>][human_feedback]" rows="3" class="ck-input ck-input--area"><%= assessment.human_feedback %></textarea>
             </div>
           </div>
         </section>
