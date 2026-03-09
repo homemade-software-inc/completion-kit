@@ -5,7 +5,7 @@
 [![CodeQL](https://github.com/homemade-software-inc/completion-kit/actions/workflows/codeql.yml/badge.svg)](https://github.com/homemade-software-inc/completion-kit/actions/workflows/codeql.yml)
 ![dependencies](https://img.shields.io/badge/dependencies-7-blue)
 
-LLM outputs are unpredictable. A prompt that works on one input can fail on the next. CompletionKit gives you a way to know — before shipping — whether your prompts actually hold up across real data.
+You need to know whether your prompts produce the output you expect, consistently, across real data. CompletionKit gives you that.
 
 Mount it in any Rails app, feed it a prompt and a CSV of real inputs, and it runs every row through the model. Then it scores each output using configurable metrics and rubrics, flags regressions, and lets you compare versions side by side. When you change a prompt, you re-run the same dataset and see exactly what got better and what broke.
 
