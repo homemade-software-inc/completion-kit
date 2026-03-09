@@ -5,7 +5,11 @@
 [![CodeQL](https://github.com/homemade-software-inc/completion-kit/actions/workflows/codeql.yml/badge.svg)](https://github.com/homemade-software-inc/completion-kit/actions/workflows/codeql.yml)
 ![dependencies](https://img.shields.io/badge/dependencies-7-blue)
 
-A mountable Rails engine for testing LLM prompts against CSV datasets. Create prompts with `{{variable}}` placeholders, run them against OpenAI/Anthropic/Llama-compatible providers, and review scored results.
+LLM outputs are unpredictable. A prompt that works on one input can fail on the next. CompletionKit gives you a way to know — before shipping — whether your prompts actually hold up across real data.
+
+Mount it in any Rails app, feed it a prompt and a CSV of real inputs, and it runs every row through the model. Then it scores each output using configurable metrics and rubrics, flags regressions, and lets you compare versions side by side. When you change a prompt, you re-run the same dataset and see exactly what got better and what broke.
+
+It's the difference between "this prompt seems to work" and "this prompt scores 8.4 across 200 inputs, up from 7.1 last version."
 
 ## Setup
 
