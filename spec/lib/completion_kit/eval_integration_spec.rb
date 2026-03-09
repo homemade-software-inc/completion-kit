@@ -1,0 +1,50 @@
+require "rails_helper"
+
+RSpec.describe "Eval DSL end-to-end" do
+  let!(:metric_group) { create(:completion_kit_metric_group) }
+  let!(:relevance) { create(:completion_kit_metric, name: "Relevance", key: "relevance", metric_groups: [metric_group]) }
+  let!(:accuracy) { create(:completion_kit_metric, name: "Accuracy", key: "accuracy", metric_groups: [metric_group]) }
+  let!(:prompt) { create(:completion_kit_prompt, name: "e2e_test", metric_group: metric_group, current: true) }
+
+  let(:csv_path) { Rails.root.join("tmp/e2e_eval.csv").to_s }
+
+  before do
+    FileUtils.mkdir_p(File.dirname(csv_path))
+    File.write(csv_path, "content,audience,expected_output\nfirst row,devs,expected1\nsecond row,managers,expected2\n")
+    allow_any_instance_of(CompletionKit::LlmClient).to receive(:configured?).and_return(true)
+    allow_any_instance_of(CompletionKit::LlmClient).to receive(:configuration_errors).and_return([])
+    allow_any_instance_of(CompletionKit::LlmClient).to receive(:generate_completion).and_return("generated output")
+    allow_any_instance_of(CompletionKit::JudgeService).to receive(:evaluate).and_return({ score: 8.5, feedback: "Good work" })
+  end
+
+  after do
+    CompletionKit.clear_evals!
+    File.delete(csv_path) if File.exist?(csv_path)
+  end
+
+  it "defines an eval, runs it, and gets structured results" do
+    CompletionKit.define_eval("e2e_test") do |e|
+      e.prompt "e2e_test"
+      e.dataset csv_path
+      e.metric :relevance, threshold: 7.0
+      e.metric :accuracy, threshold: 8.0
+    end
+
+    defn = CompletionKit.registered_evals.first
+    runner = CompletionKit::EvalRunner.new(defn)
+    result = runner.run
+
+    expect(result[:passed]).to be true
+    expect(result[:row_count]).to eq(2)
+    expect(result[:metrics].size).to eq(2)
+
+    test_run = CompletionKit::TestRun.find(result[:test_run_id])
+    expect(test_run.source).to eq("eval_dsl")
+    expect(test_run.eval_name).to eq("e2e_test")
+
+    output = CompletionKit::EvalFormatter.format_results([result])
+    expect(output).to include("2 rows")
+    expect(output).to include("pass")
+    expect(output).to include("1 passed, 0 failed")
+  end
+end
