@@ -17,6 +17,9 @@
             <div class="ck-inline">
               <h2 class="ck-card-title"><%= link_to test_run.name, test_run_path(test_run), class: "ck-link" %></h2>
               <span class="<%= ck_badge_classes(test_run.status.to_s.presence&.to_sym) %>"><%= test_run.status %></span>
+              <% if test_run.respond_to?(:source) && test_run.source == "eval_dsl" %>
+                <span class="ck-chip ck-chip--soft">eval</span>
+              <% end %>
             </div>
             <p class="ck-copy">Prompt: <%= link_to test_run.prompt.display_name, prompt_path(test_run.prompt), class: "ck-link" %></p>
             <p class="ck-meta-copy"><%= test_run.created_at.strftime("%Y-%m-%d %H:%M") %> · <%= pluralize(test_run.csv_data.to_s.lines.count - 1, "CSV row") %> · <%= pluralize(test_run.test_results.count, "result") %></p>

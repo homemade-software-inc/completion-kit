@@ -5,6 +5,9 @@
     <div class="ck-inline">
       <h1 class="ck-title"><%= @test_run.name %></h1>
       <span class="<%= ck_badge_classes(@test_run.status.to_s.to_sym) %>"><%= @test_run.status %></span>
+      <% if @test_run.respond_to?(:source) && @test_run.source == "eval_dsl" %>
+        <span class="ck-chip ck-chip--soft">eval</span>
+      <% end %>
     </div>
     <p class="ck-meta-copy">Prompt: <%= link_to @test_run.prompt.display_name, prompt_path(@test_run.prompt), class: "ck-link" %> · <%= @test_run.prompt.llm_model %> · <%= @test_run.created_at.strftime("%Y-%m-%d %H:%M") %></p>
   </div>
