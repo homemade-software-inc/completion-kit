@@ -2,6 +2,7 @@ require "completion_kit/version"
 require "completion_kit/engine"
 require "completion_kit/eval_definition"
 require "completion_kit/eval_runner"
+require "completion_kit/eval_formatter"
 
 module CompletionKit
   # Configuration for the CompletionKit module
