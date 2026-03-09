@@ -32,8 +32,8 @@ RSpec.describe "CompletionKit test results", type: :request do
     get "/completion_kit/test_runs/#{test_run.id}/test_results/#{high_result.id}"
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Expected-output match")
-    expect(response.body).to include("Scores by metric")
+    expect(response.body).to include("Word-overlap match")
+    expect(response.body).to include("Human review")
     expect(response.body).to include(metric_group.metrics.first.name)
   end
 
@@ -41,7 +41,7 @@ RSpec.describe "CompletionKit test results", type: :request do
     get "/completion_kit/test_runs/#{test_run.id}/test_results/#{pending_result.id}"
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).not_to include("Expected-output match")
+    expect(response.body).not_to include("Word-overlap match")
   end
 
   it "saves a human review and handles invalid review input" do
