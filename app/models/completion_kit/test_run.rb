@@ -8,6 +8,7 @@ module CompletionKit
     validates :name, presence: true
     validates :csv_data, presence: true
     validates :status, inclusion: { in: STATUSES }
+    validates :source, inclusion: { in: %w[ui eval_dsl] }, allow_nil: true
 
     before_validation :reset_parsed_csv_rows
     before_validation :set_default_status, on: :create

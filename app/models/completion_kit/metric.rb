@@ -36,7 +36,9 @@ module CompletionKit
 
     validates :name, presence: true
     validates :rubric_text, presence: true
+    validates :key, uniqueness: true, allow_nil: true
 
+    before_validation :generate_key
     before_validation :normalize_rubric_bands
     before_validation :set_defaults
 
@@ -92,6 +94,10 @@ module CompletionKit
     end
 
     private
+
+    def generate_key
+      self.key ||= name&.parameterize if name.present?
+    end
 
     def set_defaults
       self.guidance_text ||= ""

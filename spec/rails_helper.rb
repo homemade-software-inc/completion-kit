@@ -52,6 +52,7 @@ ActiveRecord::Schema.define do
     t.text :guidance_text
     t.text :rubric_text
     t.text :rubric_bands
+    t.string :key
     t.timestamps
   end
 
@@ -92,6 +93,8 @@ ActiveRecord::Schema.define do
     t.references :prompt, null: false
     t.text :csv_data
     t.string :status
+    t.string :source, default: "ui"
+    t.string :eval_name
     t.timestamps
   end
 
