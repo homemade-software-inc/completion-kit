@@ -40,6 +40,28 @@ Available models are discovered dynamically from each provider's API.
 2. Create a test run and paste CSV data (headers match variable names)
 3. Generate outputs, run AI review, inspect scored results
 
+## Eval DSL
+
+Run prompt evaluations from code, in CI, or from the command line. Define evals in `evals/` and run them with rake:
+
+```ruby
+# evals/summarization_eval.rb
+CompletionKit.define_eval("summarization") do |e|
+  e.prompt "summarize_article"
+  e.dataset "evals/fixtures/articles.csv"
+  e.metric :relevance, threshold: 7.0
+  e.metric :conciseness, threshold: 6.5
+end
+```
+
+```bash
+bundle exec rake completion_kit:eval           # run all evals
+bundle exec rake completion_kit:eval:dry_run   # validate without API calls
+bundle exec rake completion_kit:metrics        # list available metrics
+```
+
+See [docs/eval-dsl.md](docs/eval-dsl.md) for the full guide.
+
 ## Development
 
 ```bash
