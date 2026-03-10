@@ -46,7 +46,7 @@ body.ck-app {
   background: var(--ck-bg);
   color: var(--ck-text);
   font-family: var(--ck-sans);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 a {
@@ -159,9 +159,9 @@ form.button_to {
 .ck-label {
   margin: 0;
   font-family: var(--ck-mono);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ck-dim);
 }
@@ -178,17 +178,17 @@ form.button_to {
 }
 
 .ck-title {
-  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
   line-height: 1.15;
 }
 
 .ck-section-title {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
 }
 
 .ck-card-title,
 .ck-item-title {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 
 .ck-lead,
@@ -203,15 +203,15 @@ form.button_to {
 
 .ck-lead {
   max-width: 56rem;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
 }
 
 .ck-copy,
 .ck-meta-copy,
 .ck-note,
 .ck-hint {
-  font-size: 0.82rem;
-  line-height: 1.55;
+  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
 .ck-note {
@@ -274,7 +274,7 @@ form.button_to {
   padding: 1.25rem;
   color: var(--ck-muted);
   font-family: var(--ck-mono);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   border-style: dashed;
 }
 
@@ -304,7 +304,7 @@ form.button_to {
   padding: 0.25rem 0.55rem;
   border-radius: 4px;
   font-family: var(--ck-mono);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -368,9 +368,9 @@ form.button_to {
   border-radius: var(--ck-radius);
   text-decoration: none;
   font-family: var(--ck-mono);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   line-height: 1;
   cursor: pointer;
@@ -413,13 +413,14 @@ form.button_to {
 
 .ck-button--danger {
   background: transparent;
-  border-color: rgba(239, 68, 68, 0.4);
-  color: var(--ck-danger);
+  border-color: var(--ck-line-strong);
+  color: var(--ck-muted);
 }
 
 .ck-button--danger:hover {
   background: var(--ck-danger-soft);
-  border-color: var(--ck-danger);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: var(--ck-danger);
 }
 
 .ck-button--warning {
@@ -458,7 +459,7 @@ form.button_to {
   background: var(--ck-bg);
   border: 1px solid var(--ck-line);
   color: var(--ck-text);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
 }
 
 .ck-code--dark {
@@ -515,7 +516,7 @@ form.button_to {
   background: var(--ck-bg);
   color: var(--ck-text);
   font-family: var(--ck-sans);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -536,7 +537,7 @@ form.button_to {
 
 .ck-input--code {
   font-family: var(--ck-mono);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
 }
 
 .ck-checkbox {
@@ -583,7 +584,7 @@ form.button_to {
   background: var(--ck-accent);
   color: #080b14;
   font-family: var(--ck-mono);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -624,7 +625,7 @@ form.button_to {
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--ck-line);
   font-family: var(--ck-mono);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--ck-muted);
 }
 
