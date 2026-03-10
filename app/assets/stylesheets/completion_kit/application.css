@@ -43,10 +43,16 @@ html {
 body.ck-app {
   margin: 0;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: var(--ck-bg);
   color: var(--ck-text);
   font-family: var(--ck-sans);
   font-size: 1rem;
+}
+
+body.ck-app > main {
+  flex: 1;
 }
 
 a {
