@@ -11,9 +11,8 @@ RSpec.describe "Eval DSL end-to-end" do
   before do
     FileUtils.mkdir_p(File.dirname(csv_path))
     File.write(csv_path, "content,audience,expected_output\nfirst row,devs,expected1\nsecond row,managers,expected2\n")
-    allow_any_instance_of(CompletionKit::LlmClient).to receive(:configured?).and_return(true)
-    allow_any_instance_of(CompletionKit::LlmClient).to receive(:configuration_errors).and_return([])
-    allow_any_instance_of(CompletionKit::LlmClient).to receive(:generate_completion).and_return("generated output")
+    mock_client = instance_double(CompletionKit::OpenAiClient, configured?: true, configuration_errors: [], generate_completion: "generated output")
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(mock_client)
     allow_any_instance_of(CompletionKit::JudgeService).to receive(:evaluate).and_return({ score: 8.5, feedback: "Good work" })
   end
 
