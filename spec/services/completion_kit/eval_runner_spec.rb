@@ -38,6 +38,9 @@ RSpec.describe CompletionKit::EvalRunner do
       result = runner.run
 
       expect(result[:eval_name]).to eq("test_eval")
+      expect(result[:error]).to be_nil
+      expect(result[:metrics]).not_to be_empty, "Expected metrics but got: #{result.inspect}"
+      expect(result[:metrics].first[:average]).to be >= 7.0, "Average #{result[:metrics].first[:average]} below threshold. Assessments: #{CompletionKit::TestResultMetricAssessment.count}, TestResults: #{CompletionKit::TestResult.count}"
       expect(result[:passed]).to be true
       expect(result[:metrics].first[:key]).to eq(:relevance)
       expect(result[:metrics].first[:average]).to be_a(Float)
