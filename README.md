@@ -11,6 +11,12 @@ Mount it in any Rails app, feed it a prompt and a CSV of real inputs, and it run
 
 It's the difference between "this prompt seems to work" and "this prompt scores 8.4 across 200 inputs, up from 7.1 last version."
 
+![Prompts index](docs/screenshots/prompts.png)
+
+![Prompt detail with metrics and rubrics](docs/screenshots/prompt-detail.png)
+
+![Test run with scored results](docs/screenshots/test-run.png)
+
 ## Setup
 
 ```ruby
