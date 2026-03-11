@@ -13,7 +13,7 @@
         Test the engine in a real Rails app.
       </h1>
       <p class="max-w-2xl text-base leading-7 text-slate-400">
-        This host app exists to validate whether CompletionKit works when mounted for real. It seeds a prompt, a CSV-backed run, and gives you a clean launch surface into the engine.
+        This host app exists to validate whether CompletionKit works when mounted for real. It ships with an example prompt and a CSV-backed run so you can try the full flow immediately.
       </p>
     </div>
 
@@ -25,11 +25,11 @@
 
     <div class="grid gap-3 md:grid-cols-3">
       <div class="rounded-lg border border-slate-800 bg-slate-900 p-5">
-        <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-slate-600" style="font-family: 'JetBrains Mono', monospace;">Seeded Prompts</p>
+        <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-slate-600" style="font-family: 'JetBrains Mono', monospace;">Example Prompts</p>
         <p class="mt-3 text-4xl font-bold tracking-tight text-cyan-400" style="font-family: 'JetBrains Mono', monospace;"><%= @prompt_count %></p>
       </div>
       <div class="rounded-lg border border-slate-800 bg-slate-900 p-5">
-        <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-slate-600" style="font-family: 'JetBrains Mono', monospace;">Seeded Test Runs</p>
+        <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-slate-600" style="font-family: 'JetBrains Mono', monospace;">Example Runs</p>
         <p class="mt-3 text-4xl font-bold tracking-tight text-cyan-400" style="font-family: 'JetBrains Mono', monospace;"><%= @test_run_count %></p>
       </div>
       <div class="rounded-lg border border-cyan-900/50 bg-gradient-to-br from-cyan-950/50 to-slate-900 p-5">
@@ -46,8 +46,8 @@
         <h2 class="mt-2 text-lg font-bold tracking-tight text-slate-100" style="font-family: 'JetBrains Mono', monospace;">What to click first</h2>
       </div>
       <ol class="space-y-3 px-5 py-5 text-sm leading-7 text-slate-400">
-        <li><span class="font-medium text-slate-200">1.</span> Open the engine UI and inspect the seeded prompt.</li>
-        <li><span class="font-medium text-slate-200">2.</span> Open the seeded draft test run and verify the CSV is visible.</li>
+        <li><span class="font-medium text-slate-200">1.</span> Open the engine UI and inspect the example prompt.</li>
+        <li><span class="font-medium text-slate-200">2.</span> Open the example draft run and verify the CSV is visible.</li>
         <li><span class="font-medium text-slate-200">3.</span> Add a provider API key and run the batch.</li>
         <li><span class="font-medium text-slate-200">4.</span> Evaluate results and inspect sorting, filtering, and detail pages.</li>
       </ol>
@@ -63,10 +63,10 @@
     </div>
 
     <div class="rounded-lg border border-slate-800 bg-slate-900 p-5">
-      <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-slate-600" style="font-family: 'JetBrains Mono', monospace;">Seeded Fixture</p>
+      <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-slate-600" style="font-family: 'JetBrains Mono', monospace;">Example Fixture</p>
       <p class="mt-2 text-base font-bold tracking-tight text-slate-200" style="font-family: 'JetBrains Mono', monospace;">Support Ticket Summarizer</p>
       <p class="mt-2 text-sm leading-7 text-slate-400">
-        The seeded run uses two realistic support-ticket examples so you can validate the full flow without creating data by hand.
+        The example run uses realistic support-ticket data so you can try the full flow without creating data by hand.
       </p>
     </div>
   </aside>

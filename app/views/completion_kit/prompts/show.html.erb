@@ -1,3 +1,8 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Prompts", prompts_path %></li>
+  <li><%= @prompt.name %></li>
+</ol>
+
 <section class="ck-page-header">
   <div>
     <div class="ck-inline">
@@ -7,17 +12,18 @@
         <span class="<%= ck_badge_classes(:high) %>">Current</span>
       <% end %>
     </div>
-    <p class="ck-lead"><%= @prompt.description.presence || "No description." %></p>
-    <p class="ck-meta-copy">Assess with <%= @prompt.assessment_model %> · Metric group: <%= @prompt.metric_group&.name || "None" %> · Published: <%= @prompt.published_at&.strftime("%Y-%m-%d %H:%M") || "Draft" %></p>
+    <% if @prompt.description.present? %>
+      <p class="ck-lead"><%= @prompt.description %></p>
+    <% end %>
   </div>
 
   <div class="ck-actions">
-    <%= link_to "Edit", edit_prompt_path(@prompt), class: ck_button_classes(:amber, variant: :outline) %>
-    <%= link_to "New CSV run", new_test_run_path(prompt_id: @prompt.id), class: ck_button_classes(:green) %>
-    <%= button_to "New version", new_version_prompt_path(@prompt), method: :post, class: ck_button_classes(:blue, variant: :outline), form_class: "inline-block" %>
     <% unless @prompt.current? %>
-      <%= button_to "Publish current", publish_prompt_path(@prompt), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+      <%= button_to "Publish", publish_prompt_path(@prompt), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
     <% end %>
+    <%= button_to "New version", new_version_prompt_path(@prompt), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
+    <%= link_to "Edit", edit_prompt_path(@prompt), class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "New run", new_test_run_path(prompt_id: @prompt.id), class: ck_button_classes(:dark) %>
   </div>
 </section>
 
@@ -30,18 +36,32 @@
   <div class="ck-card">
     <p class="ck-kicker">Details</p>
 
+    <dl class="ck-stat-list">
+      <div class="ck-stat-row">
+        <dt>Judge model</dt>
+        <dd><%= @prompt.assessment_model %></dd>
+      </div>
+      <div class="ck-stat-row">
+        <dt>Metrics</dt>
+        <dd><%= @prompt.metric_group&.name || "Default" %></dd>
+      </div>
+      <div class="ck-stat-row">
+        <dt>Runs</dt>
+        <dd><%= @prompt.test_runs.count %></dd>
+      </div>
+      <div class="ck-stat-row">
+        <dt>Published</dt>
+        <dd><%= @prompt.published_at&.strftime("%Y-%m-%d") || "Draft" %></dd>
+      </div>
+    </dl>
+
     <% if @prompt.variables.any? %>
-      <p class="ck-minor-label">Variables</p>
+      <p class="ck-minor-label" style="margin-top: 0.75rem;">Variables</p>
       <div class="ck-chip-row">
         <% @prompt.variables.each do |variable| %>
           <span class="ck-chip ck-chip--soft"><%= variable %></span>
         <% end %>
       </div>
-    <% end %>
-
-    <% if @prompt.effective_review_guidance.present? %>
-      <p class="ck-minor-label">Review notes</p>
-      <div class="ck-note-box"><%= @prompt.effective_review_guidance %></div>
     <% end %>
   </div>
 </section>
@@ -55,7 +75,9 @@
       <div class="ck-item">
         <div class="ck-stack">
           <p class="ck-item-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></p>
-          <p class="ck-copy"><%= metric.description.presence || "No description." %></p>
+          <% if metric.description.present? %>
+            <p class="ck-copy"><%= metric.description %></p>
+          <% end %>
         </div>
       </div>
 
@@ -69,10 +91,6 @@
               <div class="ck-field ck-field--tight">
                 <p class="ck-label">Criteria</p>
                 <p class="ck-copy"><%= band["criteria"] %></p>
-              </div>
-              <div class="ck-field ck-field--tight">
-                <p class="ck-label">Reasoning cue</p>
-                <p class="ck-copy"><%= band["reason"] %></p>
               </div>
             </div>
           </div>
@@ -96,7 +114,7 @@
         </div>
         <div class="ck-actions">
           <% unless version.current? %>
-            <%= button_to "Publish", publish_prompt_path(version), method: :post, class: ck_button_classes(:blue, variant: :outline), form_class: "inline-block" %>
+            <%= button_to "Publish", publish_prompt_path(version), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
           <% end %>
         </div>
       </div>

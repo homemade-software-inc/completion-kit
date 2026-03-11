@@ -32,7 +32,7 @@ RSpec.describe "CompletionKit test results", type: :request do
     get "/completion_kit/test_runs/#{test_run.id}/test_results/#{high_result.id}"
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Word-overlap match")
+    expect(response.body).to include("Word overlap")
     expect(response.body).to include("Human review")
     expect(response.body).to include(metric_group.metrics.first.name)
   end

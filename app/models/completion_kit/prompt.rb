@@ -161,12 +161,11 @@ module CompletionKit
         next unless default_band
 
         criteria_line = lines.find { |line| line.start_with?("Criteria:") }
-        reason_line = lines.find { |line| line.start_with?("Reasoning cue:") }
+        criteria = criteria_line.to_s.sub("Criteria:", "").strip.presence || lines.first.to_s.strip.presence
 
         {
           "range" => range,
-          "criteria" => criteria_line.to_s.sub("Criteria:", "").strip.presence || default_band["criteria"],
-          "reason" => reason_line.to_s.sub("Reasoning cue:", "").strip.presence || default_band["reason"]
+          "criteria" => criteria || default_band["criteria"]
         }
       end
     end

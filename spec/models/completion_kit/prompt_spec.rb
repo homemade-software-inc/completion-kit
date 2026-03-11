@@ -46,7 +46,7 @@ RSpec.describe CompletionKit::Prompt, type: :model do
     expect(prompt.assessment_metrics.length).to eq(1)
     expect(metric.name).to eq("Overall quality")
     expect(metric.persisted?).to eq(false)
-    expect(metric.rubric_text).to include("9-10", "Reasoning cue:")
+    expect(metric.rubric_text).to include("9-10")
   end
 
   it "collects human review examples for a specific metric" do
@@ -81,7 +81,6 @@ RSpec.describe CompletionKit::Prompt, type: :model do
       rubric_text: <<~RUBRIC
         9-10
         Criteria: Excellent
-        Reasoning cue: Ready to ship
       RUBRIC
     )
 
@@ -110,7 +109,6 @@ RSpec.describe CompletionKit::Prompt, type: :model do
 
       unknown
       Criteria: Ignore me
-      Reasoning cue: Ignore me
     RUBRIC
 
     expect(prompt.rubric_bands.first["range"]).to eq("1-2")

@@ -3,28 +3,23 @@ module CompletionKit
     DEFAULT_RUBRIC_BANDS = [
       {
         "range" => "1-2",
-        "criteria" => "The output is irrelevant, contradicted by the input, or fails to answer the requested task in any useful way.",
-        "reason" => "Use this range when the result misses the assignment so badly that a human would discard it and start over."
+        "criteria" => "The output is irrelevant, contradicted by the input, or fails to answer the requested task in any useful way."
       },
       {
         "range" => "3-4",
-        "criteria" => "The output is somewhat related but incomplete, confused, or unreliable enough that it would require major correction.",
-        "reason" => "Use this range when there is a faint connection to the task, but the answer still creates substantial rework or risk."
+        "criteria" => "The output is somewhat related but incomplete, confused, or unreliable enough that it would require major correction."
       },
       {
         "range" => "5-6",
-        "criteria" => "The output is usable in parts and generally on-topic, but it has clear gaps, weak structure, or accuracy issues that need noticeable editing.",
-        "reason" => "Use this range when the answer shows partial understanding yet still falls short of a dependable production result."
+        "criteria" => "The output is usable in parts and generally on-topic, but it has clear gaps, weak structure, or accuracy issues that need noticeable editing."
       },
       {
         "range" => "7-8",
-        "criteria" => "The output is strong, mostly accurate, and aligned to the task, but it misses nuance, polish, or a small requirement.",
-        "reason" => "Use this range when the answer is clearly good and useful, but not the best possible version."
+        "criteria" => "The output is strong, mostly accurate, and aligned to the task, but it misses nuance, polish, or a small requirement."
       },
       {
         "range" => "9-10",
-        "criteria" => "The output is accurate, complete, clear, well-structured, and directly useful with little or no editing.",
-        "reason" => "Use this range when the answer fully satisfies the prompt and input data with the right level of detail and judgment."
+        "criteria" => "The output is accurate, complete, clear, well-structured, and directly useful with little or no editing."
       }
     ].freeze
 
@@ -54,8 +49,7 @@ module CompletionKit
       normalize_rubric_bands(bands).map do |band|
         <<~BAND.strip
           #{band["range"]}
-          Criteria: #{band["criteria"]}
-          Reasoning cue: #{band["reason"]}
+          #{band["criteria"]}
         BAND
       end.join("\n\n")
     end
@@ -64,14 +58,13 @@ module CompletionKit
       band_map = Array(raw_bands).each_with_object({}) do |band, acc|
         next unless band.respond_to?(:to_h)
 
-        normalized = band.to_h.stringify_keys.slice("range", "criteria", "reason")
+        normalized = band.to_h.stringify_keys.slice("range", "criteria")
         range = normalized["range"].to_s.strip
         next unless DEFAULT_RUBRIC_BANDS.any? { |default_band| default_band["range"] == range }
 
         acc[range] = {
           "range" => range,
-          "criteria" => normalized["criteria"].to_s.strip,
-          "reason" => normalized["reason"].to_s.strip
+          "criteria" => normalized["criteria"].to_s.strip
         }
       end
 
@@ -79,8 +72,7 @@ module CompletionKit
         band = band_map[default_band["range"]] || {}
         {
           "range" => default_band["range"],
-          "criteria" => band["criteria"].presence || default_band["criteria"],
-          "reason" => band["reason"].presence || default_band["reason"]
+          "criteria" => band["criteria"].presence || default_band["criteria"]
         }
       end
     end
@@ -113,7 +105,7 @@ module CompletionKit
     def parsed_rubric_bands_from_text(text)
       return [] if text.blank?
 
-      text.to_s.split(/\n{2,}/).filter_map do |chunk|
+      text.to_s.split(/\n{2,}/).each_with_object([]) do |chunk, result|
         lines = chunk.lines.map(&:strip).reject(&:blank?)
         next if lines.empty?
 
@@ -122,12 +114,11 @@ module CompletionKit
         next unless default_band
 
         criteria_line = lines.find { |line| line.start_with?("Criteria:") }
-        reason_line = lines.find { |line| line.start_with?("Reasoning cue:") }
+        criteria = criteria_line.to_s.sub("Criteria:", "").strip.presence || lines.first.to_s.strip.presence
 
-        {
+        result << {
           "range" => range,
-          "criteria" => criteria_line.to_s.sub("Criteria:", "").strip.presence || default_band["criteria"],
-          "reason" => reason_line.to_s.sub("Reasoning cue:", "").strip.presence || default_band["reason"]
+          "criteria" => criteria || default_band["criteria"]
         }
       end
     end

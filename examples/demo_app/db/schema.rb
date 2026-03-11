@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_09_022610) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_11_003606) do
   create_table "completion_kit_metric_group_memberships", force: :cascade do |t|
     t.integer "metric_group_id", null: false
     t.integer "metric_id", null: false
@@ -44,6 +44,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_09_022610) do
     t.text "rubric_bands"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "key"
+    t.index ["key"], name: "index_completion_kit_metrics_on_key", unique: true
   end
 
   create_table "completion_kit_prompts", force: :cascade do |t|
@@ -123,6 +125,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_09_022610) do
     t.string "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "source", default: "ui"
+    t.string "eval_name"
     t.index ["prompt_id"], name: "index_completion_kit_test_runs_on_prompt_id"
   end
 

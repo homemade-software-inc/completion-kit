@@ -50,8 +50,8 @@
     </div>
 
     <div class="ck-actions">
-      <%= form.submit(prompt.persisted? ? "Save prompt" : "Create prompt", class: ck_button_classes(:dark)) %>
       <%= link_to "Cancel", prompts_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= form.submit(prompt.persisted? ? "Save prompt" : "Create prompt", class: ck_button_classes(:dark)) %>
     </div>
   </div>
 <% end %>

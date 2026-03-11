@@ -32,8 +32,8 @@
           </div>
 
           <div class="ck-actions">
-            <%= link_to "Open", prompt_path(prompt), class: ck_button_classes(:dark) %>
             <%= button_to "Delete", prompt_path(prompt), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: ck_button_classes(:red, variant: :outline), form_class: "inline-block" %>
+            <%= link_to "Open", prompt_path(prompt), class: ck_button_classes(:dark) %>
           </div>
         </div>
       </section>

@@ -1,19 +1,26 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li><%= @metric.name %></li>
+</ol>
+
 <section class="ck-page-header">
   <div>
-    <p class="ck-step">Setup</p>
     <h1 class="ck-title"><%= @metric.name %></h1>
-    <p class="ck-lead"><%= @metric.description.presence || "No description yet." %></p>
+    <% if @metric.description.present? %>
+      <p class="ck-lead"><%= @metric.description %></p>
+    <% end %>
   </div>
   <div class="ck-actions">
-    <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:amber, variant: :outline) %>
-    <%= link_to "All metrics", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 
+<% if @metric.guidance_text.present? %>
 <section class="ck-card">
-  <p class="ck-kicker">Assessment guidance</p>
-  <div class="ck-note-box"><%= @metric.guidance_text.presence || "No extra guidance for this metric." %></div>
+  <p class="ck-kicker">Guidance</p>
+  <div class="ck-note-box"><%= @metric.guidance_text %></div>
 </section>
+<% end %>
 
 <section class="ck-card ck-card--spaced">
   <p class="ck-kicker">Rubric</p>
@@ -27,10 +34,6 @@
           <div class="ck-field ck-field--tight">
             <p class="ck-label">Criteria</p>
             <p class="ck-copy"><%= band["criteria"] %></p>
-          </div>
-          <div class="ck-field ck-field--tight">
-            <p class="ck-label">Reasoning cue</p>
-            <p class="ck-copy"><%= band["reason"] %></p>
           </div>
         </div>
       </div>

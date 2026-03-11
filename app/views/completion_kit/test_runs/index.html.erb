@@ -26,8 +26,8 @@
           </div>
 
           <div class="ck-actions">
-            <%= link_to "Open", test_run_path(test_run), class: ck_button_classes(:dark) %>
             <%= button_to "Delete", test_run_path(test_run), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: ck_button_classes(:red, variant: :outline), form_class: "inline-block" %>
+            <%= link_to "Open", test_run_path(test_run), class: ck_button_classes(:dark) %>
           </div>
         </div>
       </section>

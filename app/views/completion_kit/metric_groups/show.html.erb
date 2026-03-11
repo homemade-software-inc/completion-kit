@@ -1,27 +1,32 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li><%= link_to "Groups", metric_groups_path %></li>
+  <li><%= @metric_group.name %></li>
+</ol>
+
 <section class="ck-page-header">
   <div>
-    <p class="ck-step">Setup</p>
     <h1 class="ck-title"><%= @metric_group.name %></h1>
-    <p class="ck-lead"><%= @metric_group.description.presence || "No description yet." %></p>
+    <% if @metric_group.description.present? %>
+      <p class="ck-lead"><%= @metric_group.description %></p>
+    <% end %>
   </div>
   <div class="ck-actions">
-    <%= link_to "Edit", edit_metric_group_path(@metric_group), class: ck_button_classes(:amber, variant: :outline) %>
-    <%= link_to "All groups", metric_groups_path, class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Edit", edit_metric_group_path(@metric_group), class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 
 <section class="ck-card">
-  <p class="ck-kicker">Metrics in this group</p>
+  <p class="ck-kicker">Metrics</p>
   <% if @metric_group.metrics.any? %>
     <div class="ck-list ck-list--compact">
       <% @metric_group.metrics.each do |metric| %>
         <div class="ck-item">
           <div>
-            <p class="ck-item-title"><%= metric.name %></p>
-            <p class="ck-copy"><%= metric.description.presence || "No description yet." %></p>
-          </div>
-          <div class="ck-actions">
-            <%= link_to "Open metric", metric_path(metric), class: ck_button_classes(:dark) %>
+            <p class="ck-item-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></p>
+            <% if metric.description.present? %>
+              <p class="ck-copy"><%= metric.description %></p>
+            <% end %>
           </div>
         </div>
       <% end %>

@@ -1,7 +1,13 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Runs", test_runs_path %></li>
+  <li><%= link_to @test_run.name, test_run_path(@test_run) %></li>
+  <li>Results</li>
+</ol>
+
 <section class="ck-page-header">
   <div>
-    <h1 class="ck-title">Results for <%= @test_run.name %></h1>
-    <p class="ck-meta-copy"><%= link_to "Back to run", test_run_path(@test_run), class: "ck-link" %></p>
+    <h1 class="ck-title">Results</h1>
+    <p class="ck-meta-copy"><%= @test_run.name %> · <%= @test_run.prompt.display_name %></p>
   </div>
 </section>
 
@@ -31,12 +37,12 @@
 
         <div class="ck-stack">
           <div>
-            <p class="ck-minor-label">Input row</p>
+            <p class="ck-minor-label">Input</p>
             <pre class="ck-code"><%= JSON.parse(result.input_data).to_json(pretty: true) rescue result.input_data %></pre>
           </div>
 
           <div>
-            <p class="ck-minor-label">Model output</p>
+            <p class="ck-minor-label">Output</p>
             <pre class="ck-code"><%= result.output_text %></pre>
           </div>
         </div>

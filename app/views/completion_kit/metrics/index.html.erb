@@ -5,7 +5,7 @@
   </div>
   <div class="ck-actions">
     <%= link_to "New metric", new_metric_path, class: ck_button_classes(:dark) %>
-    <%= link_to "Metric groups", metric_groups_path, class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Groups", metric_groups_path, class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 
@@ -16,12 +16,13 @@
         <div class="ck-split">
           <div class="ck-stack">
             <h2 class="ck-card-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></h2>
-            <p class="ck-copy"><%= metric.description.presence || "No description yet." %></p>
-            <p class="ck-note"><%= metric.guidance_text.presence || "No extra guidance yet." %></p>
+            <% if metric.description.present? %>
+              <p class="ck-copy"><%= metric.description %></p>
+            <% end %>
           </div>
           <div class="ck-actions">
+            <%= link_to "Edit", edit_metric_path(metric), class: ck_button_classes(:light, variant: :outline) %>
             <%= link_to "Open", metric_path(metric), class: ck_button_classes(:dark) %>
-            <%= link_to "Edit", edit_metric_path(metric), class: ck_button_classes(:amber, variant: :outline) %>
           </div>
         </div>
       </section>

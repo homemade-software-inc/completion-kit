@@ -21,7 +21,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
   it "builds prompts with expected output and parses the judge response" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
 
-    allow(client).to receive(:generate_completion).with(include("Expected output:", "Structured rubric:", "Reasoning cue:"), model: "gpt-4.1").and_return("Score: 8.8\nFeedback: Strong match")
+    allow(client).to receive(:generate_completion).with(include("Expected output:", "Structured rubric:"), model: "gpt-4.1").and_return("Score: 8.8\nFeedback: Strong match")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
     service = described_class.new

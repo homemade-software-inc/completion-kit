@@ -44,10 +44,6 @@
                 <textarea id="metric_rubric_bands_<%= index %>_criteria" name="metric[rubric_bands][<%= index %>][criteria]" rows="3" class="ck-input ck-input--area"><%= band["criteria"] %></textarea>
               </div>
 
-              <div class="ck-field ck-field--tight">
-                <label class="ck-label" for="metric_rubric_bands_<%= index %>_reason">Reasoning cue</label>
-                <textarea id="metric_rubric_bands_<%= index %>_reason" name="metric[rubric_bands][<%= index %>][reason]" rows="3" class="ck-input ck-input--area"><%= band["reason"] %></textarea>
-              </div>
             </div>
           </div>
         <% end %>
@@ -55,8 +51,8 @@
     </div>
 
     <div class="ck-actions">
-      <%= form.submit(metric.persisted? ? "Save metric" : "Create metric", class: ck_button_classes(:dark)) %>
       <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= form.submit(metric.persisted? ? "Save metric" : "Create metric", class: ck_button_classes(:dark)) %>
     </div>
   </div>
 <% end %>

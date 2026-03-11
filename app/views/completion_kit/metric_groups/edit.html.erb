@@ -1,11 +1,13 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li><%= link_to "Groups", metric_groups_path %></li>
+  <li><%= link_to @metric_group.name, metric_group_path(@metric_group) %></li>
+  <li>Edit</li>
+</ol>
+
 <section class="ck-page-header">
   <div>
-    <p class="ck-step">Setup</p>
     <h1 class="ck-title">Edit metric group</h1>
-    <p class="ck-lead">Change which metrics should be applied together.</p>
-  </div>
-  <div class="ck-actions">
-    <%= link_to "View group", metric_group_path(@metric_group), class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 

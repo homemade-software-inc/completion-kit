@@ -34,8 +34,8 @@ input,expected_output
     </div>
 
     <div class="ck-actions">
-      <%= form.submit(test_run.persisted? ? "Save CSV run" : "Create CSV run", class: ck_button_classes(:dark)) %>
       <%= link_to "Cancel", test_runs_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= form.submit(test_run.persisted? ? "Save run" : "Create run", class: ck_button_classes(:dark)) %>
     </div>
   </div>
 <% end %>

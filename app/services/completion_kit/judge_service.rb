@@ -26,7 +26,7 @@ module CompletionKit
         You are an expert evaluator of AI-generated content.
         Score the AI-generated output on a rubric from 1 to 10.
         First choose the best fitting score range, then choose the exact score within that range.
-        Use each range's criteria and reasoning cue to justify the score.
+        Use each range's criteria to justify the score.
 
         Original prompt template:
         #{prompt || "Not provided"}

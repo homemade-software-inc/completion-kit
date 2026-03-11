@@ -1,5 +1,10 @@
 <% unscored_count = @test_run.test_results.where(quality_score: nil).count %>
 
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Runs", test_runs_path %></li>
+  <li><%= @test_run.name %></li>
+</ol>
+
 <section class="ck-page-header">
   <div>
     <div class="ck-inline">
@@ -9,16 +14,16 @@
         <span class="ck-chip ck-chip--soft">eval</span>
       <% end %>
     </div>
-    <p class="ck-meta-copy">Prompt: <%= link_to @test_run.prompt.display_name, prompt_path(@test_run.prompt), class: "ck-link" %> · <%= @test_run.prompt.llm_model %> · <%= @test_run.created_at.strftime("%Y-%m-%d %H:%M") %></p>
+    <p class="ck-meta-copy"><%= link_to @test_run.prompt.display_name, prompt_path(@test_run.prompt), class: "ck-link" %> · <%= @test_run.prompt.llm_model %> · <%= @test_run.created_at.strftime("%Y-%m-%d %H:%M") %></p>
   </div>
 
   <div class="ck-actions">
-    <%= button_to "Generate outputs", run_test_run_path(@test_run), method: :post, class: ck_button_classes(:green), form_class: "inline-block" %>
+    <%= link_to "Edit", edit_test_run_path(@test_run), class: ck_button_classes(:light, variant: :outline) %>
     <% if @test_run.test_results.any? %>
-      <%= button_to "Run AI review", evaluate_test_run_path(@test_run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
-      <%= link_to "Open results", test_run_test_results_path(@test_run), class: ck_button_classes(:blue, variant: :outline) %>
+      <%= link_to "Results", test_run_test_results_path(@test_run), class: ck_button_classes(:light, variant: :outline) %>
+      <%= button_to "Run AI review", evaluate_test_run_path(@test_run), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
     <% end %>
-    <%= link_to "Edit", edit_test_run_path(@test_run), class: ck_button_classes(:amber, variant: :outline) %>
+    <%= button_to "Generate outputs", run_test_run_path(@test_run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
   </div>
 </section>
 
@@ -73,12 +78,12 @@
 
           <div class="ck-stack">
             <div>
-              <p class="ck-minor-label">Input row</p>
+              <p class="ck-minor-label">Input</p>
               <pre class="ck-code"><%= result.input_data %></pre>
             </div>
 
             <div>
-              <p class="ck-minor-label">Model output</p>
+              <p class="ck-minor-label">Output</p>
               <pre class="ck-code"><%= result.output_text %></pre>
             </div>
           </div>
@@ -88,6 +93,6 @@
   </section>
 <% else %>
   <div class="ck-empty ck-empty--spaced">
-    No results yet.
+    No results yet. Generate outputs to see results here.
   </div>
 <% end %>

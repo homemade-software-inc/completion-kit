@@ -39,8 +39,8 @@
     </div>
 
     <div class="ck-actions">
-      <%= form.submit(metric_group.persisted? ? "Save metric group" : "Create metric group", class: ck_button_classes(:dark)) %>
       <%= link_to "Cancel", metric_groups_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= form.submit(metric_group.persisted? ? "Save group" : "Create group", class: ck_button_classes(:dark)) %>
     </div>
   </div>
 <% end %>
