@@ -16,8 +16,8 @@
         <div class="ck-split">
           <div class="ck-stack">
             <h2 class="ck-card-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></h2>
-            <% if metric.description.present? %>
-              <p class="ck-copy"><%= metric.description %></p>
+            <% if metric.criteria.present? %>
+              <p class="ck-copy"><%= truncate(metric.criteria, length: 120) %></p>
             <% end %>
           </div>
           <div class="ck-actions">
