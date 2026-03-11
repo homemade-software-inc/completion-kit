@@ -69,6 +69,12 @@ ActiveRecord::Schema.define do
     t.timestamps
   end
 
+  create_table :completion_kit_datasets, force: true do |t|
+    t.string :name, null: false
+    t.text :csv_data, null: false
+    t.timestamps
+  end
+
   create_table :completion_kit_prompts, force: true do |t|
     t.string :name
     t.text :description
@@ -77,54 +83,36 @@ ActiveRecord::Schema.define do
     t.string :family_key
     t.integer :version_number
     t.boolean :current, default: true, null: false
-    t.string :assessment_model
-    t.text :review_guidance
-    t.text :rubric_text
-    t.text :rubric_bands
     t.datetime :published_at
-    t.references :metric_group
     t.timestamps
   end
 
-  create_table :completion_kit_test_runs, force: true do |t|
+  create_table :completion_kit_runs, force: true do |t|
     t.string :name
-    t.text :description
     t.references :prompt, null: false
-    t.text :csv_data
+    t.references :dataset
+    t.references :metric_group
+    t.string :judge_model
     t.string :status
-    t.string :source, default: "ui"
-    t.string :eval_name
     t.timestamps
   end
 
-  create_table :completion_kit_test_results, force: true do |t|
-    t.references :test_run, null: false
-    t.string :status
+  create_table :completion_kit_responses, force: true do |t|
+    t.references :run, null: false
     t.text :input_data
-    t.text :output_text
+    t.text :response_text
     t.text :expected_output
-    t.text :judge_feedback
-    t.decimal :quality_score, precision: 5, scale: 2
-    t.decimal :human_score, precision: 4, scale: 1
-    t.text :human_feedback
-    t.string :human_reviewer_name
-    t.datetime :human_reviewed_at
     t.timestamps
   end
 
-  create_table :completion_kit_test_result_metric_assessments, force: true do |t|
-    t.references :test_result, null: false
+  create_table :completion_kit_reviews, force: true do |t|
+    t.references :response, null: false
     t.references :metric
     t.string :metric_name
     t.text :criteria
-    t.text :rubric_text
     t.string :status
     t.decimal :ai_score, precision: 4, scale: 1
     t.text :ai_feedback
-    t.decimal :human_score, precision: 4, scale: 1
-    t.text :human_feedback
-    t.string :human_reviewer_name
-    t.datetime :human_reviewed_at
     t.timestamps
   end
 end

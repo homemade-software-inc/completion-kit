@@ -1,6 +1,6 @@
 module CompletionKit
   class EvalRunner
-    attr_reader :eval_definition, :test_run
+    attr_reader :eval_definition, :run
 
     def initialize(eval_definition)
       @eval_definition = eval_definition
@@ -22,21 +22,27 @@ module CompletionKit
         return error_result("Unknown metric keys: #{missing.join(", ")}. Available: #{available}")
       end
 
-      @test_run = TestRun.create!(
-        prompt: prompt,
-        name: "eval: #{eval_definition.eval_name} (#{Time.current.strftime("%Y-%m-%d %H:%M")})",
-        csv_data: csv_data,
-        source: "eval_dsl",
-        eval_name: eval_definition.eval_name
+      metric_group = available_metrics.values.first&.metric_groups&.first
+
+      dataset = Dataset.create!(
+        name: "eval: #{eval_definition.eval_name}",
+        csv_data: csv_data
       )
 
-      @test_run.run_tests
-      @test_run.evaluate_results
+      @run = Run.create!(
+        prompt: prompt,
+        name: "eval: #{eval_definition.eval_name} (#{Time.current.strftime("%Y-%m-%d %H:%M")})",
+        dataset: dataset,
+        judge_model: prompt.llm_model,
+        metric_group: metric_group
+      )
 
-      row_count = @test_run.test_results.count
+      @run.generate_responses!
+
+      row_count = @run.responses.count
       metric_results = eval_definition.metrics.map do |metric_def|
-        assessments = TestResultMetricAssessment.joins(:test_result)
-          .where(CompletionKit::TestResult.table_name => { test_run_id: @test_run.id })
+        assessments = Review.joins(:response)
+          .where(completion_kit_responses: { run_id: @run.id })
           .where(metric_key_or_name_clause(metric_def[:key]))
 
         scores = assessments.where.not(ai_score: nil).pluck(:ai_score).map(&:to_f)
@@ -55,7 +61,7 @@ module CompletionKit
         row_count: row_count,
         metrics: metric_results,
         passed: metric_results.all? { |m| m[:passed] },
-        test_run_id: @test_run.id
+        run_id: @run.id
       }
     rescue StandardError => e
       error_result(e.message)

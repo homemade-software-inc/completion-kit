@@ -10,7 +10,7 @@ module CompletionKit
 
     has_many :metric_group_memberships, dependent: :destroy
     has_many :metric_groups, through: :metric_group_memberships
-    has_many :test_result_metric_assessments, dependent: :nullify
+    has_many :reviews, dependent: :nullify
 
     serialize :rubric_bands, coder: JSON
     serialize :evaluation_steps, coder: JSON
