@@ -69,14 +69,23 @@
             <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][id]", assessment.id %>
             <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][metric_id]", assessment.metric_id %>
             <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][metric_name]", assessment.metric_name %>
-            <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][guidance_text]", assessment.guidance_text %>
+            <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][criteria]", assessment.criteria %>
             <%= hidden_field_tag "test_result[metric_assessments_attributes][#{index}][rubric_text]", assessment.rubric_text %>
           </div>
 
           <div class="ck-rubric-row__fields">
             <div class="ck-field ck-field--tight">
               <p class="ck-label">AI score</p>
-              <p class="ck-copy"><%= assessment.ai_score.present? ? assessment.ai_score : "Pending" %></p>
+              <div class="ck-inline">
+                <% if assessment.ai_score.present? %>
+                  <% 5.times do |i| %>
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke-width="1.75" class="ck-star <%= i < assessment.ai_score.to_i ? "ck-star--filled" : "ck-star--empty" %>"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <% end %>
+                  <span class="ck-meta-copy" style="margin-left: 0.25rem;"><%= assessment.ai_score %></span>
+                <% else %>
+                  <p class="ck-copy">Pending</p>
+                <% end %>
+              </div>
             </div>
 
             <div class="ck-field ck-field--tight">
@@ -84,9 +93,16 @@
               <div class="ck-note-box"><%= assessment.ai_feedback.presence || "None." %></div>
             </div>
 
+            <% if assessment.rubric_text.present? %>
+              <div class="ck-field ck-field--tight">
+                <p class="ck-label">Rubric reference</p>
+                <div class="ck-note-box" style="font-size: 0.8rem;"><%= simple_format(assessment.rubric_text) %></div>
+              </div>
+            <% end %>
+
             <div class="ck-field ck-field--tight">
-              <label class="ck-label" for="metric_assessment_<%= index %>_score">Human score (1-10)</label>
-              <input id="metric_assessment_<%= index %>_score" name="test_result[metric_assessments_attributes][<%= index %>][human_score]" type="number" step="0.1" min="1" max="10" value="<%= assessment.human_score %>" class="ck-input">
+              <label class="ck-label" for="metric_assessment_<%= index %>_score">Human score (1-5)</label>
+              <input id="metric_assessment_<%= index %>_score" name="test_result[metric_assessments_attributes][<%= index %>][human_score]" type="number" step="1" min="1" max="5" value="<%= assessment.human_score %>" class="ck-input">
             </div>
 
             <div class="ck-field ck-field--tight">
