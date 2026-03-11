@@ -3,12 +3,12 @@ module CompletionKit
     before_action :set_prompt, only: [:show, :edit, :update, :destroy, :publish, :new_version]
     
     def index
-      @prompts = Prompt.current_versions.order(created_at: :desc)
+      @prompts = Prompt.current_versions.includes(:runs).order(created_at: :desc)
     end
     
     def show
       @family_versions = @prompt.family_versions
-      @runs = @prompt.runs.includes(:dataset, :responses).order(created_at: :desc)
+      @runs = @prompt.runs.includes(:dataset, responses: :reviews).order(created_at: :desc)
     end
     
     def new

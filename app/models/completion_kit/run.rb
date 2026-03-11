@@ -22,7 +22,8 @@ module CompletionKit
     end
 
     def avg_score
-      scores = responses.joins(:reviews).where.not(completion_kit_reviews: { ai_score: nil }).pluck("completion_kit_reviews.ai_score").map(&:to_f)
+      all_reviews = responses.flat_map(&:reviews)
+      scores = all_reviews.map(&:ai_score).compact.map(&:to_f)
       return nil if scores.empty?
 
       (scores.sum / scores.length).round(2)

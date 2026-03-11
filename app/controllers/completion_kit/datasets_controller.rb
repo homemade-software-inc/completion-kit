@@ -3,11 +3,11 @@ module CompletionKit
     before_action :set_dataset, only: [:show, :edit, :update, :destroy]
 
     def index
-      @datasets = Dataset.order(created_at: :desc)
+      @datasets = Dataset.includes(:runs).order(created_at: :desc)
     end
 
     def show
-      @runs = @dataset.runs.includes(:prompt).order(created_at: :desc)
+      @runs = @dataset.runs.includes(:prompt, :responses).order(created_at: :desc)
     end
 
     def new

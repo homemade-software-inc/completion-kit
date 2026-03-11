@@ -9,14 +9,14 @@ module CompletionKit
     validates :response_text, presence: true
 
     def score
-      scores = reviews.where.not(ai_score: nil).pluck(:ai_score).map(&:to_f)
+      scores = reviews.select { |r| r.ai_score.present? }.map { |r| r.ai_score.to_f }
       return nil if scores.empty?
 
       (scores.sum / scores.length).round(2)
     end
 
     def reviewed?
-      reviews.where.not(ai_score: nil).exists?
+      reviews.any? { |r| r.ai_score.present? }
     end
   end
 end

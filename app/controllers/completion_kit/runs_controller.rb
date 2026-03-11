@@ -1,45 +1,39 @@
 module CompletionKit
   class RunsController < ApplicationController
     before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :judge]
+    before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
-      @runs = Run.includes(:prompt, :dataset, :responses).order(created_at: :desc)
+      @runs = Run.includes(:prompt, :dataset, responses: :reviews).order(created_at: :desc)
     end
 
     def show
       @responses = if @run.judge_configured? && params[:sort] == "score_asc"
                      @run.responses
                        .left_joins(:reviews)
+                       .includes(:reviews)
                        .group("completion_kit_responses.id")
                        .order(Arel.sql("AVG(completion_kit_reviews.ai_score) ASC NULLS LAST"))
                    elsif @run.judge_configured?
                      @run.responses
                        .left_joins(:reviews)
+                       .includes(:reviews)
                        .group("completion_kit_responses.id")
                        .order(Arel.sql("AVG(completion_kit_reviews.ai_score) DESC NULLS LAST"))
                    else
-                     @run.responses.order(:id)
+                     @run.responses.includes(:reviews).order(:id)
                    end
     end
 
     def new
       @run = Run.new(prompt_id: params[:prompt_id])
-      @prompts = Prompt.order(:name)
-      @datasets = Dataset.order(:name)
-      @metric_groups = MetricGroup.order(:name)
     end
 
     def edit
-      @prompts = Prompt.order(:name)
-      @datasets = Dataset.order(:name)
-      @metric_groups = MetricGroup.order(:name)
     end
 
     def create
       @run = Run.new(run_params)
-      @prompts = Prompt.order(:name)
-      @datasets = Dataset.order(:name)
-      @metric_groups = MetricGroup.order(:name)
 
       if @run.save
         redirect_to runs_path, notice: "Run was successfully created."
@@ -49,10 +43,6 @@ module CompletionKit
     end
 
     def update
-      @prompts = Prompt.order(:name)
-      @datasets = Dataset.order(:name)
-      @metric_groups = MetricGroup.order(:name)
-
       if @run.update(run_params)
         redirect_to @run, notice: "Run was successfully updated."
       else
@@ -89,6 +79,12 @@ module CompletionKit
 
     def set_run
       @run = Run.find(params[:id])
+    end
+
+    def load_form_collections
+      @prompts = Prompt.order(:name)
+      @datasets = Dataset.order(:name)
+      @metric_groups = MetricGroup.order(:name)
     end
 
     def run_params
