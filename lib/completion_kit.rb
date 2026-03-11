@@ -53,8 +53,9 @@ module CompletionKit
         metrics: prompt.assessment_metrics.map do |metric|
           {
             name: metric.name,
-            guidance_text: metric.guidance_text,
-            rubric_text: metric.rubric_text,
+            criteria: metric.respond_to?(:criteria) ? metric.criteria : nil,
+            evaluation_steps: metric.respond_to?(:evaluation_steps) ? metric.evaluation_steps : [],
+            rubric_text: metric.respond_to?(:display_rubric_text) ? metric.display_rubric_text : metric.rubric_text,
             rubric_bands: metric.respond_to?(:rubric_bands_for_form) ? metric.rubric_bands_for_form : metric.rubric_bands
           }
         end

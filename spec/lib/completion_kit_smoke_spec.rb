@@ -74,17 +74,21 @@ RSpec.describe "CompletionKit boot smoke" do
 
     expect(payload[:metric_group]).to be_nil
     expect(payload[:metrics].first[:name]).to eq("Overall quality")
-    expect(payload[:metrics].first[:rubric_bands].first["range"]).to eq("1-2")
+    expect(payload[:metrics].first[:criteria]).to eq(prompt.effective_review_guidance)
+    expect(payload[:metrics].first[:rubric_bands].first["stars"]).to eq(5)
   end
 
   it "uses raw rubric bands when a metric-like payload object does not expose rubric_bands_for_form" do
     prompt = create(:completion_kit_prompt, name: "Stub Prompt", family_key: "stub-family", metric_group: nil)
-    metric_like = Struct.new(:name, :guidance_text, :rubric_text, :rubric_bands).new("Stub", "Guide", "Rubric", [{ "range" => "1-2" }])
+    metric_like = Struct.new(:name, :rubric_text, :rubric_bands).new("Stub", "Rubric", [{ "stars" => 3 }])
 
     allow(CompletionKit).to receive(:current_prompt).with("stub-family").and_return(prompt)
     allow(prompt).to receive(:assessment_metrics).and_return([metric_like])
 
-    expect(CompletionKit.current_prompt_payload("stub-family")[:metrics].first[:rubric_bands]).to eq([{ "range" => "1-2" }])
+    result = CompletionKit.current_prompt_payload("stub-family")[:metrics].first
+    expect(result[:rubric_bands]).to eq([{ "stars" => 3 }])
+    expect(result[:criteria]).to be_nil
+    expect(result[:evaluation_steps]).to eq([])
   end
 
   it "initializes configuration defaults from ENV and registers the precompiled asset" do
@@ -101,8 +105,8 @@ RSpec.describe "CompletionKit boot smoke" do
     expect(config.llama_api_key).to eq("env-llama")
     expect(config.llama_api_endpoint).to eq("https://env-llama.example.test")
     expect(config.judge_model).to eq("gpt-4.1")
-    expect(config.high_quality_threshold).to eq(8)
-    expect(config.medium_quality_threshold).to eq(5)
+    expect(config.high_quality_threshold).to eq(4)
+    expect(config.medium_quality_threshold).to eq(3)
 
     asset_initializer = CompletionKit::Engine.initializers.find { |initializer| initializer.name == "completion_kit.assets" }
     assets = Struct.new(:precompile).new([])
