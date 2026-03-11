@@ -1,9 +1,10 @@
 require "csv"
 require "json"
 
-CompletionKit::TestResultMetricAssessment.delete_all
-CompletionKit::TestResult.delete_all
-CompletionKit::TestRun.delete_all
+CompletionKit::Review.delete_all
+CompletionKit::Response.delete_all
+CompletionKit::Run.delete_all
+CompletionKit::Dataset.delete_all
 CompletionKit::Prompt.delete_all
 CompletionKit::MetricGroupMembership.delete_all
 CompletionKit::MetricGroup.delete_all
@@ -54,8 +55,6 @@ prompt_v1 = CompletionKit::Prompt.create!(
     - Recommended next action
   TEMPLATE
   llm_model: "gpt-4.1",
-  assessment_model: "gpt-4.1",
-  metric_group: support_metrics,
   family_key: "ticket-summarizer",
   version_number: 1,
   current: false,
@@ -80,8 +79,6 @@ prompt_v2 = CompletionKit::Prompt.create!(
     - No hedging, no filler, no preamble
   TEMPLATE
   llm_model: "gpt-4.1",
-  assessment_model: "gpt-4.1",
-  metric_group: support_metrics,
   family_key: "ticket-summarizer",
   version_number: 2,
   current: true,
@@ -121,12 +118,18 @@ tickets = [
   }
 ]
 
-v1_run = CompletionKit::TestRun.create!(
-  prompt: prompt_v1,
-  name: "v1 baseline",
-  description: "First run with the basic prompt. Scores are decent but the outputs are vague.",
-  status: "evaluated",
+ticket_dataset = CompletionKit::Dataset.create!(
+  name: "Support tickets",
   csv_data: csv_from_rows(tickets)
+)
+
+v1_run = CompletionKit::Run.create!(
+  prompt: prompt_v1,
+  dataset: ticket_dataset,
+  judge_model: "gpt-4.1",
+  metric_group: support_metrics,
+  name: "v1 baseline",
+  status: "completed"
 )
 
 v1_outputs = [
@@ -178,22 +181,18 @@ v1_outputs = [
 ]
 
 v1_outputs.each_with_index do |output, idx|
-  result = v1_run.test_results.create!(
-    status: "evaluated",
+  result = v1_run.responses.create!(
     input_data: tickets[idx].to_json,
-    output_text: output[:text],
-    expected_output: tickets[idx]["expected_output"],
-    quality_score: output[:scores].values.sum / output[:scores].size.to_f,
-    judge_feedback: output[:feedback].map { |metric, fb| "#{metric}: #{fb}" }.join("\n\n")
+    response_text: output[:text],
+    expected_output: tickets[idx]["expected_output"]
   )
 
   output[:scores].each do |metric_name, score|
     metric = CompletionKit::Metric.find_by!(name: metric_name)
-    result.metric_assessments.create!(
+    result.reviews.create!(
       metric: metric,
       metric_name: metric_name,
       criteria: metric.criteria,
-      rubric_text: metric.display_rubric_text,
       status: "evaluated",
       ai_score: score,
       ai_feedback: output[:feedback][metric_name]
@@ -201,12 +200,13 @@ v1_outputs.each_with_index do |output, idx|
   end
 end
 
-v2_run = CompletionKit::TestRun.create!(
+v2_run = CompletionKit::Run.create!(
   prompt: prompt_v2,
+  dataset: ticket_dataset,
+  judge_model: "gpt-4.1",
+  metric_group: support_metrics,
   name: "v2 improved",
-  description: "Same dataset, better prompt. Scores jumped across every metric.",
-  status: "evaluated",
-  csv_data: csv_from_rows(tickets)
+  status: "completed"
 )
 
 v2_outputs = [
@@ -258,22 +258,18 @@ v2_outputs = [
 ]
 
 v2_outputs.each_with_index do |output, idx|
-  result = v2_run.test_results.create!(
-    status: "evaluated",
+  result = v2_run.responses.create!(
     input_data: tickets[idx].to_json,
-    output_text: output[:text],
-    expected_output: tickets[idx]["expected_output"],
-    quality_score: output[:scores].values.sum / output[:scores].size.to_f,
-    judge_feedback: output[:feedback].map { |metric, fb| "#{metric}: #{fb}" }.join("\n\n")
+    response_text: output[:text],
+    expected_output: tickets[idx]["expected_output"]
   )
 
   output[:scores].each do |metric_name, score|
     metric = CompletionKit::Metric.find_by!(name: metric_name)
-    result.metric_assessments.create!(
+    result.reviews.create!(
       metric: metric,
       metric_name: metric_name,
       criteria: metric.criteria,
-      rubric_text: metric.display_rubric_text,
       status: "evaluated",
       ai_score: score,
       ai_feedback: output[:feedback][metric_name]
@@ -281,11 +277,8 @@ v2_outputs.each_with_index do |output, idx|
   end
 end
 
-draft_run = CompletionKit::TestRun.create!(
-  prompt: prompt_v2,
-  name: "New batch (draft)",
-  description: "Ready to run — generate outputs to see how v2 handles fresh data.",
-  status: "draft",
+draft_dataset = CompletionKit::Dataset.create!(
+  name: "New batch",
   csv_data: csv_from_rows([
     {
       "customer" => "Pinnacle Finance",
@@ -302,10 +295,18 @@ draft_run = CompletionKit::TestRun.create!(
   ])
 )
 
+CompletionKit::Run.create!(
+  prompt: prompt_v2,
+  dataset: draft_dataset,
+  name: "New batch (pending)",
+  status: "pending"
+)
+
 puts "Created #{CompletionKit::Prompt.count} prompts (2 versions of the same prompt)"
 puts "Created #{CompletionKit::Metric.count} metrics in #{CompletionKit::MetricGroup.count} group"
-puts "Created #{CompletionKit::TestRun.count} runs (v1 baseline, v2 improved, 1 draft)"
-puts "Created #{CompletionKit::TestResult.count} scored results with #{CompletionKit::TestResultMetricAssessment.count} metric assessments"
+puts "Created #{CompletionKit::Dataset.count} datasets"
+puts "Created #{CompletionKit::Run.count} runs (v1 baseline, v2 improved, 1 pending)"
+puts "Created #{CompletionKit::Response.count} responses with #{CompletionKit::Review.count} reviews"
 puts ""
 puts "The story: v1 averaged ~2.6 across metrics. v2 averages ~5.0."
 puts "Open the UI to see the version comparison and per-metric breakdowns."

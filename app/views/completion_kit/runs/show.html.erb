@@ -40,7 +40,7 @@
 <% if @run.dataset %>
   <details class="ck-details">
     <summary class="ck-details__summary">Dataset preview</summary>
-    <pre class="ck-code ck-code--dark"><%= @run.dataset.csv_data.to_s.lines.first(10).join %><% if @run.dataset.csv_data.to_s.lines.count > 10 %>...</% end %></pre>
+    <pre class="ck-code ck-code--dark"><%= @run.dataset.csv_data.to_s.lines.first(10).join %><% if @run.dataset.csv_data.to_s.lines.count > 10 %>...<% end %></pre>
   </details>
 <% end %>
 
