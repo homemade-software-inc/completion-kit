@@ -16,7 +16,7 @@
 
       <nav class="ck-nav">
         <%= link_to "Prompts", prompts_path, class: current_page?(prompts_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Runs", test_runs_path, class: current_page?(test_runs_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Runs", runs_path, class: current_page?(runs_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
         <%= link_to "Metrics", metrics_path, class: current_page?(metrics_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
         <%= link_to "Providers", provider_credentials_path, class: current_page?(provider_credentials_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
       </nav>

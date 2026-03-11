@@ -8,22 +8,19 @@ module CompletionKit
     
     def show
       @family_versions = @prompt.family_versions
-      @metric_groups = MetricGroup.order(:name)
+      @runs = @prompt.runs.includes(:dataset, :responses).order(created_at: :desc)
     end
     
     def new
       @prompt = Prompt.new
-      @metric_groups = MetricGroup.order(:name)
     end
-    
+
     def edit
-      @metric_groups = MetricGroup.order(:name)
     end
-    
+
     def create
       @prompt = Prompt.new(prompt_params)
-      @metric_groups = MetricGroup.order(:name)
-      
+
       if @prompt.save
         redirect_to prompt_path(@prompt), notice: "Prompt version was successfully created."
       else
@@ -32,9 +29,7 @@ module CompletionKit
     end
     
     def update
-      @metric_groups = MetricGroup.order(:name)
-
-      if @prompt.test_runs.exists?
+      if @prompt.runs.exists?
         new_prompt = @prompt.clone_as_new_version(prompt_params.to_h)
         redirect_to edit_prompt_path(new_prompt), notice: "Created #{new_prompt.version_label}. The previous version is unchanged because it already has runs."
       elsif @prompt.update(prompt_params)
@@ -70,12 +65,7 @@ module CompletionKit
         :name,
         :description,
         :template,
-        :llm_model,
-        :assessment_model,
-        :metric_group_id,
-        :review_guidance,
-        :rubric_text,
-        rubric_bands: [:range, :criteria, :reason]
+        :llm_model
       )
     end
   end

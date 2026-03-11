@@ -35,7 +35,9 @@ module CompletionKit
         "ck-badge ck-badge--pending"
       when :running
         "ck-badge ck-badge--running"
-      when :completed, :evaluated
+      when :generating, :judging
+        "ck-badge ck-badge--running"
+      when :completed
         "ck-badge ck-badge--high"
       when :failed
         "ck-badge ck-badge--low"

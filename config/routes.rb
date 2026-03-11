@@ -1,5 +1,6 @@
 CompletionKit::Engine.routes.draw do
   root to: "prompts#index"
+
   resources :prompts do
     member do
       post :publish
@@ -7,20 +8,17 @@ CompletionKit::Engine.routes.draw do
     end
   end
 
+  resources :datasets
   resources :metrics
   resources :metric_groups
-  resources :provider_credentials, only: [:index, :new, :create, :edit, :update]
-  
-  resources :test_runs do
-    member do
-      post :run
-      post :evaluate
-    end
 
-    resources :test_results, only: [:index, :show] do
-      member do
-        patch :human_review
-      end
+  resources :runs do
+    member do
+      post :generate
+      post :judge
     end
+    resources :responses, only: [:show]
   end
+
+  resources :provider_credentials, only: [:index, :new, :create, :edit, :update]
 end

@@ -23,7 +23,7 @@
     <% end %>
     <%= button_to "New version", new_version_prompt_path(@prompt), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
     <%= link_to "Edit", edit_prompt_path(@prompt), class: ck_button_classes(:light, variant: :outline) %>
-    <%= link_to "New run", new_test_run_path(prompt_id: @prompt.id), class: ck_button_classes(:dark) %>
+    <%= link_to "New run", new_run_path(prompt_id: @prompt.id), class: ck_button_classes(:dark) %>
   </div>
 </section>
 
@@ -38,16 +38,8 @@
 
     <dl class="ck-stat-list">
       <div class="ck-stat-row">
-        <dt>Judge model</dt>
-        <dd><%= @prompt.assessment_model %></dd>
-      </div>
-      <div class="ck-stat-row">
-        <dt>Metrics</dt>
-        <dd><%= @prompt.metric_group&.name || "Default" %></dd>
-      </div>
-      <div class="ck-stat-row">
         <dt>Runs</dt>
-        <dd><%= @prompt.test_runs.count %></dd>
+        <dd><%= @prompt.runs.count %></dd>
       </div>
       <div class="ck-stat-row">
         <dt>Published</dt>
@@ -66,40 +58,6 @@
   </div>
 </section>
 
-<% if @prompt.assessment_metrics.any? %>
-<section class="ck-card ck-card--spaced">
-  <p class="ck-kicker">Metrics</p>
-
-  <div class="ck-list ck-list--compact">
-    <% @prompt.assessment_metrics.each do |metric| %>
-      <div class="ck-item">
-        <div class="ck-stack">
-          <p class="ck-item-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></p>
-          <% if metric.criteria.present? %>
-            <p class="ck-copy"><%= metric.criteria %></p>
-          <% end %>
-        </div>
-      </div>
-
-      <div class="ck-rubric-display">
-        <% metric.rubric_bands_for_form.each do |band| %>
-          <div class="ck-rubric-row ck-rubric-row--display">
-            <div class="ck-rubric-row__range">
-              <span class="ck-rubric-range"><%= band["stars"] %> ★</span>
-            </div>
-            <div class="ck-rubric-row__fields">
-              <div class="ck-field ck-field--tight">
-                <p class="ck-label">Description</p>
-                <p class="ck-copy"><%= band["description"] %></p>
-              </div>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    <% end %>
-  </div>
-</section>
-<% end %>
 
 <% if @family_versions.length > 1 %>
 <section class="ck-card ck-card--spaced">
@@ -110,7 +68,7 @@
       <div class="ck-item">
         <div>
           <p class="ck-item-title"><%= link_to version.display_name, prompt_path(version), class: "ck-link" %></p>
-          <p class="ck-meta-copy"><%= version.llm_model %> · <%= pluralize(version.test_runs.count, "run") %></p>
+          <p class="ck-meta-copy"><%= version.llm_model %> · <%= pluralize(version.runs.count, "run") %></p>
         </div>
         <div class="ck-actions">
           <% unless version.current? %>
@@ -123,16 +81,16 @@
 </section>
 <% end %>
 
-<% if @prompt.test_runs.any? %>
+<% if @runs.any? %>
 <section class="ck-card ck-card--spaced">
   <p class="ck-kicker">Runs</p>
 
   <div class="ck-list ck-list--compact">
-    <% @prompt.test_runs.order(created_at: :desc).each do |test_run| %>
+    <% @runs.each do |run| %>
       <div class="ck-item">
         <div>
-          <p class="ck-item-title"><%= link_to test_run.name, test_run_path(test_run), class: "ck-link" %></p>
-          <p class="ck-meta-copy"><%= test_run.created_at.strftime("%Y-%m-%d %H:%M") %> · <%= pluralize(test_run.test_results.count, "result") %> · <%= test_run.status %></p>
+          <p class="ck-item-title"><%= link_to run.name, run_path(run), class: "ck-link" %></p>
+          <p class="ck-meta-copy"><%= run.created_at.strftime("%Y-%m-%d %H:%M") %> · <%= pluralize(run.responses.count, "response") %> · <%= run.status %></p>
         </div>
       </div>
     <% end %>
