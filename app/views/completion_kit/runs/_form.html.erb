@@ -1,0 +1,49 @@
+<%= form_with(model: run, local: true) do |form| %>
+  <% if run.errors.any? %>
+    <div class="ck-flash ck-flash--alert">
+      <p class="ck-flash__title"><%= pluralize(run.errors.count, "problem") %> prevented this run from being saved.</p>
+      <ul class="ck-error-list">
+        <% run.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="ck-card ck-form-card">
+    <div class="ck-field">
+      <%= form.label :prompt_id, "Prompt", class: "ck-label" %>
+      <%= form.select :prompt_id, @prompts.map { |p| [p.display_name, p.id] }, { include_blank: "Select a prompt" }, { class: "ck-input" } %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :dataset_id, "Dataset", class: "ck-label" %>
+      <% if @datasets.empty? %>
+        <p class="ck-meta-copy">No datasets yet. <%= link_to "Create a dataset", new_dataset_path, class: "ck-link" %> first.</p>
+      <% else %>
+        <%= form.select :dataset_id, @datasets.map { |d| [d.name, d.id] }, { include_blank: "Select a dataset" }, { class: "ck-input" } %>
+      <% end %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :judge_model, "Judge model (optional)", class: "ck-label" %>
+      <%= form.select :judge_model, CompletionKit::Prompt.available_models.map { |m| [m[:name], m[:id]] }, { include_blank: "No judge" }, { class: "ck-input" } %>
+    </div>
+
+    <div id="metric-group-field" class="ck-field" style="<%= 'display:none' unless run.judge_model.present? %>">
+      <%= form.label :metric_group_id, "Metric group (optional)", class: "ck-label" %>
+      <%= form.select :metric_group_id, @metric_groups.map { |mg| [mg.name, mg.id] }, { include_blank: "No metric group" }, { class: "ck-input" } %>
+    </div>
+
+    <script>
+document.querySelector('[name="run[judge_model]"]').addEventListener('change', function() {
+  document.getElementById('metric-group-field').style.display = this.value ? '' : 'none';
+});
+    </script>
+
+    <div class="ck-actions">
+      <%= link_to "Cancel", run.persisted? ? run_path(run) : runs_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= form.submit(run.persisted? ? "Save run" : "Create run", class: ck_button_classes(:dark)) %>
+    </div>
+  </div>
+<% end %>

@@ -1,14 +1,21 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::Engine.routes, type: :routing do
-  it "routes nested test results to the test results controller" do
-    route = described_class.recognize_path("/test_runs/12/test_results/34", method: :get)
+  it "routes nested responses to the responses controller" do
+    route = described_class.recognize_path("/runs/12/responses/34", method: :get)
 
     expect(route).to include(
-      controller: "completion_kit/test_results",
+      controller: "completion_kit/responses",
       action: "show",
-      test_run_id: "12",
+      run_id: "12",
       id: "34"
+    )
+  end
+
+  it "routes datasets" do
+    expect(described_class.recognize_path("/datasets", method: :get)).to include(
+      controller: "completion_kit/datasets",
+      action: "index"
     )
   end
 

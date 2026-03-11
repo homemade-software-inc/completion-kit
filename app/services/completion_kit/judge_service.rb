@@ -69,7 +69,7 @@ module CompletionKit
           judge_prompt += <<~PROMPT
             Example #{index + 1}
             Input: #{example[:input_data]}
-            Output: #{example[:output_text]}
+            Output: #{example[:response_text]}
             Human score: #{example[:human_score]}
             Human notes: #{example[:human_feedback].presence || "None"}
           PROMPT

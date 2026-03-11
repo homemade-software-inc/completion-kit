@@ -24,20 +24,22 @@ module CompletionKit
     end
 
     def ck_badge_classes(kind)
-      case kind
-      when :high
+      case kind.to_s
+      when "high"
         "ck-badge ck-badge--high"
-      when :medium
+      when "medium"
         "ck-badge ck-badge--medium"
-      when :low
+      when "low"
         "ck-badge ck-badge--low"
-      when :pending
+      when "pending"
         "ck-badge ck-badge--pending"
-      when :running
+      when "running"
         "ck-badge ck-badge--running"
-      when :completed, :evaluated
+      when "generating", "judging"
+        "ck-badge ck-badge--running"
+      when "completed"
         "ck-badge ck-badge--high"
-      when :failed
+      when "failed"
         "ck-badge ck-badge--low"
       else
         "ck-badge ck-badge--pending"

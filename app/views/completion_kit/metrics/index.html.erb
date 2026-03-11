@@ -1,33 +1,37 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title">Metrics</h1>
-    <p class="ck-lead">Each metric is one way to score a result.</p>
   </div>
   <div class="ck-actions">
-    <%= link_to "New metric", new_metric_path, class: ck_button_classes(:dark) %>
     <%= link_to "Groups", metric_groups_path, class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "New metric", new_metric_path, class: ck_button_classes(:dark) %>
   </div>
 </section>
 
 <% if @metrics.any? %>
-  <div class="ck-list">
-    <% @metrics.each do |metric| %>
-      <section class="ck-card">
-        <div class="ck-split">
-          <div class="ck-stack">
-            <h2 class="ck-card-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></h2>
-            <% if metric.criteria.present? %>
-              <p class="ck-copy"><%= truncate(metric.criteria, length: 120) %></p>
-            <% end %>
-          </div>
-          <div class="ck-actions">
-            <%= link_to "Edit", edit_metric_path(metric), class: ck_button_classes(:light, variant: :outline) %>
-            <%= link_to "Open", metric_path(metric), class: ck_button_classes(:dark) %>
-          </div>
-        </div>
-      </section>
-    <% end %>
-  </div>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Criteria</th>
+        <th>Group</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @metrics.each do |metric| %>
+        <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
+          <td><strong><%= metric.name %></strong></td>
+          <td><%= truncate(metric.criteria.to_s, length: 80) %></td>
+          <td>
+            <% group = metric.metric_groups.first %>
+            <%= group&.name || "&mdash;".html_safe %>
+          </td>
+          <td class="ck-results-table__arrow">&rarr;</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 <% else %>
   <div class="ck-empty">No metrics yet.</div>
 <% end %>

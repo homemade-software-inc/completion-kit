@@ -1,0 +1,41 @@
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Runs</h1>
+  </div>
+</section>
+
+<% if @runs.any? %>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th>Run</th>
+        <th>Prompt</th>
+        <th>Responses</th>
+        <th>Avg score</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @runs.each do |run| %>
+        <tr onclick="window.location='<%= run_path(run) %>'" style="cursor: pointer;">
+          <td><strong><%= run.name %></strong></td>
+          <td><%= link_to run.prompt.name, prompt_path(run.prompt), class: "ck-link" %></td>
+          <td><%= run.responses.size %></td>
+          <td>
+            <% avg = run.avg_score %>
+            <% if avg %>
+              <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
+            <% else %>
+              &mdash;
+            <% end %>
+          </td>
+          <td class="ck-results-table__arrow">&rarr;</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="ck-empty">
+    No runs yet. Create a run from a prompt page.
+  </div>
+<% end %>

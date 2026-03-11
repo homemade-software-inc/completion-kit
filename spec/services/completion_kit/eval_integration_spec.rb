@@ -4,7 +4,7 @@ RSpec.describe "Eval DSL end-to-end" do
   let!(:metric_group) { create(:completion_kit_metric_group) }
   let!(:relevance) { create(:completion_kit_metric, name: "Relevance", key: "relevance", metric_groups: [metric_group]) }
   let!(:accuracy) { create(:completion_kit_metric, name: "Accuracy", key: "accuracy", metric_groups: [metric_group]) }
-  let!(:prompt) { create(:completion_kit_prompt, name: "e2e_test", metric_group: metric_group, current: true) }
+  let!(:prompt) { create(:completion_kit_prompt, name: "e2e_test", current: true) }
 
   let(:csv_path) { Rails.root.join("tmp/e2e_eval.csv").to_s }
 
@@ -37,9 +37,8 @@ RSpec.describe "Eval DSL end-to-end" do
     expect(result[:row_count]).to eq(2)
     expect(result[:metrics].size).to eq(2)
 
-    test_run = CompletionKit::TestRun.find(result[:test_run_id])
-    expect(test_run.source).to eq("eval_dsl")
-    expect(test_run.eval_name).to eq("e2e_test")
+    run = CompletionKit::Run.find(result[:run_id])
+    expect(run.name).to include("e2e_test")
 
     output = CompletionKit::EvalFormatter.format_results([result])
     expect(output).to include("2 rows")

@@ -32,23 +32,6 @@
       <%= form.select :llm_model, CompletionKit::Prompt.available_models.map { |model| [model[:name], model[:id]] }, {}, { class: "ck-input" } %>
     </div>
 
-    <div class="ck-field">
-      <%= form.label :assessment_model, "Assessment model", class: "ck-label" %>
-      <%= form.select :assessment_model, CompletionKit::Prompt.available_models.map { |model| [model[:name], model[:id]] }, {}, { class: "ck-input" } %>
-    </div>
-
-    <div class="ck-field">
-      <%= form.label :metric_group_id, "Metric group", class: "ck-label" %>
-      <%= form.collection_select :metric_group_id, @metric_groups, :id, :name, { include_blank: "Choose a metric group" }, { class: "ck-input" } %>
-      <p class="ck-hint">This decides how results are scored.</p>
-    </div>
-
-    <div class="ck-field">
-      <%= form.label :review_guidance, "Review notes", class: "ck-label" %>
-      <%= form.text_area :review_guidance, rows: 4, class: "ck-input ck-input--area", placeholder: "Optional notes for scoring this prompt." %>
-      <p class="ck-hint">Optional.</p>
-    </div>
-
     <div class="ck-actions">
       <%= link_to "Cancel", prompts_path, class: ck_button_classes(:light, variant: :outline) %>
       <%= form.submit(prompt.persisted? ? "Save prompt" : "Create prompt", class: ck_button_classes(:dark)) %>

@@ -7,8 +7,7 @@ RSpec.describe CompletionKit::EvalRunner do
   let!(:prompt) do
     create(:completion_kit_prompt,
       name: "test_prompt",
-      template: "Summarize {{content}} for {{audience}}",
-      metric_group: metric_group)
+      template: "Summarize {{content}} for {{audience}}")
   end
 
   let(:csv_path) { Rails.root.join("tmp/test_eval.csv").to_s }
@@ -32,7 +31,7 @@ RSpec.describe CompletionKit::EvalRunner do
   after { File.delete(csv_path) if File.exist?(csv_path) }
 
   describe "#run" do
-    it "creates a test run, generates outputs, evaluates, and returns results" do
+    it "creates a run, generates responses, judges, and returns results" do
       runner = described_class.new(eval_defn)
       result = runner.run
 
@@ -53,15 +52,6 @@ RSpec.describe CompletionKit::EvalRunner do
 
       expect(result[:passed]).to be false
       expect(result[:metrics].first[:passed]).to be false
-    end
-
-    it "stores the test run with source eval_dsl" do
-      runner = described_class.new(eval_defn)
-      runner.run
-
-      test_run = CompletionKit::TestRun.last
-      expect(test_run.source).to eq("eval_dsl")
-      expect(test_run.eval_name).to eq("test_eval")
     end
   end
 
@@ -112,7 +102,7 @@ RSpec.describe CompletionKit::EvalRunner do
 
   describe "#run with unexpected error" do
     it "returns an error result" do
-      allow(CompletionKit::TestRun).to receive(:create!).and_raise(StandardError, "boom")
+      allow(CompletionKit::Run).to receive(:create!).and_raise(StandardError, "boom")
 
       runner = described_class.new(eval_defn)
       result = runner.run
@@ -121,5 +111,4 @@ RSpec.describe CompletionKit::EvalRunner do
       expect(result[:error]).to eq("boom")
     end
   end
-
 end

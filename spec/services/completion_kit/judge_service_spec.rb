@@ -73,7 +73,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
         criteria: "Check for accuracy",
         evaluation_steps: ["Step one"],
         rubric_text: "Custom rubric",
-        human_examples: [{ input_data: "{x:1}", output_text: "draft", human_score: 4, human_feedback: "Good" }]
+        human_examples: [{ input_data: "{x:1}", response_text: "draft", human_score: 4, human_feedback: "Good" }]
       )
     ).to eq(score: 3.0, feedback: "Calibrated")
   end
