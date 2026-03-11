@@ -1,26 +1,11 @@
 module CompletionKit
   class Metric < ApplicationRecord
     DEFAULT_RUBRIC_BANDS = [
-      {
-        "range" => "1-2",
-        "criteria" => "The output is irrelevant, contradicted by the input, or fails to answer the requested task in any useful way."
-      },
-      {
-        "range" => "3-4",
-        "criteria" => "The output is somewhat related but incomplete, confused, or unreliable enough that it would require major correction."
-      },
-      {
-        "range" => "5-6",
-        "criteria" => "The output is usable in parts and generally on-topic, but it has clear gaps, weak structure, or accuracy issues that need noticeable editing."
-      },
-      {
-        "range" => "7-8",
-        "criteria" => "The output is strong, mostly accurate, and aligned to the task, but it misses nuance, polish, or a small requirement."
-      },
-      {
-        "range" => "9-10",
-        "criteria" => "The output is accurate, complete, clear, well-structured, and directly useful with little or no editing."
-      }
+      { "stars" => 5, "description" => "Fully meets or exceeds all criteria. No meaningful issues." },
+      { "stars" => 4, "description" => "Meets criteria well. Minor issues only." },
+      { "stars" => 3, "description" => "Meets criteria adequately. Some room for improvement." },
+      { "stars" => 2, "description" => "Partially meets criteria. Significant gaps or frequent errors." },
+      { "stars" => 1, "description" => "Fails to meet the criteria. Major errors or completely off-target." }
     ].freeze
 
     has_many :metric_group_memberships, dependent: :destroy
@@ -28,9 +13,9 @@ module CompletionKit
     has_many :test_result_metric_assessments, dependent: :nullify
 
     serialize :rubric_bands, coder: JSON
+    serialize :evaluation_steps, coder: JSON
 
     validates :name, presence: true
-    validates :rubric_text, presence: true
     validates :key, uniqueness: true, allow_nil: true
 
     before_validation :generate_key
@@ -46,11 +31,10 @@ module CompletionKit
     end
 
     def self.rubric_text_for(bands)
-      normalize_rubric_bands(bands).map do |band|
-        <<~BAND.strip
-          #{band["range"]}
-          #{band["criteria"]}
-        BAND
+      Array(bands).sort_by { |b| -(b["stars"] || 0) }.map do |band|
+        stars = band["stars"].to_i
+        label = stars == 1 ? "1 star" : "#{stars} stars"
+        "#{label}: #{band["description"]}"
       end.join("\n\n")
     end
 
@@ -58,27 +42,28 @@ module CompletionKit
       band_map = Array(raw_bands).each_with_object({}) do |band, acc|
         next unless band.respond_to?(:to_h)
 
-        normalized = band.to_h.stringify_keys.slice("range", "criteria")
-        range = normalized["range"].to_s.strip
-        next unless DEFAULT_RUBRIC_BANDS.any? { |default_band| default_band["range"] == range }
+        normalized = band.to_h.stringify_keys.slice("stars", "description")
+        stars = normalized["stars"].to_i
+        next unless (1..5).cover?(stars)
 
-        acc[range] = {
-          "range" => range,
-          "criteria" => normalized["criteria"].to_s.strip
+        acc[stars] = {
+          "stars" => stars,
+          "description" => normalized["description"].to_s.strip
         }
       end
 
       default_rubric_bands.map do |default_band|
-        band = band_map[default_band["range"]] || {}
+        stars = default_band["stars"]
+        band = band_map[stars]
         {
-          "range" => default_band["range"],
-          "criteria" => band["criteria"].presence || default_band["criteria"]
+          "stars" => stars,
+          "description" => band && band["description"].present? ? band["description"] : default_band["description"]
         }
       end
     end
 
     def rubric_bands_for_form
-      self.class.normalize_rubric_bands(rubric_bands.presence || parsed_rubric_bands_from_text(rubric_text))
+      self.class.normalize_rubric_bands(rubric_bands)
     end
 
     def display_rubric_text
@@ -92,35 +77,12 @@ module CompletionKit
     end
 
     def set_defaults
-      self.guidance_text ||= ""
-      self.rubric_bands = self.class.default_rubric_bands if rubric_bands.blank? && rubric_text.blank?
-      self.rubric_text = self.class.rubric_text_for(rubric_bands) if rubric_bands.present?
-      self.rubric_text ||= self.class.default_rubric_text
+      self.evaluation_steps ||= []
+      self.rubric_bands = self.class.default_rubric_bands if rubric_bands.blank?
     end
 
     def normalize_rubric_bands
       self.rubric_bands = self.class.normalize_rubric_bands(rubric_bands) if rubric_bands.present?
-    end
-
-    def parsed_rubric_bands_from_text(text)
-      return [] if text.blank?
-
-      text.to_s.split(/\n{2,}/).each_with_object([]) do |chunk, result|
-        lines = chunk.lines.map(&:strip).reject(&:blank?)
-        next if lines.empty?
-
-        range = lines.shift.to_s.strip
-        default_band = self.class.default_rubric_bands.find { |band| band["range"] == range }
-        next unless default_band
-
-        criteria_line = lines.find { |line| line.start_with?("Criteria:") }
-        criteria = criteria_line.to_s.sub("Criteria:", "").strip.presence || lines.first.to_s.strip.presence
-
-        result << {
-          "range" => range,
-          "criteria" => criteria || default_band["criteria"]
-        }
-      end
     end
   end
 end
