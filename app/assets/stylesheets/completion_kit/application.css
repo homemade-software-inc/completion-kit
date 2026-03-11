@@ -586,6 +586,12 @@ form.button_to {
   accent-color: var(--ck-accent);
 }
 
+.ck-section-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ck-text);
+}
+
 .ck-rubric-builder,
 .ck-rubric-display {
   display: grid;
@@ -595,7 +601,7 @@ form.button_to {
 
 .ck-rubric-row {
   display: grid;
-  grid-template-columns: 6.5rem minmax(0, 1fr);
+  grid-template-columns: 5.5rem minmax(0, 1fr);
   gap: 0.85rem;
   align-items: flex-start;
   padding: 0.85rem;
@@ -608,25 +614,89 @@ form.button_to {
   background: var(--ck-bg-strong);
 }
 
-.ck-rubric-row__range,
+.ck-rubric-row__stars {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding-top: 0.5rem;
+}
+
 .ck-rubric-row__fields {
   display: grid;
   gap: 0.6rem;
 }
 
-.ck-rubric-range {
-  display: inline-flex;
+.ck-star {
+  stroke-width: 1.75;
+}
+
+.ck-star--filled {
+  fill: var(--ck-accent);
+  stroke: var(--ck-accent);
+}
+
+.ck-star--empty {
+  fill: none;
+  stroke: var(--ck-dim);
+}
+
+.ck-step-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.ck-step-row .ck-input {
+  flex: 1;
+}
+
+.ck-icon-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--ck-radius);
+  padding: 0.375rem;
+  cursor: pointer;
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.2rem;
-  padding: 0.35rem 0.65rem;
-  border-radius: var(--ck-radius);
-  background: var(--ck-accent);
-  color: #080b14;
-  font-family: var(--ck-mono);
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  color: var(--ck-dim);
+  transition: all 0.15s;
+}
+
+.ck-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--ck-line-strong);
+  color: var(--ck-danger);
+}
+
+.ck-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ck-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  margin-top: 0.25rem;
+  background: none;
+  border: none;
+  transition: color 0.15s;
+}
+
+.ck-add-btn:hover {
+  color: var(--ck-text);
+}
+
+.ck-step-list {
+  padding-left: 1.5rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ck-step-list li {
+  color: var(--ck-text);
+  line-height: 1.5;
 }
 
 .ck-filter-grid {
@@ -725,7 +795,9 @@ select.ck-input {
   .ck-grid--two {
     grid-template-columns: 1fr;
   }
+}
 
+@media (max-width: 44rem) {
   .ck-rubric-row {
     grid-template-columns: 1fr;
   }
