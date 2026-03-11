@@ -1,0 +1,97 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Prompts", prompts_path %></li>
+  <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
+  <li><%= @run.name %></li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title"><%= @run.name %></h1>
+    <p class="ck-run-meta">
+      <span class="ck-chip"><%= @run.prompt.llm_model %></span>
+      <% if @run.dataset %>
+        <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
+      <% end %>
+      <% if @run.judge_configured? %>
+        <span>Judge: <%= @run.judge_model %></span>
+        <% if @run.metric_group %>
+          <span>Metrics: <%= @run.metric_group.name %></span>
+        <% end %>
+      <% else %>
+        <span class="ck-meta-copy">No judge configured</span>
+      <% end %>
+    </p>
+  </div>
+
+  <div class="ck-actions">
+    <%= link_to "Edit", edit_run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
+    <% if @run.status == "pending" || (@run.status == "completed" && @run.responses.empty?) %>
+      <%= button_to "Generate", generate_run_path(@run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+    <% end %>
+    <% if @run.status == "completed" && @run.responses.any? && !@run.judge_configured? %>
+      <%= link_to "Judge responses", edit_run_path(@run), class: ck_button_classes(:dark) %>
+    <% end %>
+    <% if @run.judge_configured? && @run.status == "completed" %>
+      <%= button_to "Re-judge", judge_run_path(@run), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
+    <% end %>
+  </div>
+</section>
+
+<% if @run.dataset %>
+  <details class="ck-details">
+    <summary class="ck-details__summary">Dataset preview</summary>
+    <pre class="ck-code ck-code--dark"><%= @run.dataset.csv_data.to_s.lines.first(10).join %><% if @run.dataset.csv_data.to_s.lines.count > 10 %>...</% end %></pre>
+  </details>
+<% end %>
+
+<% judged = @responses.any? { |r| r.reviewed? } %>
+
+<% if judged %>
+  <div class="ck-toolbar" style="margin-top: 1.5rem;">
+    <%= link_to "Best first", run_path(@run, sort: "score_desc"), class: params[:sort].blank? || params[:sort] == "score_desc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Worst first", run_path(@run, sort: "score_asc"), class: params[:sort] == "score_asc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+  </div>
+<% end %>
+
+<% if @responses.any? %>
+  <div class="ck-response-list">
+    <% @responses.each_with_index do |response, idx| %>
+      <% score = response.score %>
+      <article class="ck-response-card<%= " ck-response-card--low" if score && ck_score_kind(score) == :low %>" onclick="window.location='<%= run_response_path(@run, response) %>'" style="cursor: pointer;">
+        <div class="ck-response-card__header">
+          <span class="ck-minor-label">Row <%= idx + 1 %></span>
+          <% if score %>
+            <span class="<%= ck_badge_classes(ck_score_kind(score)) %>"><%= score %></span>
+          <% end %>
+        </div>
+
+        <div class="ck-response-card__body">
+          <div>
+            <p class="ck-minor-label">Input</p>
+            <p class="ck-meta-copy"><%= truncate(response.input_data, length: 120) %></p>
+          </div>
+
+          <div>
+            <p class="ck-minor-label">Response</p>
+            <p class="ck-meta-copy"><%= truncate(response.response_text, length: 200) %></p>
+          </div>
+        </div>
+
+        <% if response.reviewed? %>
+          <div class="ck-metric-bar">
+            <% response.reviews.where.not(ai_score: nil).each do |review| %>
+              <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(review.ai_score) %>">
+                <span class="ck-metric-pip__bar"></span>
+                <span class="ck-metric-pip__label"><%= review.metric_name %> <strong><%= review.ai_score.to_i %></strong></span>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+      </article>
+    <% end %>
+  </div>
+<% else %>
+  <div class="ck-empty ck-empty--spaced">
+    No responses yet. Generate outputs to see results here.
+  </div>
+<% end %>

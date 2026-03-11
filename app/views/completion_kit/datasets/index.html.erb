@@ -1,0 +1,37 @@
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Datasets</h1>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "New dataset", new_dataset_path, class: ck_button_classes(:dark) %>
+  </div>
+</section>
+
+<% if @datasets.any? %>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Rows</th>
+        <th>Used in</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @datasets.each do |dataset| %>
+        <tr onclick="window.location='<%= dataset_path(dataset) %>'" style="cursor: pointer;">
+          <td><strong><%= dataset.name %></strong></td>
+          <td><%= dataset.row_count %></td>
+          <td><%= dataset.runs.count %></td>
+          <td><%= dataset.created_at.strftime("%Y-%m-%d") %></td>
+          <td class="ck-results-table__arrow">&rarr;</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="ck-empty">
+    No datasets yet. Create one to use with your prompts.
+  </div>
+<% end %>

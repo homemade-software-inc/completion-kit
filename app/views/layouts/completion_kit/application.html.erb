@@ -7,7 +7,6 @@
   <%= csp_meta_tag %>
 
   <%= stylesheet_link_tag "completion_kit/application", media: "all" %>
-  <%= javascript_include_tag "completion_kit/evaluation_steps_controller" %>
 </head>
 <body class="ck-app">
   <header class="ck-topbar">
@@ -15,10 +14,11 @@
       <%= link_to "CompletionKit", prompts_path, class: "ck-brand" %>
 
       <nav class="ck-nav">
-        <%= link_to "Prompts", prompts_path, class: current_page?(prompts_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Runs", runs_path, class: current_page?(runs_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Metrics", metrics_path, class: current_page?(metrics_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Providers", provider_credentials_path, class: current_page?(provider_credentials_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Prompts", prompts_path, class: request.path.start_with?(prompts_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Metrics", metrics_path, class: request.path.start_with?(metrics_path) || request.path.start_with?(metric_groups_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Datasets", datasets_path, class: request.path.start_with?(datasets_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Runs", runs_path, class: request.path == runs_path ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Settings", provider_credentials_path, class: request.path.start_with?(provider_credentials_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
       </nav>
     </div>
   </header>

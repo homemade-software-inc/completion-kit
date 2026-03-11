@@ -1,0 +1,65 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Prompts", prompts_path %></li>
+  <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
+  <li><%= link_to @run.name, run_path(@run) %></li>
+  <li>Response #<%= @response.id %></li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <div class="ck-inline">
+      <h1 class="ck-title">Response #<%= @response.id %></h1>
+      <% score = @response.score %>
+      <% if score %>
+        <span class="<%= ck_badge_classes(ck_score_kind(score)) %>"><%= score %></span>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="ck-kicker">Input</p>
+  <pre class="ck-code ck-code--dark"><%= begin; JSON.pretty_generate(JSON.parse(@response.input_data)); rescue; @response.input_data; end %></pre>
+</section>
+
+<section class="ck-card--spaced">
+  <p class="ck-kicker">Response</p>
+  <pre class="ck-code"><%= @response.response_text %></pre>
+</section>
+
+<% if @response.expected_output.present? %>
+  <section class="ck-card--spaced">
+    <p class="ck-kicker">Expected</p>
+    <pre class="ck-code"><%= @response.expected_output %></pre>
+  </section>
+<% end %>
+
+<% if @reviews.any? %>
+  <section class="ck-card--spaced">
+    <p class="ck-kicker">Review</p>
+
+    <div class="ck-review-list">
+      <% @reviews.each do |review| %>
+        <div class="ck-review-card">
+          <div class="ck-review-card__header">
+            <span class="ck-review-card__metric"><%= review.metric_name %></span>
+            <div class="ck-inline">
+              <% if review.ai_score %>
+                <% 5.times do |i| %>
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke-width="1.75" class="ck-star <%= i < review.ai_score.to_i ? "ck-star--filled" : "ck-star--empty" %>"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <% end %>
+              <% else %>
+                <span class="<%= ck_badge_classes(:pending) %>">Pending</span>
+              <% end %>
+            </div>
+          </div>
+          <% if review.ai_feedback.present? %>
+            <div class="ck-review-card__feedback">
+              <div class="ck-note-box"><%= review.ai_feedback %></div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+<% end %>

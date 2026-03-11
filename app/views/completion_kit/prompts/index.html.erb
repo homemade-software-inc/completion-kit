@@ -1,7 +1,6 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title">Prompts</h1>
-    <p class="ck-lead">A prompt is the instruction sent to the model. Prompts can include variables like <code>{{customer_name}}</code> that get filled from each dataset row.</p>
   </div>
   <div class="ck-actions">
     <%= link_to "New prompt", new_prompt_path, class: ck_button_classes(:dark) %>
@@ -9,38 +8,37 @@
 </section>
 
 <% if @prompts.any? %>
-  <div class="ck-list">
-    <% @prompts.each do |prompt| %>
-      <section class="ck-card">
-        <div class="ck-split">
-          <div class="ck-stack">
-            <div class="ck-inline">
-              <h2 class="ck-card-title"><%= link_to prompt.name, prompt_path(prompt), class: "ck-link" %></h2>
-              <span class="ck-chip"><%= prompt.version_label %></span>
-              <span class="ck-chip"><%= prompt.llm_model %></span>
-            </div>
-
-            <p class="ck-copy"><%= prompt.description.presence || "No description." %></p>
-
-            <% if prompt.variables.any? %>
-              <div class="ck-chip-row">
-                <% prompt.variables.each do |variable| %>
-                  <span class="ck-chip ck-chip--soft"><%= variable %></span>
-                <% end %>
-              </div>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Model</th>
+        <th>Runs</th>
+        <th>Last run</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @prompts.each do |prompt| %>
+        <tr onclick="window.location='<%= prompt_path(prompt) %>'" style="cursor: pointer;">
+          <td><strong><%= prompt.name %></strong></td>
+          <td><span class="ck-chip"><%= prompt.llm_model %></span></td>
+          <td><%= prompt.runs.size %></td>
+          <td>
+            <% last_run = prompt.runs.max_by(&:created_at) %>
+            <% if last_run %>
+              <%= time_ago_in_words(last_run.created_at) %> ago
+            <% else %>
+              &mdash;
             <% end %>
-          </div>
-
-          <div class="ck-actions">
-            <%= button_to "Delete", prompt_path(prompt), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: ck_button_classes(:red, variant: :outline), form_class: "inline-block" %>
-            <%= link_to "Open", prompt_path(prompt), class: ck_button_classes(:dark) %>
-          </div>
-        </div>
-      </section>
-    <% end %>
-  </div>
+          </td>
+          <td class="ck-results-table__arrow">&rarr;</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 <% else %>
   <div class="ck-empty">
-    No prompts yet. Create one, then attach a dataset and run it.
+    No prompts yet. Create one to get started.
   </div>
 <% end %>

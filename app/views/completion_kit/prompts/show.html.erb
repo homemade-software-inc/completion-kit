@@ -6,94 +6,70 @@
 <section class="ck-page-header">
   <div>
     <div class="ck-inline">
-      <h1 class="ck-title"><%= @prompt.display_name %></h1>
+      <h1 class="ck-title"><%= @prompt.name %></h1>
+      <span class="<%= ck_badge_classes(@prompt.current? ? :high : :pending) %>">v<%= @prompt.version_number %><%= " · current" if @prompt.current? %></span>
       <span class="ck-chip"><%= @prompt.llm_model %></span>
-      <% if @prompt.current? %>
-        <span class="<%= ck_badge_classes(:high) %>">Current</span>
-      <% end %>
     </div>
-    <% if @prompt.description.present? %>
-      <p class="ck-lead"><%= @prompt.description %></p>
-    <% end %>
   </div>
 
   <div class="ck-actions">
-    <% unless @prompt.current? %>
-      <%= button_to "Publish", publish_prompt_path(@prompt), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
-    <% end %>
-    <%= button_to "New version", new_version_prompt_path(@prompt), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
     <%= link_to "Edit", edit_prompt_path(@prompt), class: ck_button_classes(:light, variant: :outline) %>
-    <%= link_to "New run", new_run_path(prompt_id: @prompt.id), class: ck_button_classes(:dark) %>
+    <%= button_to "New version", new_version_prompt_path(@prompt), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
+    <%= link_to "Run test", new_run_path(prompt_id: @prompt.id), class: ck_button_classes(:dark) %>
   </div>
 </section>
 
-<section class="ck-grid ck-grid--sidebar">
-  <div class="ck-card">
-    <p class="ck-kicker">Prompt</p>
-    <pre class="ck-code ck-code--dark"><%= @prompt.template %></pre>
-  </div>
-
-  <div class="ck-card">
-    <p class="ck-kicker">Details</p>
-
-    <dl class="ck-stat-list">
-      <div class="ck-stat-row">
-        <dt>Runs</dt>
-        <dd><%= @prompt.runs.count %></dd>
-      </div>
-      <div class="ck-stat-row">
-        <dt>Published</dt>
-        <dd><%= @prompt.published_at&.strftime("%Y-%m-%d") || "Draft" %></dd>
-      </div>
-    </dl>
-
-    <% if @prompt.variables.any? %>
-      <p class="ck-minor-label" style="margin-top: 0.75rem;">Variables</p>
-      <div class="ck-chip-row">
-        <% @prompt.variables.each do |variable| %>
-          <span class="ck-chip ck-chip--soft"><%= variable %></span>
-        <% end %>
-      </div>
-    <% end %>
-  </div>
+<section>
+  <p class="ck-kicker">Template</p>
+  <pre class="ck-code ck-code--dark"><%= @prompt.template %></pre>
 </section>
-
-
-<% if @family_versions.length > 1 %>
-<section class="ck-card ck-card--spaced">
-  <p class="ck-kicker">Versions</p>
-
-  <div class="ck-list ck-list--compact">
-    <% @family_versions.each do |version| %>
-      <div class="ck-item">
-        <div>
-          <p class="ck-item-title"><%= link_to version.display_name, prompt_path(version), class: "ck-link" %></p>
-          <p class="ck-meta-copy"><%= version.llm_model %> · <%= pluralize(version.runs.count, "run") %></p>
-        </div>
-        <div class="ck-actions">
-          <% unless version.current? %>
-            <%= button_to "Publish", publish_prompt_path(version), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-  </div>
-</section>
-<% end %>
 
 <% if @runs.any? %>
-<section class="ck-card ck-card--spaced">
-  <p class="ck-kicker">Runs</p>
+  <section class="ck-card--spaced">
+    <p class="ck-kicker">Runs</p>
 
-  <div class="ck-list ck-list--compact">
-    <% @runs.each do |run| %>
-      <div class="ck-item">
-        <div>
-          <p class="ck-item-title"><%= link_to run.name, run_path(run), class: "ck-link" %></p>
-          <p class="ck-meta-copy"><%= run.created_at.strftime("%Y-%m-%d %H:%M") %> · <%= pluralize(run.responses.count, "response") %> · <%= run.status %></p>
-        </div>
-      </div>
-    <% end %>
-  </div>
-</section>
+    <table class="ck-results-table" style="margin-top: 0.5rem;">
+      <thead>
+        <tr>
+          <th>Run</th>
+          <th>Responses</th>
+          <th>Avg score</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @runs.each do |run| %>
+          <tr onclick="window.location='<%= run_path(run) %>'" style="cursor: pointer;">
+            <td><strong><%= run.name %></strong></td>
+            <td><%= run.responses.size %></td>
+            <td>
+              <% avg = run.avg_score %>
+              <% if avg %>
+                <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
+              <% else %>
+                &mdash;
+              <% end %>
+            </td>
+            <td class="ck-results-table__arrow">&rarr;</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+<% end %>
+
+<% if @family_versions.length > 1 %>
+  <section class="ck-card--spaced">
+    <p class="ck-kicker">Versions</p>
+
+    <div class="ck-inline" style="margin-top: 0.5rem; gap: 0.5rem;">
+      <% @family_versions.each do |version| %>
+        <% if version.id == @prompt.id %>
+          <span class="ck-chip ck-chip--soft">v<%= version.version_number %></span>
+        <% else %>
+          <%= link_to "v#{version.version_number}", prompt_path(version), class: "ck-chip" %>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
 <% end %>

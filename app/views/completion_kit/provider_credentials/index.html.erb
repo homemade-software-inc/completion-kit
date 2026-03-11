@@ -1,7 +1,6 @@
 <section class="ck-page-header">
   <div>
-    <h1 class="ck-title">Providers</h1>
-    <p class="ck-lead">API credentials for generation and scoring.</p>
+    <h1 class="ck-title">Settings</h1>
   </div>
   <div class="ck-actions">
     <%= link_to "New provider", new_provider_credential_path, class: ck_button_classes(:dark) %>
@@ -9,24 +8,28 @@
 </section>
 
 <% if @provider_credentials.any? %>
-  <div class="ck-list">
-    <% @provider_credentials.each do |provider_credential| %>
-      <section class="ck-card">
-        <div class="ck-split">
-          <div class="ck-stack">
-            <div class="ck-inline">
-              <h2 class="ck-card-title"><%= provider_credential.display_provider %></h2>
-              <span class="<%= ck_badge_classes(provider_credential.configured? ? :high : :failed) %>"><%= provider_credential.configured? ? "Connected" : "Not connected" %></span>
-            </div>
-            <p class="ck-meta-copy"><%= provider_credential.api_endpoint.presence || "Default endpoint" %></p>
-          </div>
-          <div class="ck-actions">
-            <%= link_to "Edit", edit_provider_credential_path(provider_credential), class: ck_button_classes(:light, variant: :outline) %>
-          </div>
-        </div>
-      </section>
-    <% end %>
-  </div>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th>Provider</th>
+        <th>Status</th>
+        <th>Endpoint</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @provider_credentials.each do |provider_credential| %>
+        <tr onclick="window.location='<%= edit_provider_credential_path(provider_credential) %>'" style="cursor: pointer;">
+          <td><strong><%= provider_credential.display_provider %></strong></td>
+          <td>
+            <span class="<%= ck_badge_classes(provider_credential.configured? ? :high : :failed) %>"><%= provider_credential.configured? ? "Connected" : "Not connected" %></span>
+          </td>
+          <td><%= provider_credential.api_endpoint.presence || "Default endpoint" %></td>
+          <td class="ck-results-table__arrow">&rarr;</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 <% else %>
   <div class="ck-empty">
     No providers yet. Add one to start running prompts.

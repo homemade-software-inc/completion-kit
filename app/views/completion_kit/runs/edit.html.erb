@@ -1,0 +1,14 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Prompts", prompts_path %></li>
+  <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
+  <li><%= link_to @run.name, run_path(@run) %></li>
+  <li>Edit</li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Edit run</h1>
+  </div>
+</section>
+
+<%= render "form", run: @run %>
