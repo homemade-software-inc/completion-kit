@@ -20,20 +20,17 @@ end
 
 accuracy = CompletionKit::Metric.create!(
   name: "Accuracy",
-  description: "Does the output preserve every important fact from the input?",
-  guidance_text: "Penalize missing facts, wrong numbers, invented details, or swapped severity levels. A single factual error drops the score below 7."
+  criteria: "Does the output preserve every important fact from the input? Penalize missing facts, wrong numbers, invented details, or swapped severity levels. A single factual error drops the score below 3 stars."
 )
 
 clarity = CompletionKit::Metric.create!(
   name: "Clarity",
-  description: "Is the output concise, scannable, and free of filler?",
-  guidance_text: "Reward short sentences, bullet points, and plain language. Penalize jargon, hedging ('it seems like'), and unnecessary preamble."
+  criteria: "Is the output concise, scannable, and free of filler? Reward short sentences, bullet points, and plain language. Penalize jargon, hedging ('it seems like'), and unnecessary preamble."
 )
 
 actionability = CompletionKit::Metric.create!(
   name: "Actionability",
-  description: "Does the output tell the reader exactly what to do next?",
-  guidance_text: "The output must include a concrete next step. Vague suggestions like 'look into it' score below 5."
+  criteria: "Does the output tell the reader exactly what to do next? The output must include a concrete next step. Vague suggestions like 'look into it' score below 2 stars."
 )
 
 support_metrics = CompletionKit::MetricGroup.create!(name: "Support quality", description: "Score support ticket summaries on accuracy, clarity, and actionability.")
@@ -135,7 +132,7 @@ v1_run = CompletionKit::TestRun.create!(
 v1_outputs = [
   {
     text: "Acme Corp has a password reset issue. Users can't reset their passwords. The team should look into the email system.",
-    scores: { "Accuracy" => 7.2, "Clarity" => 6.8, "Actionability" => 4.5 },
+    scores: { "Accuracy" => 4, "Clarity" => 3, "Actionability" => 2 },
     feedback: {
       "Accuracy" => "Captures the core issue but omits that it affects enterprise-plan users and was caused by a deploy.",
       "Clarity" => "Readable but generic. 'Has a password reset issue' is not specific enough for triage.",
@@ -144,7 +141,7 @@ v1_outputs = [
   },
   {
     text: "Northwind has export problems with large accounts. The team should check the export feature.",
-    scores: { "Accuracy" => 6.0, "Clarity" => 5.5, "Actionability" => 3.8 },
+    scores: { "Accuracy" => 3, "Clarity" => 3, "Actionability" => 2 },
     feedback: {
       "Accuracy" => "Mentions large accounts but drops the 10K row threshold, the silent failure mode, and the spinner behavior.",
       "Clarity" => "'Export problems' is vague. A reader cannot tell if exports error out, hang, or produce wrong data.",
@@ -153,7 +150,7 @@ v1_outputs = [
   },
   {
     text: "There was a billing issue at Blue Sky Airlines after a plan change. Someone should review it.",
-    scores: { "Accuracy" => 4.8, "Clarity" => 4.2, "Actionability" => 3.0 },
+    scores: { "Accuracy" => 2, "Clarity" => 2, "Actionability" => 2 },
     feedback: {
       "Accuracy" => "Misses that it was a duplicate charge, that it was mid-cycle, and that finance flagged it.",
       "Clarity" => "'Billing issue' and 'plan change' are too vague to act on. Does not say what went wrong.",
@@ -162,7 +159,7 @@ v1_outputs = [
   },
   {
     text: "Delta Health users are experiencing login problems with SAML. The issue needs to be investigated. This is urgent.",
-    scores: { "Accuracy" => 6.5, "Clarity" => 5.0, "Actionability" => 4.0 },
+    scores: { "Accuracy" => 3, "Clarity" => 3, "Actionability" => 2 },
     feedback: {
       "Accuracy" => "Mentions SAML and urgency but drops the redirect loop detail, the 800+ user count, and the valid certificate.",
       "Clarity" => "'Login problems' understates the severity. Should say 'locked out' or 'redirect loop'.",
@@ -171,7 +168,7 @@ v1_outputs = [
   },
   {
     text: "Greenleaf's dashboard is showing old data. The data pipeline might be the cause. Low priority.",
-    scores: { "Accuracy" => 6.8, "Clarity" => 6.0, "Actionability" => 4.2 },
+    scores: { "Accuracy" => 3, "Clarity" => 3, "Actionability" => 2 },
     feedback: {
       "Accuracy" => "Gets the gist but misses that only the analytics tab is affected and that the pipeline did run successfully.",
       "Clarity" => "'Old data' is imprecise — should say 'yesterday's data' vs today's.",
@@ -195,8 +192,8 @@ v1_outputs.each_with_index do |output, idx|
     result.metric_assessments.create!(
       metric: metric,
       metric_name: metric_name,
-      guidance_text: metric.guidance_text,
-      rubric_text: metric.rubric_text,
+      criteria: metric.criteria,
+      rubric_text: metric.display_rubric_text,
       status: "evaluated",
       ai_score: score,
       ai_feedback: output[:feedback][metric_name]
@@ -215,7 +212,7 @@ v2_run = CompletionKit::TestRun.create!(
 v2_outputs = [
   {
     text: "- Acme Corp enterprise users cannot reset passwords — reset emails stopped sending after last night's deploy.\n- All enterprise-plan users are locked out if they forget or need to change credentials.\n- Investigate the email service changes in last night's deploy; confirm whether a rollback or manual reset workaround is available.",
-    scores: { "Accuracy" => 9.5, "Clarity" => 9.2, "Actionability" => 9.0 },
+    scores: { "Accuracy" => 5, "Clarity" => 5, "Actionability" => 5 },
     feedback: {
       "Accuracy" => "Captures every key detail: enterprise plan, reset emails not sending, deploy timing.",
       "Clarity" => "Three clean bullets. No filler. Each bullet has one job.",
@@ -224,7 +221,7 @@ v2_outputs = [
   },
   {
     text: "- Northwind CSV exports fail silently for datasets over 10,000 rows — the download spinner hangs indefinitely.\n- Two account managers cannot pull client reports, blocking their weekly workflow.\n- Check the export job's row limit, add a server-side timeout, and consider paginated exports for large accounts.",
-    scores: { "Accuracy" => 9.3, "Clarity" => 9.0, "Actionability" => 9.4 },
+    scores: { "Accuracy" => 5, "Clarity" => 5, "Actionability" => 5 },
     feedback: {
       "Accuracy" => "Includes the 10K threshold, silent failure, and spinner behavior. All facts preserved.",
       "Clarity" => "Specific numbers and behavior. A reader knows exactly what's happening.",
@@ -233,7 +230,7 @@ v2_outputs = [
   },
   {
     text: "- Blue Sky Airlines was double-charged after a mid-cycle plan upgrade — two invoices cover the same billing period.\n- Customer trust and revenue recognition are at risk; finance has already flagged the discrepancy.\n- Review the billing event log for the upgrade, void the duplicate invoice, and issue a credit to the customer.",
-    scores: { "Accuracy" => 9.6, "Clarity" => 9.4, "Actionability" => 9.5 },
+    scores: { "Accuracy" => 5, "Clarity" => 5, "Actionability" => 5 },
     feedback: {
       "Accuracy" => "Every detail preserved: duplicate charge, mid-cycle, same period, finance flagged it.",
       "Clarity" => "Precise language. 'Double-charged' is unambiguous. Impact is clear.",
@@ -242,7 +239,7 @@ v2_outputs = [
   },
   {
     text: "- URGENT: Delta Health's 800+ employees are locked out by a SAML SSO redirect loop. Certificate is confirmed valid.\n- The entire organization cannot access the platform — this is a total outage for the customer.\n- Escalate immediately. Check the SAML assertion consumer URL for mismatches and provide a direct-login bypass while investigating.",
-    scores: { "Accuracy" => 9.8, "Clarity" => 9.5, "Actionability" => 9.7 },
+    scores: { "Accuracy" => 5, "Clarity" => 5, "Actionability" => 5 },
     feedback: {
       "Accuracy" => "All facts: 800+ users, redirect loop, valid cert, total lockout. Nothing missed.",
       "Clarity" => "URGENT prefix matches severity. Impact is stark and clear.",
@@ -251,7 +248,7 @@ v2_outputs = [
   },
   {
     text: "- Greenleaf's analytics dashboard is showing yesterday's data instead of today's. Only the analytics tab is affected.\n- The data pipeline completed successfully at 2am, so the issue is likely a stale cache rather than a pipeline failure.\n- Clear the analytics cache and verify the cache-invalidation trigger fires after each pipeline run.",
-    scores: { "Accuracy" => 9.4, "Clarity" => 9.1, "Actionability" => 9.3 },
+    scores: { "Accuracy" => 5, "Clarity" => 5, "Actionability" => 5 },
     feedback: {
       "Accuracy" => "Distinguishes 'yesterday vs today', scopes to analytics tab, notes pipeline ran OK. Complete.",
       "Clarity" => "Identifies the root cause (cache vs pipeline). Reader knows where to look.",
@@ -275,8 +272,8 @@ v2_outputs.each_with_index do |output, idx|
     result.metric_assessments.create!(
       metric: metric,
       metric_name: metric_name,
-      guidance_text: metric.guidance_text,
-      rubric_text: metric.rubric_text,
+      criteria: metric.criteria,
+      rubric_text: metric.display_rubric_text,
       status: "evaluated",
       ai_score: score,
       ai_feedback: output[:feedback][metric_name]
@@ -310,5 +307,5 @@ puts "Created #{CompletionKit::Metric.count} metrics in #{CompletionKit::MetricG
 puts "Created #{CompletionKit::TestRun.count} runs (v1 baseline, v2 improved, 1 draft)"
 puts "Created #{CompletionKit::TestResult.count} scored results with #{CompletionKit::TestResultMetricAssessment.count} metric assessments"
 puts ""
-puts "The story: v1 averaged ~5.3 across metrics. v2 averages ~9.4."
+puts "The story: v1 averaged ~2.6 across metrics. v2 averages ~5.0."
 puts "Open the UI to see the version comparison and per-metric breakdowns."
