@@ -7,7 +7,6 @@
   <div>
     <div class="ck-inline">
       <h1 class="ck-title"><%= @prompt.name %></h1>
-      <span class="<%= ck_badge_classes(@prompt.current? ? :high : :pending) %>">v<%= @prompt.version_number %><%= " · current" if @prompt.current? %></span>
       <span class="ck-chip"><%= @prompt.llm_model %></span>
     </div>
   </div>
@@ -32,8 +31,11 @@
       <thead>
         <tr>
           <th>Run</th>
+          <th>Version</th>
           <th>Responses</th>
           <th>Avg score</th>
+          <th>Metrics</th>
+          <th>When</th>
           <th></th>
         </tr>
       </thead>
@@ -41,6 +43,7 @@
         <% @runs.each do |run| %>
           <tr onclick="window.location='<%= run_path(run) %>'" style="cursor: pointer;">
             <td><strong><%= run.name %></strong></td>
+            <td><span class="ck-chip ck-chip--soft">v<%= run.prompt.version_number %></span></td>
             <td><%= run.responses.size %></td>
             <td>
               <% avg = run.avg_score %>
@@ -50,6 +53,22 @@
                 &mdash;
               <% end %>
             </td>
+            <td>
+              <% metrics = run.metric_averages %>
+              <% if metrics.any? %>
+                <div class="ck-metric-bar ck-metric-bar--compact">
+                  <% metrics.each do |m| %>
+                    <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(m[:avg]) %>">
+                      <span class="ck-metric-pip__bar"></span>
+                      <span class="ck-metric-pip__label"><%= m[:name] %> <strong><%= m[:avg] %></strong></span>
+                    </span>
+                  <% end %>
+                </div>
+              <% else %>
+                &mdash;
+              <% end %>
+            </td>
+            <td class="ck-meta-copy"><%= time_ago_in_words(run.created_at) %> ago</td>
             <td class="ck-results-table__arrow">&rarr;</td>
           </tr>
         <% end %>
@@ -58,18 +77,3 @@
   </section>
 <% end %>
 
-<% if @family_versions.length > 1 %>
-  <section class="ck-card--spaced">
-    <p class="ck-kicker">Versions</p>
-
-    <div class="ck-inline" style="margin-top: 0.5rem; gap: 0.5rem;">
-      <% @family_versions.each do |version| %>
-        <% if version.id == @prompt.id %>
-          <span class="ck-chip ck-chip--soft">v<%= version.version_number %></span>
-        <% else %>
-          <%= link_to "v#{version.version_number}", prompt_path(version), class: "ck-chip" %>
-        <% end %>
-      <% end %>
-    </div>
-  </section>
-<% end %>

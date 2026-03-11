@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_11_205540) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_11_214724) do
   create_table "completion_kit_datasets", force: :cascade do |t|
     t.string "name", null: false
     t.text "csv_data", null: false
@@ -35,41 +35,31 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_11_205540) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "completion_kit_metric_sets", force: :cascade do |t|
-    t.string "name", null: false
-    t.text "guidance_text"
-    t.text "rubric_text"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "completion_kit_metrics", force: :cascade do |t|
     t.string "name", null: false
-    t.text "rubric_bands"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "key"
     t.text "criteria"
     t.text "evaluation_steps"
+    t.text "rubric_bands"
+    t.string "key"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["key"], name: "index_completion_kit_metrics_on_key", unique: true
   end
 
   create_table "completion_kit_prompts", force: :cascade do |t|
-    t.string "name"
+    t.string "name", null: false
     t.text "description"
-    t.text "template"
-    t.string "llm_model"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.text "template", null: false
+    t.string "llm_model", null: false
     t.string "family_key", null: false
     t.integer "version_number", null: false
     t.boolean "current", default: true, null: false
     t.datetime "published_at"
-    t.integer "metric_set_id"
-    t.index ["family_key", "current"], name: "idx_completion_kit_prompts_family_current"
-    t.index ["family_key", "version_number"], name: "idx_completion_kit_prompts_family_version", unique: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["family_key", "current"], name: "idx_ck_prompts_family_current"
+    t.index ["family_key", "version_number"], name: "idx_ck_prompts_family_version", unique: true
     t.index ["family_key"], name: "index_completion_kit_prompts_on_family_key"
-    t.index ["metric_set_id"], name: "index_completion_kit_prompts_on_metric_set_id"
   end
 
   create_table "completion_kit_provider_credentials", force: :cascade do |t|
@@ -108,20 +98,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_11_205540) do
   create_table "completion_kit_runs", force: :cascade do |t|
     t.string "name"
     t.integer "prompt_id", null: false
+    t.integer "dataset_id"
+    t.integer "metric_group_id"
+    t.string "judge_model"
     t.string "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "dataset_id"
-    t.string "judge_model"
-    t.integer "metric_group_id"
+    t.index ["dataset_id"], name: "index_completion_kit_runs_on_dataset_id"
+    t.index ["metric_group_id"], name: "index_completion_kit_runs_on_metric_group_id"
     t.index ["prompt_id"], name: "index_completion_kit_runs_on_prompt_id"
   end
 
   add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metric_groups", column: "metric_group_id"
   add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metrics", column: "metric_id"
-  add_foreign_key "completion_kit_prompts", "completion_kit_metric_sets", column: "metric_set_id"
   add_foreign_key "completion_kit_responses", "completion_kit_runs", column: "run_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_metrics", column: "metric_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_responses", column: "response_id"
+  add_foreign_key "completion_kit_runs", "completion_kit_datasets", column: "dataset_id"
+  add_foreign_key "completion_kit_runs", "completion_kit_metric_groups", column: "metric_group_id"
   add_foreign_key "completion_kit_runs", "completion_kit_prompts", column: "prompt_id"
 end

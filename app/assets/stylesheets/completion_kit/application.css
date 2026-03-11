@@ -218,6 +218,7 @@ form.button_to {
 .ck-title {
   font-size: clamp(1.8rem, 3.5vw, 2.5rem);
   line-height: 1.15;
+  margin-right: 0.75rem;
 }
 
 .ck-section-title {
@@ -995,6 +996,45 @@ select.ck-input {
 
 .ck-metric-pip__label strong {
   font-weight: 700;
+}
+
+.ck-metric-bar--compact {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  gap: 3px;
+  flex-wrap: nowrap;
+}
+
+.ck-metric-bar--compact .ck-metric-pip {
+  padding: 0;
+  gap: 0;
+  position: relative;
+}
+
+.ck-metric-bar--compact .ck-metric-pip__bar {
+  width: 6px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.ck-metric-bar--compact .ck-metric-pip__label {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  background: var(--ck-surface);
+  border: 1px solid var(--ck-line);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.875rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.ck-metric-bar--compact .ck-metric-pip:hover .ck-metric-pip__label {
+  display: block;
 }
 
 .ck-review-list {

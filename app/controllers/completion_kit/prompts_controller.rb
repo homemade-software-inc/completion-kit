@@ -7,8 +7,9 @@ module CompletionKit
     end
     
     def show
-      @family_versions = @prompt.family_versions
-      @runs = @prompt.runs.includes(:dataset, responses: :reviews).order(created_at: :desc)
+      @runs = Run.where(prompt_id: @prompt.family_versions.select(:id))
+                 .includes(:prompt, :dataset, responses: :reviews)
+                 .order(created_at: :desc)
     end
     
     def new

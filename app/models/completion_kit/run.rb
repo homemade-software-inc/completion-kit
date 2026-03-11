@@ -29,6 +29,14 @@ module CompletionKit
       (scores.sum / scores.length).round(2)
     end
 
+    def metric_averages
+      all_reviews = responses.flat_map(&:reviews).select { |r| r.ai_score.present? }
+      all_reviews.group_by(&:metric_name).map do |name, reviews|
+        scores = reviews.map { |r| r.ai_score.to_f }
+        { name: name, avg: (scores.sum / scores.length).round(1) }
+      end
+    end
+
     def generate_responses!
       rows = CsvProcessor.process_self(self)
       return false if rows.empty?

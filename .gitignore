@@ -8,3 +8,4 @@
 /coverage/
 .idea/
 spec/dummy/tmp/
+.superpowers/
