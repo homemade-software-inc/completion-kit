@@ -82,17 +82,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_11_205540) do
   end
 
   create_table "completion_kit_responses", force: :cascade do |t|
-    t.integer "test_run_id", null: false
+    t.integer "run_id", null: false
     t.text "input_data"
     t.text "response_text"
     t.text "expected_output"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["test_run_id"], name: "index_completion_kit_responses_on_test_run_id"
+    t.index ["run_id"], name: "index_completion_kit_responses_on_run_id"
   end
 
   create_table "completion_kit_reviews", force: :cascade do |t|
-    t.integer "test_result_id", null: false
+    t.integer "response_id", null: false
     t.integer "metric_id"
     t.string "metric_name"
     t.text "criteria"
@@ -102,7 +102,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_11_205540) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["metric_id"], name: "index_completion_kit_reviews_on_metric_id"
-    t.index ["test_result_id"], name: "index_completion_kit_reviews_on_test_result_id"
+    t.index ["response_id"], name: "index_completion_kit_reviews_on_response_id"
   end
 
   create_table "completion_kit_runs", force: :cascade do |t|
@@ -120,8 +120,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_11_205540) do
   add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metric_groups", column: "metric_group_id"
   add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metrics", column: "metric_id"
   add_foreign_key "completion_kit_prompts", "completion_kit_metric_sets", column: "metric_set_id"
-  add_foreign_key "completion_kit_responses", "completion_kit_runs", column: "test_run_id"
+  add_foreign_key "completion_kit_responses", "completion_kit_runs", column: "run_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_metrics", column: "metric_id"
-  add_foreign_key "completion_kit_reviews", "completion_kit_responses", column: "test_result_id"
+  add_foreign_key "completion_kit_reviews", "completion_kit_responses", column: "response_id"
   add_foreign_key "completion_kit_runs", "completion_kit_prompts", column: "prompt_id"
 end

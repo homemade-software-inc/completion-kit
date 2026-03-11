@@ -23,6 +23,13 @@
     </p>
   </div>
 
+  <% if @run.status == "generating" || @run.status == "judging" %>
+    <div class="ck-status-indicator">
+      <span class="<%= ck_badge_classes(@run.status) %>"><%= @run.status.capitalize %></span>
+      <span><%= @run.responses.count %> responses so far</span>
+    </div>
+  <% end %>
+
   <div class="ck-actions">
     <%= link_to "Edit", edit_run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
     <% if @run.status == "pending" || (@run.status == "completed" && @run.responses.empty?) %>
@@ -92,6 +99,6 @@
   </div>
 <% else %>
   <div class="ck-empty ck-empty--spaced">
-    No responses yet. Generate outputs to see results here.
+    No responses yet. Generate responses to see results here.
   </div>
 <% end %>

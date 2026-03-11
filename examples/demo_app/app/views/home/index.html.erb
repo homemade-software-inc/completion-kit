@@ -20,7 +20,7 @@
     <div class="flex flex-wrap gap-2">
       <%= link_to "Launch Engine UI", "/completion_kit", class: "inline-flex items-center rounded-md bg-cyan-400 px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-[#080b14] shadow-lg shadow-cyan-400/20 transition hover:-translate-y-0.5 hover:bg-cyan-300 hover:shadow-cyan-400/30", style: "font-family: 'JetBrains Mono', monospace;" %>
       <%= link_to "Prompts", "/completion_kit/prompts", class: "inline-flex items-center rounded-md border border-slate-700 px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-slate-400 transition hover:border-cyan-400 hover:text-cyan-400", style: "font-family: 'JetBrains Mono', monospace;" %>
-      <%= link_to "Runs", "/completion_kit/test_runs", class: "inline-flex items-center rounded-md border border-slate-700 px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-slate-400 transition hover:border-cyan-400 hover:text-cyan-400", style: "font-family: 'JetBrains Mono', monospace;" %>
+      <%= link_to "Runs", "/completion_kit/runs", class: "inline-flex items-center rounded-md border border-slate-700 px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-slate-400 transition hover:border-cyan-400 hover:text-cyan-400", style: "font-family: 'JetBrains Mono', monospace;" %>
     </div>
 
     <div class="grid gap-3 md:grid-cols-3">
@@ -30,11 +30,11 @@
       </div>
       <div class="rounded-lg border border-slate-800 bg-slate-900 p-5">
         <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-slate-600" style="font-family: 'JetBrains Mono', monospace;">Example Runs</p>
-        <p class="mt-3 text-4xl font-bold tracking-tight text-cyan-400" style="font-family: 'JetBrains Mono', monospace;"><%= @test_run_count %></p>
+        <p class="mt-3 text-4xl font-bold tracking-tight text-cyan-400" style="font-family: 'JetBrains Mono', monospace;"><%= @run_count %></p>
       </div>
       <div class="rounded-lg border border-cyan-900/50 bg-gradient-to-br from-cyan-950/50 to-slate-900 p-5">
         <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-cyan-500" style="font-family: 'JetBrains Mono', monospace;">Primary Path</p>
-        <p class="mt-3 text-sm font-medium tracking-tight text-slate-200">Create prompt &rarr; run CSV &rarr; evaluate results</p>
+        <p class="mt-3 text-sm font-medium tracking-tight text-slate-200">Create prompt &rarr; run CSV &rarr; judge results</p>
       </div>
     </div>
   </div>

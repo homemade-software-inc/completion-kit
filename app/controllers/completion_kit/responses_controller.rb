@@ -4,6 +4,7 @@ module CompletionKit
     before_action :set_response
 
     def show
+      @response_number = @run.responses.where("id <= ?", @response.id).count
       @reviews = @response.reviews.includes(:metric)
     end
 

@@ -2,23 +2,23 @@ module CompletionKit
   class CsvProcessor
     require 'csv'
 
-    def self.process(test_run)
-      return [] if test_run.csv_data.blank?
+    def self.process(run)
+      return [] if run.csv_data.blank?
 
       begin
-        csv_data = CSV.parse(test_run.csv_data, headers: true)
+        csv_data = CSV.parse(run.csv_data, headers: true)
         rows = csv_data.map(&:to_h)
 
         if rows.empty?
-          test_run.errors.add(:csv_data, "No data rows found in CSV")
+          run.errors.add(:csv_data, "No data rows found in CSV")
           return []
         end
 
-        return [] unless validate_variables(test_run, rows.first.keys)
+        return [] unless validate_variables(run, rows.first.keys)
 
         rows
       rescue CSV::MalformedCSVError => e
-        test_run.errors.add(:csv_data, "Invalid CSV format: #{e.message}")
+        run.errors.add(:csv_data, "Invalid CSV format: #{e.message}")
         []
       end
     end
@@ -40,12 +40,12 @@ module CompletionKit
       prompt.template.scan(/\{\{([^}]+)\}\}/).flatten.map(&:strip).uniq
     end
 
-    def self.validate_variables(test_run, headers)
-      prompt_variables = extract_variables(test_run.prompt)
+    def self.validate_variables(run, headers)
+      prompt_variables = extract_variables(run.prompt)
       missing_variables = prompt_variables - headers
 
       if missing_variables.any?
-        test_run.errors.add(:csv_data, "Missing required variables in CSV: #{missing_variables.join(', ')}")
+        run.errors.add(:csv_data, "Missing required variables in CSV: #{missing_variables.join(', ')}")
         return false
       end
 

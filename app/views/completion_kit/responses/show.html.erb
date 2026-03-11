@@ -2,13 +2,13 @@
   <li><%= link_to "Prompts", prompts_path %></li>
   <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
   <li><%= link_to @run.name, run_path(@run) %></li>
-  <li>Response #<%= @response.id %></li>
+  <li>Response #<%= @response_number %></li>
 </ol>
 
 <section class="ck-page-header">
   <div>
     <div class="ck-inline">
-      <h1 class="ck-title">Response #<%= @response.id %></h1>
+      <h1 class="ck-title">Response #<%= @response_number %></h1>
       <% score = @response.score %>
       <% if score %>
         <span class="<%= ck_badge_classes(ck_score_kind(score)) %>"><%= score %></span>

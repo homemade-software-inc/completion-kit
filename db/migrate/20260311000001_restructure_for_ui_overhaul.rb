@@ -52,6 +52,9 @@ class RestructureForUiOverhaul < ActiveRecord::Migration[7.1]
       SQL
     end
 
+    rename_column :completion_kit_test_results, :test_run_id, :run_id
+    rename_column :completion_kit_test_result_metric_assessments, :test_result_id, :response_id
+
     rename_column :completion_kit_test_results, :output_text, :response_text
 
     if column_exists?(:completion_kit_test_results, :quality_score)
