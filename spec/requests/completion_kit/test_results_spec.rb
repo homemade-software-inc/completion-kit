@@ -4,14 +4,14 @@ RSpec.describe "CompletionKit test results", type: :request do
   let!(:metric_group) { create(:completion_kit_metric_group, :with_metrics) }
   let!(:prompt) { create(:completion_kit_prompt, metric_group: metric_group) }
   let!(:test_run) { create(:completion_kit_test_run, prompt: prompt, name: "Run Results") }
-  let!(:high_result) { create(:completion_kit_test_result, test_run: test_run, quality_score: 9.0, output_text: "alpha beta", expected_output: "alpha beta") }
-  let!(:medium_result) { create(:completion_kit_test_result, test_run: test_run, quality_score: 6.0, output_text: "beta gamma", expected_output: "beta") }
+  let!(:high_result) { create(:completion_kit_test_result, test_run: test_run, quality_score: 4.5, output_text: "alpha beta", expected_output: "alpha beta") }
+  let!(:medium_result) { create(:completion_kit_test_result, test_run: test_run, quality_score: 3.5, output_text: "beta gamma", expected_output: "beta") }
   let!(:low_result) { create(:completion_kit_test_result, test_run: test_run, quality_score: 1.0, output_text: "delta", expected_output: "epsilon") }
   let!(:pending_result) { create(:completion_kit_test_result, test_run: test_run, quality_score: nil, expected_output: nil) }
 
   before do
     metric_group.metrics.each do |metric|
-      create(:completion_kit_test_result_metric_assessment, test_result: high_result, metric: metric, metric_name: metric.name, ai_score: 8.5, ai_feedback: "Solid #{metric.name}")
+      create(:completion_kit_test_result_metric_assessment, test_result: high_result, metric: metric, metric_name: metric.name, ai_score: 4.5, ai_feedback: "Solid #{metric.name}")
     end
   end
 
@@ -56,7 +56,7 @@ RSpec.describe "CompletionKit test results", type: :request do
               metric_id: assessment.metric_id,
               metric_name: assessment.metric_name,
               human_reviewer_name: "Dana",
-              human_score: 7.5,
+              human_score: 4.5,
               human_feedback: "Good enough"
             }
           }
@@ -64,7 +64,7 @@ RSpec.describe "CompletionKit test results", type: :request do
       }
 
     expect(response).to redirect_to("/completion_kit/test_runs/#{test_run.id}/test_results/#{pending_result.id}")
-    expect(assessment.reload.human_score.to_f).to eq(7.5)
+    expect(assessment.reload.human_score.to_f).to eq(4.5)
 
     patch "/completion_kit/test_runs/#{test_run.id}/test_results/#{pending_result.id}/human_review",
       params: {

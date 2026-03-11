@@ -29,8 +29,8 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
   describe "#ck_score_kind" do
     it "returns the expected score bands" do
       expect(helper.ck_score_kind(nil)).to eq(:pending)
-      expect(helper.ck_score_kind(9.5)).to eq(:high)
-      expect(helper.ck_score_kind(6.0)).to eq(:medium)
+      expect(helper.ck_score_kind(4.5)).to eq(:high)
+      expect(helper.ck_score_kind(3.5)).to eq(:medium)
       expect(helper.ck_score_kind(2.0)).to eq(:low)
     end
   end

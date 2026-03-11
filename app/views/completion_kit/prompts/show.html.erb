@@ -75,8 +75,8 @@
       <div class="ck-item">
         <div class="ck-stack">
           <p class="ck-item-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></p>
-          <% if metric.description.present? %>
-            <p class="ck-copy"><%= metric.description %></p>
+          <% if metric.criteria.present? %>
+            <p class="ck-copy"><%= metric.criteria %></p>
           <% end %>
         </div>
       </div>
@@ -85,12 +85,12 @@
         <% metric.rubric_bands_for_form.each do |band| %>
           <div class="ck-rubric-row ck-rubric-row--display">
             <div class="ck-rubric-row__range">
-              <span class="ck-rubric-range"><%= band["range"] %></span>
+              <span class="ck-rubric-range"><%= band["stars"] %> ★</span>
             </div>
             <div class="ck-rubric-row__fields">
               <div class="ck-field ck-field--tight">
-                <p class="ck-label">Criteria</p>
-                <p class="ck-copy"><%= band["criteria"] %></p>
+                <p class="ck-label">Description</p>
+                <p class="ck-copy"><%= band["description"] %></p>
               </div>
             </div>
           </div>

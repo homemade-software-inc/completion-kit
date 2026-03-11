@@ -13,7 +13,7 @@ RSpec.describe "Eval DSL end-to-end" do
     File.write(csv_path, "content,audience,expected_output\nfirst row,devs,expected1\nsecond row,managers,expected2\n")
     mock_client = instance_double(CompletionKit::OpenAiClient, configured?: true, configuration_errors: [], generate_completion: "generated output")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(mock_client)
-    allow_any_instance_of(CompletionKit::JudgeService).to receive(:evaluate).and_return({ score: 8.5, feedback: "Good work" })
+    allow_any_instance_of(CompletionKit::JudgeService).to receive(:evaluate).and_return({ score: 4.5, feedback: "Good work" })
   end
 
   after do
@@ -25,8 +25,8 @@ RSpec.describe "Eval DSL end-to-end" do
     CompletionKit.define_eval("e2e_test") do |e|
       e.prompt "e2e_test"
       e.dataset csv_path
-      e.metric :relevance, threshold: 7.0
-      e.metric :accuracy, threshold: 8.0
+      e.metric :relevance, threshold: 3.5
+      e.metric :accuracy, threshold: 4.0
     end
 
     defn = CompletionKit.registered_evals.first

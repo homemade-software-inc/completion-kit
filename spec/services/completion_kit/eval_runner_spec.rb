@@ -16,7 +16,7 @@ RSpec.describe CompletionKit::EvalRunner do
     defn = CompletionKit::EvalDefinition.new("test_eval")
     defn.prompt "test_prompt"
     defn.dataset csv_path
-    defn.metric :relevance, threshold: 7.0
+    defn.metric :relevance, threshold: 3.5
     defn
   end
 
@@ -26,7 +26,7 @@ RSpec.describe CompletionKit::EvalRunner do
 
     mock_client = instance_double(CompletionKit::OpenAiClient, configured?: true, configuration_errors: [], generate_completion: "output text")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(mock_client)
-    allow_any_instance_of(CompletionKit::JudgeService).to receive(:evaluate).and_return({ score: 8.0, feedback: "Good" })
+    allow_any_instance_of(CompletionKit::JudgeService).to receive(:evaluate).and_return({ score: 4.0, feedback: "Good" })
   end
 
   after { File.delete(csv_path) if File.exist?(csv_path) }
@@ -40,7 +40,7 @@ RSpec.describe CompletionKit::EvalRunner do
       expect(result[:passed]).to be true
       expect(result[:metrics].first[:key]).to eq(:relevance)
       expect(result[:metrics].first[:average]).to be_a(Float)
-      expect(result[:metrics].first[:threshold]).to eq(7.0)
+      expect(result[:metrics].first[:threshold]).to eq(3.5)
       expect(result[:metrics].first[:passed]).to be true
       expect(result[:row_count]).to eq(2)
     end

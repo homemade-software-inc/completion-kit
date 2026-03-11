@@ -12,7 +12,7 @@ RSpec.describe "CompletionKit test runs", type: :request do
 
   it "renders index, show, new, and edit pages across sort branches" do
     test_run = create(:completion_kit_test_run, prompt: prompt, name: "Run A")
-    create(:completion_kit_test_result, test_run: test_run, quality_score: 8.0, created_at: 2.days.ago)
+    create(:completion_kit_test_result, test_run: test_run, quality_score: 4.0, created_at: 2.days.ago)
     create(:completion_kit_test_result, test_run: test_run, quality_score: 2.0, created_at: 1.day.ago)
 
     get base_path

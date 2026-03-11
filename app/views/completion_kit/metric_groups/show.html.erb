@@ -24,8 +24,8 @@
         <div class="ck-item">
           <div>
             <p class="ck-item-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></p>
-            <% if metric.description.present? %>
-              <p class="ck-copy"><%= metric.description %></p>
+            <% if metric.criteria.present? %>
+              <p class="ck-copy"><%= metric.criteria %></p>
             <% end %>
           </div>
         </div>

@@ -57,6 +57,18 @@ RSpec.describe CompletionKit::TestResult, type: :model do
 
       expect(test_result.evaluate_quality).to eq(false)
     end
+
+    it "handles metric-like objects that use rubric_text and guidance_text instead of criteria and display_rubric_text" do
+      legacy_like = Struct.new(:name, :rubric_text, :guidance_text).new("Legacy", "rubric text", "guidance")
+      test_result = create(:completion_kit_test_result)
+      judge = instance_double(CompletionKit::JudgeService, evaluate: { score: 3.0, feedback: "OK" })
+
+      allow(test_result.prompt).to receive(:assessment_metrics).and_return([legacy_like])
+      allow(test_result.prompt).to receive(:human_review_examples).and_return([])
+      allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
+
+      expect(test_result.evaluate_quality).to eq(true)
+    end
   end
 
   describe "#quality_band" do
@@ -86,6 +98,17 @@ RSpec.describe CompletionKit::TestResult, type: :model do
 
       expect(test_result.metric_assessments_for_review.first.metric).to be_nil
       expect(test_result.metric_assessments_for_review.first.metric_name).to eq("Overall quality")
+    end
+
+    it "builds review assessments for metric-like objects without criteria or display_rubric_text" do
+      legacy_like = Struct.new(:name, :rubric_text).new("Legacy", "rubric text")
+      test_result = create(:completion_kit_test_result)
+
+      allow(test_result.prompt).to receive(:assessment_metrics).and_return([legacy_like])
+
+      built = test_result.metric_assessments_for_review
+      expect(built.first.metric_name).to eq("Legacy")
+      expect(built.first.rubric_text).to eq("rubric text")
     end
   end
 
