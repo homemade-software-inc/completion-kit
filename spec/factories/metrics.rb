@@ -1,9 +1,8 @@
 FactoryBot.define do
   factory :completion_kit_metric, class: "CompletionKit::Metric" do
     sequence(:name) { |n| "Helpfulness #{n}" }
-    description { "Measures whether the output is useful and actionable." }
-    guidance_text { "Reward direct usefulness, task completion, and clear next steps." }
-    rubric_text { CompletionKit::Metric.default_rubric_text }
+    criteria { "Measures whether the output is useful and actionable." }
+    evaluation_steps { [] }
     rubric_bands { CompletionKit::Metric.default_rubric_bands }
   end
 end
