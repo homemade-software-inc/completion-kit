@@ -20,13 +20,17 @@ module CompletionKit
 
     scope :current_versions, -> { where(current: true).order(created_at: :desc) }
 
-    LegacyMetric = Struct.new(:id, :name, :description, :guidance_text, :rubric_text, :rubric_bands, keyword_init: true) do
+    LegacyMetric = Struct.new(:id, :name, :criteria, :rubric_text, :rubric_bands, :evaluation_steps, keyword_init: true) do
       def persisted?
         false
       end
 
       def rubric_bands_for_form
         CompletionKit::Metric.normalize_rubric_bands(rubric_bands)
+      end
+
+      def display_rubric_text
+        CompletionKit::Metric.rubric_text_for(rubric_bands_for_form)
       end
     end
 
@@ -66,7 +70,7 @@ module CompletionKit
     end
 
     def effective_rubric_bands
-      Metric.normalize_rubric_bands(rubric_bands.presence || parsed_rubric_bands_from_text(effective_rubric_text))
+      Metric.normalize_rubric_bands(rubric_bands.presence || Metric.default_rubric_bands)
     end
 
     def effective_rubric_text
@@ -142,32 +146,11 @@ module CompletionKit
     def legacy_metric
       LegacyMetric.new(
         name: "Overall quality",
-        description: "Fallback metric for prompts without a metric group.",
-        guidance_text: effective_review_guidance,
+        criteria: effective_review_guidance,
         rubric_text: effective_rubric_text,
-        rubric_bands: effective_rubric_bands
+        rubric_bands: effective_rubric_bands,
+        evaluation_steps: []
       )
-    end
-
-    def parsed_rubric_bands_from_text(text)
-      return [] if text.blank?
-
-      text.to_s.split(/\n{2,}/).filter_map do |chunk|
-        lines = chunk.lines.map(&:strip).reject(&:blank?)
-        next if lines.empty?
-
-        range = lines.shift.to_s.strip
-        default_band = Metric.default_rubric_bands.find { |band| band["range"] == range }
-        next unless default_band
-
-        criteria_line = lines.find { |line| line.start_with?("Criteria:") }
-        criteria = criteria_line.to_s.sub("Criteria:", "").strip.presence || lines.first.to_s.strip.presence
-
-        {
-          "range" => range,
-          "criteria" => criteria || default_band["criteria"]
-        }
-      end
     end
   end
 end

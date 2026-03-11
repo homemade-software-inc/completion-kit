@@ -46,7 +46,8 @@ RSpec.describe CompletionKit::Prompt, type: :model do
     expect(prompt.assessment_metrics.length).to eq(1)
     expect(metric.name).to eq("Overall quality")
     expect(metric.persisted?).to eq(false)
-    expect(metric.rubric_text).to include("9-10")
+    expect(metric.criteria).to eq(prompt.effective_review_guidance)
+    expect(metric.rubric_text).to include("5 stars:")
   end
 
   it "collects human review examples for a specific metric" do
@@ -57,12 +58,12 @@ RSpec.describe CompletionKit::Prompt, type: :model do
     test_run = create(:completion_kit_test_run, prompt: prompt)
     reviewed = create(:completion_kit_test_result, test_run: test_run, human_score: nil, human_feedback: nil, human_reviewed_at: nil)
     skipped = create(:completion_kit_test_result, test_run: test_run, human_score: nil, human_feedback: nil, human_reviewed_at: nil)
-    create(:completion_kit_test_result_metric_assessment, test_result: reviewed, metric: metric, metric_name: metric.name, human_score: 8.0, human_feedback: "Good", human_reviewed_at: 1.hour.ago)
-    create(:completion_kit_test_result_metric_assessment, test_result: skipped, metric: metric, metric_name: metric.name, human_score: 4.0, human_feedback: "Weak", human_reviewed_at: Time.current)
+    create(:completion_kit_test_result_metric_assessment, test_result: reviewed, metric: metric, metric_name: metric.name, human_score: 5.0, human_feedback: "Good", human_reviewed_at: 1.hour.ago)
+    create(:completion_kit_test_result_metric_assessment, test_result: skipped, metric: metric, metric_name: metric.name, human_score: 2.0, human_feedback: "Weak", human_reviewed_at: Time.current)
 
     examples = prompt.human_review_examples(metric: metric, excluding_test_result_id: skipped.id, limit: 5)
 
-    expect(examples).to eq([{ input_data: reviewed.input_data, output_text: reviewed.output_text, human_score: 8.0, human_feedback: "Good" }])
+    expect(examples).to eq([{ input_data: reviewed.input_data, output_text: reviewed.output_text, human_score: 5.0, human_feedback: "Good" }])
   end
 
   it "returns no human review examples for non-persisted metrics" do
@@ -71,23 +72,16 @@ RSpec.describe CompletionKit::Prompt, type: :model do
     expect(prompt.human_review_examples(metric: prompt.assessment_metrics.first)).to eq([])
   end
 
-  it "defaults current state and assessment model and parses legacy rubric text" do
+  it "defaults current state and assessment model" do
     prompt = create(
       :completion_kit_prompt,
       current: nil,
       assessment_model: nil,
-      metric_group: create(:completion_kit_metric_group),
-      rubric_bands: nil,
-      rubric_text: <<~RUBRIC
-        9-10
-        Criteria: Excellent
-      RUBRIC
+      metric_group: create(:completion_kit_metric_group)
     )
 
     expect(prompt.current).to eq(true)
     expect(prompt.assessment_model).to eq(prompt.llm_model)
-    expect(prompt.effective_rubric_bands.last["criteria"]).to eq("Excellent")
-    expect(prompt.send(:parsed_rubric_bands_from_text, "")).to eq([])
   end
 
   it "returns human review examples without exclusion when requested" do
@@ -97,21 +91,14 @@ RSpec.describe CompletionKit::Prompt, type: :model do
     prompt = create(:completion_kit_prompt, metric_group: metric_group)
     test_run = create(:completion_kit_test_run, prompt: prompt)
     result = create(:completion_kit_test_result, test_run: test_run)
-    create(:completion_kit_test_result_metric_assessment, test_result: result, metric: metric, metric_name: metric.name, human_score: 9.0, human_feedback: "Strong", human_reviewed_at: Time.current)
+    create(:completion_kit_test_result_metric_assessment, test_result: result, metric: metric, metric_name: metric.name, human_score: 5.0, human_feedback: "Strong", human_reviewed_at: Time.current)
 
-    expect(prompt.human_review_examples(metric: metric, limit: 5).first[:human_score]).to eq(9.0)
+    expect(prompt.human_review_examples(metric: metric, limit: 5).first[:human_score]).to eq(5.0)
   end
 
-  it "builds default rubric bands for prompts without a metric group and ignores invalid rubric chunks" do
+  it "builds default rubric bands for prompts without a metric group" do
     prompt = create(:completion_kit_prompt, metric_group: nil, rubric_bands: nil, rubric_text: nil)
-    parsed = prompt.send(:parsed_rubric_bands_from_text, <<~RUBRIC)
-       
 
-      unknown
-      Criteria: Ignore me
-    RUBRIC
-
-    expect(prompt.rubric_bands.first["range"]).to eq("1-2")
-    expect(parsed).to eq([])
+    expect(prompt.rubric_bands.first["stars"]).to eq(5)
   end
 end
