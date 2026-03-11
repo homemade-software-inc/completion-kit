@@ -5,6 +5,6 @@ FactoryBot.define do
     input_data { { content: "Release notes", audience: "developers" }.to_json }
     output_text { "A generated summary" }
     expected_output { "A developer-focused summary" }
-    quality_score { 8.5 }
+    quality_score { 4.0 }
   end
 end

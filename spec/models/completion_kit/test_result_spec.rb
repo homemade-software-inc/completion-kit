@@ -8,10 +8,10 @@ RSpec.describe CompletionKit::TestResult, type: :model do
       judge = instance_double(CompletionKit::JudgeService)
 
       allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
-      allow(judge).to receive(:evaluate).and_return({ score: 9.0, feedback: "Strong match" }, { score: 7.0, feedback: "Good enough" })
+      allow(judge).to receive(:evaluate).and_return({ score: 4.5, feedback: "Strong match" }, { score: 3.5, feedback: "Good enough" })
 
       expect(test_result.evaluate_quality).to eq(true)
-      expect(test_result.reload.quality_score.to_f).to eq(8.0)
+      expect(test_result.reload.quality_score.to_f).to eq(4.0)
       expect(test_result.judge_feedback).to include("Strong match", "Good enough")
       expect(test_result.status).to eq("evaluated")
       expect(test_result.metric_assessments.count).to eq(2)
@@ -19,13 +19,13 @@ RSpec.describe CompletionKit::TestResult, type: :model do
 
     it "supports the legacy single-metric fallback and preserves human review status on reevaluation" do
       test_result = create(:completion_kit_test_result, test_run: create(:completion_kit_test_run, prompt: create(:completion_kit_prompt, metric_group: nil)), quality_score: nil, judge_feedback: nil)
-      judge = instance_double(CompletionKit::JudgeService, evaluate: { score: 8.0, feedback: "Legacy metric" })
+      judge = instance_double(CompletionKit::JudgeService, evaluate: { score: 4.0, feedback: "Legacy metric" })
 
       allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
 
       expect(test_result.evaluate_quality).to eq(true)
       assessment = test_result.reload.metric_assessments.first
-      assessment.apply_human_review!(reviewer_name: "Dana", score: 8.5, feedback: "Looks right")
+      assessment.apply_human_review!(reviewer_name: "Dana", score: 4.5, feedback: "Looks right")
 
       expect(test_result.evaluate_quality).to eq(true)
       expect(test_result.reload.metric_assessments.first.status).to eq("reviewed")
@@ -61,13 +61,13 @@ RSpec.describe CompletionKit::TestResult, type: :model do
 
   describe "#quality_band" do
     it "uses configured thresholds" do
-      test_result = build(:completion_kit_test_result, quality_score: 6.5)
+      test_result = build(:completion_kit_test_result, quality_score: 3.5)
 
       expect(test_result.quality_band).to eq(:medium)
     end
 
     it "returns the remaining quality bands" do
-      expect(build(:completion_kit_test_result, quality_score: 9.0).quality_band).to eq(:high)
+      expect(build(:completion_kit_test_result, quality_score: 4.5).quality_band).to eq(:high)
       expect(build(:completion_kit_test_result, quality_score: 1.0).quality_band).to eq(:low)
       expect(build(:completion_kit_test_result, quality_score: nil).quality_band).to eq(:pending)
     end
@@ -95,14 +95,14 @@ RSpec.describe CompletionKit::TestResult, type: :model do
       test_result = assessment.test_result
 
       test_result.apply_human_reviews!(
-        [{ id: assessment.id, metric_name: assessment.metric_name, human_reviewer_name: "Jamie", human_score: 7.0, human_feedback: "Solid but incomplete" }]
+        [{ id: assessment.id, metric_name: assessment.metric_name, human_reviewer_name: "Jamie", human_score: 4.0, human_feedback: "Solid but incomplete" }]
       )
 
       expect(assessment.reload.human_reviewer_name).to eq("Jamie")
-      expect(assessment.human_score.to_f).to eq(7.0)
+      expect(assessment.human_score.to_f).to eq(4.0)
       expect(assessment.human_feedback).to eq("Solid but incomplete")
       expect(assessment.human_reviewed_at).to be_present
-      expect(test_result.reload.human_score.to_f).to eq(7.0)
+      expect(test_result.reload.human_score.to_f).to eq(4.0)
     end
 
     it "finds assessments by metric id or metric name and tolerates blank submissions" do
@@ -111,13 +111,13 @@ RSpec.describe CompletionKit::TestResult, type: :model do
 
       test_result.apply_human_reviews!(
         [
-          { metric_id: metric.id, metric_name: metric.name, guidance_text: metric.guidance_text, rubric_text: metric.rubric_text, human_reviewer_name: "Dana", human_score: 6.0, human_feedback: "Needs edits" },
-          { metric_name: "Legacy", guidance_text: "", rubric_text: "Legacy rubric", human_reviewer_name: "Dana", human_score: 5.0, human_feedback: "Fallback path" },
+          { metric_id: metric.id, metric_name: metric.name, criteria: metric.criteria, rubric_text: metric.display_rubric_text, human_reviewer_name: "Dana", human_score: 4.0, human_feedback: "Needs edits" },
+          { metric_name: "Legacy", criteria: "", rubric_text: "Legacy rubric", human_reviewer_name: "Dana", human_score: 3.0, human_feedback: "Fallback path" },
           { metric_name: "Skipped", human_reviewer_name: "", human_score: "", human_feedback: "" }
         ]
       )
 
-      expect(test_result.metric_assessments.find_by(metric_id: metric.id).human_score.to_f).to eq(6.0)
+      expect(test_result.metric_assessments.find_by(metric_id: metric.id).human_score.to_f).to eq(4.0)
       expect(test_result.metric_assessments.find_by(metric_name: "Legacy").human_feedback).to eq("Fallback path")
     end
   end

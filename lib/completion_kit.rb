@@ -19,8 +19,8 @@ module CompletionKit
       
       # Judge configuration
       @judge_model = "gpt-4.1"
-      @high_quality_threshold = 8
-      @medium_quality_threshold = 5
+      @high_quality_threshold = 4
+      @medium_quality_threshold = 3
     end
   end
   

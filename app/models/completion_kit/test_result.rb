@@ -7,8 +7,8 @@ module CompletionKit
 
     validates :input_data, presence: true
     validates :output_text, presence: true
-    validates :quality_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 10, allow_nil: true }
-    validates :human_score, numericality: { greater_than_or_equal_to: 1, less_than_or_equal_to: 10, allow_nil: true }
+    validates :quality_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5, allow_nil: true }
+    validates :human_score, numericality: { greater_than_or_equal_to: 1, less_than_or_equal_to: 5, allow_nil: true }
     validates :judge_feedback, presence: true, allow_nil: true
     validates :expected_output, presence: true, allow_nil: true
 
@@ -26,8 +26,9 @@ module CompletionKit
             expected_output,
             prompt.template,
             input_data: input_data,
-            review_guidance: combined_review_guidance(metric),
-            rubric_text: metric.rubric_text,
+            criteria: combined_review_guidance(metric),
+            evaluation_steps: metric.respond_to?(:evaluation_steps) ? metric.evaluation_steps : nil,
+            rubric_text: metric.respond_to?(:display_rubric_text) ? metric.display_rubric_text : metric.rubric_text,
             human_examples: prompt.human_review_examples(metric: metric, excluding_test_result_id: id),
             test_run_id: test_run_id
           )
@@ -36,8 +37,8 @@ module CompletionKit
           assessment.assign_attributes(
             metric: metric.respond_to?(:persisted?) && metric.persisted? ? metric : nil,
             metric_name: metric.name,
-            guidance_text: metric.guidance_text,
-            rubric_text: metric.rubric_text,
+            criteria: metric.respond_to?(:criteria) ? metric.criteria.to_s : "",
+            rubric_text: metric.respond_to?(:display_rubric_text) ? metric.display_rubric_text : metric.rubric_text,
             status: assessment.human_score.present? ? "reviewed" : "evaluated",
             ai_score: evaluation[:score],
             ai_feedback: evaluation[:feedback]
@@ -69,8 +70,8 @@ module CompletionKit
         metric_assessments.build(
           metric: metric.respond_to?(:persisted?) && metric.persisted? ? metric : nil,
           metric_name: metric.name,
-          guidance_text: metric.guidance_text,
-          rubric_text: metric.rubric_text
+          criteria: metric.respond_to?(:criteria) ? metric.criteria.to_s : "",
+          rubric_text: metric.respond_to?(:display_rubric_text) ? metric.display_rubric_text : metric.rubric_text
         )
       end
     end
@@ -91,7 +92,7 @@ module CompletionKit
 
           assessment.metric_id ||= attrs["metric_id"].presence
           assessment.metric_name ||= attrs["metric_name"]
-          assessment.guidance_text ||= attrs["guidance_text"].to_s
+          assessment.criteria ||= attrs["criteria"].to_s
           assessment.rubric_text ||= attrs["rubric_text"].to_s
           assessment.apply_human_review!(
             reviewer_name: attrs["human_reviewer_name"],
@@ -132,7 +133,8 @@ module CompletionKit
     private
 
     def combined_review_guidance(metric)
-      [prompt.effective_review_guidance, metric.guidance_text].reject(&:blank?).join("\n\n")
+      guidance = metric.respond_to?(:criteria) ? metric.criteria : metric.guidance_text
+      [prompt.effective_review_guidance, guidance].reject(&:blank?).join("\n\n")
     end
 
     def find_or_initialize_metric_assessment(metric)
