@@ -39,7 +39,7 @@ RSpec.describe "CompletionKit runs", type: :request do
       post base_path, params: { run: { prompt_id: prompt.id, dataset_id: dataset.id } }
     end.to change(CompletionKit::Run, :count).by(1)
 
-    expect(response).to redirect_to("/completion_kit/runs")
+    expect(response).to redirect_to(%r{/completion_kit/runs/\d+})
   end
 
   it "renders new when create is invalid" do

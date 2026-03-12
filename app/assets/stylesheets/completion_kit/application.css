@@ -555,6 +555,47 @@ form.button_to {
   color: var(--ck-warning);
 }
 
+.ck-button--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.ck-config-checklist {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  max-width: 36rem;
+}
+
+.ck-config-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ck-sans);
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--ck-radius);
+  background: var(--ck-surface);
+  border: 1px solid var(--ck-border);
+}
+
+.ck-config-item--ok .ck-config-item__icon {
+  color: var(--ck-success);
+}
+
+.ck-config-item--missing .ck-config-item__icon {
+  color: var(--ck-danger);
+}
+
+.ck-config-item--info .ck-config-item__icon {
+  color: var(--ck-text-muted);
+}
+
+.ck-config-item .ck-link {
+  margin-left: auto;
+}
+
 .ck-field {
   display: grid;
   gap: 0.4rem;

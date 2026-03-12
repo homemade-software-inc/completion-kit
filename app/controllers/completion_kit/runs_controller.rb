@@ -36,7 +36,7 @@ module CompletionKit
       @run = Run.new(run_params)
 
       if @run.save
-        redirect_to runs_path, notice: "Run was successfully created."
+        redirect_to run_path(@run), notice: "Run created. Review the configuration below, then start when ready."
       else
         render :new, status: :unprocessable_entity
       end
