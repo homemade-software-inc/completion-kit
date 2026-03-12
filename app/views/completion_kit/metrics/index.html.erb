@@ -3,7 +3,7 @@
     <h1 class="ck-title">Metrics</h1>
   </div>
   <div class="ck-actions">
-    <%= link_to "Groups", metric_groups_path, class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Criteria", criteria_path, class: ck_button_classes(:light, variant: :outline) %>
     <%= link_to "New metric", new_metric_path, class: ck_button_classes(:dark) %>
   </div>
 </section>
@@ -14,7 +14,7 @@
       <tr>
         <th>Name</th>
         <th>Criteria</th>
-        <th>Group</th>
+        <th>Criteria</th>
         <th></th>
       </tr>
     </thead>
@@ -24,8 +24,8 @@
           <td><strong><%= metric.name %></strong></td>
           <td><%= truncate(metric.criteria.to_s, length: 80) %></td>
           <td>
-            <% group = metric.metric_groups.first %>
-            <%= group&.name || "&mdash;".html_safe %>
+            <% c = metric.criterias.first %>
+            <%= c&.name || "&mdash;".html_safe %>
           </td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>

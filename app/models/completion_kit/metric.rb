@@ -8,8 +8,8 @@ module CompletionKit
       { "stars" => 1, "description" => "Fails to meet the criteria. Major errors or completely off-target." }
     ].freeze
 
-    has_many :metric_group_memberships, dependent: :destroy
-    has_many :metric_groups, through: :metric_group_memberships
+    has_many :criteria_memberships, dependent: :destroy
+    has_many :criterias, through: :criteria_memberships, source: :criteria
     has_many :reviews, dependent: :nullify
 
     serialize :rubric_bands, coder: JSON

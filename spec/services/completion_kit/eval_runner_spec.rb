@@ -1,9 +1,9 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::EvalRunner do
-  let!(:metric_group) { create(:completion_kit_metric_group) }
+  let!(:criteria) { create(:completion_kit_criteria) }
   let!(:relevance_metric) { create(:completion_kit_metric, name: "Relevance", key: "relevance") }
-  let!(:membership) { create(:completion_kit_metric_group_membership, metric_group: metric_group, metric: relevance_metric) }
+  let!(:membership) { create(:completion_kit_criteria_membership, criteria: criteria, metric: relevance_metric) }
   let!(:prompt) do
     create(:completion_kit_prompt,
       name: "test_prompt",

@@ -12,6 +12,11 @@
 
   <div class="ck-card ck-form-card">
     <div class="ck-field">
+      <%= form.label :name, "Name (auto-generated if blank)", class: "ck-label" %>
+      <%= form.text_field :name, class: "ck-input", placeholder: run.name.presence || "Auto-generated from prompt + version + timestamp" %>
+    </div>
+
+    <div class="ck-field">
       <%= form.label :prompt_id, "Prompt", class: "ck-label" %>
       <%= form.select :prompt_id, @prompts.map { |p| [p.display_name, p.id] }, { include_blank: "Select a prompt" }, { class: "ck-input" } %>
     </div>
@@ -27,18 +32,41 @@
 
     <div class="ck-field">
       <%= form.label :judge_model, "Judge model (optional)", class: "ck-label" %>
-      <%= form.select :judge_model, CompletionKit::Prompt.available_models.map { |m| [m[:name], m[:id]] }, { include_blank: "No judge" }, { class: "ck-input" } %>
+      <%= form.select :judge_model, ck_grouped_models(CompletionKit::Prompt.available_models, run.judge_model), { include_blank: "None" }, { class: "ck-input", id: "run_judge_model" } %>
     </div>
 
-    <div id="metric-group-field" class="ck-field" style="<%= 'display:none' unless run.judge_model.present? %>">
-      <%= form.label :metric_group_id, "Metric group (optional)", class: "ck-label" %>
-      <%= form.select :metric_group_id, @metric_groups.map { |mg| [mg.name, mg.id] }, { include_blank: "No metric group" }, { class: "ck-input" } %>
+    <div class="ck-field">
+      <%= form.label :criteria_id, "Criteria (optional)", class: "ck-label" %>
+      <%= form.select :criteria_id, @criterias.map { |c| ["#{c.name} (#{c.metrics.count} metrics)", c.id] }, { include_blank: "None" }, { class: "ck-input", id: "run_criteria" } %>
     </div>
+
+    <div id="run-judge-hint" class="ck-form-hint" style="display: none;"></div>
 
     <script>
-document.querySelector('[name="run[judge_model]"]').addEventListener('change', function() {
-  document.getElementById('metric-group-field').style.display = this.value ? '' : 'none';
-});
+function updateJudgeHint() {
+  var judge = document.getElementById('run_judge_model').value;
+  var group = document.getElementById('run_criteria').value;
+  var hint = document.getElementById('run-judge-hint');
+  if (judge && group) {
+    hint.textContent = 'Responses will be generated then judged automatically.';
+    hint.className = 'ck-form-hint ck-form-hint--success';
+    hint.style.display = '';
+  } else if (judge && !group) {
+    hint.textContent = 'Select criteria to enable judging.';
+    hint.className = 'ck-form-hint ck-form-hint--warn';
+    hint.style.display = '';
+  } else if (!judge && group) {
+    hint.textContent = 'Select a judge model to enable judging.';
+    hint.className = 'ck-form-hint ck-form-hint--warn';
+    hint.style.display = '';
+  } else {
+    hint.textContent = '';
+    hint.style.display = 'none';
+  }
+}
+document.getElementById('run_judge_model').addEventListener('change', updateJudgeHint);
+document.getElementById('run_criteria').addEventListener('change', updateJudgeHint);
+updateJudgeHint();
     </script>
 
     <div class="ck-actions">

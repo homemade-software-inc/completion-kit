@@ -65,7 +65,7 @@ module CompletionKit
 
     def judge
       if params[:run].present?
-        @run.update(params.require(:run).permit(:judge_model, :metric_group_id))
+        @run.update(params.require(:run).permit(:judge_model, :criteria_id))
       end
 
       if @run.judge_responses!
@@ -84,11 +84,11 @@ module CompletionKit
     def load_form_collections
       @prompts = Prompt.order(:name)
       @datasets = Dataset.order(:name)
-      @metric_groups = MetricGroup.order(:name)
+      @criterias = Criteria.includes(:metrics).order(:name)
     end
 
     def run_params
-      params.require(:run).permit(:prompt_id, :dataset_id, :judge_model, :metric_group_id)
+      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :criteria_id)
     end
   end
 end

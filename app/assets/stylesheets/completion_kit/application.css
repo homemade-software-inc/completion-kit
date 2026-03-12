@@ -534,6 +534,25 @@ form.button_to {
 .ck-form-card {
   display: grid;
   gap: 1rem;
+  max-width: 36rem;
+}
+
+.ck-form-hint {
+  font-family: var(--ck-sans);
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--ck-radius);
+  line-height: 1.4;
+}
+
+.ck-form-hint--success {
+  background: var(--ck-success-soft);
+  color: var(--ck-success);
+}
+
+.ck-form-hint--warn {
+  background: var(--ck-warning-soft);
+  color: var(--ck-warning);
 }
 
 .ck-field {
@@ -903,6 +922,10 @@ select.ck-input {
   color: var(--ck-muted);
 }
 
+.ck-run-meta .ck-meta-copy {
+  margin: 0;
+}
+
 .ck-response-list {
   display: grid;
   gap: 0.75rem;
@@ -992,6 +1015,54 @@ select.ck-input {
 
 .ck-metric-pip__label {
   white-space: nowrap;
+}
+
+.ck-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ck-dot--pending {
+  background: var(--ck-accent);
+}
+
+.ck-dot--running {
+  background: var(--ck-accent);
+  animation: ck-pulse 1.5s ease-in-out infinite;
+}
+
+.ck-dot--completed {
+  background: var(--ck-success);
+}
+
+.ck-dot--high {
+  background: var(--ck-success);
+}
+
+.ck-dot--medium {
+  background: var(--ck-warning);
+}
+
+.ck-dot--low {
+  background: var(--ck-danger);
+}
+
+.ck-dot--failed {
+  background: var(--ck-danger);
+}
+
+@keyframes ck-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.ck-run-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .ck-metric-pip__label strong {

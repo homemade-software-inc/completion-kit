@@ -23,7 +23,7 @@ class CreateCompletionKitTables < ActiveRecord::Migration[7.1]
       t.timestamps
     end
 
-    create_table :completion_kit_metric_groups do |t|
+    create_table :completion_kit_criteria do |t|
       t.string :name, null: false
       t.text :description
       t.timestamps
@@ -40,8 +40,8 @@ class CreateCompletionKitTables < ActiveRecord::Migration[7.1]
 
     add_index :completion_kit_metrics, :key, unique: true
 
-    create_table :completion_kit_metric_group_memberships do |t|
-      t.references :metric_group, null: false, foreign_key: { to_table: :completion_kit_metric_groups }
+    create_table :completion_kit_criteria_memberships do |t|
+      t.references :criteria, null: false, foreign_key: { to_table: :completion_kit_criteria }
       t.references :metric, null: false, foreign_key: { to_table: :completion_kit_metrics }
       t.integer :position
       t.timestamps
@@ -60,7 +60,7 @@ class CreateCompletionKitTables < ActiveRecord::Migration[7.1]
       t.string :name
       t.references :prompt, null: false, foreign_key: { to_table: :completion_kit_prompts }
       t.references :dataset, foreign_key: { to_table: :completion_kit_datasets }
-      t.references :metric_group, foreign_key: { to_table: :completion_kit_metric_groups }
+      t.references :criteria, foreign_key: { to_table: :completion_kit_criteria }
       t.string :judge_model
       t.string :status
       t.timestamps

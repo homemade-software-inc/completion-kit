@@ -19,9 +19,9 @@ RSpec.describe CompletionKit::Engine.routes, type: :routing do
     )
   end
 
-  it "routes metric groups and metrics" do
-    expect(described_class.recognize_path("/metric_groups/12", method: :get)).to include(
-      controller: "completion_kit/metric_groups",
+  it "routes criteria and metrics" do
+    expect(described_class.recognize_path("/criteria/12", method: :get)).to include(
+      controller: "completion_kit/criteria",
       action: "show",
       id: "12"
     )

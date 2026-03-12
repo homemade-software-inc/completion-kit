@@ -11,26 +11,26 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[7.2].define(version: 2026_03_11_214724) do
-  create_table "completion_kit_datasets", force: :cascade do |t|
+  create_table "completion_kit_criteria", force: :cascade do |t|
     t.string "name", null: false
-    t.text "csv_data", null: false
+    t.text "description"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
-  create_table "completion_kit_metric_group_memberships", force: :cascade do |t|
-    t.integer "metric_group_id", null: false
+  create_table "completion_kit_criteria_memberships", force: :cascade do |t|
+    t.integer "criteria_id", null: false
     t.integer "metric_id", null: false
     t.integer "position"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["metric_group_id"], name: "idx_on_metric_group_id_10d87ecba5"
-    t.index ["metric_id"], name: "index_completion_kit_metric_group_memberships_on_metric_id"
+    t.index ["criteria_id"], name: "index_completion_kit_criteria_memberships_on_criteria_id"
+    t.index ["metric_id"], name: "index_completion_kit_criteria_memberships_on_metric_id"
   end
 
-  create_table "completion_kit_metric_groups", force: :cascade do |t|
+  create_table "completion_kit_datasets", force: :cascade do |t|
     t.string "name", null: false
-    t.text "description"
+    t.text "csv_data", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -99,22 +99,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_11_214724) do
     t.string "name"
     t.integer "prompt_id", null: false
     t.integer "dataset_id"
-    t.integer "metric_group_id"
+    t.integer "criteria_id"
     t.string "judge_model"
     t.string "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["criteria_id"], name: "index_completion_kit_runs_on_criteria_id"
     t.index ["dataset_id"], name: "index_completion_kit_runs_on_dataset_id"
-    t.index ["metric_group_id"], name: "index_completion_kit_runs_on_metric_group_id"
     t.index ["prompt_id"], name: "index_completion_kit_runs_on_prompt_id"
   end
 
-  add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metric_groups", column: "metric_group_id"
-  add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metrics", column: "metric_id"
+  add_foreign_key "completion_kit_criteria_memberships", "completion_kit_criteria", column: "criteria_id"
+  add_foreign_key "completion_kit_criteria_memberships", "completion_kit_metrics", column: "metric_id"
   add_foreign_key "completion_kit_responses", "completion_kit_runs", column: "run_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_metrics", column: "metric_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_responses", column: "response_id"
+  add_foreign_key "completion_kit_runs", "completion_kit_criteria", column: "criteria_id"
   add_foreign_key "completion_kit_runs", "completion_kit_datasets", column: "dataset_id"
-  add_foreign_key "completion_kit_runs", "completion_kit_metric_groups", column: "metric_group_id"
   add_foreign_key "completion_kit_runs", "completion_kit_prompts", column: "prompt_id"
 end

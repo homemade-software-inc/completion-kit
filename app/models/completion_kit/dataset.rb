@@ -8,8 +8,9 @@ module CompletionKit
     def row_count
       return 0 if csv_data.blank?
 
-      CSV.parse(csv_data, headers: true).length
-    rescue CSV::MalformedCSVError
+      require "csv"
+      ::CSV.parse(csv_data, headers: true).length
+    rescue ::CSV::MalformedCSVError
       0
     end
   end

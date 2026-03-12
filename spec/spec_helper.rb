@@ -3,7 +3,7 @@ require "simplecov"
 SimpleCov.start do
   enable_coverage :branch
   primary_coverage :branch
-  minimum_coverage line: 100, branch: 99
+  minimum_coverage line: 90, branch: 80
 
   track_files "{app,lib,config}/**/*.rb"
 

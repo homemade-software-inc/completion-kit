@@ -4,7 +4,7 @@ module CompletionKit
 
     belongs_to :prompt
     belongs_to :dataset, optional: true
-    belongs_to :metric_group, optional: true
+    belongs_to :criteria, optional: true, class_name: "CompletionKit::Criteria", foreign_key: "criteria_id"
     has_many :responses, dependent: :destroy
 
     validates :name, presence: true
@@ -18,7 +18,7 @@ module CompletionKit
     end
 
     def metrics
-      metric_group&.ordered_metrics || []
+      criteria&.ordered_metrics || []
     end
 
     def avg_score

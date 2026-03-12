@@ -22,7 +22,7 @@ module CompletionKit
         return error_result("Unknown metric keys: #{missing.join(", ")}. Available: #{available}")
       end
 
-      metric_group = available_metrics.values.first&.metric_groups&.first
+      criteria = available_metrics.values.first&.criterias&.first
 
       dataset = Dataset.create!(
         name: "eval: #{eval_definition.eval_name}",
@@ -34,7 +34,7 @@ module CompletionKit
         name: "eval: #{eval_definition.eval_name} (#{Time.current.strftime("%Y-%m-%d %H:%M")})",
         dataset: dataset,
         judge_model: prompt.llm_model,
-        metric_group: metric_group
+        criteria: criteria
       )
 
       @run.generate_responses!

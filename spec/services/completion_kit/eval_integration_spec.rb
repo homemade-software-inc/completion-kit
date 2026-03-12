@@ -1,9 +1,9 @@
 require "rails_helper"
 
 RSpec.describe "Eval DSL end-to-end" do
-  let!(:metric_group) { create(:completion_kit_metric_group) }
-  let!(:relevance) { create(:completion_kit_metric, name: "Relevance", key: "relevance", metric_groups: [metric_group]) }
-  let!(:accuracy) { create(:completion_kit_metric, name: "Accuracy", key: "accuracy", metric_groups: [metric_group]) }
+  let!(:criteria) { create(:completion_kit_criteria) }
+  let!(:relevance) { create(:completion_kit_metric, name: "Relevance", key: "relevance", criterias: [criteria]) }
+  let!(:accuracy) { create(:completion_kit_metric, name: "Accuracy", key: "accuracy", criterias: [criteria]) }
   let!(:prompt) { create(:completion_kit_prompt, name: "e2e_test", current: true) }
 
   let(:csv_path) { Rails.root.join("tmp/e2e_eval.csv").to_s }

@@ -1,12 +1,12 @@
 <ol class="ck-breadcrumb">
   <li><%= link_to "Prompts", prompts_path %></li>
   <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
-  <li><%= @run.name %></li>
+  <li><span class="ck-run-name"><span class="<%= ck_run_dot(@run) %>"></span><%= @run.name %></span></li>
 </ol>
 
 <section class="ck-page-header">
   <div>
-    <h1 class="ck-title"><%= @run.name %></h1>
+    <h1 class="ck-title"><span class="ck-run-name"><span class="<%= ck_run_dot(@run) %>"></span><%= @run.name %></span></h1>
     <p class="ck-run-meta">
       <span class="ck-chip"><%= @run.prompt.llm_model %></span>
       <% if @run.dataset %>
@@ -14,11 +14,17 @@
       <% end %>
       <% if @run.judge_configured? %>
         <span>Judge: <%= @run.judge_model %></span>
-        <% if @run.metric_group %>
-          <span>Metrics: <%= @run.metric_group.name %></span>
+        <% if @run.criteria %>
+          <span>Criteria: <%= @run.criteria.name %></span>
         <% end %>
+      <% elsif @run.judge_model.present? %>
+        <span>Judge: <%= @run.judge_model %></span>
+        <span class="ck-meta-copy">
+          Provider not configured —
+          <%= link_to "set up #{CompletionKit::ApiConfig.provider_for_model(@run.judge_model) || 'provider'}", new_provider_credential_path, class: "ck-link" %>
+        </span>
       <% else %>
-        <span class="ck-meta-copy">No judge configured</span>
+        <span class="ck-meta-copy">No judge configured — responses only</span>
       <% end %>
     </p>
   </div>
@@ -33,7 +39,7 @@
   <div class="ck-actions">
     <%= link_to "Edit", edit_run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
     <% if @run.status == "pending" || (@run.status == "completed" && @run.responses.empty?) %>
-      <%= button_to "Generate", generate_run_path(@run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+      <%= button_to "Start", generate_run_path(@run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
     <% end %>
     <% if @run.status == "completed" && @run.responses.any? && !@run.judge_configured? %>
       <%= link_to "Judge responses", edit_run_path(@run), class: ck_button_classes(:dark) %>

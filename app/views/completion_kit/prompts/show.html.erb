@@ -9,6 +9,9 @@
       <h1 class="ck-title"><%= @prompt.name %></h1>
       <span class="ck-chip"><%= @prompt.llm_model %></span>
     </div>
+    <% if @prompt.description.present? %>
+      <p class="ck-meta-copy"><%= @prompt.description %></p>
+    <% end %>
   </div>
 
   <div class="ck-actions">
@@ -42,7 +45,7 @@
       <tbody>
         <% @runs.each do |run| %>
           <tr onclick="window.location='<%= run_path(run) %>'" style="cursor: pointer;">
-            <td><strong><%= run.name %></strong></td>
+            <td><span class="ck-run-name"><span class="<%= ck_run_dot(run) %>"></span><strong><%= run.name %></strong></span></td>
             <td><span class="ck-chip ck-chip--soft">v<%= run.prompt.version_number %></span></td>
             <td><%= run.responses.size %></td>
             <td>

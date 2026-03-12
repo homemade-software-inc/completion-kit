@@ -40,7 +40,7 @@ ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:"
 ActiveRecord::Schema.verbose = false
 
 ActiveRecord::Schema.define do
-  create_table :completion_kit_metric_groups, force: true do |t|
+  create_table :completion_kit_criteria, force: true do |t|
     t.string :name
     t.text :description
     t.timestamps
@@ -55,8 +55,8 @@ ActiveRecord::Schema.define do
     t.timestamps
   end
 
-  create_table :completion_kit_metric_group_memberships, force: true do |t|
-    t.references :metric_group, null: false
+  create_table :completion_kit_criteria_memberships, force: true do |t|
+    t.references :criteria, null: false
     t.references :metric, null: false
     t.integer :position
     t.timestamps
@@ -91,7 +91,7 @@ ActiveRecord::Schema.define do
     t.string :name
     t.references :prompt, null: false
     t.references :dataset
-    t.references :metric_group
+    t.references :criteria
     t.string :judge_model
     t.string :status
     t.timestamps

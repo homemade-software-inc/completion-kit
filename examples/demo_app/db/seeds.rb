@@ -6,8 +6,8 @@ CompletionKit::Response.delete_all
 CompletionKit::Run.delete_all
 CompletionKit::Dataset.delete_all
 CompletionKit::Prompt.delete_all
-CompletionKit::MetricGroupMembership.delete_all
-CompletionKit::MetricGroup.delete_all
+CompletionKit::CriteriaMembership.delete_all
+CompletionKit::Criteria.delete_all
 CompletionKit::Metric.delete_all
 
 def csv_from_rows(rows)
@@ -34,10 +34,10 @@ actionability = CompletionKit::Metric.create!(
   criteria: "Does the output tell the reader exactly what to do next? The output must include a concrete next step. Vague suggestions like 'look into it' score below 2 stars."
 )
 
-support_metrics = CompletionKit::MetricGroup.create!(name: "Support quality", description: "Score support ticket summaries on accuracy, clarity, and actionability.")
-support_metrics.metric_group_memberships.create!(metric: accuracy, position: 1)
-support_metrics.metric_group_memberships.create!(metric: clarity, position: 2)
-support_metrics.metric_group_memberships.create!(metric: actionability, position: 3)
+support_criteria = CompletionKit::Criteria.create!(name: "Support quality", description: "Score support ticket summaries on accuracy, clarity, and actionability.")
+support_criteria.criteria_memberships.create!(metric: accuracy, position: 1)
+support_criteria.criteria_memberships.create!(metric: clarity, position: 2)
+support_criteria.criteria_memberships.create!(metric: actionability, position: 3)
 
 prompt_v1 = CompletionKit::Prompt.create!(
   name: "Ticket summarizer",
@@ -127,7 +127,7 @@ v1_run = CompletionKit::Run.create!(
   prompt: prompt_v1,
   dataset: ticket_dataset,
   judge_model: "gpt-4.1",
-  metric_group: support_metrics,
+  criteria: support_criteria,
   name: "v1 baseline",
   status: "completed"
 )
@@ -204,7 +204,7 @@ v2_run = CompletionKit::Run.create!(
   prompt: prompt_v2,
   dataset: ticket_dataset,
   judge_model: "gpt-4.1",
-  metric_group: support_metrics,
+  criteria: support_criteria,
   name: "v2 improved",
   status: "completed"
 )
@@ -303,7 +303,7 @@ CompletionKit::Run.create!(
 )
 
 puts "Created #{CompletionKit::Prompt.count} prompts (2 versions of the same prompt)"
-puts "Created #{CompletionKit::Metric.count} metrics in #{CompletionKit::MetricGroup.count} group"
+puts "Created #{CompletionKit::Metric.count} metrics in #{CompletionKit::Criteria.count} criteria"
 puts "Created #{CompletionKit::Dataset.count} datasets"
 puts "Created #{CompletionKit::Run.count} runs (v1 baseline, v2 improved, 1 pending)"
 puts "Created #{CompletionKit::Response.count} responses with #{CompletionKit::Review.count} reviews"
