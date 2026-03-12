@@ -35,6 +35,7 @@
 }
 
 html {
+  font-size: 18px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -310,7 +311,10 @@ form.button_to {
 }
 
 .ck-empty {
-  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  min-height: 3.25rem;
+  padding: 0.85rem 1.15rem;
   color: var(--ck-muted);
   font-family: var(--ck-mono);
   font-size: 0.95rem;
@@ -340,10 +344,10 @@ form.button_to {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.25rem 0.55rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-family: var(--ck-mono);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 500;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -555,45 +559,67 @@ form.button_to {
   color: var(--ck-warning);
 }
 
-.ck-button--disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.ck-config-checklist {
+.ck-run-config {
   display: grid;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
-  max-width: 36rem;
+  gap: 0;
+  max-width: 32rem;
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius-lg);
+  background: var(--ck-surface);
+  overflow: hidden;
 }
 
-.ck-config-item {
+.ck-run-config__row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  min-height: 2.75rem;
   font-family: var(--ck-sans);
-  font-size: 0.875rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--ck-radius);
-  background: var(--ck-surface);
-  border: 1px solid var(--ck-border);
+  font-size: 0.88rem;
 }
 
-.ck-config-item--ok .ck-config-item__icon {
-  color: var(--ck-success);
+.ck-run-config__row + .ck-run-config__row {
+  border-top: 1px solid var(--ck-line);
 }
 
-.ck-config-item--missing .ck-config-item__icon {
-  color: var(--ck-danger);
+.ck-run-config__key {
+  flex-shrink: 0;
+  width: 5rem;
+  font-family: var(--ck-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
 }
 
-.ck-config-item--info .ck-config-item__icon {
-  color: var(--ck-text-muted);
+.ck-run-config__none {
+  color: var(--ck-dim);
 }
 
-.ck-config-item .ck-link {
-  margin-left: auto;
+.ck-run-config__warn {
+  color: var(--ck-warning);
+  font-size: 0.82rem;
+}
+
+.ck-run-config__note {
+  border-top: 1px solid var(--ck-line);
+  padding: 0.55rem 1rem;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  font-family: var(--ck-sans);
+  font-size: 0.82rem;
+  color: var(--ck-accent);
+  background: var(--ck-accent-soft);
+}
+
+.ck-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
 }
 
 .ck-field {
@@ -916,6 +942,9 @@ select.ck-input {
 }
 
 .ck-details__summary {
+  display: flex;
+  align-items: center;
+  min-height: 3.25rem;
   padding: 0.85rem 1.15rem;
   font-family: var(--ck-mono);
   font-size: 0.85rem;
@@ -952,20 +981,6 @@ select.ck-input {
   border-top: 1px solid var(--ck-line);
 }
 
-.ck-run-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0.35rem 0 0;
-  font-family: var(--ck-sans);
-  font-size: 0.95rem;
-  color: var(--ck-muted);
-}
-
-.ck-run-meta .ck-meta-copy {
-  margin: 0;
-}
 
 .ck-response-list {
   display: grid;
@@ -1104,6 +1119,15 @@ select.ck-input {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.ck-title .ck-run-name {
+  gap: 1rem;
+}
+
+.ck-title .ck-dot {
+  width: 16px;
+  height: 16px;
 }
 
 .ck-metric-pip__label strong {

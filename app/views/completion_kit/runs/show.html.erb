@@ -7,34 +7,7 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title"><span class="ck-run-name"><span class="<%= ck_run_dot(@run) %>"></span><%= @run.name %></span></h1>
-    <p class="ck-run-meta">
-      <span class="ck-chip"><%= @run.prompt.llm_model %></span>
-      <% if @run.dataset %>
-        <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
-      <% end %>
-      <% if @run.judge_configured? %>
-        <span>Judge: <%= @run.judge_model %></span>
-        <% if @run.criteria %>
-          <span>Criteria: <%= @run.criteria.name %></span>
-        <% end %>
-      <% elsif @run.judge_model.present? %>
-        <span>Judge: <%= @run.judge_model %></span>
-        <span class="ck-meta-copy">
-          Provider not configured —
-          <%= link_to "set up #{CompletionKit::ApiConfig.provider_for_model(@run.judge_model) || 'provider'}", new_provider_credential_path, class: "ck-link" %>
-        </span>
-      <% else %>
-        <span class="ck-meta-copy">No judge configured — responses only</span>
-      <% end %>
-    </p>
   </div>
-
-  <% if @run.status == "generating" || @run.status == "judging" %>
-    <div class="ck-status-indicator">
-      <span class="<%= ck_badge_classes(@run.status) %>"><%= @run.status.capitalize %></span>
-      <span><%= @run.responses.count %> responses so far</span>
-    </div>
-  <% end %>
 
   <div class="ck-actions">
     <%= link_to "Edit", edit_run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
@@ -50,31 +23,62 @@
   </div>
 </section>
 
-<% if @run.status == "pending" %>
-  <div class="ck-config-checklist">
-    <div class="ck-config-item <%= @run.dataset ? 'ck-config-item--ok' : 'ck-config-item--info' %>">
-      <span class="ck-config-item__icon"><%= @run.dataset ? "&#10003;" : "—" %></span>
-      <span><strong>Dataset</strong> — <%= @run.dataset ? @run.dataset.name : "none (prompt runs as-is)" %></span>
-      <% unless @run.dataset %>
-        <%= link_to "Configure", edit_run_path(@run), class: "ck-link" %>
-      <% end %>
-    </div>
-    <div class="ck-config-item <%= @run.judge_model.present? ? 'ck-config-item--ok' : 'ck-config-item--info' %>">
-      <span class="ck-config-item__icon"><%= @run.judge_model.present? ? "&#10003;" : "—" %></span>
-      <span><strong>Judge model</strong> — <%= @run.judge_model.presence || "not set (responses only)" %></span>
-      <% unless @run.judge_model.present? %>
-        <%= link_to "Configure", edit_run_path(@run), class: "ck-link" %>
-      <% end %>
-    </div>
-    <div class="ck-config-item <%= @run.criteria ? 'ck-config-item--ok' : 'ck-config-item--info' %>">
-      <span class="ck-config-item__icon"><%= @run.criteria ? "&#10003;" : "—" %></span>
-      <span><strong>Criteria</strong> — <%= @run.criteria ? "#{@run.criteria.name} (#{@run.criteria.metrics.count} metrics)" : "not set" %></span>
-      <% unless @run.criteria %>
-        <%= link_to "Configure", edit_run_path(@run), class: "ck-link" %>
-      <% end %>
-    </div>
+<% if @run.status == "generating" || @run.status == "judging" %>
+  <div class="ck-status-indicator">
+    <span class="<%= ck_badge_classes(@run.status) %>"><%= @run.status.capitalize %></span>
+    <span class="ck-meta-copy"><%= @run.responses.count %> responses so far</span>
   </div>
 <% end %>
+
+<div class="ck-run-config">
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Model</span>
+    <span class="ck-chip"><%= @run.prompt.llm_model %></span>
+  </div>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Dataset</span>
+    <% if @run.dataset %>
+      <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
+    <% else %>
+      <span class="ck-run-config__none">none — prompt runs as-is</span>
+    <% end %>
+  </div>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Judge</span>
+    <% if @run.judge_configured? %>
+      <span><%= @run.judge_model %></span>
+    <% elsif @run.judge_model.present? %>
+      <span><%= @run.judge_model %></span>
+      <span class="ck-run-config__warn">
+        provider not configured —
+        <%= link_to "set up #{CompletionKit::ApiConfig.provider_for_model(@run.judge_model) || 'provider'}", new_provider_credential_path, class: "ck-link" %>
+      </span>
+    <% else %>
+      <span class="ck-run-config__none">none</span>
+    <% end %>
+  </div>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Criteria</span>
+    <% if @run.criteria %>
+      <span><%= @run.criteria.name %> <span class="ck-run-config__none">(<%= @run.criteria.metrics.count %> metrics)</span></span>
+    <% else %>
+      <span class="ck-run-config__none">none</span>
+    <% end %>
+  </div>
+  <% unless @run.judge_configured? && @run.criteria %>
+    <div class="ck-run-config__note">
+      <% if !@run.judge_model.present? && !@run.criteria %>
+        Responses only — no judge and criteria configured.
+      <% elsif !@run.judge_model.present? %>
+        Responses only — no judge model selected.
+      <% elsif @run.judge_model.present? && !@run.judge_configured? %>
+        Responses only — judge provider not configured.
+      <% elsif !@run.criteria %>
+        Responses only — no criteria to score against.
+      <% end %>
+    </div>
+  <% end %>
+</div>
 
 <% if @run.dataset %>
   <details class="ck-details">
@@ -131,6 +135,6 @@
   </div>
 <% else %>
   <div class="ck-empty ck-empty--spaced">
-    No responses yet. Generate responses to see results here.
+    No responses yet. Start the run to generate responses.
   </div>
 <% end %>
