@@ -39,7 +39,12 @@ module CompletionKit
 
     def generate_responses!
       rows = CsvProcessor.process_self(self)
-      return false if rows.empty?
+      rows = [{}] if rows.empty? && dataset.blank?
+
+      if rows.empty?
+        errors.add(:base, "Dataset has no rows")
+        return false
+      end
 
       client = LlmClient.for_model(prompt.llm_model, ApiConfig.for_model(prompt.llm_model))
 
@@ -57,7 +62,7 @@ module CompletionKit
           output = client.generate_completion(CsvProcessor.apply_variables(prompt, row), model: prompt.llm_model)
 
           responses.create!(
-            input_data: row.to_json,
+            input_data: row.empty? ? nil : row.to_json,
             response_text: output,
             expected_output: row["expected_output"]
           )

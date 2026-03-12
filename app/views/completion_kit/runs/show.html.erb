@@ -39,11 +39,7 @@
   <div class="ck-actions">
     <%= link_to "Edit", edit_run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
     <% if @run.status == "pending" || (@run.status == "completed" && @run.responses.empty?) %>
-      <% if @run.dataset %>
-        <%= button_to "Start", generate_run_path(@run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
-      <% else %>
-        <span class="ck-button ck-button--primary ck-button--disabled" title="Select a dataset before starting">Start</span>
-      <% end %>
+      <%= button_to "Start", generate_run_path(@run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
     <% end %>
     <% if @run.status == "completed" && @run.responses.any? && !@run.judge_configured? %>
       <%= link_to "Judge responses", edit_run_path(@run), class: ck_button_classes(:dark) %>
@@ -56,11 +52,11 @@
 
 <% if @run.status == "pending" %>
   <div class="ck-config-checklist">
-    <div class="ck-config-item <%= @run.dataset ? 'ck-config-item--ok' : 'ck-config-item--missing' %>">
-      <span class="ck-config-item__icon"><%= @run.dataset ? "&#10003;" : "&#10005;" %></span>
-      <span><strong>Dataset</strong> — <%= @run.dataset ? @run.dataset.name : "required" %></span>
+    <div class="ck-config-item <%= @run.dataset ? 'ck-config-item--ok' : 'ck-config-item--info' %>">
+      <span class="ck-config-item__icon"><%= @run.dataset ? "&#10003;" : "—" %></span>
+      <span><strong>Dataset</strong> — <%= @run.dataset ? @run.dataset.name : "none (prompt runs as-is)" %></span>
       <% unless @run.dataset %>
-        <%= link_to "Select", edit_run_path(@run), class: "ck-link" %>
+        <%= link_to "Configure", edit_run_path(@run), class: "ck-link" %>
       <% end %>
     </div>
     <div class="ck-config-item <%= @run.judge_model.present? ? 'ck-config-item--ok' : 'ck-config-item--info' %>">
