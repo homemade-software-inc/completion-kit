@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>CompletionKit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
@@ -10,16 +11,15 @@
 <body class="ck-app">
   <header class="ck-topbar">
     <div class="ck-wrap ck-topbar__inner">
-      <div>
-        <%= link_to "Completion Kit", prompts_path, class: "ck-brand" %>
-        <p class="ck-topbar__copy">Create a prompt, attach a dataset, run it, and inspect the results.</p>
-      </div>
+      <%= link_to "CompletionKit", prompts_path, class: "ck-brand" %>
 
       <nav class="ck-nav">
-        <%= link_to "Prompts", prompts_path, class: current_page?(prompts_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Runs", test_runs_path, class: current_page?(test_runs_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Metrics", metrics_path, class: current_page?(metrics_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Providers", provider_credentials_path, class: current_page?(provider_credentials_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <% active = ->(path) { request.path.start_with?(path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) } %>
+        <%= link_to "Prompts", prompts_path, class: active.(prompts_path) %>
+        <%= link_to "Metrics", metrics_path, class: request.path.start_with?(metrics_path) || request.path.start_with?(criteria_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Datasets", datasets_path, class: active.(datasets_path) %>
+        <%= link_to "Runs", runs_path, class: active.(runs_path) %>
+        <%= link_to "Settings", provider_credentials_path, class: active.(provider_credentials_path) %>
       </nav>
     </div>
   </header>

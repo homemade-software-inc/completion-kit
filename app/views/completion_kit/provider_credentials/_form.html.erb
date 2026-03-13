@@ -13,7 +13,7 @@
   <div class="ck-card ck-form-card">
     <div class="ck-field">
       <%= form.label :provider, class: "ck-label" %>
-      <%= form.select :provider, CompletionKit::ProviderCredential::PROVIDERS.map { |provider| [provider.titleize, provider] }, {}, { class: "ck-input" } %>
+      <%= form.select :provider, CompletionKit::ProviderCredential::PROVIDERS.map { |p| [CompletionKit::ProviderCredential::PROVIDER_LABELS[p] || p.titleize, p] }, {}, { class: "ck-input" } %>
     </div>
 
     <div class="ck-field">
@@ -27,8 +27,8 @@
     </div>
 
     <div class="ck-actions">
-      <%= form.submit(provider_credential.persisted? ? "Save provider" : "Create provider", class: ck_button_classes(:dark)) %>
       <%= link_to "Cancel", provider_credentials_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= form.submit(provider_credential.persisted? ? "Save provider" : "Create provider", class: ck_button_classes(:dark)) %>
     </div>
   </div>
 <% end %>

@@ -13,7 +13,7 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
 
     get base_path
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Openai")
+    expect(response.body).to include("OpenAI")
 
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)

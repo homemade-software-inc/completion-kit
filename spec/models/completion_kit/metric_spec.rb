@@ -1,51 +1,44 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::Metric, type: :model do
-  it "fills in default guidance and rubric text" do
+  it "fills in default rubric bands on a new metric" do
     metric = described_class.create!(name: "Default metric")
 
-    expect(metric.guidance_text).to eq("")
-    expect(metric.rubric_text).to eq(described_class.default_rubric_text)
-    expect(metric.rubric_bands_for_form.first["range"]).to eq("1-2")
+    expect(metric.criteria).to be_nil
+    expect(metric.evaluation_steps).to eq([])
+    expect(metric.rubric_bands.length).to eq(5)
+    expect(metric.rubric_bands.first).to include("stars" => 5)
+    expect(metric.rubric_bands.last).to include("stars" => 1)
   end
 
-  it "normalizes rubric bands and ignores invalid entries" do
+  it "generates rubric text from star bands" do
+    metric = described_class.create!(name: "Test metric")
+
+    expect(metric.display_rubric_text).to include("5 stars:")
+    expect(metric.display_rubric_text).to include("1 star:")
+  end
+
+  it "normalizes rubric bands preserving only valid star entries" do
     metric = build(
       :completion_kit_metric,
-      rubric_text: nil,
       rubric_bands: [
         "junk",
-        { range: "12-13", criteria: "Ignore", reason: "Ignore" },
-        { range: "9-10", criteria: "Great", reason: "Ship it" }
+        { stars: 99, description: "Ignore" },
+        { stars: 5, description: "Great" },
+        { stars: 3, description: "OK" }
       ]
     )
 
     metric.valid?
 
-    expect(metric.rubric_bands.last).to include("range" => "9-10", "criteria" => "Great", "reason" => "Ship it")
-    expect(metric.display_rubric_text).to include("Reasoning cue: Ship it")
+    expect(metric.rubric_bands.length).to eq(5)
+    expect(metric.rubric_bands.find { |b| b["stars"] == 5 }["description"]).to eq("Great")
+    expect(metric.rubric_bands.find { |b| b["stars"] == 3 }["description"]).to eq("OK")
   end
 
-  it "parses structured rubric text and handles blank text" do
-    metric = build(:completion_kit_metric, rubric_bands: nil, rubric_text: <<~RUBRIC)
-       
+  it "generates a unique key from name" do
+    metric = described_class.create!(name: "Hallucination Detection")
 
-      unknown
-      Criteria: Ignore me
-      Reasoning cue: Ignore me
-
-      9-10
-      Criteria: Keep me
-      Reasoning cue: This is valid
-    RUBRIC
-
-    expect(metric.rubric_bands_for_form.last).to include("range" => "9-10", "criteria" => "Keep me", "reason" => "This is valid")
-    expect(metric.send(:parsed_rubric_bands_from_text, "")).to eq([])
-  end
-
-  it "keeps explicit rubric text when rubric bands are absent" do
-    metric = create(:completion_kit_metric, rubric_bands: nil, rubric_text: "Explicit rubric")
-
-    expect(metric.rubric_text).to eq("Explicit rubric")
+    expect(metric.key).to eq("hallucination-detection")
   end
 end

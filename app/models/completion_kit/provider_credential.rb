@@ -1,6 +1,11 @@
 module CompletionKit
   class ProviderCredential < ApplicationRecord
     PROVIDERS = %w[openai anthropic llama].freeze
+    PROVIDER_LABELS = { "openai" => "OpenAI", "anthropic" => "Anthropic", "llama" => "Llama" }.freeze
+
+    def display_provider
+      PROVIDER_LABELS[provider] || provider.titleize
+    end
 
     validates :provider, presence: true, inclusion: { in: PROVIDERS }, uniqueness: true
 

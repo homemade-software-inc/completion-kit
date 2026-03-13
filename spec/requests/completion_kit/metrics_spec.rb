@@ -12,7 +12,7 @@ RSpec.describe "CompletionKit metrics", type: :request do
 
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Reasoning cue")
+    expect(response.body).to include("Criteria")
 
     get "#{base_path}/#{metric.id}"
     expect(response).to have_http_status(:ok)
@@ -21,16 +21,16 @@ RSpec.describe "CompletionKit metrics", type: :request do
     expect(response).to have_http_status(:ok)
 
     expect do
-      post base_path, params: { metric: { name: "Accuracy", guidance_text: "Be exact" } }
+      post base_path, params: { metric: { name: "Accuracy", criteria: "Be exact" } }
     end.to change(CompletionKit::Metric, :count).by(1)
     expect(response).to redirect_to(%r{/completion_kit/metrics/\d+})
 
-    post base_path, params: { metric: { name: "", rubric_text: "" } }
+    post base_path, params: { metric: { name: "" } }
     expect(response).to have_http_status(:unprocessable_entity)
 
-    patch "#{base_path}/#{metric.id}", params: { metric: { guidance_text: "Updated guidance" } }
+    patch "#{base_path}/#{metric.id}", params: { metric: { criteria: "Updated criteria" } }
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
-    expect(metric.reload.guidance_text).to eq("Updated guidance")
+    expect(metric.reload.criteria).to eq("Updated criteria")
 
     patch "#{base_path}/#{metric.id}", params: { metric: { name: "" } }
     expect(response).to have_http_status(:unprocessable_entity)
