@@ -2,10 +2,16 @@ module CompletionKit
   class Engine < ::Rails::Engine
     isolate_namespace CompletionKit
 
+    initializer("completion_kit.inflections", before: :load_config_initializers) do
+      ActiveSupport::Inflector.inflections(:en) do |inflect|
+        inflect.irregular "criterion", "criteria"
+      end
+    end
+
     paths.add "app/services", eager_load: true
 
     def self.register_assets(app)
-      app.config.assets.precompile += %w( completion_kit/application.css )
+      app.config.assets.precompile += %w( completion_kit/application.css completion_kit/evaluation_steps_controller.js )
     end
 
     initializer("completion_kit.assets") { |app| Engine.register_assets(app) }

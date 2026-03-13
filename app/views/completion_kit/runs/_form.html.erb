@@ -1,0 +1,77 @@
+<%= form_with(model: run, local: true) do |form| %>
+  <% if run.errors.any? %>
+    <div class="ck-flash ck-flash--alert">
+      <p class="ck-flash__title"><%= pluralize(run.errors.count, "problem") %> prevented this run from being saved.</p>
+      <ul class="ck-error-list">
+        <% run.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="ck-card ck-form-card">
+    <div class="ck-field">
+      <%= form.label :name, "Name (auto-generated if blank)", class: "ck-label" %>
+      <%= form.text_field :name, class: "ck-input", placeholder: run.name.presence || "Auto-generated from prompt + version + timestamp" %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :prompt_id, "Prompt", class: "ck-label" %>
+      <%= form.select :prompt_id, @prompts.map { |p| [p.display_name, p.id] }, { include_blank: "Select a prompt" }, { class: "ck-input" } %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :dataset_id, "Dataset", class: "ck-label" %>
+      <% if @datasets.empty? %>
+        <p class="ck-meta-copy">No datasets yet. <%= link_to "Create a dataset", new_dataset_path, class: "ck-link" %> first.</p>
+      <% else %>
+        <%= form.select :dataset_id, @datasets.map { |d| [d.name, d.id] }, { include_blank: "Select a dataset" }, { class: "ck-input" } %>
+      <% end %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :judge_model, "Judge model (optional)", class: "ck-label" %>
+      <%= form.select :judge_model, ck_grouped_models(CompletionKit::Prompt.available_models, run.judge_model), { include_blank: "None" }, { class: "ck-input", id: "run_judge_model" } %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :criteria_id, "Criteria (optional)", class: "ck-label" %>
+      <%= form.select :criteria_id, @criterias.map { |c| ["#{c.name} (#{c.metrics.count} metrics)", c.id] }, { include_blank: "None" }, { class: "ck-input", id: "run_criteria" } %>
+    </div>
+
+    <div id="run-judge-hint" class="ck-form-hint" style="display: none;"></div>
+
+    <script>
+function updateJudgeHint() {
+  var judge = document.getElementById('run_judge_model').value;
+  var group = document.getElementById('run_criteria').value;
+  var hint = document.getElementById('run-judge-hint');
+  if (judge && group) {
+    hint.textContent = 'Responses will be generated then judged automatically.';
+    hint.className = 'ck-form-hint ck-form-hint--success';
+    hint.style.display = '';
+  } else if (judge && !group) {
+    hint.textContent = 'Select criteria to enable judging.';
+    hint.className = 'ck-form-hint ck-form-hint--warn';
+    hint.style.display = '';
+  } else if (!judge && group) {
+    hint.textContent = 'Select a judge model to enable judging.';
+    hint.className = 'ck-form-hint ck-form-hint--warn';
+    hint.style.display = '';
+  } else {
+    hint.textContent = '';
+    hint.style.display = 'none';
+  }
+}
+document.getElementById('run_judge_model').addEventListener('change', updateJudgeHint);
+document.getElementById('run_criteria').addEventListener('change', updateJudgeHint);
+updateJudgeHint();
+    </script>
+
+    <div class="ck-actions">
+      <%= link_to "Cancel", run.persisted? ? run_path(run) : runs_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= form.submit(run.persisted? ? "Save run" : "Create run", class: ck_button_classes(:dark)) %>
+    </div>
+  </div>
+<% end %>

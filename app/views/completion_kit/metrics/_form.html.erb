@@ -16,38 +16,48 @@
       <%= form.text_field :name, class: "ck-input", placeholder: "Helpfulness" %>
     </div>
 
-    <div class="ck-field">
-      <%= form.label :description, class: "ck-label" %>
-      <%= form.text_area :description, rows: 3, class: "ck-input ck-input--area", placeholder: "What this metric measures." %>
+    <div class="ck-field ck-field--spacious">
+      <p class="ck-section-title">Criteria</p>
+      <p class="ck-hint">What should the evaluator assess? This is the core evaluation instruction.</p>
+      <%= form.text_area :criteria, rows: 8, class: "ck-input ck-input--area", placeholder: "Evaluate whether the output..." %>
     </div>
 
-    <div class="ck-field">
-      <%= form.label :guidance_text, "Assessment guidance", class: "ck-label" %>
-      <%= form.text_area :guidance_text, rows: 4, class: "ck-input ck-input--area", placeholder: "Tell the evaluator what matters for this metric." %>
+    <div class="ck-field ck-field--spacious" data-controller="evaluation-steps">
+      <p class="ck-section-title">Evaluation Steps</p>
+      <p class="ck-hint">Steps the evaluator follows during assessment.</p>
+
+      <div data-evaluation-steps-target="list">
+        <% Array(metric.evaluation_steps).each_with_index do |step, index| %>
+          <div class="ck-step-row" data-evaluation-steps-target="row">
+            <input type="text" name="metric[evaluation_steps][]" value="<%= step %>" class="ck-input" />
+            <button type="button" class="ck-icon-btn" data-action="evaluation-steps#remove" aria-label="Remove step">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </button>
+          </div>
+        <% end %>
+      </div>
+
+      <button type="button" class="ck-add-btn" data-action="evaluation-steps#add">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add step
+      </button>
     </div>
 
     <div class="ck-field ck-field--spacious">
-      <p class="ck-label">Rubric</p>
-      <p class="ck-hint">Each metric owns its own five-band rubric.</p>
+      <p class="ck-section-title">Rubric</p>
+      <p class="ck-hint">What each star rating means for this metric.</p>
 
       <div class="ck-rubric-builder">
         <% metric.rubric_bands_for_form.each_with_index do |band, index| %>
           <div class="ck-rubric-row">
-            <div class="ck-rubric-row__range">
-              <span class="ck-rubric-range"><%= band["range"] %></span>
-              <input type="hidden" name="metric[rubric_bands][<%= index %>][range]" value="<%= band["range"] %>">
+            <div class="ck-rubric-row__stars">
+              <% 5.times do |i| %>
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke-width="1.75" class="ck-star <%= i < band["stars"] ? "ck-star--filled" : "ck-star--empty" %>"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <% end %>
+              <input type="hidden" name="metric[rubric_bands][<%= index %>][stars]" value="<%= band["stars"] %>">
             </div>
-
             <div class="ck-rubric-row__fields">
-              <div class="ck-field ck-field--tight">
-                <label class="ck-label" for="metric_rubric_bands_<%= index %>_criteria">Criteria</label>
-                <textarea id="metric_rubric_bands_<%= index %>_criteria" name="metric[rubric_bands][<%= index %>][criteria]" rows="3" class="ck-input ck-input--area"><%= band["criteria"] %></textarea>
-              </div>
-
-              <div class="ck-field ck-field--tight">
-                <label class="ck-label" for="metric_rubric_bands_<%= index %>_reason">Reasoning cue</label>
-                <textarea id="metric_rubric_bands_<%= index %>_reason" name="metric[rubric_bands][<%= index %>][reason]" rows="3" class="ck-input ck-input--area"><%= band["reason"] %></textarea>
-              </div>
+              <textarea name="metric[rubric_bands][<%= index %>][description]" rows="2" class="ck-input ck-input--area"><%= band["description"] %></textarea>
             </div>
           </div>
         <% end %>
@@ -55,8 +65,8 @@
     </div>
 
     <div class="ck-actions">
-      <%= form.submit(metric.persisted? ? "Save metric" : "Create metric", class: ck_button_classes(:dark)) %>
       <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= form.submit(metric.persisted? ? "Save metric" : "Create metric", class: ck_button_classes(:dark)) %>
     </div>
   </div>
 <% end %>

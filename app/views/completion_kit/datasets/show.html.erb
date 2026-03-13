@@ -1,0 +1,45 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Datasets", datasets_path %></li>
+  <li><%= @dataset.name %></li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title"><%= @dataset.name %></h1>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "Edit", edit_dataset_path(@dataset), class: ck_button_classes(:light, variant: :outline) %>
+  </div>
+</section>
+
+<section>
+  <p class="ck-kicker">CSV preview</p>
+  <pre class="ck-code ck-code--dark"><%= @dataset.csv_data %></pre>
+</section>
+
+<% if @runs.any? %>
+  <section class="ck-card--spaced">
+    <p class="ck-kicker">Runs</p>
+
+    <table class="ck-results-table" style="margin-top: 0.5rem;">
+      <thead>
+        <tr>
+          <th>Run</th>
+          <th>Prompt</th>
+          <th>Responses</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @runs.each do |run| %>
+          <tr onclick="window.location='<%= run_path(run) %>'" style="cursor: pointer;">
+            <td><strong><%= run.name %></strong></td>
+            <td><%= link_to run.prompt.name, prompt_path(run.prompt), class: "ck-link" %></td>
+            <td><%= run.responses.size %></td>
+            <td class="ck-results-table__arrow">&rarr;</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+<% end %>

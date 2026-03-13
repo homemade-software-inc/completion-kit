@@ -1,10 +1,12 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Prompts", prompts_path %></li>
+  <li><%= link_to @prompt.name, prompt_path(@prompt) %></li>
+  <li>Edit</li>
+</ol>
+
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title">Edit prompt</h1>
-    <p class="ck-lead">Change the prompt, model choices, or review setup. If this version already has runs, saving creates a new draft version instead of rewriting history.</p>
-  </div>
-  <div class="ck-actions">
-    <%= link_to "View prompt", prompt_path(@prompt), class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 

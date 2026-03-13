@@ -1,0 +1,38 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li>Criteria</li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Criteria</h1>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "New criteria", new_criterion_path, class: ck_button_classes(:dark) %>
+  </div>
+</section>
+
+<% if @criterias.any? %>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Metrics</th>
+        <th>Used in</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @criterias.each do |criteria| %>
+        <tr onclick="window.location='<%= criterion_path(criteria) %>'" style="cursor: pointer;">
+          <td><strong><%= criteria.name %></strong></td>
+          <td><%= criteria.metrics.size %></td>
+          <td><%= criteria.runs.count %></td>
+          <td class="ck-results-table__arrow">&rarr;</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="ck-empty">No criteria yet.</div>
+<% end %>

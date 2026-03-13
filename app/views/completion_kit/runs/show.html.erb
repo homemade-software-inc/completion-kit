@@ -1,0 +1,140 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Prompts", prompts_path %></li>
+  <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
+  <li><span class="ck-run-name"><span class="<%= ck_run_dot(@run) %>"></span><%= @run.name %></span></li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title"><span class="ck-run-name"><span class="<%= ck_run_dot(@run) %>"></span><%= @run.name %></span></h1>
+  </div>
+
+  <div class="ck-actions">
+    <%= link_to "Edit", edit_run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
+    <% if @run.status == "pending" || (@run.status == "completed" && @run.responses.empty?) %>
+      <%= button_to "Start", generate_run_path(@run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+    <% end %>
+    <% if @run.status == "completed" && @run.responses.any? && !@run.judge_configured? %>
+      <%= link_to "Judge responses", edit_run_path(@run), class: ck_button_classes(:dark) %>
+    <% end %>
+    <% if @run.judge_configured? && @run.status == "completed" %>
+      <%= button_to "Re-judge", judge_run_path(@run), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
+    <% end %>
+  </div>
+</section>
+
+<% if @run.status == "generating" || @run.status == "judging" %>
+  <div class="ck-status-indicator">
+    <span class="<%= ck_badge_classes(@run.status) %>"><%= @run.status.capitalize %></span>
+    <span class="ck-meta-copy"><%= @run.responses.count %> responses so far</span>
+  </div>
+<% end %>
+
+<div class="ck-run-config">
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Model</span>
+    <span class="ck-chip"><%= @run.prompt.llm_model %></span>
+  </div>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Dataset</span>
+    <% if @run.dataset %>
+      <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
+    <% else %>
+      <span class="ck-run-config__none">none — prompt runs as-is</span>
+    <% end %>
+  </div>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Judge</span>
+    <% if @run.judge_configured? %>
+      <span><%= @run.judge_model %></span>
+    <% elsif @run.judge_model.present? %>
+      <span><%= @run.judge_model %></span>
+      <span class="ck-run-config__warn">
+        provider not configured —
+        <%= link_to "set up #{CompletionKit::ApiConfig.provider_for_model(@run.judge_model) || 'provider'}", new_provider_credential_path, class: "ck-link" %>
+      </span>
+    <% else %>
+      <span class="ck-run-config__none">none</span>
+    <% end %>
+  </div>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Criteria</span>
+    <% if @run.criteria %>
+      <span><%= @run.criteria.name %> <span class="ck-run-config__none">(<%= @run.criteria.metrics.count %> metrics)</span></span>
+    <% else %>
+      <span class="ck-run-config__none">none</span>
+    <% end %>
+  </div>
+  <% unless @run.judge_configured? && @run.criteria %>
+    <div class="ck-run-config__note">
+      <% if !@run.judge_model.present? && !@run.criteria %>
+        Responses only — no judge and criteria configured.
+      <% elsif !@run.judge_model.present? %>
+        Responses only — no judge model selected.
+      <% elsif @run.judge_model.present? && !@run.judge_configured? %>
+        Responses only — judge provider not configured.
+      <% elsif !@run.criteria %>
+        Responses only — no criteria to score against.
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<% if @run.dataset %>
+  <details class="ck-details">
+    <summary class="ck-details__summary">Dataset preview</summary>
+    <pre class="ck-code ck-code--dark"><%= @run.dataset.csv_data.to_s.lines.first(10).join %><% if @run.dataset.csv_data.to_s.lines.count > 10 %>...<% end %></pre>
+  </details>
+<% end %>
+
+<% judged = @responses.any? { |r| r.reviewed? } %>
+
+<% if judged %>
+  <div class="ck-toolbar" style="margin-top: 1.5rem;">
+    <%= link_to "Best first", run_path(@run, sort: "score_desc"), class: params[:sort].blank? || params[:sort] == "score_desc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Worst first", run_path(@run, sort: "score_asc"), class: params[:sort] == "score_asc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+  </div>
+<% end %>
+
+<% if @responses.any? %>
+  <div class="ck-response-list">
+    <% @responses.each_with_index do |response, idx| %>
+      <% score = response.score %>
+      <article class="ck-response-card<%= " ck-response-card--low" if score && ck_score_kind(score) == :low %>" onclick="window.location='<%= run_response_path(@run, response) %>'" style="cursor: pointer;">
+        <div class="ck-response-card__header">
+          <span class="ck-minor-label">Row <%= idx + 1 %></span>
+          <% if score %>
+            <span class="<%= ck_badge_classes(ck_score_kind(score)) %>"><%= score %></span>
+          <% end %>
+        </div>
+
+        <div class="ck-response-card__body">
+          <div>
+            <p class="ck-minor-label">Input</p>
+            <p class="ck-meta-copy"><%= truncate(response.input_data, length: 120) %></p>
+          </div>
+
+          <div>
+            <p class="ck-minor-label">Response</p>
+            <p class="ck-meta-copy"><%= truncate(response.response_text, length: 200) %></p>
+          </div>
+        </div>
+
+        <% if response.reviewed? %>
+          <div class="ck-metric-bar">
+            <% response.reviews.where.not(ai_score: nil).each do |review| %>
+              <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(review.ai_score) %>">
+                <span class="ck-metric-pip__bar"></span>
+                <span class="ck-metric-pip__label"><%= review.metric_name %> <strong><%= review.ai_score.to_i %></strong></span>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+      </article>
+    <% end %>
+  </div>
+<% else %>
+  <div class="ck-empty ck-empty--spaced">
+    No responses yet. Start the run to generate responses.
+  </div>
+<% end %>

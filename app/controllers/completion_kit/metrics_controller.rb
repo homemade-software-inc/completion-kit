@@ -46,7 +46,7 @@ module CompletionKit
     end
 
     def metric_params
-      params.require(:metric).permit(:name, :description, :guidance_text, :rubric_text, rubric_bands: [:range, :criteria, :reason])
+      params.require(:metric).permit(:name, :criteria, evaluation_steps: [], rubric_bands: [:stars, :description])
     end
   end
 end

@@ -11,8 +11,7 @@ RSpec.describe CompletionKit do
       family_key: "public-family",
       version_number: 1,
       template: "Hello {{name}}",
-      generation_model: prompt.llm_model,
-      assessment_model: prompt.assessment_model
+      generation_model: prompt.llm_model
     )
     expect(described_class.render_current_prompt("Public Prompt", name: "Taylor")).to eq("Hello Taylor")
   end
