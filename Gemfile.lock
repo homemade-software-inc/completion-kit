@@ -284,7 +284,7 @@ DEPENDENCIES
   puma
   rspec-rails (~> 6.0)
   simplecov (~> 0.22)
-  sqlite3 (>= 1.6)
+  sqlite3 (~> 2.9)
 
 BUNDLED WITH
    2.5.23
