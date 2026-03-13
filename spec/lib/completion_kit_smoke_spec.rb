@@ -59,32 +59,10 @@ RSpec.describe "CompletionKit boot smoke" do
 
     expect { silently_load(File.expand_path("../../lib/completion-kit.rb", __dir__)) }.not_to raise_error
 
-    metric_group = create(:completion_kit_metric_group, :with_metrics, metrics_count: 1)
-    prompt = create(:completion_kit_prompt, name: "Smoke Prompt", family_key: "smoke-family", version_number: 1, template: "Hello {{name}}", metric_group: metric_group)
+    prompt = create(:completion_kit_prompt, name: "Smoke Prompt", family_key: "smoke-family", version_number: 1, template: "Hello {{name}}")
     expect(CompletionKit.current_prompt("Smoke Prompt")).to eq(prompt)
-    expect(CompletionKit.current_prompt_payload("smoke-family")).to include(name: "Smoke Prompt", template: "Hello {{name}}", metric_group: metric_group.name)
-    expect(CompletionKit.current_prompt_payload("smoke-family")[:metrics].first[:name]).to eq(metric_group.metrics.first.name)
+    expect(CompletionKit.current_prompt_payload("smoke-family")).to include(name: "Smoke Prompt", template: "Hello {{name}}")
     expect(CompletionKit.render_current_prompt("Smoke Prompt", name: "Avery")).to eq("Hello Avery")
-  end
-
-  it "returns a legacy metric payload when no metric group is attached" do
-    prompt = create(:completion_kit_prompt, name: "Legacy Prompt", family_key: "legacy-family", metric_group: nil)
-
-    payload = CompletionKit.current_prompt_payload("legacy-family")
-
-    expect(payload[:metric_group]).to be_nil
-    expect(payload[:metrics].first[:name]).to eq("Overall quality")
-    expect(payload[:metrics].first[:rubric_bands].first["range"]).to eq("1-2")
-  end
-
-  it "uses raw rubric bands when a metric-like payload object does not expose rubric_bands_for_form" do
-    prompt = create(:completion_kit_prompt, name: "Stub Prompt", family_key: "stub-family", metric_group: nil)
-    metric_like = Struct.new(:name, :guidance_text, :rubric_text, :rubric_bands).new("Stub", "Guide", "Rubric", [{ "range" => "1-2" }])
-
-    allow(CompletionKit).to receive(:current_prompt).with("stub-family").and_return(prompt)
-    allow(prompt).to receive(:assessment_metrics).and_return([metric_like])
-
-    expect(CompletionKit.current_prompt_payload("stub-family")[:metrics].first[:rubric_bands]).to eq([{ "range" => "1-2" }])
   end
 
   it "initializes configuration defaults from ENV and registers the precompiled asset" do
@@ -101,8 +79,8 @@ RSpec.describe "CompletionKit boot smoke" do
     expect(config.llama_api_key).to eq("env-llama")
     expect(config.llama_api_endpoint).to eq("https://env-llama.example.test")
     expect(config.judge_model).to eq("gpt-4.1")
-    expect(config.high_quality_threshold).to eq(8)
-    expect(config.medium_quality_threshold).to eq(5)
+    expect(config.high_quality_threshold).to eq(4)
+    expect(config.medium_quality_threshold).to eq(3)
 
     asset_initializer = CompletionKit::Engine.initializers.find { |initializer| initializer.name == "completion_kit.assets" }
     assets = Struct.new(:precompile).new([])

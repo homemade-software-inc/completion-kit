@@ -1,37 +1,47 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li><%= @metric.name %></li>
+</ol>
+
 <section class="ck-page-header">
   <div>
-    <p class="ck-step">Setup</p>
     <h1 class="ck-title"><%= @metric.name %></h1>
-    <p class="ck-lead"><%= @metric.description.presence || "No description yet." %></p>
   </div>
   <div class="ck-actions">
-    <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:amber, variant: :outline) %>
-    <%= link_to "All metrics", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 
+<% if @metric.criteria.present? %>
 <section class="ck-card">
-  <p class="ck-kicker">Assessment guidance</p>
-  <div class="ck-note-box"><%= @metric.guidance_text.presence || "No extra guidance for this metric." %></div>
+  <p class="ck-kicker">Criteria</p>
+  <div class="ck-note-box"><%= simple_format(@metric.criteria) %></div>
 </section>
+<% end %>
+
+<% if @metric.evaluation_steps.present? && @metric.evaluation_steps.any? %>
+<section class="ck-card">
+  <p class="ck-kicker">Evaluation Steps</p>
+  <ol class="ck-step-list">
+    <% @metric.evaluation_steps.each do |step| %>
+      <li><%= step %></li>
+    <% end %>
+  </ol>
+</section>
+<% end %>
 
 <section class="ck-card ck-card--spaced">
   <p class="ck-kicker">Rubric</p>
   <div class="ck-rubric-display">
     <% @metric.rubric_bands_for_form.each do |band| %>
       <div class="ck-rubric-row ck-rubric-row--display">
-        <div class="ck-rubric-row__range">
-          <span class="ck-rubric-range"><%= band["range"] %></span>
+        <div class="ck-rubric-row__stars">
+          <% 5.times do |i| %>
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke-width="1.75" class="ck-star <%= i < band["stars"] ? "ck-star--filled" : "ck-star--empty" %>"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <% end %>
         </div>
         <div class="ck-rubric-row__fields">
-          <div class="ck-field ck-field--tight">
-            <p class="ck-label">Criteria</p>
-            <p class="ck-copy"><%= band["criteria"] %></p>
-          </div>
-          <div class="ck-field ck-field--tight">
-            <p class="ck-label">Reasoning cue</p>
-            <p class="ck-copy"><%= band["reason"] %></p>
-          </div>
+          <p class="ck-copy"><%= band["description"] %></p>
         </div>
       </div>
     <% end %>

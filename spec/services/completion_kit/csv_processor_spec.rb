@@ -13,44 +13,18 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
     end
   end
 
-  describe ".process" do
-    it "returns an empty array when csv data is blank" do
-      test_run = build(:completion_kit_test_run, csv_data: nil)
+  describe ".process_self" do
+    it "returns an empty array when dataset is nil" do
+      run = build(:completion_kit_run, dataset: nil)
 
-      expect(described_class.process(test_run)).to eq([])
+      expect(described_class.process_self(run)).to eq([])
     end
 
-    it "adds an error when the csv is malformed" do
-      test_run = build(:completion_kit_test_run, csv_data: "\"unclosed")
+    it "returns parsed rows from dataset csv_data" do
+      dataset = build(:completion_kit_dataset)
+      run = build(:completion_kit_run, dataset: dataset)
 
-      expect(described_class.process(test_run)).to eq([])
-      expect(test_run.errors[:csv_data].first).to include("Invalid CSV format")
-    end
-
-    it "adds an error when no rows are present" do
-      test_run = build(:completion_kit_test_run, csv_data: "content,audience,expected_output\n")
-
-      expect(described_class.process(test_run)).to eq([])
-      expect(test_run.errors[:csv_data]).to include("No data rows found in CSV")
-    end
-
-    it "adds an error when required headers are missing" do
-      test_run = build(
-        :completion_kit_test_run,
-        csv_data: <<~CSV
-          content
-          "Only one column"
-        CSV
-      )
-
-      expect(described_class.process(test_run)).to eq([])
-      expect(test_run.errors[:csv_data]).to include("Missing required variables in CSV: audience")
-    end
-
-    it "returns parsed rows when the csv is valid" do
-      test_run = build(:completion_kit_test_run)
-
-      rows = described_class.process(test_run)
+      rows = described_class.process_self(run)
 
       expect(rows).to eq([{ "content" => "Release notes", "audience" => "developers", "expected_output" => "A developer-focused summary" }])
     end

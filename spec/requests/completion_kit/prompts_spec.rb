@@ -2,16 +2,13 @@ require "rails_helper"
 
 RSpec.describe "CompletionKit prompts", type: :request do
   let(:base_path) { "/completion_kit/prompts" }
-  let!(:metric_group) { create(:completion_kit_metric_group, :with_metrics) }
   let(:valid_params) do
     {
       prompt: {
         name: "Email Summarizer",
         description: "Summarizes support emails",
         template: "Summarize {{content}}",
-        llm_model: "gpt-4.1",
-        assessment_model: "gpt-4o-mini",
-        metric_group_id: metric_group.id
+        llm_model: "gpt-4.1"
       }
     }
   end
@@ -35,9 +32,7 @@ RSpec.describe "CompletionKit prompts", type: :request do
 
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Support summary")
-    expect(response.body).to include("Review notes")
-    expect(response.body).to include(metric_group.name)
+    expect(response.body).to include("Prompt text")
 
     get "#{base_path}/#{prompt.id}/edit"
     expect(response).to have_http_status(:ok)
@@ -50,7 +45,6 @@ RSpec.describe "CompletionKit prompts", type: :request do
     end.to change(CompletionKit::Prompt, :count).by(1)
 
     expect(response).to redirect_to("/completion_kit/prompts/#{CompletionKit::Prompt.last.id}")
-    expect(CompletionKit::Prompt.last.metric_group).to eq(metric_group)
   end
 
   it "renders new when create is invalid" do
@@ -80,10 +74,10 @@ RSpec.describe "CompletionKit prompts", type: :request do
 
   it "creates a new version instead of mutating a prompt with existing runs" do
     prompt = create(:completion_kit_prompt, name: "Versioned Prompt", family_key: "family-1", version_number: 1)
-    create(:completion_kit_test_run, prompt: prompt)
+    create(:completion_kit_run, prompt: prompt)
 
     expect do
-      patch "#{base_path}/#{prompt.id}", params: { prompt: { name: "Versioned Prompt", template: "Updated {{content}}", llm_model: "gpt-4o", assessment_model: "gpt-4o-mini" } }
+      patch "#{base_path}/#{prompt.id}", params: { prompt: { name: "Versioned Prompt", template: "Updated {{content}}", llm_model: "gpt-4o" } }
     end.to change(CompletionKit::Prompt, :count).by(1)
 
     expect(response).to redirect_to(%r{/completion_kit/prompts/\d+/edit})

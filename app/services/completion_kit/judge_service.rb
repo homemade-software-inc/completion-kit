@@ -6,11 +6,13 @@ module CompletionKit
       @judge_client = LlmClient.for_model(@judge_model, ApiConfig.for_model(@judge_model))
     end
 
-    def evaluate(output, expected_output = nil, prompt = nil, criteria = {})
+    def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, evaluation_steps: nil, rubric_text: nil, human_examples: nil, **_extras)
       return { score: 0, feedback: "Judge not configured" } unless @judge_client.configured?
-      
-      judge_prompt = build_judge_prompt(output, expected_output, prompt, criteria)
-      
+
+      judge_prompt = build_judge_prompt(output, expected_output, prompt,
+        criteria: criteria, evaluation_steps: evaluation_steps,
+        rubric_text: rubric_text, human_examples: human_examples)
+
       begin
         response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
         parse_judge_response(response)
@@ -18,21 +20,17 @@ module CompletionKit
         { score: 0, feedback: "Error during evaluation: #{e.message}" }
       end
     end
-    
+
     private
 
-    def build_judge_prompt(output, expected_output, prompt, criteria)
+    def build_judge_prompt(output, expected_output, prompt, criteria: nil, evaluation_steps: nil, rubric_text: nil, human_examples: nil)
       judge_prompt = <<~PROMPT
         You are an expert evaluator of AI-generated content.
-        Score the AI-generated output on a rubric from 1 to 10.
-        First choose the best fitting score range, then choose the exact score within that range.
-        Use each range's criteria and reasoning cue to justify the score.
+        Score the AI-generated output on a rubric from 1 to 5 stars.
+        First read the criteria and evaluation steps, then use the rubric to choose the best fitting score.
 
         Original prompt template:
         #{prompt || "Not provided"}
-
-        Input data for this result:
-        #{criteria[:input_data] || "Not provided"}
 
         AI-generated output:
         #{output}
@@ -45,28 +43,33 @@ module CompletionKit
         PROMPT
       end
 
-      if criteria[:review_guidance].present?
+      if criteria.present?
         judge_prompt += <<~PROMPT
-          Assessment guidance:
-          #{criteria[:review_guidance]}
+          Criteria:
+          #{criteria}
+        PROMPT
+      end
+
+      if evaluation_steps.present? && evaluation_steps.any?
+        judge_prompt += <<~PROMPT
+          Evaluation steps:
+          #{evaluation_steps.each_with_index.map { |step, i| "#{i + 1}. #{step}" }.join("\n")}
         PROMPT
       end
 
       judge_prompt += <<~PROMPT
-        Structured rubric:
-        #{criteria[:rubric_text].presence || CompletionKit::Metric.default_rubric_text}
+        Rubric:
+        #{rubric_text.presence || CompletionKit::Metric.default_rubric_text}
       PROMPT
 
-      if criteria[:human_examples].present?
-        judge_prompt += <<~PROMPT
-          Human-reviewed calibration examples:
-        PROMPT
+      if human_examples.present?
+        judge_prompt += "Human-reviewed calibration examples:\n"
 
-        criteria[:human_examples].each_with_index do |example, index|
+        human_examples.each_with_index do |example, index|
           judge_prompt += <<~PROMPT
             Example #{index + 1}
             Input: #{example[:input_data]}
-            Output: #{example[:output_text]}
+            Output: #{example[:response_text]}
             Human score: #{example[:human_score]}
             Human notes: #{example[:human_feedback].presence || "None"}
           PROMPT
@@ -75,7 +78,7 @@ module CompletionKit
 
       judge_prompt += <<~PROMPT
         Return exactly this format:
-        Score: [1-10]
+        Score: [1-5]
         Feedback: [concise explanation that references the rubric]
       PROMPT
 
@@ -85,12 +88,12 @@ module CompletionKit
     def parse_judge_response(response)
       score_match = response.match(/Score:\s*(\d+(?:\.\d+)?)/)
       feedback_match = response.match(/Feedback:\s*(.+)/m)
-      
+
       score = score_match ? score_match[1].to_f : 0
       feedback = feedback_match ? feedback_match[1].strip : "No feedback provided"
-      
-      score = [[score, 0].max, 10].min
-      
+
+      score = [[score, 0].max, 5].min
+
       { score: score, feedback: feedback }
     end
   end

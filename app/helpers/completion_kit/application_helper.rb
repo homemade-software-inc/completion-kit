@@ -24,24 +24,58 @@ module CompletionKit
     end
 
     def ck_badge_classes(kind)
-      case kind
-      when :high
+      case kind.to_s
+      when "high"
         "ck-badge ck-badge--high"
-      when :medium
+      when "medium"
         "ck-badge ck-badge--medium"
-      when :low
+      when "low"
         "ck-badge ck-badge--low"
-      when :pending
+      when "pending"
         "ck-badge ck-badge--pending"
-      when :running
+      when "running"
         "ck-badge ck-badge--running"
-      when :completed, :evaluated
+      when "generating", "judging"
+        "ck-badge ck-badge--running"
+      when "completed"
         "ck-badge ck-badge--high"
-      when :failed
+      when "failed"
         "ck-badge ck-badge--low"
       else
         "ck-badge ck-badge--pending"
       end
+    end
+
+    def ck_run_dot(run)
+      if run.status == "pending"
+        "ck-dot ck-dot--pending"
+      elsif run.status == "generating" || run.status == "judging"
+        "ck-dot ck-dot--running"
+      elsif run.status == "failed"
+        "ck-dot ck-dot--failed"
+      elsif run.status == "completed"
+        avg = run.avg_score
+        if avg
+          "ck-dot ck-dot--#{ck_score_kind(avg)}"
+        else
+          "ck-dot ck-dot--completed"
+        end
+      else
+        "ck-dot ck-dot--pending"
+      end
+    end
+
+    PROVIDER_LABELS = { "openai" => "OpenAI", "anthropic" => "Anthropic", "llama" => "Llama" }.freeze
+
+    def ck_provider_label(provider)
+      PROVIDER_LABELS[provider.to_s] || provider.to_s.titleize
+    end
+
+    def ck_grouped_models(models, selected = nil)
+      groups = models.group_by { |m| m[:provider] }.map do |provider, ms|
+        [ck_provider_label(provider), ms.map { |m| [m[:name], m[:id]] }]
+      end
+      grouped_options_for_select(groups, selected)
     end
 
     def ck_score_kind(score)

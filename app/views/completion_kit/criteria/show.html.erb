@@ -1,0 +1,37 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li><%= link_to "Criteria", criteria_path %></li>
+  <li><%= @criteria.name %></li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title"><%= @criteria.name %></h1>
+    <% if @criteria.description.present? %>
+      <p class="ck-lead"><%= @criteria.description %></p>
+    <% end %>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "Edit", edit_criterion_path(@criteria), class: ck_button_classes(:light, variant: :outline) %>
+  </div>
+</section>
+
+<section class="ck-card">
+  <p class="ck-kicker">Metrics</p>
+  <% if @criteria.metrics.any? %>
+    <div class="ck-list ck-list--compact">
+      <% @criteria.metrics.each do |metric| %>
+        <div class="ck-item">
+          <div>
+            <p class="ck-item-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></p>
+            <% if metric.criteria.present? %>
+              <p class="ck-copy"><%= metric.criteria %></p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="ck-copy">No metrics in this criteria yet.</p>
+  <% end %>
+</section>

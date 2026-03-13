@@ -1,0 +1,29 @@
+<%= form_with(model: dataset, local: true) do |form| %>
+  <% if dataset.errors.any? %>
+    <div class="ck-flash ck-flash--alert">
+      <p class="ck-flash__title"><%= pluralize(dataset.errors.count, "problem") %> prevented this dataset from being saved.</p>
+      <ul class="ck-error-list">
+        <% dataset.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="ck-card ck-form-card">
+    <div class="ck-field">
+      <%= form.label :name, "Name", class: "ck-label" %>
+      <%= form.text_field :name, class: "ck-input", placeholder: "Customer support tickets" %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :csv_data, "CSV data", class: "ck-label" %>
+      <%= form.text_area :csv_data, rows: 12, class: "ck-input ck-input--area ck-input--code", placeholder: "content,audience\nFirst ticket text,internal\nSecond ticket text,customer" %>
+    </div>
+
+    <div class="ck-actions">
+      <%= link_to "Cancel", datasets_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= form.submit(dataset.persisted? ? "Save dataset" : "Create dataset", class: ck_button_classes(:dark)) %>
+    </div>
+  </div>
+<% end %>

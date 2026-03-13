@@ -1,0 +1,12 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Datasets", datasets_path %></li>
+  <li>New</li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">New dataset</h1>
+  </div>
+</section>
+
+<%= render "form", dataset: @dataset %>
