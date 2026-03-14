@@ -39,6 +39,31 @@ LLAMA_API_ENDPOINT=...
 
 Available models are discovered dynamically from each provider's API.
 
+## Authentication
+
+CompletionKit requires authentication in production. In development, routes are open by default (with a log warning).
+
+### Basic Auth (recommended for simple setups)
+
+```ruby
+# config/initializers/completion_kit.rb
+CompletionKit.configure do |c|
+  c.username = "admin"
+  c.password = ENV["COMPLETION_KIT_PASSWORD"]
+end
+```
+
+### Custom Auth (Devise, etc.)
+
+```ruby
+# config/initializers/completion_kit.rb
+CompletionKit.configure do |c|
+  c.auth_strategy = ->(controller) { controller.authenticate_user! }
+end
+```
+
+Only one mode can be active — setting both raises a `ConfigurationError`.
+
 ## Usage
 
 1. Create a prompt with `{{variable}}` placeholders
