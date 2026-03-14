@@ -118,4 +118,14 @@ RSpec.describe "CompletionKit prompts", type: :request do
 
     expect(response).to redirect_to("/completion_kit/prompts")
   end
+
+  it "shows Make current button for non-current versions and Current badge for current" do
+    v1 = create(:completion_kit_prompt, name: "Prompt", family_key: "fam-1", version_number: 1, current: true)
+    v2 = create(:completion_kit_prompt, name: "Prompt", family_key: "fam-1", version_number: 2, current: false)
+
+    get "/completion_kit/prompts/#{v1.id}"
+
+    expect(response.body).to include("Current")
+    expect(response.body).to include("Make current")
+  end
 end

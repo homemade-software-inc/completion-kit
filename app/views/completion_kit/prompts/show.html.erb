@@ -26,6 +26,39 @@
   <pre class="ck-code ck-code--dark"><%= @prompt.template %></pre>
 </section>
 
+<% versions = @prompt.family_versions %>
+<% if versions.size > 1 %>
+  <section class="ck-card--spaced">
+    <p class="ck-kicker">Versions</p>
+    <table class="ck-results-table" style="margin-top: 0.5rem;">
+      <thead>
+        <tr>
+          <th>Version</th>
+          <th>Model</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% versions.each do |v| %>
+          <tr>
+            <td><strong>v<%= v.version_number %></strong></td>
+            <td><span class="ck-chip ck-chip--soft"><%= v.llm_model %></span></td>
+            <td class="ck-meta-copy"><%= time_ago_in_words(v.created_at) %> ago</td>
+            <td>
+              <% if v.current? %>
+                <span class="ck-chip">Current</span>
+              <% else %>
+                <%= button_to "Make current", publish_prompt_path(v), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+<% end %>
+
 <% if @runs.any? %>
   <section class="ck-card--spaced">
     <p class="ck-kicker">Runs</p>
