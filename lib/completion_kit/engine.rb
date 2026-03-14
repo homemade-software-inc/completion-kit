@@ -16,6 +16,13 @@ module CompletionKit
 
     initializer("completion_kit.assets") { |app| Engine.register_assets(app) }
 
+    config.after_initialize do
+      cfg = CompletionKit.config
+      unless cfg.username || cfg.auth_strategy
+        Rails.logger.warn "[CompletionKit] WARNING: No authentication configured. All routes are publicly accessible."
+      end
+    end
+
     config.generators do |g|
       g.test_framework :rspec
       g.fixture_replacement :factory_bot
