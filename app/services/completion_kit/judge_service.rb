@@ -15,6 +15,10 @@ module CompletionKit
 
       response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
       parse_judge_response(response)
+    rescue Faraday::Error
+      raise
+    rescue => e
+      { score: 0, feedback: "Error during evaluation: #{e.message}" }
     end
 
     private
