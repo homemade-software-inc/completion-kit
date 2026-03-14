@@ -57,6 +57,7 @@ module CompletionKit
     def publish!
       transaction do
         self.class.where(family_key: family_key).where.not(id: id).update_all(current: false)
+        reload
         update!(current: true, published_at: Time.current)
       end
     end
