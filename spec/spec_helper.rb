@@ -3,7 +3,7 @@ require "simplecov"
 SimpleCov.start do
   enable_coverage :branch
   primary_coverage :branch
-  minimum_coverage line: 90, branch: 80
+  minimum_coverage line: 100, branch: 100
 
   track_files "{app,lib,config}/**/*.rb"
 
@@ -15,6 +15,7 @@ SimpleCov.start do
   add_filter "/app/views/"
   add_filter "/lib/tasks/"
   add_filter "/lib/generators/completion_kit/templates/"
+  add_filter "/lib/completion_kit/engine.rb"
 
   add_group "Controllers", "app/controllers"
   add_group "Models", "app/models"

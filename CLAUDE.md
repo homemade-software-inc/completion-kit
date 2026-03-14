@@ -20,4 +20,5 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use standard RESTful controllers with strong parameters
 - Models should include validations and associations at the top
 - Follow test-driven development using RSpec and FactoryBot
+- Maintain 100% line and branch coverage — CI enforces this
 - Wrap LLM API calls in service classes with consistent interfaces
