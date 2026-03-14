@@ -111,4 +111,19 @@ RSpec.describe CompletionKit::EvalRunner do
       expect(result[:error]).to eq("boom")
     end
   end
+
+  describe "#run with no metrics defined" do
+    it "creates run with nil criteria when metric list is empty" do
+      defn = CompletionKit::EvalDefinition.new("no_metrics_eval")
+      defn.prompt "test_prompt"
+      defn.dataset csv_path
+
+      runner = described_class.new(defn)
+      result = runner.run
+
+      expect(result[:eval_name]).to eq("no_metrics_eval")
+      expect(result[:metrics]).to eq([])
+      expect(result[:passed]).to be true
+    end
+  end
 end

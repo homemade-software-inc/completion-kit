@@ -4,22 +4,12 @@ RSpec.describe "CompletionKit runs", type: :request do
   let!(:prompt) { create(:completion_kit_prompt, name: "Prompt A") }
   let(:base_path) { "/completion_kit/runs" }
 
-  it "renders index, show, new, and edit pages across sort branches" do
+  it "renders index, show, new, and edit pages" do
     run = create(:completion_kit_run, prompt: prompt, name: "Run A")
-    r1 = create(:completion_kit_response, run: run)
-    r2 = create(:completion_kit_response, run: run)
-    create(:completion_kit_review, response: r1, ai_score: 4.0)
-    create(:completion_kit_review, response: r2, ai_score: 2.0)
 
     get base_path
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Run A")
-
-    %w[score_desc score_asc].each do |sort|
-      get "#{base_path}/#{run.id}", params: { sort: sort }
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Run A")
-    end
 
     get "#{base_path}/#{run.id}"
     expect(response).to have_http_status(:ok)
@@ -30,6 +20,32 @@ RSpec.describe "CompletionKit runs", type: :request do
     get "#{base_path}/#{run.id}/edit"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Run A")
+  end
+
+  it "sorts responses by score when judge is configured" do
+    run = create(:completion_kit_run, prompt: prompt, name: "Run A")
+    r1 = create(:completion_kit_response, run: run)
+    r2 = create(:completion_kit_response, run: run)
+    create(:completion_kit_review, response: r1, ai_score: 4.0)
+    create(:completion_kit_review, response: r2, ai_score: 2.0)
+
+    allow_any_instance_of(CompletionKit::Run).to receive(:judge_configured?).and_return(true)
+
+    get "#{base_path}/#{run.id}", params: { sort: "score_asc" }
+    expect(response).to have_http_status(:ok)
+
+    get "#{base_path}/#{run.id}", params: { sort: "score_desc" }
+    expect(response).to have_http_status(:ok)
+  end
+
+  it "orders responses by id when judge is not configured" do
+    run = create(:completion_kit_run, prompt: prompt, name: "Run A")
+    create(:completion_kit_response, run: run)
+
+    allow_any_instance_of(CompletionKit::Run).to receive(:judge_configured?).and_return(false)
+
+    get "#{base_path}/#{run.id}"
+    expect(response).to have_http_status(:ok)
   end
 
   it "creates a run with valid params" do
@@ -113,6 +129,17 @@ RSpec.describe "CompletionKit runs", type: :request do
     post "#{base_path}/#{run.id}/judge"
 
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
+  end
+
+  it "updates run params before judging when run params are present" do
+    run = create(:completion_kit_run, prompt: prompt)
+
+    allow_any_instance_of(CompletionKit::Run).to receive(:judge_responses!).and_return(true)
+
+    post "#{base_path}/#{run.id}/judge", params: { run: { judge_model: "gpt-4.1" } }
+
+    expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
+    expect(run.reload.judge_model).to eq("gpt-4.1")
   end
 
   it "handles judge failure" do

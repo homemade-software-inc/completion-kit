@@ -20,9 +20,46 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_badge_classes(:low)).to include("ck-badge--low")
       expect(helper.ck_badge_classes(:pending)).to include("ck-badge--pending")
       expect(helper.ck_badge_classes(:running)).to include("ck-badge--running")
+      expect(helper.ck_badge_classes(:generating)).to include("ck-badge--running")
+      expect(helper.ck_badge_classes(:judging)).to include("ck-badge--running")
       expect(helper.ck_badge_classes(:completed)).to include("ck-badge--high")
       expect(helper.ck_badge_classes(:failed)).to include("ck-badge--low")
       expect(helper.ck_badge_classes(:mystery)).to include("ck-badge--pending")
+    end
+  end
+
+  describe "#ck_run_dot" do
+    def stub_run(status, avg_score: nil)
+      instance_double(CompletionKit::Run, status: status, avg_score: avg_score)
+    end
+
+    it "returns pending dot for pending status" do
+      expect(helper.ck_run_dot(stub_run("pending"))).to eq("ck-dot ck-dot--pending")
+    end
+
+    it "returns running dot for generating status" do
+      expect(helper.ck_run_dot(stub_run("generating"))).to eq("ck-dot ck-dot--running")
+    end
+
+    it "returns running dot for judging status" do
+      expect(helper.ck_run_dot(stub_run("judging"))).to eq("ck-dot ck-dot--running")
+    end
+
+    it "returns failed dot for failed status" do
+      expect(helper.ck_run_dot(stub_run("failed"))).to eq("ck-dot ck-dot--failed")
+    end
+
+    it "returns score-based dot for completed status with a score" do
+      result = helper.ck_run_dot(stub_run("completed", avg_score: 4.5))
+      expect(result).to eq("ck-dot ck-dot--high")
+    end
+
+    it "returns completed dot for completed status without a score" do
+      expect(helper.ck_run_dot(stub_run("completed", avg_score: nil))).to eq("ck-dot ck-dot--completed")
+    end
+
+    it "returns pending dot for unknown status" do
+      expect(helper.ck_run_dot(stub_run("unknown_state"))).to eq("ck-dot ck-dot--pending")
     end
   end
 
