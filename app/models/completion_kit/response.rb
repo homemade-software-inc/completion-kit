@@ -5,7 +5,6 @@ module CompletionKit
 
     delegate :prompt, to: :run
 
-    validates :input_data, presence: true
     validates :response_text, presence: true
 
     def score
