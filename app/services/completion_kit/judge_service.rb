@@ -13,12 +13,8 @@ module CompletionKit
         criteria: criteria, evaluation_steps: evaluation_steps,
         rubric_text: rubric_text, human_examples: human_examples)
 
-      begin
-        response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
-        parse_judge_response(response)
-      rescue => e
-        { score: 0, feedback: "Error during evaluation: #{e.message}" }
-      end
+      response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
+      parse_judge_response(response)
     end
 
     private
