@@ -8,6 +8,7 @@ module CompletionKit
   class Configuration
     attr_accessor :openai_api_key, :anthropic_api_key, :llama_api_key, :llama_api_endpoint
     attr_accessor :judge_model, :high_quality_threshold, :medium_quality_threshold
+    attr_accessor :username, :password, :auth_strategy
 
     def initialize
       @openai_api_key = ENV['OPENAI_API_KEY']
