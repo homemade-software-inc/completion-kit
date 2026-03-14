@@ -103,4 +103,21 @@ RSpec.describe "CompletionKit authentication", type: :request do
       expect(response).to have_http_status(:ok)
     end
   end
+
+  context "with no auth in production" do
+    around do |example|
+      original_env = Rails.env
+      Rails.env = ActiveSupport::EnvironmentInquirer.new("production")
+      example.run
+    ensure
+      Rails.env = original_env
+    end
+
+    it "blocks access with 403" do
+      get base_path
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response.body).to include("authentication not configured")
+    end
+  end
 end
