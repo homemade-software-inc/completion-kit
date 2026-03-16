@@ -33,4 +33,11 @@ CompletionKit.configure do |config|
 
   # 5. Direct assignment:
   # config.openai_api_key = 'your-api-key-here'
+
+  # API Authentication
+  # config.api_token = ENV['COMPLETION_KIT_API_TOKEN']
+
+  # Web UI Authentication
+  # config.username = "admin"
+  # config.password = ENV['COMPLETION_KIT_PASSWORD']
 end
