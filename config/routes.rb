@@ -21,4 +21,10 @@ CompletionKit::Engine.routes.draw do
   end
 
   resources :provider_credentials, only: [:index, :new, :create, :edit, :update]
+
+  namespace :api do
+    namespace :v1 do
+      resources :prompts, only: [:index]
+    end
+  end
 end
