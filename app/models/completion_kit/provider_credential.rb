@@ -3,6 +3,13 @@ module CompletionKit
     PROVIDERS = %w[openai anthropic llama].freeze
     PROVIDER_LABELS = { "openai" => "OpenAI", "anthropic" => "Anthropic", "llama" => "Llama" }.freeze
 
+    def as_json(options = {})
+      {
+        id: id, provider: provider, api_endpoint: api_endpoint,
+        created_at: created_at, updated_at: updated_at
+      }
+    end
+
     def display_provider
       PROVIDER_LABELS[provider] || provider.titleize
     end

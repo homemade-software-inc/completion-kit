@@ -118,6 +118,15 @@ module CompletionKit
       false
     end
 
+    def as_json(options = {})
+      {
+        id: id, name: name, status: status, prompt_id: prompt_id,
+        dataset_id: dataset_id, criteria_id: criteria_id, judge_model: judge_model,
+        created_at: created_at, updated_at: updated_at,
+        responses_count: responses.count, avg_score: avg_score
+      }
+    end
+
     private
 
     def set_default_status

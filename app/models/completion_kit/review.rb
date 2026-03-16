@@ -11,6 +11,14 @@ module CompletionKit
 
     before_validation :set_default_status
 
+    def as_json(options = {})
+      {
+        id: id, response_id: response_id, metric_id: metric_id,
+        metric_name: metric_name, ai_score: ai_score,
+        ai_feedback: ai_feedback, status: status
+      }
+    end
+
     private
 
     def set_default_status

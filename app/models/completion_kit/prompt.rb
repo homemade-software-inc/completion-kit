@@ -62,6 +62,14 @@ module CompletionKit
       end
     end
 
+    def as_json(options = {})
+      {
+        id: id, name: name, description: description, template: template,
+        llm_model: llm_model, family_key: family_key, version_number: version_number,
+        current: current, created_at: created_at, updated_at: updated_at
+      }
+    end
+
     private
 
     def assign_family_key

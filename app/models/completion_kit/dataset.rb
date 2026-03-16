@@ -5,6 +5,13 @@ module CompletionKit
     validates :name, presence: true
     validates :csv_data, presence: true
 
+    def as_json(options = {})
+      {
+        id: id, name: name, csv_data: csv_data,
+        created_at: created_at, updated_at: updated_at
+      }
+    end
+
     def row_count
       return 0 if csv_data.blank?
 

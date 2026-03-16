@@ -70,6 +70,14 @@ module CompletionKit
       self.class.rubric_text_for(rubric_bands_for_form)
     end
 
+    def as_json(options = {})
+      {
+        id: id, name: name, key: key, criteria: criteria,
+        evaluation_steps: evaluation_steps, rubric_bands: rubric_bands,
+        created_at: created_at, updated_at: updated_at
+      }
+    end
+
     private
 
     def generate_key
