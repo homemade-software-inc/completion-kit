@@ -40,6 +40,7 @@ CompletionKit::Engine.routes.draw do
       resources :datasets
       resources :metrics
       resources :criteria, controller: "criteria"
+      resources :provider_credentials
     end
   end
 end
