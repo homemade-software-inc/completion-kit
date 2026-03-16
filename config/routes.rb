@@ -37,6 +37,7 @@ CompletionKit::Engine.routes.draw do
         end
         resources :responses, only: [:index, :show]
       end
+      resources :datasets
     end
   end
 end
