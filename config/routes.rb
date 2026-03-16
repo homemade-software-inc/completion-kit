@@ -30,6 +30,12 @@ CompletionKit::Engine.routes.draw do
           post :new_version
         end
       end
+      resources :runs do
+        member do
+          post :generate
+          post :judge
+        end
+      end
     end
   end
 end
