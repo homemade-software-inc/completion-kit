@@ -57,6 +57,15 @@ RSpec.describe "API V1 Provider Credentials", type: :request do
       expect(response).to have_http_status(:ok)
       expect(cred.reload.api_key).to eq("new-key")
     end
+
+    it "returns 422 with invalid params" do
+      cred = create(:completion_kit_provider_credential)
+      patch "/completion_kit/api/v1/provider_credentials/#{cred.id}",
+        params: {provider: "invalid-provider"}.to_json,
+        headers: headers
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)).to have_key("errors")
+    end
   end
 
   describe "DELETE /api/v1/provider_credentials/:id" do

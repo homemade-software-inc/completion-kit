@@ -79,6 +79,14 @@ RSpec.describe "API V1 Criteria", type: :request do
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body)["metric_ids"]).to eq([new_metric.id])
     end
+
+    it "handles nil metric_ids" do
+      criteria = create(:completion_kit_criteria, :with_metrics)
+      patch "/completion_kit/api/v1/criteria/#{criteria.id}",
+        params: {name: "updated", metric_ids: nil}.to_json,
+        headers: headers
+      expect(response).to have_http_status(:ok)
+    end
   end
 
   describe "DELETE /api/v1/criteria/:id" do

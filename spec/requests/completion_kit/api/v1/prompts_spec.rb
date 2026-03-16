@@ -56,6 +56,12 @@ RSpec.describe "API V1 Prompts", type: :request do
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body)["name"]).to eq("updated")
     end
+
+    it "returns 422 with invalid params" do
+      patch "/completion_kit/api/v1/prompts/#{prompt.id}", params: {name: ""}.to_json, headers: headers
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)).to have_key("errors")
+    end
   end
 
   describe "DELETE /api/v1/prompts/:id" do
