@@ -35,6 +35,7 @@ CompletionKit::Engine.routes.draw do
           post :generate
           post :judge
         end
+        resources :responses, only: [:index, :show]
       end
     end
   end
