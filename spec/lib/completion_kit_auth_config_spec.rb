@@ -23,4 +23,15 @@ RSpec.describe "CompletionKit auth configuration" do
 
     expect(CompletionKit.config.auth_strategy).to eq(strategy)
   end
+
+  it "exposes api_token" do
+    CompletionKit.configure do |c|
+      c.api_token = "test-token-123"
+    end
+    expect(CompletionKit.config.api_token).to eq("test-token-123")
+  end
+
+  it "defaults api_token to nil" do
+    expect(CompletionKit.config.api_token).to be_nil
+  end
 end
