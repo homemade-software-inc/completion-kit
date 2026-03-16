@@ -24,7 +24,12 @@ CompletionKit::Engine.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :prompts, only: [:index]
+      resources :prompts do
+        member do
+          post :publish
+          post :new_version
+        end
+      end
     end
   end
 end
