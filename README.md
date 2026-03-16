@@ -70,27 +70,66 @@ Only one mode can be active — setting both raises a `ConfigurationError`.
 2. Create a test run and paste CSV data (headers match variable names)
 3. Generate outputs, run AI review, inspect scored results
 
-## Eval DSL
+## REST API
 
-Run prompt evaluations from code, in CI, or from the command line. Define evals in `evals/` and run them with rake:
+CompletionKit provides a JSON API for programmatic access to all resources.
+
+### Configuration
 
 ```ruby
-# evals/summarization_eval.rb
-CompletionKit.define_eval("summarization") do |e|
-  e.prompt "summarize_article"
-  e.dataset "evals/fixtures/articles.csv"
-  e.metric :relevance, threshold: 7.0
-  e.metric :conciseness, threshold: 6.5
+CompletionKit.configure do |config|
+  config.api_token = ENV['COMPLETION_KIT_API_TOKEN']
 end
 ```
 
+### Authentication
+
+All API requests require a bearer token:
+
 ```bash
-bundle exec rake completion_kit:eval           # run all evals
-bundle exec rake completion_kit:eval:dry_run   # validate without API calls
-bundle exec rake completion_kit:metrics        # list available metrics
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:3000/completion_kit/api/v1/prompts
 ```
 
-See [docs/eval-dsl.md](docs/eval-dsl.md) for the full guide.
+### Endpoints
+
+| Resource | Endpoints |
+|----------|-----------|
+| Prompts | `GET/POST /api/v1/prompts`, `GET/PATCH/DELETE /api/v1/prompts/:id`, `POST /api/v1/prompts/:id/publish`, `POST /api/v1/prompts/:id/new_version` |
+| Runs | `GET/POST /api/v1/runs`, `GET/PATCH/DELETE /api/v1/runs/:id`, `POST /api/v1/runs/:id/generate`, `POST /api/v1/runs/:id/judge` |
+| Responses | `GET /api/v1/runs/:run_id/responses`, `GET /api/v1/runs/:run_id/responses/:id` |
+| Datasets | `GET/POST /api/v1/datasets`, `GET/PATCH/DELETE /api/v1/datasets/:id` |
+| Metrics | `GET/POST /api/v1/metrics`, `GET/PATCH/DELETE /api/v1/metrics/:id` |
+| Criteria | `GET/POST /api/v1/criteria`, `GET/PATCH/DELETE /api/v1/criteria/:id` |
+| Provider Credentials | `GET/POST /api/v1/provider_credentials`, `GET/PATCH/DELETE /api/v1/provider_credentials/:id` |
+
+### Examples
+
+**Create a prompt:**
+
+```bash
+curl -X POST http://localhost:3000/completion_kit/api/v1/prompts \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "summarizer", "template": "Summarize: {{text}}", "llm_model": "gpt-4.1"}'
+```
+
+**Create a run and generate responses:**
+
+```bash
+curl -X POST http://localhost:3000/completion_kit/api/v1/runs \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt_id": 1, "dataset_id": 1}'
+
+curl -X POST http://localhost:3000/completion_kit/api/v1/runs/1/generate \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+curl -X POST http://localhost:3000/completion_kit/api/v1/runs/1/judge \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+curl http://localhost:3000/completion_kit/api/v1/runs/1/responses \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
 
 ## Development
 
