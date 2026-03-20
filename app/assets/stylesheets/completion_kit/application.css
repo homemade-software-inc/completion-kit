@@ -359,6 +359,20 @@ form.button_to {
   color: var(--ck-muted);
 }
 
+.ck-chip--publish {
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+}
+tr:hover .ck-chip--publish {
+  opacity: 0.5;
+}
+.ck-chip--publish:hover {
+  opacity: 1 !important;
+  border-color: var(--ck-accent);
+  color: var(--ck-accent);
+}
+
 .ck-chip--soft {
   background: var(--ck-accent-soft);
   border-color: rgba(6, 182, 212, 0.2);

@@ -49,7 +49,7 @@
               <% if v.current? %>
                 <span class="ck-chip">Current</span>
               <% else %>
-                <%= button_to "Make current", publish_prompt_path(v), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
+                <%= button_to "Publish", publish_prompt_path(v), method: :post, class: "ck-chip ck-chip--publish", form_class: "inline-block" %>
               <% end %>
             </td>
           </tr>
