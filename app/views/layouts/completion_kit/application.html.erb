@@ -11,7 +11,7 @@
 <body class="ck-app">
   <header class="ck-topbar">
     <div class="ck-wrap ck-topbar__inner">
-      <%= link_to "CompletionKit", prompts_path, class: "ck-brand" %>
+      <%= link_to "CompletionKit", main_app.root_path, class: "ck-brand" %>
 
       <nav class="ck-nav">
         <% active = ->(path) { request.path.start_with?(path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) } %>
