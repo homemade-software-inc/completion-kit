@@ -1,10 +1,9 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title">Metrics</h1>
-    <p class="ck-lead">Scoring dimensions used by the judge model to evaluate responses. Each metric defines what to assess, the evaluation steps, and a rubric for star ratings.</p>
+    <p class="ck-lead">Scoring dimensions used by the judge model to evaluate responses. Each metric defines what to assess, the evaluation steps, and a rubric for star ratings. Group metrics into <%= link_to "Criteria", criteria_path, class: "ck-link" %> for reuse across runs.</p>
   </div>
   <div class="ck-actions">
-    <%= link_to "Criteria", criteria_path, class: ck_button_classes(:light, variant: :outline) %>
     <%= link_to "New metric", new_metric_path, class: ck_button_classes(:dark) %>
   </div>
 </section>
