@@ -8,9 +8,9 @@
 /coverage/
 .idea/
 spec/dummy/tmp/
-examples/demo_app/tmp/
 .superpowers/
 standalone/config/master.key
 standalone/tmp/
 standalone/log/*.log
 standalone/db/*.sqlite3
+standalone/db/*.sqlite3-*
