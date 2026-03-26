@@ -36,6 +36,19 @@ RSpec.describe CompletionKit::Metric, type: :model do
     expect(metric.rubric_bands.find { |b| b["stars"] == 3 }["description"]).to eq("OK")
   end
 
+  it "normalizes rubric bands from indexed hash params (form submission)" do
+    metric = build(
+      :completion_kit_metric,
+      rubric_bands: {"0" => {"stars" => "5", "description" => "Great"}, "1" => {"stars" => "3", "description" => "OK"}}
+    )
+
+    metric.valid?
+
+    expect(metric.rubric_bands.length).to eq(5)
+    expect(metric.rubric_bands.find { |b| b["stars"] == 5 }["description"]).to eq("Great")
+    expect(metric.rubric_bands.find { |b| b["stars"] == 3 }["description"]).to eq("OK")
+  end
+
   it "generates a unique key from name" do
     metric = described_class.create!(name: "Hallucination Detection")
 

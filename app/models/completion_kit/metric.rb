@@ -39,7 +39,8 @@ module CompletionKit
     end
 
     def self.normalize_rubric_bands(raw_bands)
-      band_map = Array(raw_bands).each_with_object({}) do |band, acc|
+      bands = raw_bands.is_a?(Hash) ? raw_bands.values : Array(raw_bands)
+      band_map = bands.each_with_object({}) do |band, acc|
         next unless band.respond_to?(:to_h)
 
         normalized = band.to_h.stringify_keys.slice("stars", "description")
