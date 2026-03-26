@@ -12,4 +12,9 @@ test:
   database: db/test.sqlite3
 
 production:
+  <% if ENV["DATABASE_URL"] %>
   url: <%= ENV["DATABASE_URL"] %>
+  <% else %>
+  <<: *default
+  database: db/production.sqlite3
+  <% end %>
