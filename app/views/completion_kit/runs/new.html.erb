@@ -1,8 +1,5 @@
 <ol class="ck-breadcrumb">
-  <li><%= link_to "Prompts", prompts_path %></li>
-  <% if @run.prompt %>
-    <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
-  <% end %>
+  <li><%= link_to "Runs", runs_path %></li>
   <li>New run</li>
 </ol>
 
