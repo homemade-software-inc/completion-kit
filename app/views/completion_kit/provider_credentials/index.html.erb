@@ -8,20 +8,29 @@
 </section>
 
 <% if @provider_credentials.any? %>
+  <% default_endpoints = {"openai" => "https://api.openai.com", "anthropic" => "https://api.anthropic.com"} %>
   <table class="ck-results-table">
     <thead>
       <tr>
         <th>Provider</th>
+        <th>Key</th>
         <th>Endpoint</th>
+        <th>Prompts</th>
+        <th>Judges</th>
+        <th>Last used</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
       <% @provider_credentials.each do |provider_credential| %>
+        <% masked_key = provider_credential.api_key.present? ? "#{provider_credential.api_key[0..6]}#{'•' * 20}#{provider_credential.api_key[-4..]}" : "—" %>
         <tr onclick="window.location='<%= edit_provider_credential_path(provider_credential) %>'" style="cursor: pointer;">
           <td><strong><%= provider_credential.display_provider %></strong></td>
-          <% default_endpoints = {"openai" => "https://api.openai.com", "anthropic" => "https://api.anthropic.com"} %>
+          <td class="ck-meta-copy" style="font-family: var(--ck-mono); font-size: 0.8rem;"><%= masked_key %></td>
           <td class="ck-meta-copy"><%= provider_credential.api_endpoint.presence || default_endpoints[provider_credential.provider] %></td>
+          <td><%= provider_credential.prompt_count %></td>
+          <td><%= provider_credential.judge_count %></td>
+          <td class="ck-meta-copy"><%= provider_credential.last_used_at ? "#{time_ago_in_words(provider_credential.last_used_at)} ago" : "Never" %></td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
       <% end %>

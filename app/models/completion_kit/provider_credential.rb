@@ -35,5 +35,33 @@ module CompletionKit
     rescue StandardError
       false
     end
+
+    def model_pattern
+      case provider
+      when "openai" then /\Agpt-/
+      when "anthropic" then /\Aclaude-/
+      when "llama" then /llama/i
+      end
+    end
+
+    def prompt_count
+      pattern = model_pattern
+      return 0 unless pattern
+      Prompt.all.count { |p| p.llm_model&.match?(pattern) }
+    end
+
+    def judge_count
+      pattern = model_pattern
+      return 0 unless pattern
+      Run.where.not(judge_model: [nil, ""]).all.count { |r| r.judge_model.match?(pattern) }
+    end
+
+    def last_used_at
+      pattern = model_pattern
+      return nil unless pattern
+      runs = Run.where.not(status: "pending").order(created_at: :desc)
+      run = runs.find { |r| r.prompt.llm_model&.match?(pattern) || r.judge_model&.match?(pattern) }
+      run&.created_at
+    end
   end
 end
