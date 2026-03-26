@@ -1,4 +1,5 @@
 class HomeController < ActionController::Base
+  helper CompletionKit::ApplicationHelper
   layout "application"
 
   def index

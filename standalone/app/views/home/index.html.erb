@@ -42,8 +42,8 @@
         </thead>
         <tbody>
           <% @recent_runs.each do |run| %>
-            <tr onclick="window.location='<%= completion_kit.run_path(run) %>'" style="cursor: pointer;">
-              <td><strong><%= run.name %></strong></td>
+            <tr>
+              <td><strong><%= link_to run.name, completion_kit.run_path(run), class: "ck-link" %></strong></td>
               <td><%= link_to run.prompt.name, completion_kit.prompts_path, class: "ck-link" %></td>
               <td><span class="<%= ck_badge_classes(run.status) %>"><%= run.status %></span></td>
               <td>
@@ -55,7 +55,7 @@
                 <% end %>
               </td>
               <td class="ck-meta-copy"><%= time_ago_in_words(run.created_at) %> ago</td>
-              <td class="ck-results-table__arrow">&rarr;</td>
+              <td><%= link_to "→", completion_kit.run_path(run), class: "ck-link" %></td>
             </tr>
           <% end %>
         </tbody>
