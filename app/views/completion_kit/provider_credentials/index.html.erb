@@ -20,7 +20,8 @@
       <% @provider_credentials.each do |provider_credential| %>
         <tr onclick="window.location='<%= edit_provider_credential_path(provider_credential) %>'" style="cursor: pointer;">
           <td><strong><%= provider_credential.display_provider %></strong></td>
-          <td><%= provider_credential.api_endpoint.presence || "Default endpoint" %></td>
+          <% default_endpoints = {"openai" => "https://api.openai.com", "anthropic" => "https://api.anthropic.com"} %>
+          <td class="ck-meta-copy"><%= provider_credential.api_endpoint.presence || default_endpoints[provider_credential.provider] %></td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
       <% end %>
