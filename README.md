@@ -131,19 +131,38 @@ curl http://localhost:3000/completion_kit/api/v1/runs/1/responses \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
+## Standalone App
+
+CompletionKit ships with a standalone Rails app you can deploy as a hosted service.
+
+### Quick Start
+
+```bash
+cd standalone
+bundle install
+bin/rails completion_kit:install:migrations
+bin/rails db:migrate
+bin/rails server
+```
+
+Visit `http://localhost:3000` for the home page, or `http://localhost:3000/completion_kit` for the engine UI.
+
+### Configuration
+
+Set environment variables:
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `COMPLETION_KIT_API_TOKEN` | Bearer token for REST API access | (none — API disabled) |
+| `COMPLETION_KIT_USERNAME` | Web UI basic auth username | `admin` |
+| `COMPLETION_KIT_PASSWORD` | Web UI basic auth password | (none — open in dev) |
+| `DATABASE_URL` | PostgreSQL connection string (production) | SQLite in dev |
+
 ## Development
 
 ```bash
 bundle install
 bundle exec rspec
-```
-
-Demo app:
-
-```bash
-cd examples/demo_app
-bin/rails db:migrate db:seed
-bin/rails server
 ```
 
 ## License
