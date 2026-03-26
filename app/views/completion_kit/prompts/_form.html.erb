@@ -13,7 +13,7 @@
   <div class="ck-card ck-form-card">
     <div class="ck-field">
       <%= form.label :name, "Name", class: "ck-label" %>
-      <%= form.text_field :name, class: "ck-input", placeholder: "Support summary" %>
+      <%= form.text_field :name, class: "ck-input", placeholder: "Support summary", autocomplete: "off", data: { "1p-ignore": "" } %>
     </div>
 
     <div class="ck-field">
