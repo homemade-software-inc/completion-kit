@@ -10,3 +10,6 @@
 spec/dummy/tmp/
 examples/demo_app/tmp/
 .superpowers/
+standalone/config/master.key
+standalone/tmp/
+standalone/log/*.log
