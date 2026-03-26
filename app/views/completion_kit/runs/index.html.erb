@@ -39,6 +39,6 @@
   </table>
 <% else %>
   <div class="ck-empty">
-    No runs yet. Create a run from a prompt page.
+    No runs yet. <%= link_to "Create your first run", new_run_path, class: "ck-link" %>.
   </div>
 <% end %>
