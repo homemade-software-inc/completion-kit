@@ -14,3 +14,4 @@ standalone/tmp/
 standalone/log/*.log
 standalone/db/*.sqlite3
 standalone/db/*.sqlite3-*
+standalone/.env
