@@ -14,11 +14,11 @@
       <%= link_to "CompletionKit", root_path, class: "ck-brand" %>
 
       <nav class="ck-nav">
-        <%= link_to "Prompts", completion_kit.prompts_path, class: "ck-btn ck-btn--light ck-btn--outline" %>
-        <%= link_to "Metrics", completion_kit.metrics_path, class: "ck-btn ck-btn--light ck-btn--outline" %>
-        <%= link_to "Datasets", completion_kit.datasets_path, class: "ck-btn ck-btn--light ck-btn--outline" %>
-        <%= link_to "Runs", completion_kit.runs_path, class: "ck-btn ck-btn--light ck-btn--outline" %>
-        <%= link_to "Settings", completion_kit.provider_credentials_path, class: "ck-btn ck-btn--light ck-btn--outline" %>
+        <%= link_to "Prompts", completion_kit.prompts_path, class: ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Metrics", completion_kit.metrics_path, class: ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Datasets", completion_kit.datasets_path, class: ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Runs", completion_kit.runs_path, class: ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Settings", completion_kit.provider_credentials_path, class: ck_button_classes(:light, variant: :outline) %>
       </nav>
     </div>
   </header>
