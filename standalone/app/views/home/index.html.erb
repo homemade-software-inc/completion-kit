@@ -80,21 +80,21 @@
       <p class="ck-step">Step 1</p>
       <h2 class="ck-section-title">Configure a provider</h2>
       <p class="ck-copy">Add your API key for OpenAI, Anthropic, or another supported provider to start generating responses.</p>
-      <%= link_to "Set up provider", completion_kit.provider_credentials_path, class: "ck-link" %>
+      <p style="margin-top: 0.75rem;"><%= link_to "Set up provider →", completion_kit.provider_credentials_path, class: "ck-button ck-button--secondary" %></p>
     </div>
 
     <div class="ck-card">
       <p class="ck-step">Step 2</p>
       <h2 class="ck-section-title">Create a prompt</h2>
       <p class="ck-copy">Write a system prompt and configure which model to test against. Prompts are versioned so you can track changes over time.</p>
-      <%= link_to "Create prompt", completion_kit.new_prompt_path, class: "ck-link" %>
+      <p style="margin-top: 0.75rem;"><%= link_to "Create prompt →", completion_kit.new_prompt_path, class: "ck-button ck-button--secondary" %></p>
     </div>
 
     <div class="ck-card">
       <p class="ck-step">Step 3</p>
       <h2 class="ck-section-title">Run an evaluation</h2>
       <p class="ck-copy">Run your prompt against a dataset and score the responses with a judge model. Compare results across prompt versions.</p>
-      <%= link_to "New run", completion_kit.new_run_path, class: "ck-link" %>
+      <p style="margin-top: 0.75rem;"><%= link_to "New run →", completion_kit.new_run_path, class: "ck-button ck-button--secondary" %></p>
     </div>
   </div>
 <% end %>
