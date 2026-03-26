@@ -11,7 +11,7 @@
 <body class="ck-app">
   <header class="ck-topbar">
     <div class="ck-wrap ck-topbar__inner">
-      <%= link_to "CompletionKit", main_app.root_path, class: "ck-brand" %>
+      <%= link_to "CompletionKit", (main_app.respond_to?(:root_path) ? main_app.root_path : prompts_path), class: "ck-brand" %>
 
       <nav class="ck-nav">
         <% active = ->(path) { request.path.start_with?(path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) } %>
@@ -20,6 +20,7 @@
         <%= link_to "Datasets", datasets_path, class: active.(datasets_path) %>
         <%= link_to "Runs", runs_path, class: active.(runs_path) %>
         <%= link_to "Settings", provider_credentials_path, class: active.(provider_credentials_path) %>
+        <%= link_to "API", api_reference_path, class: active.(api_reference_path) %>
       </nav>
     </div>
   </header>

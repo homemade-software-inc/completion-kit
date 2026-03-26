@@ -22,6 +22,8 @@ CompletionKit::Engine.routes.draw do
 
   resources :provider_credentials, only: [:index, :new, :create, :edit, :update]
 
+  get "api_reference", to: "api_reference#index", as: :api_reference
+
   namespace :api do
     namespace :v1 do
       resources :prompts do

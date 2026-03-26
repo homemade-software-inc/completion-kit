@@ -1,0 +1,123 @@
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">API</h1>
+    <p class="ck-lead">REST JSON API for programmatic access. All requests require a bearer token via the Authorization header.</p>
+  </div>
+</section>
+
+<div class="ck-stack">
+  <div class="ck-card">
+    <p class="ck-kicker">Authentication</p>
+    <% if @token.present? %>
+      <% if @token.length >= 12 %>
+        <% masked = "#{@token[0..3]}#{'•' * [@token.length - 8, 4].max}#{@token[-4..]}" %>
+      <% else %>
+        <% masked = "••••••••" %>
+      <% end %>
+      <p style="font-family: var(--ck-mono); font-size: 0.85rem; margin: 0.5rem 0;">
+        <span class="ck-chip"><%= masked %></span>
+      </p>
+      <p class="ck-meta-copy">Set via <code>COMPLETION_KIT_API_TOKEN</code> environment variable.</p>
+    <% else %>
+      <p class="ck-meta-copy">No API token configured. Set <code>COMPLETION_KIT_API_TOKEN</code> to enable API access.</p>
+    <% end %>
+    <p class="ck-copy" style="margin-top: 0.75rem;">
+      <code>Authorization: Bearer YOUR_TOKEN</code>
+    </p>
+  </div>
+
+  <div class="ck-card">
+    <p class="ck-kicker">Published Prompts</p>
+    <% if @published_prompts.any? %>
+      <table class="ck-results-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Version</th>
+            <th>Model</th>
+            <th>Family Key</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @published_prompts.each do |prompt| %>
+            <tr>
+              <td><strong><%= link_to prompt.name, prompt_path(prompt), class: "ck-link" %></strong></td>
+              <td><span class="ck-chip ck-chip--soft">v<%= prompt.version_number %></span></td>
+              <td><span class="ck-chip"><%= prompt.llm_model %></span></td>
+              <td class="ck-meta-copy" style="font-family: var(--ck-mono); font-size: 0.8rem;"><%= prompt.family_key %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="ck-empty">No published prompts yet. <%= link_to "Create a prompt", new_prompt_path, class: "ck-link" %> and publish it.</div>
+    <% end %>
+  </div>
+
+  <div class="ck-card">
+    <p class="ck-kicker">Endpoints</p>
+    <table class="ck-results-table">
+      <thead>
+        <tr>
+          <th>Resource</th>
+          <th>Endpoints</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Prompts</strong></td>
+          <td class="ck-meta-copy"><code>GET/POST /api/v1/prompts</code>&ensp;<code>GET/PATCH/DELETE /api/v1/prompts/:id</code>&ensp;<code>POST /api/v1/prompts/:id/publish</code>&ensp;<code>POST /api/v1/prompts/:id/new_version</code></td>
+        </tr>
+        <tr>
+          <td><strong>Runs</strong></td>
+          <td class="ck-meta-copy"><code>GET/POST /api/v1/runs</code>&ensp;<code>GET/PATCH/DELETE /api/v1/runs/:id</code>&ensp;<code>POST /api/v1/runs/:id/generate</code>&ensp;<code>POST /api/v1/runs/:id/judge</code></td>
+        </tr>
+        <tr>
+          <td><strong>Responses</strong></td>
+          <td class="ck-meta-copy"><code>GET /api/v1/runs/:run_id/responses</code>&ensp;<code>GET /api/v1/runs/:run_id/responses/:id</code></td>
+        </tr>
+        <tr>
+          <td><strong>Datasets</strong></td>
+          <td class="ck-meta-copy"><code>GET/POST /api/v1/datasets</code>&ensp;<code>GET/PATCH/DELETE /api/v1/datasets/:id</code></td>
+        </tr>
+        <tr>
+          <td><strong>Metrics</strong></td>
+          <td class="ck-meta-copy"><code>GET/POST /api/v1/metrics</code>&ensp;<code>GET/PATCH/DELETE /api/v1/metrics/:id</code></td>
+        </tr>
+        <tr>
+          <td><strong>Criteria</strong></td>
+          <td class="ck-meta-copy"><code>GET/POST /api/v1/criteria</code>&ensp;<code>GET/PATCH/DELETE /api/v1/criteria/:id</code></td>
+        </tr>
+        <tr>
+          <td><strong>Providers</strong></td>
+          <td class="ck-meta-copy"><code>GET/POST /api/v1/provider_credentials</code>&ensp;<code>GET/PATCH/DELETE /api/v1/provider_credentials/:id</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="ck-card">
+    <p class="ck-kicker">Examples</p>
+
+    <p class="ck-section-title">List published prompts</p>
+    <pre class="ck-code ck-code--dark">curl <%= @base_url %>/api/v1/prompts \
+  -H "Authorization: Bearer YOUR_TOKEN"</pre>
+
+    <p class="ck-section-title" style="margin-top: 1.5rem;">Create a run and generate</p>
+    <pre class="ck-code ck-code--dark">curl -X POST <%= @base_url %>/api/v1/runs \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt_id": 1}'
+
+curl -X POST <%= @base_url %>/api/v1/runs/1/generate \
+  -H "Authorization: Bearer YOUR_TOKEN"</pre>
+
+    <p class="ck-section-title" style="margin-top: 1.5rem;">Judge a run</p>
+    <pre class="ck-code ck-code--dark">curl -X POST <%= @base_url %>/api/v1/runs/1/judge \
+  -H "Authorization: Bearer YOUR_TOKEN"</pre>
+
+    <p class="ck-section-title" style="margin-top: 1.5rem;">View results</p>
+    <pre class="ck-code ck-code--dark">curl <%= @base_url %>/api/v1/runs/1/responses \
+  -H "Authorization: Bearer YOUR_TOKEN"</pre>
+  </div>
+</div>
