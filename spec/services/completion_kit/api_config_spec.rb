@@ -36,6 +36,10 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
 
     expect(described_class.valid_for_model?("gpt-4.1")).to eq(true)
     expect(described_class.errors_for_model("gpt-4.1")).to eq(["none"])
+
+    create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+    create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-test2")
+    create(:completion_kit_provider_credential, provider: "llama", api_key: "sk-test3")
     expect(described_class.available_models.map { |model| model[:id] }).to include("gpt-4.1", "claude-3-7-sonnet-latest", "llama-3.1-8b-instruct")
   end
 
@@ -58,5 +62,19 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
     expect(described_class.provider_for_model("claude-fallback")).to eq("anthropic")
 
     credential.destroy!
+  end
+
+  it "returns empty models when no providers are configured" do
+    expect(described_class.available_models).to eq([])
+  end
+
+  it "skips unconfigured providers when filtering by provider" do
+    expect(described_class.available_models(provider: "openai")).to eq([])
+  end
+
+  it "rescues errors from configured providers" do
+    create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-fail")
+    allow(CompletionKit::LlmClient).to receive(:for_provider).with("anthropic", anything).and_raise(StandardError, "API down")
+    expect(described_class.available_models).to eq([])
   end
 end

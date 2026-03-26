@@ -95,6 +95,7 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(unconfigured.generate_completion("prompt")).to eq("Error: API key not configured")
     expect(unconfigured.configured?).to eq(false)
     expect(unconfigured.configuration_errors).to include("Anthropic API key is not configured")
+    expect(unconfigured.available_models).to eq(CompletionKit::AnthropicClient::STATIC_MODELS)
   end
 
   it "covers Anthropic dynamic model listing branches" do
@@ -136,6 +137,7 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     allow(missing_key).to receive(:api_endpoint).and_return(nil)
     expect(missing_key.generate_completion("prompt")).to eq("Error: API credentials not configured")
     expect(missing_key.configuration_errors).to include("Llama API key is not configured")
+    expect(missing_key.available_models).to eq(CompletionKit::LlamaClient::STATIC_MODELS)
   end
 
   it "covers Llama dynamic model listing branches" do

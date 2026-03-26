@@ -32,7 +32,13 @@
 
     <div class="ck-field">
       <%= form.label :judge_model, "Judge model (optional)", class: "ck-label" %>
-      <%= form.select :judge_model, ck_grouped_models(CompletionKit::Prompt.available_models, run.judge_model), { include_blank: "None" }, { class: "ck-input", id: "run_judge_model" } %>
+      <% available = CompletionKit::Prompt.available_models %>
+      <% if available.any? %>
+        <%= form.select :judge_model, ck_grouped_models(available, run.judge_model), { include_blank: "None" }, { class: "ck-input", id: "run_judge_model" } %>
+      <% else %>
+        <p class="ck-meta-copy">No providers configured. <%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %> to enable judging.</p>
+        <%= form.hidden_field :judge_model, value: nil, id: "run_judge_model" %>
+      <% end %>
     </div>
 
     <div class="ck-field">

@@ -30,9 +30,11 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Visible Prompt")
 
+    create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Prompt text")
+    expect(response.body).to include("OpenAI")
 
     get "#{base_path}/#{prompt.id}/edit"
     expect(response).to have_http_status(:ok)

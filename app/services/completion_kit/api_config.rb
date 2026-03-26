@@ -54,9 +54,11 @@ module CompletionKit
     end
 
     def self.available_models(provider: nil)
-      providers = provider.present? ? [provider.to_s] : ProviderCredential::PROVIDERS
+      configured = ProviderCredential.pluck(:provider)
+      providers = provider.present? ? [provider.to_s] : configured
 
       providers.flat_map do |provider_name|
+        next [] unless configured.include?(provider_name)
         client = LlmClient.for_provider(provider_name, for_provider(provider_name))
         client.available_models.map { |model| model.symbolize_keys.merge(provider: provider_name) }
       rescue StandardError

@@ -29,7 +29,12 @@
 
     <div class="ck-field">
       <%= form.label :llm_model, "Generation model", class: "ck-label" %>
-      <%= form.select :llm_model, ck_grouped_models(CompletionKit::Prompt.available_models, prompt.llm_model), {}, { class: "ck-input" } %>
+      <% available = CompletionKit::Prompt.available_models %>
+      <% if available.any? %>
+        <%= form.select :llm_model, ck_grouped_models(available, prompt.llm_model), {}, { class: "ck-input" } %>
+      <% else %>
+        <p class="ck-meta-copy">No providers configured. <%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %> to select a model.</p>
+      <% end %>
     </div>
 
     <div class="ck-actions">

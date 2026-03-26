@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_26_180606) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_223928) do
   create_table "completion_kit_criteria", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -37,8 +37,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_180606) do
 
   create_table "completion_kit_metrics", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.text "criteria"
     t.text "evaluation_steps"
+    t.text "instruction"
     t.string "key"
     t.string "name", null: false
     t.text "rubric_bands"
@@ -85,7 +85,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_180606) do
     t.text "ai_feedback"
     t.decimal "ai_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
-    t.text "criteria"
+    t.text "instruction"
     t.integer "metric_id"
     t.string "metric_name"
     t.integer "response_id", null: false
