@@ -73,7 +73,7 @@ module CompletionKit
 
     def as_json(options = {})
       {
-        id: id, name: name, key: key, criteria: criteria,
+        id: id, name: name, key: key, instruction: instruction,
         evaluation_steps: evaluation_steps, rubric_bands: rubric_bands,
         created_at: created_at, updated_at: updated_at
       }

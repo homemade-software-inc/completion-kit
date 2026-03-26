@@ -48,7 +48,7 @@ ActiveRecord::Schema.define do
 
   create_table :completion_kit_metrics, force: true do |t|
     t.string :name
-    t.text :criteria
+    t.text :instruction
     t.text :evaluation_steps
     t.text :rubric_bands
     t.string :key
@@ -109,7 +109,7 @@ ActiveRecord::Schema.define do
     t.references :response, null: false
     t.references :metric
     t.string :metric_name
-    t.text :criteria
+    t.text :instruction
     t.string :status
     t.decimal :ai_score, precision: 4, scale: 1
     t.text :ai_feedback

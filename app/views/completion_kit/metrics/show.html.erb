@@ -12,10 +12,10 @@
   </div>
 </section>
 
-<% if @metric.criteria.present? %>
+<% if @metric.instruction.present? %>
 <section class="ck-card">
-  <p class="ck-kicker">Criteria</p>
-  <div class="ck-note-box"><%= simple_format(@metric.criteria) %></div>
+  <p class="ck-kicker">Evaluation Instruction</p>
+  <div class="ck-note-box"><%= simple_format(@metric.instruction) %></div>
 </section>
 <% end %>
 

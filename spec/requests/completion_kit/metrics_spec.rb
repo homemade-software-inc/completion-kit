@@ -12,7 +12,7 @@ RSpec.describe "CompletionKit metrics", type: :request do
 
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Criteria")
+    expect(response.body).to include("Evaluation Instruction")
 
     get "#{base_path}/#{metric.id}"
     expect(response).to have_http_status(:ok)
@@ -21,16 +21,16 @@ RSpec.describe "CompletionKit metrics", type: :request do
     expect(response).to have_http_status(:ok)
 
     expect do
-      post base_path, params: { metric: { name: "Accuracy", criteria: "Be exact" } }
+      post base_path, params: { metric: { name: "Accuracy", instruction: "Be exact" } }
     end.to change(CompletionKit::Metric, :count).by(1)
     expect(response).to redirect_to(%r{/completion_kit/metrics/\d+})
 
     post base_path, params: { metric: { name: "" } }
     expect(response).to have_http_status(:unprocessable_entity)
 
-    patch "#{base_path}/#{metric.id}", params: { metric: { criteria: "Updated criteria" } }
+    patch "#{base_path}/#{metric.id}", params: { metric: { instruction: "Updated instruction" } }
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
-    expect(metric.reload.criteria).to eq("Updated criteria")
+    expect(metric.reload.instruction).to eq("Updated instruction")
 
     patch "#{base_path}/#{metric.id}", params: { metric: { name: "" } }
     expect(response).to have_http_status(:unprocessable_entity)

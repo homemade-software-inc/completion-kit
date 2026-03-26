@@ -3,7 +3,7 @@ require "faraday"
 
 RSpec.describe "End-to-end judging pipeline", type: :model do
   let(:metric) do
-    create(:completion_kit_metric, name: "Relevance", criteria: "Is the output relevant?")
+    create(:completion_kit_metric, name: "Relevance", instruction: "Is the output relevant?")
   end
   let(:criteria) do
     c = create(:completion_kit_criteria, name: "QA Criteria")

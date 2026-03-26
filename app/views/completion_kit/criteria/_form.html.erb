@@ -29,7 +29,7 @@
           <label class="ck-item">
             <span>
               <strong><%= metric.name %></strong>
-              <span class="ck-meta-copy"><%= metric.criteria.presence || "No criteria yet." %></span>
+              <span class="ck-meta-copy"><%= metric.instruction.presence || "No instruction set." %></span>
             </span>
             <%= check_box_tag "criteria[metric_ids][]", metric.id, criteria.metrics.exists?(metric.id), class: "ck-checkbox" %>
           </label>

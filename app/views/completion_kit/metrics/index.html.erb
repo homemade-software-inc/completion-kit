@@ -23,7 +23,7 @@
       <% @metrics.each do |metric| %>
         <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
           <td><strong><%= metric.name %></strong></td>
-          <td><%= truncate(metric.criteria.to_s, length: 80) %></td>
+          <td><%= truncate(metric.instruction.to_s, length: 80) %></td>
           <td>
             <% c = metric.criterias.first %>
             <%= c&.name || "&mdash;".html_safe %>

@@ -4,7 +4,7 @@ RSpec.describe CompletionKit::Metric, type: :model do
   it "fills in default rubric bands on a new metric" do
     metric = described_class.create!(name: "Default metric")
 
-    expect(metric.criteria).to be_nil
+    expect(metric.instruction).to be_nil
     expect(metric.evaluation_steps).to eq([])
     expect(metric.rubric_bands.length).to eq(5)
     expect(metric.rubric_bands.first).to include("stars" => 5)

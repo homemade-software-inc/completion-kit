@@ -32,7 +32,7 @@ RSpec.describe "API V1 Metrics", type: :request do
   describe "POST /api/v1/metrics" do
     it "creates a metric" do
       post "/completion_kit/api/v1/metrics",
-        params: {name: "relevance", criteria: "Is the response relevant?"}.to_json,
+        params: {name: "relevance", instruction: "Is the response relevant?"}.to_json,
         headers: headers
       expect(response).to have_http_status(:created)
     end
