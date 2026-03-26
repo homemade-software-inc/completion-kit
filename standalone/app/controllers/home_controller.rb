@@ -4,8 +4,11 @@ class HomeController < ActionController::Base
   before_action :authenticate!
 
   def index
-    @has_data = CompletionKit::Prompt.any?
-    if @has_data
+    @has_provider = CompletionKit::ProviderCredential.any?
+    @has_prompt = CompletionKit::Prompt.any?
+    @has_run = CompletionKit::Run.where.not(status: "pending").any?
+    @setup_complete = @has_provider && @has_prompt && @has_run
+    if @setup_complete
       @prompt_count = CompletionKit::Prompt.current_versions.count
       @run_count = CompletionKit::Run.count
       @recent_runs = CompletionKit::Run.order(created_at: :desc).limit(5)

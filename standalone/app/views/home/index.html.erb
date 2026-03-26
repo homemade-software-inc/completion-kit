@@ -1,4 +1,4 @@
-<% if @has_data %>
+<% if @setup_complete %>
   <section class="ck-page-header">
     <div>
       <p class="ck-kicker">Dashboard</p>
@@ -61,9 +61,7 @@
         </tbody>
       </table>
     <% else %>
-      <div class="ck-empty">
-        No runs yet. <%= link_to "Create your first run", completion_kit.new_run_path, class: "ck-link" %>.
-      </div>
+      <div class="ck-empty">No runs yet.&ensp;<%= link_to "Create your first run →", completion_kit.new_run_path, class: "ck-link" %></div>
     <% end %>
   </div>
 
@@ -76,25 +74,32 @@
   </section>
 
   <div class="ck-stack">
-    <div class="ck-card">
-      <p class="ck-step">Step 1</p>
-      <h2 class="ck-section-title">Configure a provider</h2>
-      <p class="ck-copy">Add your API key for OpenAI, Anthropic, or another supported provider to start generating responses.</p>
-      <p style="margin-top: 0.75rem;"><%= link_to "Set up provider →", completion_kit.provider_credentials_path, class: "ck-button ck-button--secondary" %></p>
-    </div>
+    <% unless @has_provider %>
+      <div class="ck-card">
+        <p class="ck-step">Step 1</p>
+        <h2 class="ck-section-title">Configure a provider</h2>
+        <p class="ck-copy">Add your API key for OpenAI, Anthropic, or another supported provider to start generating responses.</p>
+        <p style="margin-top: 0.75rem;"><%= link_to "Set up provider →", completion_kit.provider_credentials_path, class: "ck-button ck-button--secondary" %></p>
+      </div>
+    <% end %>
 
-    <div class="ck-card">
-      <p class="ck-step">Step 2</p>
-      <h2 class="ck-section-title">Create a prompt</h2>
-      <p class="ck-copy">Write a system prompt and configure which model to test against. Prompts are versioned so you can track changes over time.</p>
-      <p style="margin-top: 0.75rem;"><%= link_to "Create prompt →", completion_kit.new_prompt_path, class: "ck-button ck-button--secondary" %></p>
-    </div>
+    <% unless @has_prompt %>
+      <div class="ck-card">
+        <p class="ck-step"><%= @has_provider ? "Step 1" : "Step 2" %></p>
+        <h2 class="ck-section-title">Create a prompt</h2>
+        <p class="ck-copy">Write a system prompt and configure which model to test against. Prompts are versioned so you can track changes over time.</p>
+        <p style="margin-top: 0.75rem;"><%= link_to "Create prompt →", completion_kit.new_prompt_path, class: "ck-button ck-button--secondary" %></p>
+      </div>
+    <% end %>
 
-    <div class="ck-card">
-      <p class="ck-step">Step 3</p>
-      <h2 class="ck-section-title">Run an evaluation</h2>
-      <p class="ck-copy">Run your prompt against a dataset and score the responses with a judge model. Compare results across prompt versions.</p>
-      <p style="margin-top: 0.75rem;"><%= link_to "New run →", completion_kit.new_run_path, class: "ck-button ck-button--secondary" %></p>
-    </div>
+    <% unless @has_run %>
+      <div class="ck-card">
+        <% step = 3 - [@has_provider, @has_prompt].count(true) %>
+        <p class="ck-step">Step <%= step %></p>
+        <h2 class="ck-section-title">Run an evaluation</h2>
+        <p class="ck-copy">Run your prompt against a dataset and score the responses with a judge model. Compare results across prompt versions.</p>
+        <p style="margin-top: 0.75rem;"><%= link_to "New run →", completion_kit.new_run_path, class: "ck-button ck-button--secondary" %></p>
+      </div>
+    <% end %>
   </div>
 <% end %>
