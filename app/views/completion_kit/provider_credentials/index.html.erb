@@ -12,7 +12,6 @@
     <thead>
       <tr>
         <th>Provider</th>
-        <th>Status</th>
         <th>Endpoint</th>
         <th></th>
       </tr>
@@ -21,9 +20,6 @@
       <% @provider_credentials.each do |provider_credential| %>
         <tr onclick="window.location='<%= edit_provider_credential_path(provider_credential) %>'" style="cursor: pointer;">
           <td><strong><%= provider_credential.display_provider %></strong></td>
-          <td>
-            <span class="<%= ck_badge_classes(provider_credential.configured? ? :high : :failed) %>"><%= provider_credential.configured? ? "Connected" : "Not connected" %></span>
-          </td>
           <td><%= provider_credential.api_endpoint.presence || "Default endpoint" %></td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
