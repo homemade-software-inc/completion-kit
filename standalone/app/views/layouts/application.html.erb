@@ -1,28 +1,38 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= content_for(:title) || "Standalone Tmp" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Standalone Tmp">
-    <meta name="mobile-web-app-capable" content="yes">
-    <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
+<head>
+  <title>CompletionKit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
 
-    <%= yield :head %>
+  <%= stylesheet_link_tag "completion_kit/application", media: "all" %>
+</head>
+<body class="ck-app">
+  <header class="ck-topbar">
+    <div class="ck-wrap ck-topbar__inner">
+      <%= link_to "CompletionKit", root_path, class: "ck-brand" %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+      <nav class="ck-nav">
+        <%= link_to "Prompts", completion_kit.prompts_path, class: "ck-btn ck-btn--light ck-btn--outline" %>
+        <%= link_to "Metrics", completion_kit.metrics_path, class: "ck-btn ck-btn--light ck-btn--outline" %>
+        <%= link_to "Datasets", completion_kit.datasets_path, class: "ck-btn ck-btn--light ck-btn--outline" %>
+        <%= link_to "Runs", completion_kit.runs_path, class: "ck-btn ck-btn--light ck-btn--outline" %>
+        <%= link_to "Settings", completion_kit.provider_credentials_path, class: "ck-btn ck-btn--light ck-btn--outline" %>
+      </nav>
+    </div>
+  </header>
 
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
+  <main class="ck-main">
+    <div class="ck-wrap">
+      <% flash.each do |type, message| %>
+        <div class="ck-flash <%= type.to_s == "notice" ? "ck-flash--notice" : "ck-flash--alert" %>">
+          <%= message %>
+        </div>
+      <% end %>
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app %>
-  </head>
-
-  <body>
-    <%= yield %>
-  </body>
+      <%= yield %>
+    </div>
+  </main>
+</body>
 </html>
