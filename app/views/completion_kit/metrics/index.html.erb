@@ -13,7 +13,7 @@
     <thead>
       <tr>
         <th>Name</th>
-        <th>Criteria</th>
+        <th>Instruction</th>
         <th>Criteria</th>
         <th></th>
       </tr>
@@ -22,11 +22,8 @@
       <% @metrics.each do |metric| %>
         <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
           <td><strong><%= metric.name %></strong></td>
-          <td><%= truncate(metric.instruction.to_s, length: 80) %></td>
-          <td>
-            <% c = metric.criterias.first %>
-            <%= c&.name || "&mdash;".html_safe %>
-          </td>
+          <td class="ck-meta-copy"><%= truncate(metric.instruction.to_s, length: 80).presence || "None" %></td>
+          <td class="ck-meta-copy"><%= metric.criterias.map(&:name).join(", ").presence || "None" %></td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
       <% end %>
