@@ -1,0 +1,100 @@
+<% if @has_data %>
+  <section class="ck-page-header">
+    <div>
+      <p class="ck-kicker">Dashboard</p>
+      <h1 class="ck-title">Prompt Testing Lab</h1>
+    </div>
+    <div class="ck-actions">
+      <%= link_to "New run", completion_kit.new_run_path, class: "ck-button ck-button--primary" %>
+    </div>
+  </section>
+
+  <div class="ck-grid ck-grid--cards">
+    <div class="ck-card">
+      <p class="ck-kicker">Prompts</p>
+      <p class="ck-title"><%= @prompt_count %></p>
+      <p class="ck-meta-copy"><%= link_to "View all prompts", completion_kit.prompts_path, class: "ck-link" %></p>
+    </div>
+    <div class="ck-card">
+      <p class="ck-kicker">Runs</p>
+      <p class="ck-title"><%= @run_count %></p>
+      <p class="ck-meta-copy"><%= link_to "View all runs", completion_kit.runs_path, class: "ck-link" %></p>
+    </div>
+  </div>
+
+  <div class="ck-card ck-card--spaced">
+    <div class="ck-split">
+      <h2 class="ck-section-title">Recent runs</h2>
+      <%= link_to "View all", completion_kit.runs_path, class: "ck-link" %>
+    </div>
+
+    <% if @recent_runs.any? %>
+      <table class="ck-results-table">
+        <thead>
+          <tr>
+            <th>Run</th>
+            <th>Prompt</th>
+            <th>Status</th>
+            <th>Avg score</th>
+            <th>When</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @recent_runs.each do |run| %>
+            <tr onclick="window.location='<%= completion_kit.run_path(run) %>'" style="cursor: pointer;">
+              <td><strong><%= run.name %></strong></td>
+              <td><%= link_to run.prompt.name, completion_kit.prompts_path, class: "ck-link" %></td>
+              <td><span class="<%= ck_badge_classes(run.status) %>"><%= run.status %></span></td>
+              <td>
+                <% avg = run.avg_score %>
+                <% if avg %>
+                  <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
+                <% else %>
+                  &mdash;
+                <% end %>
+              </td>
+              <td class="ck-meta-copy"><%= time_ago_in_words(run.created_at) %> ago</td>
+              <td class="ck-results-table__arrow">&rarr;</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="ck-empty">
+        No runs yet. <%= link_to "Create your first run", completion_kit.new_run_path, class: "ck-link" %>.
+      </div>
+    <% end %>
+  </div>
+
+<% else %>
+  <section class="ck-page-header">
+    <div>
+      <h1 class="ck-title">Prompt Testing Lab</h1>
+      <p class="ck-lead">Test, evaluate, and compare LLM prompts with structured datasets and automated scoring.</p>
+    </div>
+  </section>
+
+  <div class="ck-stack">
+    <div class="ck-card">
+      <p class="ck-step">Step 1</p>
+      <h2 class="ck-section-title">Configure a provider</h2>
+      <p class="ck-copy">Add your API key for OpenAI, Anthropic, or another supported provider to start generating responses.</p>
+      <%= link_to "Set up provider", completion_kit.provider_credentials_path, class: "ck-link" %>
+    </div>
+
+    <div class="ck-card">
+      <p class="ck-step">Step 2</p>
+      <h2 class="ck-section-title">Create a prompt</h2>
+      <p class="ck-copy">Write a system prompt and configure which model to test against. Prompts are versioned so you can track changes over time.</p>
+      <%= link_to "Create prompt", completion_kit.new_prompt_path, class: "ck-link" %>
+    </div>
+
+    <div class="ck-card">
+      <p class="ck-step">Step 3</p>
+      <h2 class="ck-section-title">Run an evaluation</h2>
+      <p class="ck-copy">Run your prompt against a dataset and score the responses with a judge model. Compare results across prompt versions.</p>
+      <%= link_to "New run", completion_kit.new_run_path, class: "ck-link" %>
+    </div>
+  </div>
+<% end %>
