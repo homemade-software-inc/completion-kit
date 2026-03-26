@@ -13,3 +13,4 @@ examples/demo_app/tmp/
 standalone/config/master.key
 standalone/tmp/
 standalone/log/*.log
+standalone/db/*.sqlite3
