@@ -1,6 +1,7 @@
 class HomeController < ActionController::Base
   helper CompletionKit::ApplicationHelper
   layout "application"
+  before_action :authenticate!
 
   def index
     @has_data = CompletionKit::Prompt.any?
@@ -8,6 +9,18 @@ class HomeController < ActionController::Base
       @prompt_count = CompletionKit::Prompt.current_versions.count
       @run_count = CompletionKit::Run.count
       @recent_runs = CompletionKit::Run.order(created_at: :desc).limit(5)
+    end
+  end
+
+  private
+
+  def authenticate!
+    cfg = CompletionKit.config
+    return unless cfg.username && cfg.password
+
+    authenticate_or_request_with_http_basic("CompletionKit") do |u, p|
+      ActiveSupport::SecurityUtils.secure_compare(u, cfg.username) &
+        ActiveSupport::SecurityUtils.secure_compare(p, cfg.password)
     end
   end
 end
