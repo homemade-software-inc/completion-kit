@@ -58,7 +58,7 @@ module CompletionKit
 
       update!(status: "generating", progress_current: 0, progress_total: rows.length)
       responses.destroy_all
-      broadcast_progress
+      broadcast_ui
 
       rows.each_with_index do |row, index|
         input = row.empty? ? nil : row.to_json
@@ -80,26 +80,26 @@ module CompletionKit
         judge_responses!
       else
         update!(status: "completed")
-        broadcast_progress
+        broadcast_ui
       end
 
       true
     rescue Faraday::Error => e
       update_columns(status: "failed")
       errors.add(:base, e.message)
-      broadcast_progress
+      broadcast_ui
       false
     rescue StandardError => e
       update_columns(status: "failed") if persisted?
       errors.add(:base, e.message)
-      broadcast_progress if persisted?
+      broadcast_ui if persisted?
       false
     end
 
     def judge_responses!
       total_evaluations = responses.count * metrics.count
       update!(status: "judging", progress_current: 0, progress_total: total_evaluations)
-      broadcast_progress
+      broadcast_ui
 
       judge = JudgeService.new(ApiConfig.for_model(judge_model).merge(judge_model: judge_model))
       evaluation_count = 0
@@ -135,17 +135,17 @@ module CompletionKit
       end
 
       update!(status: "completed")
-      broadcast_progress
+      broadcast_ui
       true
     rescue Faraday::Error => e
       update_columns(status: "failed")
       errors.add(:base, e.message)
-      broadcast_progress
+      broadcast_ui
       false
     rescue StandardError => e
       update_columns(status: "failed") if persisted?
       errors.add(:base, e.message)
-      broadcast_progress if persisted?
+      broadcast_ui if persisted?
       false
     end
 
@@ -161,6 +161,12 @@ module CompletionKit
     end
 
     private
+
+    def broadcast_ui
+      broadcast_progress
+      broadcast_status_header
+      broadcast_actions
+    end
 
     def broadcast_progress
       broadcast_replace_to(
