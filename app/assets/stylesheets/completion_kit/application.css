@@ -1392,3 +1392,17 @@ select.ck-input {
   color: var(--ck-success) !important;
   border-color: var(--ck-success) !important;
 }
+
+.ck-token-toggle {
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.ck-token-toggle:hover {
+  border-color: var(--ck-accent);
+  color: var(--ck-accent);
+}
+
+.ck-token-toggle.ck-api-copy--done {
+  border-color: var(--ck-success) !important;
+  color: var(--ck-success) !important;
+}
