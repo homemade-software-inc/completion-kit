@@ -608,22 +608,44 @@ tr:hover .ck-chip--publish {
   max-width: 36rem;
 }
 
-.ck-form-hint {
+.ck-field-hint {
   font-family: var(--ck-sans);
-  font-size: 0.875rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--ck-radius);
+  font-size: 0.8rem;
   line-height: 1.4;
+  margin: 0;
+  color: var(--ck-muted);
 }
 
-.ck-form-hint--success {
-  background: var(--ck-success-soft);
+.ck-field--info .ck-input {
+  border-color: var(--ck-info);
+}
+
+.ck-field--info .ck-field-hint {
+  color: var(--ck-info);
+}
+
+.ck-field--warn .ck-input {
+  border-color: var(--ck-warning);
+}
+
+.ck-field--warn .ck-field-hint {
+  color: var(--ck-warning);
+}
+
+.ck-field--success .ck-input {
+  border-color: var(--ck-success);
+}
+
+.ck-field--success .ck-field-hint {
   color: var(--ck-success);
 }
 
-.ck-form-hint--warn {
-  background: var(--ck-warning-soft);
-  color: var(--ck-warning);
+.ck-field--error .ck-input {
+  border-color: var(--ck-danger);
+}
+
+.ck-field--error .ck-field-hint {
+  color: var(--ck-danger);
 }
 
 .ck-run-config {

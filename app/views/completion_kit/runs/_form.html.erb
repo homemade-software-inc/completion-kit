@@ -30,21 +30,22 @@
       <% end %>
     </div>
 
-    <div class="ck-field">
-      <%= form.label :judge_model, "Judge model (optional)", class: "ck-label" %>
+    <div class="ck-field" id="judge-field">
+      <%= form.label :judge_model, "Judge model", class: "ck-label" %>
       <% available = CompletionKit::Prompt.available_models %>
       <% if available.any? %>
         <%= form.select :judge_model, ck_grouped_models(available, run.judge_model), { include_blank: "None" }, { class: "ck-input", id: "run_judge_model" } %>
+        <p class="ck-field-hint" id="judge-hint"></p>
       <% else %>
-        <p class="ck-meta-copy">No providers configured. <%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %> to enable judging.</p>
+        <p class="ck-field-hint" style="color: var(--ck-warning);">No providers configured.&ensp;<%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %></p>
         <%= form.hidden_field :judge_model, value: nil, id: "run_judge_model" %>
       <% end %>
     </div>
 
-    <div class="ck-field">
+    <div class="ck-field" id="metrics-field">
       <label class="ck-label">Metrics</label>
       <% if @all_metrics.empty? %>
-        <p class="ck-meta-copy">No metrics yet.&ensp;<%= link_to "Create a metric", new_metric_path, class: "ck-link" %></p>
+        <p class="ck-field-hint" style="color: var(--ck-warning);">No metrics yet.&ensp;<%= link_to "Create a metric", new_metric_path, class: "ck-link" %></p>
       <% else %>
         <% if @criterias.any? %>
           <p class="ck-meta-copy" style="margin-bottom: 0.5rem;">
@@ -65,30 +66,30 @@
       <% end %>
     </div>
 
-    <div id="run-judge-hint" class="ck-form-hint" style="display: none;"></div>
-
     <script>
 function updateJudgeHint() {
   var judgeEl = document.getElementById('run_judge_model');
   var judge = judgeEl ? judgeEl.value : '';
   var metrics = document.querySelectorAll('input[name="run[metric_ids][]"]:checked');
-  var hint = document.getElementById('run-judge-hint');
-  if (!hint) return;
+  var judgeField = document.getElementById('judge-field');
+  var metricsField = document.getElementById('metrics-field');
+  var hint = document.getElementById('judge-hint');
+  if (!judgeField) return;
+
+  judgeField.className = 'ck-field';
+  if (metricsField) metricsField.className = 'ck-field';
+  if (hint) hint.textContent = '';
+
   if (judge && metrics.length > 0) {
-    hint.textContent = 'Responses will be generated then judged automatically.';
-    hint.className = 'ck-form-hint ck-form-hint--success';
-    hint.style.display = '';
+    judgeField.className = 'ck-field ck-field--success';
+    if (hint) hint.textContent = 'Responses will be generated then judged automatically.';
   } else if (judge && metrics.length === 0) {
-    hint.textContent = 'Select at least one metric to enable judging.';
-    hint.className = 'ck-form-hint ck-form-hint--warn';
-    hint.style.display = '';
+    if (metricsField) metricsField.className = 'ck-field ck-field--info';
+    if (hint) hint.textContent = 'Select at least one metric to enable judging.';
+    judgeField.className = 'ck-field ck-field--info';
   } else if (!judge && metrics.length > 0) {
-    hint.textContent = 'Select a judge model to enable judging.';
-    hint.className = 'ck-form-hint ck-form-hint--warn';
-    hint.style.display = '';
-  } else {
-    hint.textContent = '';
-    hint.style.display = 'none';
+    judgeField.className = 'ck-field ck-field--info';
+    if (hint) hint.textContent = 'Select a judge model to enable judging.';
   }
 }
 
