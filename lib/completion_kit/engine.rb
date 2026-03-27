@@ -1,3 +1,5 @@
+require "turbo-rails"
+
 module CompletionKit
   class Engine < ::Rails::Engine
     isolate_namespace CompletionKit
