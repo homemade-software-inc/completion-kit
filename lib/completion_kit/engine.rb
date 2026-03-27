@@ -13,7 +13,7 @@ module CompletionKit
     paths.add "app/services", eager_load: true
 
     def self.register_assets(app)
-      app.config.assets.precompile += %w( completion_kit/application.css completion_kit/evaluation_steps_controller.js )
+      app.config.assets.precompile += %w( completion_kit/application.css completion_kit/evaluation_steps_controller.js completion_kit/logo-symbol.png )
     end
 
     initializer("completion_kit.assets") { |app| Engine.register_assets(app) }

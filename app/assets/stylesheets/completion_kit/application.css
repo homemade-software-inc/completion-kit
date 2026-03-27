@@ -128,9 +128,8 @@ form.button_to {
   color: var(--ck-accent);
 }
 
-.ck-brand::before {
-  content: '>';
-  color: var(--ck-dim);
+.ck-brand img {
+  vertical-align: middle;
 }
 
 .ck-topbar__copy {
