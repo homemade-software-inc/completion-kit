@@ -25,6 +25,8 @@ RSpec.describe "End-to-end judging pipeline", type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_status_header)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_actions)
 
     stubs.post("/v1/chat/completions") do
       [200, { "Content-Type" => "application/json" }, {

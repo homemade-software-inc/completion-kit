@@ -10,6 +10,8 @@ RSpec.describe "Run status transitions", type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_status_header)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_actions)
 
     allow(Faraday).to receive(:new).and_wrap_original do |original, *args, **kwargs, &_block|
       original.call(*args, **kwargs) do |builder|
