@@ -14,6 +14,7 @@ test:
 production:
   <% if ENV["DATABASE_URL"] %>
   url: <%= ENV["DATABASE_URL"] %>
+  prepared_statements: false
   <% else %>
   <<: *default
   database: db/production.sqlite3
