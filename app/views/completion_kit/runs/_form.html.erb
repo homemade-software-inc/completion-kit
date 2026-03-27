@@ -44,6 +44,7 @@
 
     <div class="ck-field" id="metrics-field">
       <label class="ck-label">Metrics</label>
+      <p class="ck-field-hint" id="metrics-hint"></p>
       <% if @all_metrics.empty? %>
         <p class="ck-field-hint" style="color: var(--ck-warning);">No metrics yet.&ensp;<%= link_to "Create a metric", new_metric_path, class: "ck-link" %></p>
       <% else %>
@@ -73,23 +74,25 @@ function updateJudgeHint() {
   var metrics = document.querySelectorAll('input[name="run[metric_ids][]"]:checked');
   var judgeField = document.getElementById('judge-field');
   var metricsField = document.getElementById('metrics-field');
-  var hint = document.getElementById('judge-hint');
+  var judgeHint = document.getElementById('judge-hint');
+  var metricsHint = document.getElementById('metrics-hint');
   if (!judgeField) return;
 
   judgeField.className = 'ck-field';
   if (metricsField) metricsField.className = 'ck-field';
-  if (hint) hint.textContent = '';
+  if (judgeHint) judgeHint.textContent = '';
+  if (metricsHint) metricsHint.textContent = '';
 
   if (judge && metrics.length > 0) {
     judgeField.className = 'ck-field ck-field--success';
-    if (hint) hint.textContent = 'Responses will be generated then judged automatically.';
+    if (judgeHint) judgeHint.textContent = 'Responses will be generated then judged automatically.';
   } else if (judge && metrics.length === 0) {
-    if (metricsField) metricsField.className = 'ck-field ck-field--info';
-    if (hint) hint.textContent = 'Select at least one metric to enable judging.';
     judgeField.className = 'ck-field ck-field--info';
+    if (metricsField) metricsField.className = 'ck-field ck-field--info';
+    if (metricsHint) metricsHint.textContent = 'Select at least one metric or criteria to enable judging.';
   } else if (!judge && metrics.length > 0) {
     judgeField.className = 'ck-field ck-field--info';
-    if (hint) hint.textContent = 'Select a judge model to enable judging.';
+    if (judgeHint) judgeHint.textContent = 'Select a judge model to enable judging.';
   }
 }
 
