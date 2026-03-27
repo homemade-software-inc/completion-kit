@@ -54,195 +54,230 @@ end %>
     <% end %>
   </div>
 
-  <div class="ck-card">
-    <p class="ck-kicker">Prompts</p>
-    <p class="ck-copy">Create, version, and manage LLM prompt templates.</p>
+  <details class="ck-api-section" open>
+    <summary class="ck-api-section__header">
+      <span class="ck-section-title">Prompts</span>
+      <span class="ck-meta-copy">7 endpoints</span>
+    </summary>
+    <div class="ck-api-section__body">
+      <p class="ck-copy">Create, version, and manage LLM prompt templates.</p>
 
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/prompts</p>
-      <p class="ck-meta-copy">List all prompts, ordered by most recent.</p>
-      <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl #{@base_url}/api/v1/prompts \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/prompts</p>
+        <p class="ck-meta-copy">List all prompts, ordered by most recent.</p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl #{@base_url}/api/v1/prompts \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/prompts</p>
+        <p class="ck-meta-copy">Create a new prompt.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>, <code>template</code>, <code>llm_model</code>&emsp;<strong>Optional:</strong>&ensp;<code>description</code></p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/prompts \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"summarizer\", \"template\": \"Summarize: {{text}}\", \"llm_model\": \"gpt-4.1\"}'" %>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/prompts/:id</p>
+        <p class="ck-meta-copy">Get a single prompt by ID.</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/prompts/:id</p>
+        <p class="ck-meta-copy">Update a prompt. Accepts same params as create.</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/prompts/:id</p>
+        <p class="ck-meta-copy">Delete a prompt. Returns 204 No Content.</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/prompts/:id/publish</p>
+        <p class="ck-meta-copy">Publish a prompt version, making it the current version in its family.</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/prompts/:id/new_version</p>
+        <p class="ck-meta-copy">Clone a prompt as a new version in the same family. Returns the new version.</p>
+      </div>
     </div>
+  </details>
 
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/prompts</p>
-      <p class="ck-meta-copy">Create a new prompt.</p>
-      <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>, <code>template</code>, <code>llm_model</code>&emsp;<strong>Optional:</strong>&ensp;<code>description</code></p>
-      <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/prompts \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"summarizer\", \"template\": \"Summarize: {{text}}\", \"llm_model\": \"gpt-4.1\"}'" %>
+  <details class="ck-api-section">
+    <summary class="ck-api-section__header">
+      <span class="ck-section-title">Runs</span>
+      <span class="ck-meta-copy">7 endpoints</span>
+    </summary>
+    <div class="ck-api-section__body">
+      <p class="ck-copy">Create runs, generate LLM responses, and judge them with metrics.</p>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs</p>
+        <p class="ck-meta-copy">List all runs with response counts and average scores.</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs</p>
+        <p class="ck-meta-copy">Create a new run.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>prompt_id</code>&emsp;<strong>Optional:</strong>&ensp;<code>name</code>, <code>dataset_id</code>, <code>judge_model</code>, <code>criteria_id</code></p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/runs \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"prompt_id\": 1, \"dataset_id\": 1}'" %>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:id</p>
+        <p class="ck-meta-copy">Get a run with status, progress, response count, and average score.</p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl #{@base_url}/api/v1/runs/1 \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/generate</p>
+        <p class="ck-meta-copy">Start generating responses. Returns 202 Accepted. Poll the run to check progress.</p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/runs/1/generate \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/judge</p>
+        <p class="ck-meta-copy">Start judging responses with the configured judge model and metrics. Returns 202 Accepted.</p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/runs/1/judge \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/runs/:id</p>
+        <p class="ck-meta-copy">Update a run. Accepts same params as create.</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/runs/:id</p>
+        <p class="ck-meta-copy">Delete a run and all its responses. Returns 204 No Content.</p>
+      </div>
     </div>
+  </details>
 
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/prompts/:id</p>
-      <p class="ck-meta-copy">Get a single prompt by ID.</p>
+  <details class="ck-api-section">
+    <summary class="ck-api-section__header">
+      <span class="ck-section-title">Responses</span>
+      <span class="ck-meta-copy">2 endpoints</span>
+    </summary>
+    <div class="ck-api-section__body">
+      <p class="ck-copy">Read-only access to generated responses and their review scores. Nested under runs.</p>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:run_id/responses</p>
+        <p class="ck-meta-copy">List all responses for a run, including nested review scores.</p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl #{@base_url}/api/v1/runs/1/responses \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:run_id/responses/:id</p>
+        <p class="ck-meta-copy">Get a single response with its review scores and feedback.</p>
+      </div>
     </div>
+  </details>
 
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/prompts/:id</p>
-      <p class="ck-meta-copy">Update a prompt. Accepts same params as create.</p>
+  <details class="ck-api-section">
+    <summary class="ck-api-section__header">
+      <span class="ck-section-title">Datasets</span>
+      <span class="ck-meta-copy">5 endpoints</span>
+    </summary>
+    <div class="ck-api-section__body">
+      <p class="ck-copy">Data used as input for runs.</p>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/datasets</p>
+        <p class="ck-meta-copy">List all datasets.</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/datasets</p>
+        <p class="ck-meta-copy">Create a dataset.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>, <code>csv_data</code></p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/datasets \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"tickets\", \"csv_data\": \"text,expected_output\\\\nHello,Hi\"}'" %>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/datasets/:id</p>
+        <p class="ck-meta-copy">Get, update, or delete a dataset.</p>
+      </div>
     </div>
+  </details>
 
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/prompts/:id</p>
-      <p class="ck-meta-copy">Delete a prompt. Returns 204 No Content.</p>
+  <details class="ck-api-section">
+    <summary class="ck-api-section__header">
+      <span class="ck-section-title">Metrics</span>
+      <span class="ck-meta-copy">5 endpoints</span>
+    </summary>
+    <div class="ck-api-section__body">
+      <p class="ck-copy">Scoring dimensions used by the judge model.</p>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/metrics</p>
+        <p class="ck-meta-copy">List all metrics.</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics</p>
+        <p class="ck-meta-copy">Create a metric.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>instruction</code>, <code>evaluation_steps</code> (array), <code>rubric_bands</code> (array of {stars, description})</p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/metrics \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"relevance\", \"instruction\": \"Is the response relevant?\"}'" %>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metrics/:id</p>
+        <p class="ck-meta-copy">Get, update, or delete a metric.</p>
+      </div>
     </div>
+  </details>
 
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/prompts/:id/publish</p>
-      <p class="ck-meta-copy">Publish a prompt version, making it the current version in its family.</p>
+  <details class="ck-api-section">
+    <summary class="ck-api-section__header">
+      <span class="ck-section-title">Criteria</span>
+      <span class="ck-meta-copy">5 endpoints</span>
+    </summary>
+    <div class="ck-api-section__body">
+      <p class="ck-copy">Named groups of metrics applied to runs as a set.</p>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/criteria</p>
+        <p class="ck-meta-copy">List all criteria with their metric IDs.</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/criteria</p>
+        <p class="ck-meta-copy">Create a criteria group.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>description</code>, <code>metric_ids</code> (array)</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/criteria/:id</p>
+        <p class="ck-meta-copy">Get, update, or delete a criteria group. PATCH with <code>metric_ids</code> replaces all metric associations.</p>
+      </div>
     </div>
+  </details>
 
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/prompts/:id/new_version</p>
-      <p class="ck-meta-copy">Clone a prompt as a new version in the same family. Returns the new version.</p>
+  <details class="ck-api-section">
+    <summary class="ck-api-section__header">
+      <span class="ck-section-title">Provider Credentials</span>
+      <span class="ck-meta-copy">5 endpoints</span>
+    </summary>
+    <div class="ck-api-section__body">
+      <p class="ck-copy">LLM provider API keys. The <code>api_key</code> field is write-only and never returned in responses.</p>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/provider_credentials</p>
+        <p class="ck-meta-copy">List all provider credentials (api_key excluded).</p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/provider_credentials</p>
+        <p class="ck-meta-copy">Create a provider credential.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>provider</code> (openai, anthropic, llama), <code>api_key</code>&emsp;<strong>Optional:</strong>&ensp;<code>api_endpoint</code></p>
+      </div>
+
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/provider_credentials/:id</p>
+        <p class="ck-meta-copy">Get, update, or delete a provider credential.</p>
+      </div>
     </div>
-  </div>
-
-  <div class="ck-card">
-    <p class="ck-kicker">Runs</p>
-    <p class="ck-copy">Create runs, generate LLM responses, and judge them with metrics.</p>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs</p>
-      <p class="ck-meta-copy">List all runs with response counts and average scores.</p>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs</p>
-      <p class="ck-meta-copy">Create a new run.</p>
-      <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>prompt_id</code>&emsp;<strong>Optional:</strong>&ensp;<code>name</code>, <code>dataset_id</code>, <code>judge_model</code>, <code>criteria_id</code></p>
-      <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/runs \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"prompt_id\": 1, \"dataset_id\": 1}'" %>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:id</p>
-      <p class="ck-meta-copy">Get a run with status, progress, response count, and average score.</p>
-      <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl #{@base_url}/api/v1/runs/1 \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/generate</p>
-      <p class="ck-meta-copy">Start generating responses. Returns 202 Accepted. Poll the run to check progress.</p>
-      <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/runs/1/generate \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/judge</p>
-      <p class="ck-meta-copy">Start judging responses with the configured judge model and metrics. Returns 202 Accepted.</p>
-      <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/runs/1/judge \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/runs/:id</p>
-      <p class="ck-meta-copy">Update a run. Accepts same params as create.</p>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/runs/:id</p>
-      <p class="ck-meta-copy">Delete a run and all its responses. Returns 204 No Content.</p>
-    </div>
-  </div>
-
-  <div class="ck-card">
-    <p class="ck-kicker">Responses</p>
-    <p class="ck-copy">Read-only access to generated responses and their review scores. Nested under runs.</p>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:run_id/responses</p>
-      <p class="ck-meta-copy">List all responses for a run, including nested review scores.</p>
-      <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl #{@base_url}/api/v1/runs/1/responses \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:run_id/responses/:id</p>
-      <p class="ck-meta-copy">Get a single response with its review scores and feedback.</p>
-    </div>
-  </div>
-
-  <div class="ck-card">
-    <p class="ck-kicker">Datasets</p>
-    <p class="ck-copy">CSV data used as input for runs.</p>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/datasets</p>
-      <p class="ck-meta-copy">List all datasets.</p>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/datasets</p>
-      <p class="ck-meta-copy">Create a dataset.</p>
-      <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>, <code>csv_data</code></p>
-      <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/datasets \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"tickets\", \"csv_data\": \"text,expected_output\\\\nHello,Hi\"}'" %>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/datasets/:id</p>
-      <p class="ck-meta-copy">Get, update, or delete a dataset.</p>
-    </div>
-  </div>
-
-  <div class="ck-card">
-    <p class="ck-kicker">Metrics</p>
-    <p class="ck-copy">Scoring dimensions used by the judge model.</p>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/metrics</p>
-      <p class="ck-meta-copy">List all metrics.</p>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics</p>
-      <p class="ck-meta-copy">Create a metric.</p>
-      <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>instruction</code>, <code>evaluation_steps</code> (array), <code>rubric_bands</code> (array of {stars, description})</p>
-      <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/metrics \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"relevance\", \"instruction\": \"Is the response relevant?\"}'" %>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metrics/:id</p>
-      <p class="ck-meta-copy">Get, update, or delete a metric.</p>
-    </div>
-  </div>
-
-  <div class="ck-card">
-    <p class="ck-kicker">Criteria</p>
-    <p class="ck-copy">Named groups of metrics applied to runs as a set.</p>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/criteria</p>
-      <p class="ck-meta-copy">List all criteria with their metric IDs.</p>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/criteria</p>
-      <p class="ck-meta-copy">Create a criteria group.</p>
-      <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>description</code>, <code>metric_ids</code> (array)</p>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/criteria/:id</p>
-      <p class="ck-meta-copy">Get, update, or delete a criteria group. PATCH with <code>metric_ids</code> replaces all metric associations.</p>
-    </div>
-  </div>
-
-  <div class="ck-card">
-    <p class="ck-kicker">Provider Credentials</p>
-    <p class="ck-copy">LLM provider API keys. The <code>api_key</code> field is write-only and never returned in responses.</p>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/provider_credentials</p>
-      <p class="ck-meta-copy">List all provider credentials (api_key excluded).</p>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/provider_credentials</p>
-      <p class="ck-meta-copy">Create a provider credential.</p>
-      <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>provider</code> (openai, anthropic, llama), <code>api_key</code>&emsp;<strong>Optional:</strong>&ensp;<code>api_endpoint</code></p>
-    </div>
-
-    <div class="ck-api-endpoint">
-      <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/provider_credentials/:id</p>
-      <p class="ck-meta-copy">Get, update, or delete a provider credential.</p>
-    </div>
-  </div>
+  </details>
 
 </div>
 

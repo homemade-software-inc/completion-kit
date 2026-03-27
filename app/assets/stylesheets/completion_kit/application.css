@@ -1406,3 +1406,47 @@ select.ck-input {
   border-color: var(--ck-success) !important;
   color: var(--ck-success) !important;
 }
+
+.ck-api-section {
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius-lg);
+  background: var(--ck-surface);
+}
+
+.ck-api-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  list-style: none;
+  transition: background 0.15s;
+}
+
+.ck-api-section__header::-webkit-details-marker {
+  display: none;
+}
+
+.ck-api-section__header::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--ck-muted);
+  border-bottom: 2px solid var(--ck-muted);
+  transform: rotate(-45deg);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+
+.ck-api-section[open] > .ck-api-section__header::after {
+  transform: rotate(45deg);
+}
+
+.ck-api-section__header:hover {
+  background: var(--ck-surface-hover);
+}
+
+.ck-api-section__body {
+  padding: 0 1.5rem 1.5rem;
+}
