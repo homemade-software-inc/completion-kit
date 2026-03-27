@@ -616,28 +616,16 @@ tr:hover .ck-chip--publish {
   color: var(--ck-muted);
 }
 
-.ck-field--info .ck-input {
-  border-color: var(--ck-info);
-}
-
 .ck-field--info .ck-field-hint {
-  color: var(--ck-info);
-}
-
-.ck-field--warn .ck-input {
-  border-color: var(--ck-warning);
+  color: var(--ck-dim);
 }
 
 .ck-field--warn .ck-field-hint {
-  color: var(--ck-warning);
-}
-
-.ck-field--success .ck-input {
-  border-color: var(--ck-success);
+  color: var(--ck-dim);
 }
 
 .ck-field--success .ck-field-hint {
-  color: var(--ck-success);
+  color: var(--ck-muted);
 }
 
 .ck-field--error .ck-input {

@@ -78,20 +78,14 @@ function updateJudgeHint() {
   var metricsHint = document.getElementById('metrics-hint');
   if (!judgeField) return;
 
-  judgeField.className = 'ck-field';
-  if (metricsField) metricsField.className = 'ck-field';
   if (judgeHint) judgeHint.textContent = '';
   if (metricsHint) metricsHint.textContent = '';
 
   if (judge && metrics.length > 0) {
-    judgeField.className = 'ck-field ck-field--success';
     if (judgeHint) judgeHint.textContent = 'Responses will be generated then judged automatically.';
   } else if (judge && metrics.length === 0) {
-    judgeField.className = 'ck-field ck-field--info';
-    if (metricsField) metricsField.className = 'ck-field ck-field--info';
     if (metricsHint) metricsHint.textContent = 'Select at least one metric or criteria to enable judging.';
   } else if (!judge && metrics.length > 0) {
-    judgeField.className = 'ck-field ck-field--info';
     if (judgeHint) judgeHint.textContent = 'Select a judge model to enable judging.';
   }
 }
