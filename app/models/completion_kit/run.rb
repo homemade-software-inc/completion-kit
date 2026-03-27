@@ -1,5 +1,7 @@
 module CompletionKit
   class Run < ApplicationRecord
+    include Turbo::Broadcastable
+
     STATUSES = %w[pending generating judging completed failed].freeze
 
     belongs_to :prompt
@@ -38,8 +40,11 @@ module CompletionKit
     end
 
     def generate_responses!
-      rows = CsvProcessor.process_self(self)
-      rows = [{}] if rows.empty? && dataset.blank?
+      rows = if dataset
+               CsvProcessor.process_self(self)
+             else
+               [{}]
+             end
 
       if rows.empty?
         errors.add(:base, "Dataset has no rows")
@@ -54,38 +59,53 @@ module CompletionKit
         return false
       end
 
-      transaction do
-        update!(status: "generating")
-        responses.delete_all
+      update!(status: "generating", progress_current: 0, progress_total: rows.length)
+      responses.destroy_all
+      broadcast_progress
 
-        rows.each do |row|
-          output = client.generate_completion(CsvProcessor.apply_variables(prompt, row), model: prompt.llm_model)
+      rows.each_with_index do |row, index|
+        input = row.empty? ? nil : row.to_json
+        rendered = CsvProcessor.apply_variables(prompt, row)
+        response_text = client.generate_completion(rendered, model: prompt.llm_model)
 
-          responses.create!(
-            input_data: row.empty? ? nil : row.to_json,
-            response_text: output,
-            expected_output: row["expected_output"]
-          )
-        end
+        resp = responses.create!(
+          input_data: input,
+          response_text: response_text,
+          expected_output: row["expected_output"]
+        )
 
-        if judge_configured?
-          judge_responses!
-        else
-          update!(status: "completed")
-        end
+        update_columns(progress_current: index + 1)
+        broadcast_progress
+        broadcast_response(resp)
+      end
+
+      if judge_configured?
+        judge_responses!
+      else
+        update!(status: "completed")
+        broadcast_progress
       end
 
       true
+    rescue Faraday::Error => e
+      update_columns(status: "failed")
+      errors.add(:base, e.message)
+      broadcast_progress
+      false
     rescue StandardError => e
-      errors.add(:base, "Failed to generate responses: #{e.message}")
-      update_column(:status, "failed") if persisted?
+      update_columns(status: "failed") if persisted?
+      errors.add(:base, e.message)
+      broadcast_progress if persisted?
       false
     end
 
     def judge_responses!
-      update!(status: "judging")
+      total_evaluations = responses.count * metrics.count
+      update!(status: "judging", progress_current: 0, progress_total: total_evaluations)
+      broadcast_progress
 
       judge = JudgeService.new(ApiConfig.for_model(judge_model).merge(judge_model: judge_model))
+      evaluation_count = 0
 
       responses.find_each do |response|
         metrics.each do |metric|
@@ -108,13 +128,27 @@ module CompletionKit
             )
             review.save!
           end
+
+          evaluation_count += 1
+          update_columns(progress_current: evaluation_count)
+          broadcast_progress
         end
+
+        broadcast_response_update(response)
       end
 
       update!(status: "completed")
+      broadcast_progress
+      true
+    rescue Faraday::Error => e
+      update_columns(status: "failed")
+      errors.add(:base, e.message)
+      broadcast_progress
+      false
     rescue StandardError => e
-      errors.add(:base, "Failed to judge responses: #{e.message}")
-      update_column(:status, "failed") if persisted?
+      update_columns(status: "failed") if persisted?
+      errors.add(:base, e.message)
+      broadcast_progress if persisted?
       false
     end
 
@@ -123,11 +157,39 @@ module CompletionKit
         id: id, name: name, status: status, prompt_id: prompt_id,
         dataset_id: dataset_id, criteria_id: criteria_id, judge_model: judge_model,
         created_at: created_at, updated_at: updated_at,
-        responses_count: responses.count, avg_score: avg_score
+        responses_count: responses.count, avg_score: avg_score,
+        progress_current: progress_current, progress_total: progress_total
       }
     end
 
     private
+
+    def broadcast_progress
+      broadcast_replace_to(
+        "completion_kit_run_#{id}",
+        target: "run_progress",
+        partial: "completion_kit/runs/progress",
+        locals: { run: self }
+      )
+    end
+
+    def broadcast_response(response)
+      broadcast_append_to(
+        "completion_kit_run_#{id}",
+        target: "run_responses",
+        partial: "completion_kit/runs/response_row",
+        locals: { run: self, response: response, index: responses.where("id <= ?", response.id).count }
+      )
+    end
+
+    def broadcast_response_update(response)
+      broadcast_replace_to(
+        "completion_kit_run_#{id}",
+        target: "response_#{response.id}",
+        partial: "completion_kit/runs/response_row",
+        locals: { run: self, response: response, index: responses.where("id <= ?", response.id).count }
+      )
+    end
 
     def set_default_status
       self.status ||= "pending"
