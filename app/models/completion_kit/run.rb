@@ -198,7 +198,7 @@ module CompletionKit
       return unless prompt.present?
 
       count = Run.where(prompt_id: prompt_id).count + 1
-      self.name = "#{prompt.name} ##{count} — #{Time.current.strftime("%-d %b %H:%M")}"
+      self.name = "#{prompt.name} ##{count}"
     end
   end
 end
