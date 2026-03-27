@@ -1,5 +1,10 @@
 <div id="run_progress">
-  <% if run.status == "generating" || run.status == "judging" %>
+  <% if run.status == "pending" %>
+    <div class="ck-card" style="margin-bottom: 1rem;">
+      <p class="ck-kicker">Pending</p>
+      <p class="ck-meta-copy">Ready to run. Click Start to begin generating responses.</p>
+    </div>
+  <% elsif run.status == "generating" || run.status == "judging" %>
     <div class="ck-card" style="margin-bottom: 1rem;">
       <div class="ck-split">
         <p class="ck-kicker"><%= run.status == "generating" ? "Generating responses..." : "Judging responses..." %></p>
