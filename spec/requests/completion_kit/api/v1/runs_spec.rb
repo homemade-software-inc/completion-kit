@@ -47,6 +47,17 @@ RSpec.describe "API V1 Runs", type: :request do
       post "/completion_kit/api/v1/runs", params: {}.to_json, headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
     end
+
+    it "creates a run with metric_ids" do
+      prompt = create(:completion_kit_prompt)
+      metric = create(:completion_kit_metric)
+      post "/completion_kit/api/v1/runs",
+        params: {prompt_id: prompt.id, metric_ids: [metric.id]}.to_json,
+        headers: headers
+      expect(response).to have_http_status(:created)
+      body = JSON.parse(response.body)
+      expect(body["metric_ids"]).to eq([metric.id])
+    end
   end
 
   describe "PATCH /api/v1/runs/:id" do
@@ -62,6 +73,17 @@ RSpec.describe "API V1 Runs", type: :request do
       patch "/completion_kit/api/v1/runs/#{run.id}", params: {name: ""}.to_json, headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
       expect(JSON.parse(response.body)).to have_key("errors")
+    end
+
+    it "updates a run with metric_ids" do
+      run = create(:completion_kit_run)
+      metric = create(:completion_kit_metric)
+      patch "/completion_kit/api/v1/runs/#{run.id}",
+        params: {metric_ids: [metric.id]}.to_json,
+        headers: headers
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body["metric_ids"]).to eq([metric.id])
     end
   end
 

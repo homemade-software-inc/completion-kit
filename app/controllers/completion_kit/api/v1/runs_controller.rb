@@ -13,17 +13,19 @@ module CompletionKit
         end
 
         def create
-          run = Run.new(run_params)
+          run = Run.new(run_params.except(:metric_ids))
           if run.save
-            render json: run, status: :created
+            replace_run_metrics(run, params[:metric_ids])
+            render json: run.reload, status: :created
           else
             render json: {errors: run.errors}, status: :unprocessable_entity
           end
         end
 
         def update
-          if @run.update(run_params)
-            render json: @run
+          if @run.update(run_params.except(:metric_ids))
+            replace_run_metrics(@run, params[:metric_ids]) if params.key?(:metric_ids)
+            render json: @run.reload
           else
             render json: {errors: @run.errors}, status: :unprocessable_entity
           end
@@ -53,7 +55,15 @@ module CompletionKit
         end
 
         def run_params
-          params.permit(:name, :prompt_id, :dataset_id, :judge_model, :criteria_id)
+          params.permit(:name, :prompt_id, :dataset_id, :judge_model, metric_ids: [])
+        end
+
+        def replace_run_metrics(run, metric_ids)
+          return unless metric_ids
+          run.run_metrics.delete_all
+          Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
+            run.run_metrics.create!(metric_id: metric_id, position: index + 1)
+          end
         end
       end
     end

@@ -58,6 +58,18 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to redirect_to(%r{/completion_kit/runs/\d+})
   end
 
+  it "creates a run with metric_ids" do
+    metric = create(:completion_kit_metric)
+
+    expect do
+      post base_path, params: { run: { prompt_id: prompt.id, metric_ids: [metric.id] } }
+    end.to change(CompletionKit::Run, :count).by(1)
+
+    run = CompletionKit::Run.last
+    expect(run.metric_ids).to eq([metric.id])
+    expect(response).to redirect_to(%r{/completion_kit/runs/\d+})
+  end
+
   it "renders new when create is invalid" do
     post base_path, params: { run: { prompt_id: nil } }
 
@@ -72,6 +84,16 @@ RSpec.describe "CompletionKit runs", type: :request do
     patch "#{base_path}/#{run.id}", params: { run: { prompt_id: prompt.id, dataset_id: dataset.id } }
 
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
+  end
+
+  it "updates a run with metric_ids" do
+    run = create(:completion_kit_run, prompt: prompt)
+    metric = create(:completion_kit_metric)
+
+    patch "#{base_path}/#{run.id}", params: { run: { prompt_id: prompt.id, metric_ids: [metric.id] } }
+
+    expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
+    expect(run.reload.metric_ids).to eq([metric.id])
   end
 
   it "renders edit when update is invalid" do
