@@ -124,16 +124,12 @@ RSpec.describe "CompletionKit runs", type: :request do
     run = create(:completion_kit_run, prompt: prompt)
     post "#{base_path}/#{run.id}/generate"
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
-    follow_redirect!
-    expect(response.body).to include("Generation started")
   end
 
   it "enqueues JudgeJob and redirects" do
     run = create(:completion_kit_run, prompt: prompt)
     post "#{base_path}/#{run.id}/judge"
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
-    follow_redirect!
-    expect(response.body).to include("Judging started")
   end
 
   it "updates run params before judging when run params are present" do

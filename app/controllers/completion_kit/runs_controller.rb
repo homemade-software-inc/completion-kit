@@ -60,7 +60,7 @@ module CompletionKit
 
     def generate
       GenerateJob.perform_later(@run.id)
-      redirect_to run_path(@run), notice: "Generation started."
+      redirect_to run_path(@run)
     end
 
     def judge
@@ -68,7 +68,7 @@ module CompletionKit
         @run.update(judge_model: params[:run][:judge_model])
       end
       JudgeJob.perform_later(@run.id)
-      redirect_to run_path(@run), notice: "Judging started."
+      redirect_to run_path(@run)
     end
 
     private
