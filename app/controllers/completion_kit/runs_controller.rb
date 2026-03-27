@@ -33,19 +33,22 @@ module CompletionKit
     end
 
     def create
-      @run = Run.new(run_params)
-
+      @run = Run.new(run_params.except(:metric_ids))
       if @run.save
-        redirect_to run_path(@run), notice: "Run created. Review the configuration below, then start when ready."
+        replace_run_metrics(@run, params[:run][:metric_ids])
+        redirect_to run_path(@run), notice: "Run was successfully created."
       else
+        load_form_collections
         render :new, status: :unprocessable_entity
       end
     end
 
     def update
-      if @run.update(run_params)
-        redirect_to @run, notice: "Run was successfully updated."
+      if @run.update(run_params.except(:metric_ids))
+        replace_run_metrics(@run, params[:run][:metric_ids]) if params[:run].key?(:metric_ids)
+        redirect_to run_path(@run), notice: "Run was successfully updated."
       else
+        load_form_collections
         render :edit, status: :unprocessable_entity
       end
     end
@@ -78,10 +81,19 @@ module CompletionKit
       @prompts = Prompt.order(:name)
       @datasets = Dataset.order(:name)
       @criterias = Criteria.includes(:metrics).order(:name)
+      @all_metrics = Metric.order(:name)
     end
 
     def run_params
-      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model)
+      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, metric_ids: [])
+    end
+
+    def replace_run_metrics(run, metric_ids)
+      return unless metric_ids
+      run.run_metrics.delete_all
+      Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
+        run.run_metrics.create!(metric_id: metric_id, position: index + 1)
+      end
     end
   end
 end
