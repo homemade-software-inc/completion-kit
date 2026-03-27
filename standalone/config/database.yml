@@ -12,10 +12,31 @@ test:
   database: db/test.sqlite3
 
 production:
-  <% if ENV["DATABASE_URL"] %>
-  url: <%= ENV["DATABASE_URL"] %>
-  prepared_statements: false
-  <% else %>
-  <<: *default
-  database: db/production.sqlite3
-  <% end %>
+  primary:
+    <% if ENV["DATABASE_URL"] %>
+    url: <%= ENV["DATABASE_URL"] %>
+    prepared_statements: false
+    <% else %>
+    <<: *default
+    database: db/production.sqlite3
+    <% end %>
+  cable:
+    <% if ENV["DATABASE_URL"] %>
+    url: <%= ENV["DATABASE_URL"] %>
+    prepared_statements: false
+    migrations_paths: db/cable_migrate
+    <% else %>
+    <<: *default
+    database: db/cable.sqlite3
+    migrations_paths: db/cable_migrate
+    <% end %>
+  queue:
+    <% if ENV["DATABASE_URL"] %>
+    url: <%= ENV["DATABASE_URL"] %>
+    prepared_statements: false
+    migrations_paths: db/queue_migrate
+    <% else %>
+    <<: *default
+    database: db/queue.sqlite3
+    migrations_paths: db/queue_migrate
+    <% end %>
