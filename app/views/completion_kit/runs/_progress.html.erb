@@ -1,0 +1,22 @@
+<div id="run_progress">
+  <% if run.status == "generating" || run.status == "judging" %>
+    <div class="ck-card" style="margin-bottom: 1rem;">
+      <div class="ck-split">
+        <p class="ck-kicker"><%= run.status == "generating" ? "Generating responses..." : "Judging responses..." %></p>
+        <p class="ck-meta-copy"><%= run.progress_current %> of <%= run.progress_total %></p>
+      </div>
+      <div style="margin-top: 0.5rem; background: var(--ck-surface-soft); border-radius: 4px; overflow: hidden; height: 6px;">
+        <% pct = run.progress_total > 0 ? (run.progress_current.to_f / run.progress_total * 100).round : 0 %>
+        <div style="width: <%= pct %>%; height: 100%; background: var(--ck-accent); transition: width 0.3s;"></div>
+      </div>
+    </div>
+  <% elsif run.status == "completed" %>
+    <div class="ck-card" style="margin-bottom: 1rem;">
+      <p class="ck-kicker" style="color: var(--ck-success);">Completed</p>
+    </div>
+  <% elsif run.status == "failed" %>
+    <div class="ck-card" style="margin-bottom: 1rem;">
+      <p class="ck-kicker" style="color: var(--ck-danger);">Failed</p>
+    </div>
+  <% end %>
+</div>
