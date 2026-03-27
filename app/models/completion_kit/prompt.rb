@@ -32,7 +32,7 @@ module CompletionKit
     end
 
     def display_name
-      "#{name} #{version_label}"
+      "#{name} — #{version_label}"
     end
 
     def family_versions
