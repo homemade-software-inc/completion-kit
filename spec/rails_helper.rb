@@ -92,11 +92,17 @@ ActiveRecord::Schema.define do
     t.string :name
     t.references :prompt, null: false
     t.references :dataset
-    t.references :criteria
     t.string :judge_model
     t.string :status
     t.integer :progress_current, default: 0
     t.integer :progress_total, default: 0
+    t.timestamps
+  end
+
+  create_table :completion_kit_run_metrics, force: true do |t|
+    t.references :run, null: false
+    t.references :metric, null: false
+    t.integer :position
     t.timestamps
   end
 
