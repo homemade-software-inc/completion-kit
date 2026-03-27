@@ -17,8 +17,6 @@ SimpleCov.start do
   add_filter "/lib/tasks/"
   add_filter "/lib/generators/completion_kit/templates/"
   add_filter "/lib/completion_kit/engine.rb"
-  add_filter "/app/controllers/completion_kit/mcp_controller.rb"
-  add_filter "/app/services/completion_kit/mcp_dispatcher.rb"
 
   add_group "Controllers", "app/controllers"
   add_group "Models", "app/models"
