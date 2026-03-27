@@ -1574,3 +1574,43 @@ select.ck-input {
 .ck-checkbox-label:hover {
   color: var(--ck-accent);
 }
+
+.ck-response-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--ck-line);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+
+.ck-response-row:first-child {
+  border-top: 1px solid var(--ck-line);
+}
+
+.ck-response-row:hover {
+  background: var(--ck-surface-soft);
+}
+
+.ck-response-row__index {
+  font-family: var(--ck-mono);
+  font-size: 0.8rem;
+  color: var(--ck-dim);
+  min-width: 2rem;
+  flex-shrink: 0;
+}
+
+.ck-response-row__text {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--ck-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ck-response-row__score {
+  flex-shrink: 0;
+}
