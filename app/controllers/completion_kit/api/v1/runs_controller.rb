@@ -35,19 +35,13 @@ module CompletionKit
         end
 
         def generate
-          if @run.generate_responses!
-            render json: @run.reload
-          else
-            render json: {error: "Generation failed", status: @run.reload.status}, status: :unprocessable_entity
-          end
+          GenerateJob.perform_later(@run.id)
+          render json: @run.reload, status: :accepted
         end
 
         def judge
-          if @run.judge_responses!
-            render json: @run.reload
-          else
-            render json: {error: "Judging failed", status: @run.reload.status}, status: :unprocessable_entity
-          end
+          JudgeJob.perform_later(@run.id)
+          render json: @run.reload, status: :accepted
         end
 
         private

@@ -74,42 +74,20 @@ RSpec.describe "API V1 Runs", type: :request do
   end
 
   describe "POST /api/v1/runs/:id/generate" do
-    it "generates responses and returns updated run" do
+    it "enqueues generation and returns 202" do
       run = create(:completion_kit_run)
-      allow_any_instance_of(CompletionKit::Run).to receive(:generate_responses!).and_return(true)
       post "/completion_kit/api/v1/runs/#{run.id}/generate", headers: headers
-      expect(response).to have_http_status(:ok)
-    end
-
-    it "returns 422 when generation fails" do
-      run = create(:completion_kit_run)
-      allow_any_instance_of(CompletionKit::Run).to receive(:generate_responses!) do |r|
-        r.update_column(:status, "failed")
-        false
-      end
-      post "/completion_kit/api/v1/runs/#{run.id}/generate", headers: headers
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)["error"]).to eq("Generation failed")
+      expect(response).to have_http_status(:accepted)
+      expect(JSON.parse(response.body)["id"]).to eq(run.id)
     end
   end
 
   describe "POST /api/v1/runs/:id/judge" do
-    it "judges responses and returns updated run" do
+    it "enqueues judging and returns 202" do
       run = create(:completion_kit_run)
-      allow_any_instance_of(CompletionKit::Run).to receive(:judge_responses!).and_return(true)
       post "/completion_kit/api/v1/runs/#{run.id}/judge", headers: headers
-      expect(response).to have_http_status(:ok)
-    end
-
-    it "returns 422 when judging fails" do
-      run = create(:completion_kit_run)
-      allow_any_instance_of(CompletionKit::Run).to receive(:judge_responses!) do |r|
-        r.update_column(:status, "failed")
-        false
-      end
-      post "/completion_kit/api/v1/runs/#{run.id}/judge", headers: headers
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)["error"]).to eq("Judging failed")
+      expect(response).to have_http_status(:accepted)
+      expect(JSON.parse(response.body)["id"]).to eq(run.id)
     end
   end
 end
