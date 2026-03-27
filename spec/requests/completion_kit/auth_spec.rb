@@ -67,15 +67,18 @@ RSpec.describe "CompletionKit authentication", type: :request do
       CompletionKit.configure do |c|
         c.username = "admin"
         c.password = "secret"
-        c.auth_strategy = ->(controller) { true }
+        c.auth_strategy = ->(controller) {
+          controller.head(:unauthorized) unless controller.request.headers["X-Custom-Auth"] == "valid"
+        }
       end
     end
 
-    it "raises ConfigurationError" do
-      expect { get base_path }.to raise_error(
-        CompletionKit::ConfigurationError,
-        /Cannot configure both/
-      )
+    it "uses auth_strategy and ignores basic auth" do
+      create(:completion_kit_prompt)
+
+      get base_path, headers: { "X-Custom-Auth" => "valid" }
+
+      expect(response).to have_http_status(:ok)
     end
   end
 

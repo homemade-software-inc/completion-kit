@@ -9,11 +9,6 @@ module CompletionKit
     def authenticate_completion_kit!
       cfg = CompletionKit.config
 
-      if cfg.auth_strategy && (cfg.username || cfg.password)
-        raise CompletionKit::ConfigurationError,
-          "Cannot configure both username/password and auth_strategy. Use one or the other."
-      end
-
       if (cfg.username && !cfg.password) || (cfg.password && !cfg.username)
         raise CompletionKit::ConfigurationError,
           "Both username and password are required for built-in auth."

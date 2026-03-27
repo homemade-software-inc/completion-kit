@@ -1,0 +1,19 @@
+<main class="ck-login">
+  <div class="ck-login__card">
+    <h1 class="ck-login__brand">CompletionKit</h1>
+
+    <%= form_with url: login_path, method: :post, class: "ck-login__form" do |f| %>
+      <div class="ck-field">
+        <%= f.label :username, class: "ck-label" %>
+        <%= f.text_field :username, class: "ck-input", autofocus: true, autocomplete: "username" %>
+      </div>
+
+      <div class="ck-field">
+        <%= f.label :password, class: "ck-label" %>
+        <%= f.password_field :password, class: "ck-input", autocomplete: "current-password" %>
+      </div>
+
+      <%= f.submit "Sign in", class: "ck-button ck-button--primary ck-login__submit" %>
+    <% end %>
+  </div>
+</main>

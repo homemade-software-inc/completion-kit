@@ -20,10 +20,8 @@ class HomeController < ActionController::Base
   def authenticate!
     cfg = CompletionKit.config
     return unless cfg.username && cfg.password
+    return if session[:authenticated]
 
-    authenticate_or_request_with_http_basic("CompletionKit") do |u, p|
-      ActiveSupport::SecurityUtils.secure_compare(u, cfg.username) &
-        ActiveSupport::SecurityUtils.secure_compare(p, cfg.password)
-    end
+    redirect_to login_path
   end
 end

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign in — CompletionKit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <%= stylesheet_link_tag "completion_kit/application", media: "all" %>
+</head>
+<body class="ck-app">
+  <% flash.each do |type, message| %>
+    <div class="ck-flash <%= type.to_s == "notice" ? "ck-flash--notice" : "ck-flash--alert" %>" style="position: fixed; top: 1rem; left: 50%; transform: translateX(-50%); z-index: 50;">
+      <%= message %>
+    </div>
+  <% end %>
+
+  <%= yield %>
+</body>
+</html>

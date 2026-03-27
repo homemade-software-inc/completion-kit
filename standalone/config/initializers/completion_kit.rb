@@ -3,6 +3,11 @@ CompletionKit.configure do |config|
   if ENV["COMPLETION_KIT_PASSWORD"].present?
     config.username = ENV.fetch("COMPLETION_KIT_USERNAME", "admin")
     config.password = ENV["COMPLETION_KIT_PASSWORD"]
+    config.auth_strategy = ->(controller) {
+      unless controller.session[:authenticated]
+        controller.redirect_to controller.main_app.login_path
+      end
+    }
   end
 end
 
