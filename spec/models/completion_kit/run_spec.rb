@@ -9,9 +9,18 @@ RSpec.describe CompletionKit::Run, type: :model do
   end
 
   describe "#metrics" do
-    it "returns empty array when criteria is nil" do
-      run = build(:completion_kit_run, criteria: nil)
+    it "returns empty array when no metrics associated" do
+      run = create(:completion_kit_run)
       expect(run.metrics).to eq([])
+    end
+
+    it "returns associated metrics ordered by position" do
+      run = create(:completion_kit_run)
+      m1 = create(:completion_kit_metric, name: "Second")
+      m2 = create(:completion_kit_metric, name: "First")
+      CompletionKit::RunMetric.create!(run: run, metric: m1, position: 2)
+      CompletionKit::RunMetric.create!(run: run, metric: m2, position: 1)
+      expect(run.metrics.map(&:name)).to eq(["First", "Second"])
     end
   end
 
@@ -130,11 +139,6 @@ RSpec.describe CompletionKit::Run, type: :model do
 
   describe "#judge_responses!" do
     let(:metric) { create(:completion_kit_metric, name: "Quality") }
-    let(:criteria) do
-      c = create(:completion_kit_criteria)
-      CompletionKit::CriteriaMembership.create!(criteria: c, metric: metric, position: 1)
-      c
-    end
     let(:prompt) { create(:completion_kit_prompt) }
 
     it "marks status failed without update_column on non-persisted run error" do
@@ -142,7 +146,6 @@ RSpec.describe CompletionKit::Run, type: :model do
         :completion_kit_run,
         prompt: prompt,
         judge_model: "gpt-4.1",
-        criteria: criteria,
         status: "completed"
       )
 
@@ -160,9 +163,9 @@ RSpec.describe CompletionKit::Run, type: :model do
         :completion_kit_run,
         prompt: prompt,
         judge_model: "gpt-4.1",
-        criteria: criteria,
         status: "completed"
       )
+      CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
       run.responses.create!(response_text: "Some output")
 
       allow(CompletionKit::JudgeService).to receive(:new).and_raise(StandardError, "judge boom")
@@ -180,7 +183,6 @@ RSpec.describe CompletionKit::Run, type: :model do
         :completion_kit_run,
         prompt: prompt,
         judge_model: "gpt-4.1",
-        criteria: criteria,
         status: "completed"
       )
       run.responses.create!(response_text: "Some output")

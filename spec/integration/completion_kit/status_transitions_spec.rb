@@ -33,13 +33,12 @@ RSpec.describe "Run status transitions", type: :model do
 
   it "pending -> generating -> judging -> completed (with judge)" do
     metric = create(:completion_kit_metric)
-    criteria = create(:completion_kit_criteria)
-    CompletionKit::CriteriaMembership.create!(criteria: criteria, metric: metric, position: 1)
 
     run = CompletionKit::Run.create!(
       prompt: prompt, dataset: nil, name: "With judge",
-      judge_model: "gpt-4.1", criteria: criteria
+      judge_model: "gpt-4.1"
     )
+    CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
 
     call_count = 0
     stubs.post("/v1/chat/completions") do
@@ -73,13 +72,12 @@ RSpec.describe "Run status transitions", type: :model do
 
   it "sets status to failed on judging error" do
     metric = create(:completion_kit_metric)
-    criteria = create(:completion_kit_criteria)
-    CompletionKit::CriteriaMembership.create!(criteria: criteria, metric: metric, position: 1)
 
     run = CompletionKit::Run.create!(
       prompt: prompt, dataset: nil, name: "Judge fail",
-      judge_model: "gpt-4.1", criteria: criteria, status: "completed"
+      judge_model: "gpt-4.1", status: "completed"
     )
+    CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
     run.responses.create!(input_data: nil, response_text: "Some output")
 
     stubs.post("/v1/chat/completions") do

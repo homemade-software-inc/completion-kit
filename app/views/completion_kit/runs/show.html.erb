@@ -53,23 +53,25 @@
     <% end %>
   </div>
   <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Criteria</span>
-    <% if @run.criteria %>
-      <span><%= @run.criteria.name %> <span class="ck-run-config__none">(<%= @run.criteria.metrics.count %> metrics)</span></span>
+    <span class="ck-run-config__key">Metrics</span>
+    <% if @run.metrics.any? %>
+      <span><span class="ck-run-config__none">(<%= @run.metrics.count %> metrics)</span></span>
     <% else %>
       <span class="ck-run-config__none">none</span>
     <% end %>
   </div>
-  <% unless @run.judge_configured? && @run.criteria %>
+  <% unless @run.judge_configured? %>
     <div class="ck-run-config__note">
-      <% if !@run.judge_model.present? && !@run.criteria %>
-        Responses only — no judge and criteria configured.
+      <% if !@run.judge_model.present? && !@run.metrics.any? %>
+        Responses only — no judge and metrics configured.
       <% elsif !@run.judge_model.present? %>
         Responses only — no judge model selected.
+      <% elsif @run.judge_model.present? && !@run.judge_configured? && !@run.metrics.any? %>
+        Responses only — judge provider not configured and no metrics selected.
       <% elsif @run.judge_model.present? && !@run.judge_configured? %>
         Responses only — judge provider not configured.
-      <% elsif !@run.criteria %>
-        Responses only — no criteria to score against.
+      <% elsif !@run.metrics.any? %>
+        Responses only — no metrics to score against.
       <% end %>
     </div>
   <% end %>

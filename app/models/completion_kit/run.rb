@@ -6,8 +6,9 @@ module CompletionKit
 
     belongs_to :prompt
     belongs_to :dataset, optional: true
-    belongs_to :criteria, optional: true, class_name: "CompletionKit::Criteria", foreign_key: "criteria_id"
     has_many :responses, dependent: :destroy
+    has_many :run_metrics, -> { order(:position) }, dependent: :destroy
+    has_many :metrics, through: :run_metrics
 
     validates :name, presence: true
     validates :status, inclusion: { in: STATUSES }
@@ -16,11 +17,7 @@ module CompletionKit
     before_validation :set_auto_name, on: :create
 
     def judge_configured?
-      judge_model.present? && ApiConfig.valid_for_model?(judge_model)
-    end
-
-    def metrics
-      criteria&.ordered_metrics || []
+      judge_model.present? && metrics.any? && ApiConfig.valid_for_model?(judge_model)
     end
 
     def avg_score
@@ -155,10 +152,11 @@ module CompletionKit
     def as_json(options = {})
       {
         id: id, name: name, status: status, prompt_id: prompt_id,
-        dataset_id: dataset_id, criteria_id: criteria_id, judge_model: judge_model,
+        dataset_id: dataset_id, judge_model: judge_model,
         created_at: created_at, updated_at: updated_at,
         responses_count: responses.count, avg_score: avg_score,
-        progress_current: progress_current, progress_total: progress_total
+        progress_current: progress_current, progress_total: progress_total,
+        metric_ids: metric_ids
       }
     end
 

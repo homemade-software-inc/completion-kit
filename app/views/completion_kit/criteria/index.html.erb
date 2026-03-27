@@ -19,7 +19,6 @@
       <tr>
         <th>Name</th>
         <th>Metrics</th>
-        <th>Used in</th>
         <th></th>
       </tr>
     </thead>
@@ -28,7 +27,6 @@
         <tr onclick="window.location='<%= criterion_path(criteria) %>'" style="cursor: pointer;">
           <td><strong><%= criteria.name %></strong></td>
           <td><%= criteria.metrics.size %></td>
-          <td><%= criteria.runs.count %></td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
       <% end %>

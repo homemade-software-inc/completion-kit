@@ -5,19 +5,15 @@ RSpec.describe "End-to-end judging pipeline", type: :model do
   let(:metric) do
     create(:completion_kit_metric, name: "Relevance", instruction: "Is the output relevant?")
   end
-  let(:criteria) do
-    c = create(:completion_kit_criteria, name: "QA Criteria")
-    CompletionKit::CriteriaMembership.create!(criteria: c, metric: metric, position: 1)
-    c
-  end
   let(:prompt) do
     create(:completion_kit_prompt, template: "Summarize {{content}}", llm_model: "gpt-4.1")
   end
   let(:run) do
     r = CompletionKit::Run.create!(
       prompt: prompt, dataset: nil, name: "Judge test",
-      judge_model: "gpt-4.1", criteria: criteria, status: "completed"
+      judge_model: "gpt-4.1", status: "completed"
     )
+    CompletionKit::RunMetric.create!(run: r, metric: metric, position: 1)
     r.responses.create!(input_data: nil, response_text: "A good summary")
     r
   end

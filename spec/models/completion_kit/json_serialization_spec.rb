@@ -15,7 +15,7 @@ RSpec.describe "JSON serialization" do
 
     it "includes expected attributes and computed fields" do
       json = run.as_json
-      expect(json.keys).to include(:id, :name, :status, :prompt_id, :responses_count, :avg_score, :progress_current, :progress_total)
+      expect(json.keys).to include(:id, :name, :status, :prompt_id, :responses_count, :avg_score, :progress_current, :progress_total, :metric_ids)
     end
 
     it "computes responses_count" do

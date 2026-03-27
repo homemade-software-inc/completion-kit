@@ -62,10 +62,7 @@ module CompletionKit
 
     def judge
       if params[:run]
-        @run.update(
-          judge_model: params[:run][:judge_model],
-          criteria_id: params[:run][:criteria_id]
-        )
+        @run.update(judge_model: params[:run][:judge_model])
       end
       JudgeJob.perform_later(@run.id)
       redirect_to run_path(@run), notice: "Judging started."
@@ -84,7 +81,7 @@ module CompletionKit
     end
 
     def run_params
-      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :criteria_id)
+      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model)
     end
   end
 end

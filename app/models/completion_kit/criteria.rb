@@ -4,7 +4,6 @@ module CompletionKit
 
     has_many :criteria_memberships, -> { order(:position, :id) }, dependent: :destroy
     has_many :metrics, through: :criteria_memberships
-    has_many :runs, dependent: :nullify
 
     validates :name, presence: true
 
