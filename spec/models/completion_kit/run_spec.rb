@@ -116,6 +116,8 @@ RSpec.describe CompletionKit::Run, type: :model do
     it "adds error without update_columns on non-persisted run when StandardError is raised at update!" do
       run = build(:completion_kit_run, prompt: prompt, dataset: nil)
 
+      client = instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: [])
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
       allow(run).to receive(:update!).and_raise(StandardError, "boom")
 
       result = run.generate_responses!
