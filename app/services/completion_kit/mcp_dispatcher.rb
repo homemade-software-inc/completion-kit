@@ -28,11 +28,26 @@ module CompletionKit
     end
 
     def self.tool_definitions
-      []
+      McpTools::Prompts.definitions +
+        McpTools::Runs.definitions +
+        McpTools::Responses.definitions +
+        McpTools::Datasets.definitions +
+        McpTools::Metrics.definitions +
+        McpTools::Criteria.definitions +
+        McpTools::ProviderCredentials.definitions
     end
 
     def self.call_tool(name, arguments)
-      raise MethodNotFound, "Unknown tool: #{name}"
+      case name
+      when /\Aprompts_/              then McpTools::Prompts.call(name, arguments)
+      when /\Aruns_/                 then McpTools::Runs.call(name, arguments)
+      when /\Aresponses_/            then McpTools::Responses.call(name, arguments)
+      when /\Adatasets_/             then McpTools::Datasets.call(name, arguments)
+      when /\Ametrics_/              then McpTools::Metrics.call(name, arguments)
+      when /\Acriteria_/             then McpTools::Criteria.call(name, arguments)
+      when /\Aprovider_credentials_/ then McpTools::ProviderCredentials.call(name, arguments)
+      else raise MethodNotFound, "Unknown tool: #{name}"
+      end
     end
   end
 end

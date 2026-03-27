@@ -1,0 +1,45 @@
+module CompletionKit
+  module McpTools
+    module Responses
+      TOOLS = {
+        "responses_list" => {
+          description: "List responses for a run",
+          inputSchema: {type: "object", properties: {run_id: {type: "integer"}}, required: ["run_id"]},
+          handler: :list
+        },
+        "responses_get" => {
+          description: "Get a specific response",
+          inputSchema: {
+            type: "object",
+            properties: {run_id: {type: "integer"}, id: {type: "integer"}},
+            required: ["run_id", "id"]
+          },
+          handler: :get
+        }
+      }.freeze
+
+      def self.definitions
+        TOOLS.map { |name, config| {name: name, description: config[:description], inputSchema: config[:inputSchema]} }
+      end
+
+      def self.call(name, arguments)
+        tool = TOOLS.fetch(name)
+        send(tool[:handler], arguments)
+      end
+
+      def self.list(args)
+        run = Run.find(args["run_id"])
+        text_result(run.responses.includes(:reviews).map(&:as_json))
+      end
+
+      def self.get(args)
+        run = Run.find(args["run_id"])
+        text_result(run.responses.find(args["id"]).as_json)
+      end
+
+      def self.text_result(data)
+        {content: [{type: "text", text: data.to_json}]}
+      end
+    end
+  end
+end

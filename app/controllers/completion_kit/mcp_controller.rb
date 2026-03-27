@@ -27,9 +27,9 @@ module CompletionKit
     rescue JSON::ParserError
       render json: jsonrpc_error(nil, -32700, "Parse error"), status: :bad_request
     rescue McpDispatcher::MethodNotFound => e
-      render json: jsonrpc_error(request_body&.dig("id"), -32601, e.message), status: :ok
+      render json: jsonrpc_error(request_body.dig("id"), -32601, e.message), status: :ok
     rescue McpDispatcher::InvalidParams => e
-      render json: jsonrpc_error(request_body&.dig("id"), -32602, e.message), status: :ok
+      render json: jsonrpc_error(request_body.dig("id"), -32602, e.message), status: :ok
     end
 
     def destroy
