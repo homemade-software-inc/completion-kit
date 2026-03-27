@@ -6,6 +6,8 @@ RSpec.describe CompletionKit::Run, type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_status_header)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_actions)
   end
 
   describe "#metrics" do
@@ -32,6 +34,8 @@ RSpec.describe CompletionKit::Run, type: :model do
       allow(run).to receive(:broadcast_progress).and_call_original
       allow(run).to receive(:broadcast_response).and_call_original
       allow(run).to receive(:broadcast_response_update).and_call_original
+      allow(run).to receive(:broadcast_status_header).and_call_original
+      allow(run).to receive(:broadcast_actions).and_call_original
       allow(run).to receive(:broadcast_replace_to)
       allow(run).to receive(:broadcast_append_to)
     end
@@ -59,6 +63,22 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(run).to have_received(:broadcast_replace_to).with(
         "completion_kit_run_#{run.id}",
         hash_including(target: "response_#{response.id}")
+      )
+    end
+
+    it "broadcast_status_header calls broadcast_replace_to with run_status_header target" do
+      run.send(:broadcast_status_header)
+      expect(run).to have_received(:broadcast_replace_to).with(
+        "completion_kit_run_#{run.id}",
+        hash_including(target: "run_status_header")
+      )
+    end
+
+    it "broadcast_actions calls broadcast_replace_to with run_actions target" do
+      run.send(:broadcast_actions)
+      expect(run).to have_received(:broadcast_replace_to).with(
+        "completion_kit_run_#{run.id}",
+        hash_including(target: "run_actions")
       )
     end
   end

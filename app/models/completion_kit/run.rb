@@ -171,6 +171,24 @@ module CompletionKit
       )
     end
 
+    def broadcast_status_header
+      broadcast_replace_to(
+        "completion_kit_run_#{id}",
+        target: "run_status_header",
+        partial: "completion_kit/runs/status_header",
+        locals: { run: self }
+      )
+    end
+
+    def broadcast_actions
+      broadcast_replace_to(
+        "completion_kit_run_#{id}",
+        target: "run_actions",
+        partial: "completion_kit/runs/actions",
+        locals: { run: self }
+      )
+    end
+
     def broadcast_response(response)
       broadcast_append_to(
         "completion_kit_run_#{id}",
