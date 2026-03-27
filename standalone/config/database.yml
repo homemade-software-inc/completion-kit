@@ -18,3 +18,13 @@ production:
   <<: *default
   database: db/production.sqlite3
   <% end %>
+
+queue:
+  <<: *default
+  database: db/queue.sqlite3
+  migrations_paths: db/queue_migrate
+
+cable:
+  <<: *default
+  database: db/cable.sqlite3
+  migrations_paths: db/cable_migrate

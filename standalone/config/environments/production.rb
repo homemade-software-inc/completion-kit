@@ -2,6 +2,7 @@ require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
   config.secret_key_base = ENV["SECRET_KEY_BASE"]
+  config.active_job.queue_adapter = :solid_queue
 
   config.enable_reloading = false
 
