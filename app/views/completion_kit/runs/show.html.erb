@@ -42,13 +42,6 @@
 
 <%= render "progress", run: @run %>
 
-<% if @run.status == "failed" %>
-  <div class="ck-flash ck-flash--alert" style="margin-top: 1rem;">
-    <% error_msg = @run.responses.where("response_text LIKE 'Error:%'").last&.response_text %>
-    <%= error_msg || "Run failed. Check your provider configuration and try again." %>
-  </div>
-<% end %>
-
 <% valid_responses = @responses.reject { |r| r.response_text&.start_with?("Error:") } %>
 <% judged = valid_responses.any? { |r| r.reviewed? } %>
 
