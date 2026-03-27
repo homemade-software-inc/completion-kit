@@ -58,7 +58,15 @@
 
 <%= render "progress", run: @run %>
 
-<% judged = @responses.any? { |r| r.reviewed? } %>
+<% if @run.status == "failed" %>
+  <div class="ck-flash ck-flash--alert" style="margin-top: 1rem;">
+    <% error_msg = @run.responses.where("response_text LIKE 'Error:%'").last&.response_text %>
+    <%= error_msg || "Run failed. Check your provider configuration and try again." %>
+  </div>
+<% end %>
+
+<% valid_responses = @responses.reject { |r| r.response_text&.start_with?("Error:") } %>
+<% judged = valid_responses.any? { |r| r.reviewed? } %>
 
 <% if judged %>
   <div class="ck-toolbar" style="margin-top: 1.5rem;">
@@ -68,7 +76,7 @@
 <% end %>
 
 <div id="run_responses">
-  <% @responses.each_with_index do |response, idx| %>
+  <% valid_responses.each_with_index do |response, idx| %>
     <%= render "response_row", run: @run, response: response, index: idx + 1 %>
   <% end %>
 </div>
