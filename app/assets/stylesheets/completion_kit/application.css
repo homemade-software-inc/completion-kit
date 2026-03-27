@@ -121,7 +121,7 @@ form.button_to {
   align-items: center;
   gap: 0.5rem;
   font-family: var(--ck-mono);
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-decoration: none;
@@ -129,7 +129,7 @@ form.button_to {
 }
 
 .ck-brand img {
-  vertical-align: middle;
+  display: block;
 }
 
 .ck-topbar__copy {
