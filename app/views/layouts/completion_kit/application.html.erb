@@ -14,7 +14,7 @@
 <body class="ck-app">
   <header class="ck-topbar">
     <div class="ck-wrap ck-topbar__inner">
-      <%= link_to (main_app.respond_to?(:root_path) ? main_app.root_path : prompts_path), class: "ck-brand" do %><%= image_tag "completion_kit/logo-device.svg", alt: "CompletionKit", style: "height: 34px; width: auto;" %> CompletionKit<% end %>
+      <%= link_to (main_app.respond_to?(:root_path) ? main_app.root_path : prompts_path), class: "ck-brand" do %><%= image_tag "completion_kit/logo-device.svg", alt: "CompletionKit", style: "height: 42px; width: auto; margin-bottom: -2px;" %> CompletionKit<% end %>
 
       <nav class="ck-nav">
         <% active = ->(path) { request.path.start_with?(path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) } %>
