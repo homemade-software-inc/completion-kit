@@ -98,57 +98,28 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to redirect_to("/completion_kit/runs")
   end
 
-  it "generates responses successfully" do
+  it "enqueues GenerateJob and redirects" do
     run = create(:completion_kit_run, prompt: prompt)
-
-    allow_any_instance_of(CompletionKit::Run).to receive(:generate_responses!).and_return(true)
-
     post "#{base_path}/#{run.id}/generate"
-
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
+    follow_redirect!
+    expect(response.body).to include("Generation started")
   end
 
-  it "handles generate failure with model errors" do
+  it "enqueues JudgeJob and redirects" do
     run = create(:completion_kit_run, prompt: prompt)
-
-    allow_any_instance_of(CompletionKit::Run).to receive(:generate_responses!) do |instance|
-      instance.errors.add(:base, "generation failed")
-      false
-    end
-
-    post "#{base_path}/#{run.id}/generate"
-
-    expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
-  end
-
-  it "judges responses successfully" do
-    run = create(:completion_kit_run, prompt: prompt)
-
-    allow_any_instance_of(CompletionKit::Run).to receive(:judge_responses!).and_return(true)
-
     post "#{base_path}/#{run.id}/judge"
-
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
+    follow_redirect!
+    expect(response.body).to include("Judging started")
   end
 
   it "updates run params before judging when run params are present" do
     run = create(:completion_kit_run, prompt: prompt)
 
-    allow_any_instance_of(CompletionKit::Run).to receive(:judge_responses!).and_return(true)
-
     post "#{base_path}/#{run.id}/judge", params: { run: { judge_model: "gpt-4.1" } }
 
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
     expect(run.reload.judge_model).to eq("gpt-4.1")
-  end
-
-  it "handles judge failure" do
-    run = create(:completion_kit_run, prompt: prompt)
-
-    allow_any_instance_of(CompletionKit::Run).to receive(:judge_responses!).and_return(false)
-
-    post "#{base_path}/#{run.id}/judge"
-
-    expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
   end
 end

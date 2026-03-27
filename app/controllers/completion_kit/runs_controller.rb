@@ -56,23 +56,19 @@ module CompletionKit
     end
 
     def generate
-      if @run.generate_responses!
-        redirect_to @run, notice: "Responses generated successfully."
-      else
-        redirect_to @run, alert: @run.errors.full_messages.to_sentence.presence || "Failed to generate responses."
-      end
+      GenerateJob.perform_later(@run.id)
+      redirect_to run_path(@run), notice: "Generation started."
     end
 
     def judge
-      if params[:run].present?
-        @run.update(params.require(:run).permit(:judge_model, :criteria_id))
+      if params[:run]
+        @run.update(
+          judge_model: params[:run][:judge_model],
+          criteria_id: params[:run][:criteria_id]
+        )
       end
-
-      if @run.judge_responses!
-        redirect_to @run, notice: "Judging completed successfully."
-      else
-        redirect_to @run, alert: @run.errors.full_messages.to_sentence.presence || "Failed to judge responses."
-      end
+      JudgeJob.perform_later(@run.id)
+      redirect_to run_path(@run), notice: "Judging started."
     end
 
     private
