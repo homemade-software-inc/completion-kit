@@ -23,7 +23,7 @@ RSpec.describe CompletionKit::Prompt, type: :model do
     expect(described_class.current_for("Family Prompt")).to eq(prompt)
     expect(described_class.current_for("family-a")).to eq(prompt)
     expect(prompt.version_label).to eq("v1")
-    expect(prompt.display_name).to eq("Family Prompt v1")
+    expect(prompt.display_name).to eq("Family Prompt — v1")
 
     clone = prompt.clone_as_new_version(template: "Updated {{content}}")
     expect(clone.version_number).to eq(2)

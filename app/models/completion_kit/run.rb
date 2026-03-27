@@ -197,9 +197,8 @@ module CompletionKit
       return if name.present?
       return unless prompt.present?
 
-      version = prompt.version_number || 1
-      timestamp = Time.current.strftime("%Y-%m-%d %H:%M")
-      self.name = "#{prompt.name} v#{version} — #{timestamp}"
+      count = Run.where(prompt_id: prompt_id).count + 1
+      self.name = "#{prompt.name} ##{count}"
     end
   end
 end
