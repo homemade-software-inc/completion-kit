@@ -1,0 +1,16 @@
+<div id="response_<%= response.id %>">
+  <%= link_to run_response_path(run, response), class: "ck-result-card", style: "display: block; text-decoration: none; color: inherit;" do %>
+    <div class="ck-split">
+      <span class="ck-meta-copy">#<%= index %></span>
+      <% if response.reviewed? %>
+        <span class="<%= ck_badge_classes(ck_score_kind(response.score)) %>"><%= response.score %></span>
+      <% else %>
+        <span class="ck-chip">Pending</span>
+      <% end %>
+    </div>
+    <% if response.input_data.present? %>
+      <p class="ck-meta-copy" style="margin-top: 0.35rem;"><%= truncate(response.input_data, length: 120) %></p>
+    <% end %>
+    <p style="margin-top: 0.35rem;"><%= truncate(response.response_text.to_s, length: 200) %></p>
+  <% end %>
+</div>
