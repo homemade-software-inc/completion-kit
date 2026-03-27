@@ -42,26 +42,47 @@
     </div>
 
     <div class="ck-field">
-      <%= form.label :criteria_id, "Criteria (optional)", class: "ck-label" %>
-      <%= form.select :criteria_id, @criterias.map { |c| ["#{c.name} (#{c.metrics.count} metrics)", c.id] }, { include_blank: "None" }, { class: "ck-input", id: "run_criteria" } %>
+      <label class="ck-label">Metrics</label>
+      <% if @all_metrics.empty? %>
+        <p class="ck-meta-copy">No metrics yet.&ensp;<%= link_to "Create a metric", new_metric_path, class: "ck-link" %></p>
+      <% else %>
+        <% if @criterias.any? %>
+          <p class="ck-meta-copy" style="margin-bottom: 0.5rem;">
+            Quick add:&ensp;
+            <% @criterias.each do |c| %>
+              <span class="ck-chip" style="cursor: pointer;" onclick="ckQuickAddCriteria(<%= c.metric_ids.to_json %>)"><%= c.name %></span>&ensp;
+            <% end %>
+          </p>
+        <% end %>
+        <div class="ck-metric-checkboxes">
+          <% @all_metrics.each do |metric| %>
+            <label class="ck-checkbox-label">
+              <%= check_box_tag "run[metric_ids][]", metric.id, run.metric_ids.include?(metric.id), class: "ck-checkbox", id: "run_metric_#{metric.id}" %>
+              <span><%= metric.name %></span>
+            </label>
+          <% end %>
+        </div>
+      <% end %>
     </div>
 
     <div id="run-judge-hint" class="ck-form-hint" style="display: none;"></div>
 
     <script>
 function updateJudgeHint() {
-  var judge = document.getElementById('run_judge_model').value;
-  var group = document.getElementById('run_criteria').value;
+  var judgeEl = document.getElementById('run_judge_model');
+  var judge = judgeEl ? judgeEl.value : '';
+  var metrics = document.querySelectorAll('input[name="run[metric_ids][]"]:checked');
   var hint = document.getElementById('run-judge-hint');
-  if (judge && group) {
+  if (!hint) return;
+  if (judge && metrics.length > 0) {
     hint.textContent = 'Responses will be generated then judged automatically.';
     hint.className = 'ck-form-hint ck-form-hint--success';
     hint.style.display = '';
-  } else if (judge && !group) {
-    hint.textContent = 'Select criteria to enable judging.';
+  } else if (judge && metrics.length === 0) {
+    hint.textContent = 'Select at least one metric to enable judging.';
     hint.className = 'ck-form-hint ck-form-hint--warn';
     hint.style.display = '';
-  } else if (!judge && group) {
+  } else if (!judge && metrics.length > 0) {
     hint.textContent = 'Select a judge model to enable judging.';
     hint.className = 'ck-form-hint ck-form-hint--warn';
     hint.style.display = '';
@@ -70,8 +91,20 @@ function updateJudgeHint() {
     hint.style.display = 'none';
   }
 }
-document.getElementById('run_judge_model').addEventListener('change', updateJudgeHint);
-document.getElementById('run_criteria').addEventListener('change', updateJudgeHint);
+
+function ckQuickAddCriteria(metricIds) {
+  metricIds.forEach(function(id) {
+    var cb = document.getElementById('run_metric_' + id);
+    if (cb) cb.checked = true;
+  });
+  updateJudgeHint();
+}
+
+var judgeEl = document.getElementById('run_judge_model');
+if (judgeEl) judgeEl.addEventListener('change', updateJudgeHint);
+document.querySelectorAll('input[name="run[metric_ids][]"]').forEach(function(cb) {
+  cb.addEventListener('change', updateJudgeHint);
+});
 updateJudgeHint();
     </script>
 
