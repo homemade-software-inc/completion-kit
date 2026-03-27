@@ -22,6 +22,7 @@
     <% if @run.judge_configured? && @run.status == "completed" %>
       <%= button_to "Re-judge", judge_run_path(@run), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
     <% end %>
+    <%= button_to "Delete", run_path(@run), method: :delete, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block", data: { turbo_confirm: "Delete this run and all its responses?" } %>
   </div>
 </section>
 
