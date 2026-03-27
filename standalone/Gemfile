@@ -8,6 +8,8 @@ gem "sqlite3"
 gem "sprockets-rails"
 gem "bootsnap", require: false
 gem "dotenv-rails"
+gem "solid_queue"
+gem "solid_cable"
 
 group :production do
   gem "pg"
