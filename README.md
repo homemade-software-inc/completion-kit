@@ -131,6 +131,51 @@ curl http://localhost:3000/completion_kit/api/v1/runs/1/responses \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
+## MCP Server
+
+CompletionKit includes a built-in [Model Context Protocol](https://modelcontextprotocol.io) server. Any Rails app mounting the engine automatically gets an MCP endpoint that IDE agents (Claude Code, Cursor, etc.) can connect to.
+
+### Configuration
+
+The MCP server reuses the same API token as the REST API:
+
+```ruby
+CompletionKit.configure do |config|
+  config.api_token = ENV['COMPLETION_KIT_API_TOKEN']
+end
+```
+
+### Connecting
+
+Point your MCP client at the `/mcp` endpoint within the engine mount path. For example, if mounted at `/completion_kit`:
+
+```json
+{
+  "mcpServers": {
+    "completion-kit": {
+      "url": "https://your-app.com/completion_kit/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_TOKEN"
+      }
+    }
+  }
+}
+```
+
+### Available Tools
+
+The MCP server exposes 36 tools covering all resources:
+
+| Resource | Tools |
+|----------|-------|
+| Prompts | `prompts_list`, `prompts_get`, `prompts_create`, `prompts_update`, `prompts_delete`, `prompts_publish`, `prompts_new_version` |
+| Runs | `runs_list`, `runs_get`, `runs_create`, `runs_update`, `runs_delete`, `runs_generate`, `runs_judge` |
+| Responses | `responses_list`, `responses_get` |
+| Datasets | `datasets_list`, `datasets_get`, `datasets_create`, `datasets_update`, `datasets_delete` |
+| Metrics | `metrics_list`, `metrics_get`, `metrics_create`, `metrics_update`, `metrics_delete` |
+| Criteria | `criteria_list`, `criteria_get`, `criteria_create`, `criteria_update`, `criteria_delete` |
+| Provider Credentials | `provider_credentials_list`, `provider_credentials_get`, `provider_credentials_create`, `provider_credentials_update`, `provider_credentials_delete` |
+
 ## Standalone App
 
 CompletionKit ships with a standalone Rails app you can deploy as a hosted service.
