@@ -10,6 +10,7 @@ require "action_view/railtie"
 require "active_record/railtie"
 require "active_job/railtie"
 require "action_mailer/railtie"
+require "action_cable/engine"
 require "sprockets/railtie"
 require "rspec/rails"
 require "factory_bot_rails"
@@ -94,6 +95,8 @@ ActiveRecord::Schema.define do
     t.references :criteria
     t.string :judge_model
     t.string :status
+    t.integer :progress_current, default: 0
+    t.integer :progress_total, default: 0
     t.timestamps
   end
 
