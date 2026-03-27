@@ -1,3 +1,5 @@
+<%= turbo_stream_from "completion_kit_run_#{@run.id}" %>
+
 <ol class="ck-breadcrumb">
   <li><%= link_to "Prompts", prompts_path %></li>
   <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
@@ -22,13 +24,6 @@
     <% end %>
   </div>
 </section>
-
-<% if @run.status == "generating" || @run.status == "judging" %>
-  <div class="ck-status-indicator">
-    <span class="<%= ck_badge_classes(@run.status) %>"><%= @run.status.capitalize %></span>
-    <span class="ck-meta-copy"><%= @run.responses.count %> responses so far</span>
-  </div>
-<% end %>
 
 <div class="ck-run-config">
   <div class="ck-run-config__row">
@@ -87,6 +82,8 @@
   </details>
 <% end %>
 
+<%= render "progress", run: @run %>
+
 <% judged = @responses.any? { |r| r.reviewed? } %>
 
 <% if judged %>
@@ -96,45 +93,13 @@
   </div>
 <% end %>
 
-<% if @responses.any? %>
-  <div class="ck-response-list">
-    <% @responses.each_with_index do |response, idx| %>
-      <% score = response.score %>
-      <article class="ck-response-card<%= " ck-response-card--low" if score && ck_score_kind(score) == :low %>" onclick="window.location='<%= run_response_path(@run, response) %>'" style="cursor: pointer;">
-        <div class="ck-response-card__header">
-          <span class="ck-minor-label">Row <%= idx + 1 %></span>
-          <% if score %>
-            <span class="<%= ck_badge_classes(ck_score_kind(score)) %>"><%= score %></span>
-          <% end %>
-        </div>
-
-        <div class="ck-response-card__body">
-          <div>
-            <p class="ck-minor-label">Input</p>
-            <p class="ck-meta-copy"><%= truncate(response.input_data, length: 120) %></p>
-          </div>
-
-          <div>
-            <p class="ck-minor-label">Response</p>
-            <p class="ck-meta-copy"><%= truncate(response.response_text, length: 200) %></p>
-          </div>
-        </div>
-
-        <% if response.reviewed? %>
-          <div class="ck-metric-bar">
-            <% response.reviews.where.not(ai_score: nil).each do |review| %>
-              <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(review.ai_score) %>">
-                <span class="ck-metric-pip__bar"></span>
-                <span class="ck-metric-pip__label"><%= review.metric_name %> <strong><%= review.ai_score.to_i %></strong></span>
-              </span>
-            <% end %>
-          </div>
-        <% end %>
-      </article>
-    <% end %>
-  </div>
-<% else %>
-  <div class="ck-empty ck-empty--spaced">
-    No responses yet. Start the run to generate responses.
-  </div>
-<% end %>
+<div id="run_responses">
+  <% @responses.each_with_index do |response, idx| %>
+    <%= render "response_row", run: @run, response: response, index: idx + 1 %>
+  <% end %>
+  <% if @responses.empty? %>
+    <div class="ck-empty ck-empty--spaced">
+      No responses yet. Start the run to generate responses.
+    </div>
+  <% end %>
+</div>
