@@ -10,6 +10,9 @@ RSpec.describe "End-to-end generation pipeline", type: :model do
 
   before do
     CompletionKit::ProviderCredential.create!(provider: "openai", api_key: "test-key-123")
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update)
   end
 
   context "with a dataset" do

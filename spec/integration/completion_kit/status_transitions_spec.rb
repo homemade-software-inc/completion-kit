@@ -7,6 +7,9 @@ RSpec.describe "Run status transitions", type: :model do
 
   before do
     CompletionKit::ProviderCredential.create!(provider: "openai", api_key: "test-key-123")
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update)
 
     allow(Faraday).to receive(:new).and_wrap_original do |original, *args, **kwargs, &_block|
       original.call(*args, **kwargs) do |builder|
