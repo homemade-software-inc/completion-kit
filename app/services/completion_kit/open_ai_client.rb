@@ -10,6 +10,7 @@ module CompletionKit
       return "Error: API key not configured" unless configured?
       
       require "faraday"
+      require "faraday/retry"
       require "json"
       
       model = options[:model] || "gpt-4.1"
@@ -52,6 +53,7 @@ module CompletionKit
       return STATIC_MODELS unless configured?
 
       require "faraday"
+      require "faraday/retry"
       require "json"
 
       response = Faraday.get("https://api.openai.com/v1/models") do |req|

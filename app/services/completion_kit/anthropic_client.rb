@@ -9,6 +9,7 @@ module CompletionKit
       return "Error: API key not configured" unless configured?
       
       require "faraday"
+      require "faraday/retry"
       require "json"
       
       model = options[:model] || "claude-3-7-sonnet-latest"
@@ -49,6 +50,7 @@ module CompletionKit
       return STATIC_MODELS unless configured?
 
       require "faraday"
+      require "faraday/retry"
       require "json"
 
       response = Faraday.get("https://api.anthropic.com/v1/models") do |req|

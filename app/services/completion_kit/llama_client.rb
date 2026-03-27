@@ -9,6 +9,7 @@ module CompletionKit
       return "Error: API credentials not configured" unless configured?
       
       require "faraday"
+      require "faraday/retry"
       require "json"
       
       model = options[:model] || STATIC_MODELS.first[:id]
@@ -46,6 +47,7 @@ module CompletionKit
       return STATIC_MODELS unless configured?
 
       require "faraday"
+      require "faraday/retry"
       require "json"
 
       response = Faraday.get("#{api_endpoint}/v1/models") do |req|
