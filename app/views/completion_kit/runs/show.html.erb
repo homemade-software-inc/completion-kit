@@ -29,7 +29,7 @@
 <div class="ck-run-config">
   <div class="ck-run-config__row">
     <span class="ck-run-config__key">Model</span>
-    <span class="ck-chip"><%= @run.prompt.llm_model %></span>
+    <span class="ck-chip" style="text-transform: none;"><%= @run.prompt.llm_model %></span>
   </div>
   <div class="ck-run-config__row">
     <span class="ck-run-config__key">Dataset</span>
@@ -56,7 +56,7 @@
   <div class="ck-run-config__row">
     <span class="ck-run-config__key">Metrics</span>
     <% if @run.metrics.any? %>
-      <span><span class="ck-run-config__none">(<%= @run.metrics.count %> metrics)</span></span>
+      <span><%= @run.metrics.map(&:name).join(", ") %></span>
     <% else %>
       <span class="ck-run-config__none">none</span>
     <% end %>
@@ -100,9 +100,7 @@
   <% @responses.each_with_index do |response, idx| %>
     <%= render "response_row", run: @run, response: response, index: idx + 1 %>
   <% end %>
-  <% if @responses.empty? %>
-    <div class="ck-empty ck-empty--spaced">
-      No responses yet. Start the run to generate responses.
-    </div>
+  <% if @responses.empty? && @run.status != "pending" %>
+    <div class="ck-empty ck-empty--spaced">No responses yet.</div>
   <% end %>
 </div>
