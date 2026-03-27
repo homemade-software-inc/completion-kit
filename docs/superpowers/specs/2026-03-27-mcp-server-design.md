@@ -51,7 +51,7 @@ One module per resource area under `app/services/completion_kit/mcp_tools/`. Eac
 
 ## Tools — Full resource coverage
 
-33 tools mirroring the full REST API surface. Naming convention: `resource_action`.
+36 tools mirroring the full REST API surface. Naming convention: `resource_action`.
 
 ### Prompts
 | Tool | Params | Description |
