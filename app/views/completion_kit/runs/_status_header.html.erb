@@ -1,0 +1,19 @@
+<div id="run_status_header">
+  <section class="ck-page-header">
+    <div>
+      <p class="ck-kicker"><span class="<%= ck_run_dot(run) %>"></span> <%= run.status.capitalize %></p>
+      <h1 class="ck-title"><%= run.name %></h1>
+      <p class="ck-meta-copy"><%= link_to run.prompt.display_name, prompt_path(run.prompt), class: "ck-link" %>&ensp;<span class="ck-chip" style="text-transform: none;"><%= run.prompt.llm_model %></span></p>
+    </div>
+    <div class="ck-actions">
+      <%= button_to run_path(run), method: :delete, form_class: "inline-block", class: "ck-icon-btn", title: "Delete run", data: { turbo_confirm: "Delete this run and all its responses?" } do %><%= heroicon_tag "trash", variant: :outline, size: 16 %><% end %>
+      <%= link_to "Edit", edit_run_path(run), class: ck_button_classes(:light, variant: :outline) %>
+      <% if run.judge_configured? && run.status == "completed" %>
+        <%= button_to "Re-judge", judge_run_path(run), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
+      <% end %>
+      <% if run.status == "pending" || (run.status == "completed" && run.responses.empty?) || run.status == "failed" %>
+        <%= button_to "Start", generate_run_path(run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+      <% end %>
+    </div>
+  </section>
+</div>
