@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_27_200001) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_27_202302) do
   create_table "completion_kit_criteria", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -95,9 +95,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_200001) do
     t.index ["response_id"], name: "index_completion_kit_reviews_on_response_id"
   end
 
+  create_table "completion_kit_run_metrics", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "metric_id", null: false
+    t.integer "position"
+    t.integer "run_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["metric_id"], name: "index_completion_kit_run_metrics_on_metric_id"
+    t.index ["run_id"], name: "index_completion_kit_run_metrics_on_run_id"
+  end
+
   create_table "completion_kit_runs", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.integer "criteria_id"
     t.integer "dataset_id"
     t.string "judge_model"
     t.string "name"
@@ -106,7 +115,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_200001) do
     t.integer "prompt_id", null: false
     t.string "status"
     t.datetime "updated_at", null: false
-    t.index ["criteria_id"], name: "index_completion_kit_runs_on_criteria_id"
     t.index ["dataset_id"], name: "index_completion_kit_runs_on_dataset_id"
     t.index ["prompt_id"], name: "index_completion_kit_runs_on_prompt_id"
   end
@@ -237,7 +245,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_200001) do
   add_foreign_key "completion_kit_responses", "completion_kit_runs", column: "run_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_metrics", column: "metric_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_responses", column: "response_id"
-  add_foreign_key "completion_kit_runs", "completion_kit_criteria", column: "criteria_id"
+  add_foreign_key "completion_kit_run_metrics", "completion_kit_metrics", column: "metric_id"
+  add_foreign_key "completion_kit_run_metrics", "completion_kit_runs", column: "run_id"
   add_foreign_key "completion_kit_runs", "completion_kit_datasets", column: "dataset_id"
   add_foreign_key "completion_kit_runs", "completion_kit_prompts", column: "prompt_id"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
