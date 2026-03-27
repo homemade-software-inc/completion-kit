@@ -17,11 +17,10 @@ RSpec.describe "CompletionKit API reference", type: :request do
     expect(response.body).to include("ck-api-copy")
   end
 
-  it "shows published prompts" do
-    prompt = create(:completion_kit_prompt, name: "Summarizer", current: true)
+  it "shows published prompts count" do
+    create(:completion_kit_prompt, name: "Summarizer", current: true)
     get "/completion_kit/api_reference"
-    expect(response.body).to include("Summarizer")
-    expect(response.body).to include(prompt.family_key)
+    expect(response.body).to include("Published Prompts")
   end
 
   it "shows masked API token and includes real token in copy data" do

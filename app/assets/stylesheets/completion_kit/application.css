@@ -1411,48 +1411,120 @@ select.ck-input {
   color: var(--ck-success) !important;
 }
 
-.ck-api-section {
+.ck-api-tabs {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 0;
+  margin-top: 1rem;
   border: 1px solid var(--ck-line);
   border-radius: var(--ck-radius-lg);
   background: var(--ck-surface);
+  overflow: hidden;
 }
 
-.ck-api-section__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  cursor: pointer;
-  list-style: none;
-  transition: background 0.15s;
-}
-
-.ck-api-section__header::-webkit-details-marker {
+.ck-api-tabs__radio {
   display: none;
 }
 
-.ck-api-section__header::after {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-right: 2px solid var(--ck-muted);
-  border-bottom: 2px solid var(--ck-muted);
-  transform: rotate(-45deg);
-  transition: transform 0.2s;
-  flex-shrink: 0;
-  margin-left: 1rem;
+.ck-api-tabs__nav {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--ck-line);
+  background: var(--ck-bg-strong);
+  padding: 0.5rem 0;
 }
 
-.ck-api-section[open] > .ck-api-section__header::after {
-  transform: rotate(45deg);
+.ck-api-tabs__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1.25rem;
+  font-family: var(--ck-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ck-muted);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  border-left: 2px solid transparent;
 }
 
-.ck-api-section__header:hover {
-  background: var(--ck-surface-hover);
+.ck-api-tabs__label:hover {
+  color: var(--ck-text);
+  background: var(--ck-surface-soft);
 }
 
-.ck-api-section__body {
-  padding: 0 1.5rem 1.5rem;
+.ck-api-tabs__count {
+  font-size: 0.7rem;
+  color: var(--ck-dim);
+}
+
+.ck-api-tabs__panels {
+  padding: 1.5rem;
+  min-height: 300px;
+}
+
+.ck-api-tabs__panel {
+  display: none;
+}
+
+#ck-tab-prompts:checked ~ .ck-api-tabs__nav label[for="ck-tab-prompts"],
+#ck-tab-runs:checked ~ .ck-api-tabs__nav label[for="ck-tab-runs"],
+#ck-tab-responses:checked ~ .ck-api-tabs__nav label[for="ck-tab-responses"],
+#ck-tab-datasets:checked ~ .ck-api-tabs__nav label[for="ck-tab-datasets"],
+#ck-tab-metrics:checked ~ .ck-api-tabs__nav label[for="ck-tab-metrics"],
+#ck-tab-criteria:checked ~ .ck-api-tabs__nav label[for="ck-tab-criteria"],
+#ck-tab-providers:checked ~ .ck-api-tabs__nav label[for="ck-tab-providers"] {
+  color: var(--ck-accent);
+  background: var(--ck-surface-soft);
+  border-left-color: var(--ck-accent);
+}
+
+#ck-tab-prompts:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(1),
+#ck-tab-runs:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(2),
+#ck-tab-responses:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(3),
+#ck-tab-datasets:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(4),
+#ck-tab-metrics:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(5),
+#ck-tab-criteria:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(6),
+#ck-tab-providers:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(7) {
+  display: block;
+}
+
+@media (max-width: 700px) {
+  .ck-api-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .ck-api-tabs__nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 1px solid var(--ck-line);
+    padding: 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .ck-api-tabs__label {
+    padding: 0.4rem 0.75rem;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 4px;
+    font-size: 0.75rem;
+  }
+
+  #ck-tab-prompts:checked ~ .ck-api-tabs__nav label[for="ck-tab-prompts"],
+  #ck-tab-runs:checked ~ .ck-api-tabs__nav label[for="ck-tab-runs"],
+  #ck-tab-responses:checked ~ .ck-api-tabs__nav label[for="ck-tab-responses"],
+  #ck-tab-datasets:checked ~ .ck-api-tabs__nav label[for="ck-tab-datasets"],
+  #ck-tab-metrics:checked ~ .ck-api-tabs__nav label[for="ck-tab-metrics"],
+  #ck-tab-criteria:checked ~ .ck-api-tabs__nav label[for="ck-tab-criteria"],
+  #ck-tab-providers:checked ~ .ck-api-tabs__nav label[for="ck-tab-providers"] {
+    border-left-color: transparent;
+    border-bottom-color: var(--ck-accent);
+  }
+
+  .ck-api-tabs__count {
+    display: none;
+  }
 }
 
 .ck-metric-checkboxes {
