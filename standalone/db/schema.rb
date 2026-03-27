@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_26_223928) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_27_012107) do
   create_table "completion_kit_criteria", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -101,6 +101,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_223928) do
     t.integer "dataset_id"
     t.string "judge_model"
     t.string "name"
+    t.integer "progress_current", default: 0
+    t.integer "progress_total", default: 0
     t.integer "prompt_id", null: false
     t.string "status"
     t.datetime "updated_at", null: false

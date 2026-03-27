@@ -1,12 +1,20 @@
 require "rails_helper"
 
 RSpec.describe "CompletionKit API reference", type: :request do
-  it "renders the API reference page" do
+  it "renders the API reference page with endpoint documentation" do
     get "/completion_kit/api_reference"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("API")
     expect(response.body).to include("Authentication")
-    expect(response.body).to include("Endpoints")
+    expect(response.body).to include("Prompts")
+    expect(response.body).to include("Runs")
+    expect(response.body).to include("Responses")
+    expect(response.body).to include("Datasets")
+    expect(response.body).to include("Metrics")
+    expect(response.body).to include("Criteria")
+    expect(response.body).to include("Provider Credentials")
+    expect(response.body).to include("ck-api-endpoint")
+    expect(response.body).to include("ck-api-copy")
   end
 
   it "shows published prompts" do
@@ -16,12 +24,12 @@ RSpec.describe "CompletionKit API reference", type: :request do
     expect(response.body).to include(prompt.family_key)
   end
 
-  it "shows masked API token when configured" do
+  it "shows masked API token and includes real token in copy data" do
     CompletionKit.config.api_token = "a-very-long-secret-token-here"
     get "/completion_kit/api_reference"
     expect(response.body).to include("a-ve")
     expect(response.body).to include("here")
-    expect(response.body).not_to include("a-very-long-secret-token-here")
+    expect(response.body).to include("data-real-token")
     CompletionKit.instance_variable_set(:@config, nil)
   end
 
@@ -29,7 +37,6 @@ RSpec.describe "CompletionKit API reference", type: :request do
     CompletionKit.config.api_token = "short"
     get "/completion_kit/api_reference"
     expect(response.body).to include("••••••••")
-    expect(response.body).not_to include("short")
     CompletionKit.instance_variable_set(:@config, nil)
   end
 
