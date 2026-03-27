@@ -198,7 +198,7 @@ module CompletionKit
       return unless prompt.present?
 
       count = Run.where(prompt_id: prompt_id).count + 1
-      self.name = "#{prompt.name} v#{prompt.version_number} ##{count}"
+      self.name = "#{prompt.name} — v#{prompt.version_number} ##{count}"
     end
   end
 end
