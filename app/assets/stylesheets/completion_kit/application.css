@@ -147,6 +147,10 @@ form.button_to {
   align-items: center;
 }
 
+.ck-actions {
+  justify-content: flex-end;
+}
+
 .ck-toolbar__spacer {
   flex: 1;
   min-width: 1rem;
