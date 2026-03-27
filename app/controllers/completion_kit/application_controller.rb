@@ -1,5 +1,6 @@
 module CompletionKit
   class ApplicationController < ActionController::Base
+    helper Heroicons::IconsHelper
     layout "completion_kit/application"
 
     before_action :authenticate_completion_kit!

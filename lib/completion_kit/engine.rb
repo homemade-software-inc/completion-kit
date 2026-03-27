@@ -1,4 +1,5 @@
 require "turbo-rails"
+require "heroicons-rails"
 
 module CompletionKit
   class Engine < ::Rails::Engine

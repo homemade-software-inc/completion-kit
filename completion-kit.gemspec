@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "bootstrap", "~> 5.2"
   spec.add_dependency "jquery-rails", "~> 4.5"
   spec.add_dependency "turbo-rails", ">= 1.5"
+  spec.add_dependency "heroicons-rails", "~> 1.2"
   spec.add_development_dependency "sqlite3", "~> 2.9"
   spec.add_development_dependency "rspec-rails", "~> 6.0"
   spec.add_development_dependency "factory_bot_rails", "~> 6.2"
