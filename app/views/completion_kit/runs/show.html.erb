@@ -1,79 +1,50 @@
 <%= turbo_stream_from "completion_kit_run_#{@run.id}" %>
 
 <ol class="ck-breadcrumb">
-  <li><%= link_to "Prompts", prompts_path %></li>
-  <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
-  <li><span class="ck-run-name"><span class="<%= ck_run_dot(@run) %>"></span><%= @run.name %></span></li>
+  <li><%= link_to "Runs", runs_path %></li>
+  <li><%= @run.name %></li>
 </ol>
 
 <section class="ck-page-header">
   <div>
-    <h1 class="ck-title"><span class="ck-run-name"><span class="<%= ck_run_dot(@run) %>"></span><%= @run.name %></span></h1>
+    <p class="ck-kicker"><span class="<%= ck_run_dot(@run) %>"></span> <%= @run.status.capitalize %></p>
+    <h1 class="ck-title"><%= @run.name %></h1>
+    <p class="ck-meta-copy"><%= link_to @run.prompt.display_name, prompt_path(@run.prompt), class: "ck-link" %>&ensp;<span class="ck-chip" style="text-transform: none;"><%= @run.prompt.llm_model %></span></p>
   </div>
-
   <div class="ck-actions">
-    <%= link_to "Edit", edit_run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
-    <% if @run.status == "pending" || (@run.status == "completed" && @run.responses.empty?) %>
+    <% if @run.status == "pending" || (@run.status == "completed" && @run.responses.empty?) || @run.status == "failed" %>
       <%= button_to "Start", generate_run_path(@run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
-    <% end %>
-    <% if @run.status == "completed" && @run.responses.any? && !@run.judge_configured? %>
-      <%= link_to "Judge responses", edit_run_path(@run), class: ck_button_classes(:dark) %>
     <% end %>
     <% if @run.judge_configured? && @run.status == "completed" %>
       <%= button_to "Re-judge", judge_run_path(@run), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
     <% end %>
+    <%= link_to "Edit", edit_run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
     <%= button_to run_path(@run), method: :delete, form_class: "inline-block", class: "ck-icon-btn", title: "Delete run", data: { turbo_confirm: "Delete this run and all its responses?" } do %><%= heroicon_tag "trash", variant: :outline, size: 16 %><% end %>
   </div>
 </section>
 
 <div class="ck-run-config">
   <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Model</span>
-    <span class="ck-chip" style="text-transform: none;"><%= @run.prompt.llm_model %></span>
-  </div>
-  <div class="ck-run-config__row">
     <span class="ck-run-config__key">Dataset</span>
     <% if @run.dataset %>
       <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
     <% else %>
-      <span class="ck-run-config__none">none — prompt runs as-is</span>
+      <span class="ck-run-config__none">None</span>
     <% end %>
   </div>
-  <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Judge</span>
-    <% if @run.judge_configured? %>
-      <span><%= @run.judge_model %></span>
-    <% elsif @run.judge_model.present? %>
-      <span><%= @run.judge_model %></span>
-      <span class="ck-run-config__warn">
-        provider not configured —
-        <%= link_to "set up #{CompletionKit::ApiConfig.provider_for_model(@run.judge_model) || 'provider'}", new_provider_credential_path, class: "ck-link" %>
-      </span>
-    <% else %>
-      <span class="ck-run-config__none">none</span>
-    <% end %>
-  </div>
-  <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Metrics</span>
-    <% if @run.metrics.any? %>
-      <span><%= @run.metrics.map(&:name).join(", ") %></span>
-    <% else %>
-      <span class="ck-run-config__none">none</span>
-    <% end %>
-  </div>
-  <% unless @run.judge_configured? %>
-    <div class="ck-run-config__note">
-      <% if !@run.judge_model.present? && !@run.metrics.any? %>
-        Responses only — no judge and metrics configured.
-      <% elsif !@run.judge_model.present? %>
-        Responses only — no judge model selected.
-      <% elsif @run.judge_model.present? && !@run.judge_configured? && !@run.metrics.any? %>
-        Responses only — judge provider not configured and no metrics selected.
-      <% elsif @run.judge_model.present? && !@run.judge_configured? %>
-        Responses only — judge provider not configured.
-      <% elsif !@run.metrics.any? %>
-        Responses only — no metrics to score against.
+  <% if @run.judge_model.present? %>
+    <div class="ck-run-config__row">
+      <span class="ck-run-config__key">Judge</span>
+      <span style="text-transform: none;"><%= @run.judge_model %></span>
+      <% unless @run.judge_configured? %>
+        <span class="ck-run-config__warn">provider not configured</span>
       <% end %>
+    </div>
+  <% end %>
+  <% if @run.metrics.any? %>
+    <div class="ck-run-config__row">
+      <span class="ck-run-config__key">Metrics</span>
+      <span><%= @run.metrics.map(&:name).join(", ") %></span>
     </div>
   <% end %>
 </div>
@@ -99,8 +70,5 @@
 <div id="run_responses">
   <% @responses.each_with_index do |response, idx| %>
     <%= render "response_row", run: @run, response: response, index: idx + 1 %>
-  <% end %>
-  <% if @responses.empty? && @run.status != "pending" %>
-    <div class="ck-empty ck-empty--spaced">No responses yet.</div>
   <% end %>
 </div>
