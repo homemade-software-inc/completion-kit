@@ -68,17 +68,19 @@
     </div>
 
     <script>
-function updateJudgeHint() {
+function updateRunForm() {
+  var promptEl = document.getElementById('run_prompt_id');
   var judgeEl = document.getElementById('run_judge_model');
+  var prompt = promptEl ? promptEl.value : '';
   var judge = judgeEl ? judgeEl.value : '';
   var metrics = document.querySelectorAll('input[name="run[metric_ids][]"]:checked');
   var judgeField = document.getElementById('judge-field');
   var metricsField = document.getElementById('metrics-field');
   var judgeHint = document.getElementById('judge-hint');
   var metricsHint = document.getElementById('metrics-hint');
-  if (!judgeField) return;
+  var submitBtn = document.getElementById('run-submit');
 
-  judgeField.className = 'ck-field';
+  if (judgeField) judgeField.className = 'ck-field';
   if (metricsField) metricsField.className = 'ck-field';
   if (judgeHint) judgeHint.textContent = '';
   if (metricsHint) metricsHint.textContent = '';
@@ -86,13 +88,18 @@ function updateJudgeHint() {
   if (judge && metrics.length > 0) {
     if (judgeHint) judgeHint.textContent = 'Responses will be generated then judged automatically.';
   } else if (judge && metrics.length === 0) {
-    judgeField.className = 'ck-field ck-field--info';
+    if (judgeField) judgeField.className = 'ck-field ck-field--info';
     if (metricsField) metricsField.className = 'ck-field ck-field--info';
     if (metricsHint) metricsHint.textContent = 'Select at least one metric or criteria to enable judging.';
   } else if (!judge && metrics.length > 0) {
-    judgeField.className = 'ck-field ck-field--info';
+    if (judgeField) judgeField.className = 'ck-field ck-field--info';
     if (judgeHint) judgeHint.textContent = 'Select a judge model to enable judging.';
   }
+
+  var valid = prompt !== '';
+  if (judge && metrics.length === 0) valid = false;
+  if (!judge && metrics.length > 0) valid = false;
+  if (submitBtn) submitBtn.disabled = !valid;
 }
 
 function ckQuickAddCriteria(metricIds) {
@@ -100,20 +107,22 @@ function ckQuickAddCriteria(metricIds) {
     var cb = document.getElementById('run_metric_' + id);
     if (cb) cb.checked = true;
   });
-  updateJudgeHint();
+  updateRunForm();
 }
 
 var judgeEl = document.getElementById('run_judge_model');
-if (judgeEl) judgeEl.addEventListener('change', updateJudgeHint);
+var promptEl = document.getElementById('run_prompt_id');
+if (judgeEl) judgeEl.addEventListener('change', updateRunForm);
+if (promptEl) promptEl.addEventListener('change', updateRunForm);
 document.querySelectorAll('input[name="run[metric_ids][]"]').forEach(function(cb) {
-  cb.addEventListener('change', updateJudgeHint);
+  cb.addEventListener('change', updateRunForm);
 });
-updateJudgeHint();
+updateRunForm();
     </script>
 
     <div class="ck-actions">
       <%= link_to "Cancel", run.persisted? ? run_path(run) : runs_path, class: ck_button_classes(:light, variant: :outline) %>
-      <%= form.submit(run.persisted? ? "Save run" : "Create run", class: ck_button_classes(:dark)) %>
+      <%= form.submit(run.persisted? ? "Save run" : "Create run", class: ck_button_classes(:dark), id: "run-submit") %>
     </div>
   </div>
 <% end %>

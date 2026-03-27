@@ -450,6 +450,17 @@ tr:hover .ck-chip--publish {
   box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
 }
 
+.ck-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ck-button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .ck-button--secondary {
   background: transparent;
   border-color: var(--ck-line-strong);
@@ -617,11 +628,11 @@ tr:hover .ck-chip--publish {
 }
 
 .ck-field--info .ck-input {
-  border-color: var(--ck-info);
+  border-color: var(--ck-accent);
 }
 
 .ck-field--info .ck-field-hint {
-  color: var(--ck-info);
+  color: var(--ck-accent);
 }
 
 .ck-field--warn .ck-input {
