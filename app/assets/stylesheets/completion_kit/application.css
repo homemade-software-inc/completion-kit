@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
 
+.turbo-progress-bar {
+  background-color: var(--ck-accent);
+}
+
 :root {
   --ck-bg: #080b14;
   --ck-bg-strong: #0d1117;
