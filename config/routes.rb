@@ -45,4 +45,7 @@ CompletionKit::Engine.routes.draw do
       resources :provider_credentials
     end
   end
+
+  post "mcp", to: "mcp#handle"
+  delete "mcp", to: "mcp#destroy"
 end
