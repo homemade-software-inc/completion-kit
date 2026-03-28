@@ -1622,6 +1622,17 @@ select.ck-input {
   flex-shrink: 0;
 }
 
+.ck-score {
+  font-size: 0.85rem;
+  color: var(--ck-muted);
+  white-space: nowrap;
+}
+
+.ck-score__star {
+  font-size: 1rem;
+  color: #f59e0b;
+}
+
 .ck-prompt-preview {
   margin-top: 1rem;
 }

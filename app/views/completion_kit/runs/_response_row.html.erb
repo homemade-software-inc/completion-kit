@@ -3,11 +3,11 @@
   <span class="ck-response-row__text"><%= truncate(response.response_text.to_s, length: 160) %></span>
   <span class="ck-response-row__score">
     <% if response.reviewed? %>
-      <span class="<%= ck_badge_classes(ck_score_kind(response.score)) %>"><%= response.score %></span>
+      <span class="ck-score"><span class="ck-score__star">★</span> <%= response.score %></span>
     <% elsif run.status == "failed" %>
-      <span class="<%= ck_badge_classes(:failed) %>">Failed</span>
+      <span class="ck-chip">Failed</span>
     <% elsif run.status == "judging" %>
-      <span class="<%= ck_badge_classes(:running) %>">Judging</span>
+      <span class="ck-chip">Judging</span>
     <% end %>
   </span>
 <% end %>
