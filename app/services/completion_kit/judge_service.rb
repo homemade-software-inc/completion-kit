@@ -1,3 +1,5 @@
+require "faraday"
+
 module CompletionKit
   class JudgeService
     def initialize(config = {})
@@ -86,11 +88,17 @@ module CompletionKit
     end
 
     def parse_judge_response(response)
-      score_match = response.match(/Score:\s*(\d+(?:\.\d+)?)/)
-      feedback_match = response.match(/Feedback:\s*(.+)/m)
+      score_match = response.match(/\*{0,2}Score:?\*{0,2}\s*(\d+(?:\.\d+)?)/i)
+      feedback_match = response.match(/\*{0,2}Feedback:?\*{0,2}\s*(.+)/mi)
 
       score = score_match ? score_match[1].to_f : 1
-      feedback = feedback_match ? feedback_match[1].strip : "No feedback provided"
+      feedback = if feedback_match
+                   feedback_match[1].strip
+                 elsif score_match
+                   "No feedback provided"
+                 else
+                   "Could not parse judge response: #{response.truncate(500)}"
+                 end
 
       score = [[score, 1].max, 5].min
 

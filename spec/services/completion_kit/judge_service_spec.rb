@@ -44,7 +44,9 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
     service = described_class.new
-    expect(service.evaluate("actual")).to eq(score: 1, feedback: "No feedback provided")
+    result = service.evaluate("actual")
+    expect(result[:score]).to eq(1)
+    expect(result[:feedback]).to include("Could not parse judge response")
   end
 
   it "returns an error response when the judge client raises" do
