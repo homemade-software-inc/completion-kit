@@ -27,61 +27,37 @@ module CompletionKit
 
     def build_judge_prompt(output, expected_output, prompt, criteria: nil, evaluation_steps: nil, rubric_text: nil, human_examples: nil)
       judge_prompt = <<~PROMPT
-        You are an expert evaluator of AI-generated content.
-        Score the AI-generated output on a rubric from 1 to 5 stars.
-        First read the criteria and evaluation steps, then use the rubric to choose the best fitting score.
+        You are an expert evaluator. You MUST respond with ONLY two lines in this exact format, nothing else:
 
-        Original prompt template:
-        #{prompt || "Not provided"}
+        Score: <integer from 1 to 5>
+        Feedback: <one sentence explaining why>
 
-        AI-generated output:
-        #{output}
-      PROMPT
+        Do not include any other text, markdown, or explanation. Just those two lines.
 
-      if expected_output.present?
-        judge_prompt += <<~PROMPT
-          Expected output:
-          #{expected_output}
-        PROMPT
-      end
-
-      if criteria.present?
-        judge_prompt += <<~PROMPT
-          Criteria:
-          #{criteria}
-        PROMPT
-      end
-
-      if evaluation_steps.present? && evaluation_steps.any?
-        judge_prompt += <<~PROMPT
-          Evaluation steps:
-          #{evaluation_steps.each_with_index.map { |step, i| "#{i + 1}. #{step}" }.join("\n")}
-        PROMPT
-      end
-
-      judge_prompt += <<~PROMPT
-        Rubric:
+        Use this rubric to choose the score:
         #{rubric_text.presence || CompletionKit::Metric.default_rubric_text}
       PROMPT
 
-      if human_examples.present?
-        judge_prompt += "Human-reviewed calibration examples:\n"
+      if criteria.present?
+        judge_prompt += "\nCriteria: #{criteria}\n"
+      end
 
+      if evaluation_steps.present? && evaluation_steps.any?
+        judge_prompt += "\nEvaluation steps:\n#{evaluation_steps.each_with_index.map { |step, i| "#{i + 1}. #{step}" }.join("\n")}\n"
+      end
+
+      if human_examples.present?
+        judge_prompt += "\nCalibration examples:\n"
         human_examples.each_with_index do |example, index|
-          judge_prompt += <<~PROMPT
-            Example #{index + 1}
-            Input: #{example[:input_data]}
-            Output: #{example[:response_text]}
-            Human score: #{example[:human_score]}
-            Human notes: #{example[:human_feedback].presence || "None"}
-          PROMPT
+          judge_prompt += "Example #{index + 1}: score=#{example[:human_score]} output=#{example[:response_text].to_s.truncate(200)}\n"
         end
       end
 
       judge_prompt += <<~PROMPT
-        Return exactly this format:
-        Score: [1-5]
-        Feedback: [concise explanation that references the rubric]
+
+        Original prompt: #{prompt || "Not provided"}
+        #{expected_output.present? ? "Expected output: #{expected_output}" : ""}
+        AI output to evaluate: #{output}
       PROMPT
 
       judge_prompt
