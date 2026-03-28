@@ -149,6 +149,7 @@ form.button_to {
 
 .ck-actions {
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .ck-toolbar__spacer {
@@ -191,7 +192,6 @@ form.button_to {
 
 .ck-page-header {
   display: flex;
-  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
