@@ -10,7 +10,10 @@
 <div class="ck-run-config">
   <div class="ck-run-config__row">
     <span class="ck-run-config__key">Prompt</span>
-    <span style="text-transform: none;"><%= @run.prompt.template.truncate(120) %></span>
+    <details class="ck-details" style="flex: 1;">
+      <summary class="ck-details__summary"><%= @run.prompt.template.truncate(80) %></summary>
+      <pre class="ck-code ck-code--dark" style="margin-top: 0.5rem;"><%= @run.prompt.template %></pre>
+    </details>
   </div>
   <div class="ck-run-config__row">
     <span class="ck-run-config__key">Dataset</span>
