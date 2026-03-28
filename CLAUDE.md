@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Standalone App
+- Logs: `standalone/log/` (check `development.log` for runtime errors)
+- Rails runner: `cd standalone && bin/rails runner "..."`
+- Server: `cd standalone && bin/rails s`
+
 ## Build/Test Commands
 - Install dependencies: `bundle install`
 - Run all tests: `bundle exec rake spec` or `bundle exec rspec`

@@ -168,12 +168,18 @@ module CompletionKit
       broadcast_actions
     end
 
+    def render_engine_partial(partial, locals)
+      CompletionKit::ApplicationController.render(
+        partial: partial,
+        locals: locals
+      )
+    end
+
     def broadcast_progress
       broadcast_replace_to(
         "completion_kit_run_#{id}",
         target: "run_progress",
-        partial: "completion_kit/runs/progress",
-        locals: { run: self }
+        html: render_engine_partial("completion_kit/runs/progress", run: self)
       )
     end
 
@@ -181,8 +187,7 @@ module CompletionKit
       broadcast_replace_to(
         "completion_kit_run_#{id}",
         target: "run_status_header",
-        partial: "completion_kit/runs/status_header",
-        locals: { run: self }
+        html: render_engine_partial("completion_kit/runs/status_header", run: self)
       )
     end
 
@@ -190,8 +195,7 @@ module CompletionKit
       broadcast_replace_to(
         "completion_kit_run_#{id}",
         target: "run_actions",
-        partial: "completion_kit/runs/actions",
-        locals: { run: self }
+        html: render_engine_partial("completion_kit/runs/actions", run: self)
       )
     end
 
@@ -199,8 +203,7 @@ module CompletionKit
       broadcast_append_to(
         "completion_kit_run_#{id}",
         target: "run_responses",
-        partial: "completion_kit/runs/response_row",
-        locals: { run: self, response: response, index: responses.where("id <= ?", response.id).count }
+        html: render_engine_partial("completion_kit/runs/response_row", run: self, response: response, index: responses.where("id <= ?", response.id).count)
       )
     end
 
@@ -208,8 +211,7 @@ module CompletionKit
       broadcast_replace_to(
         "completion_kit_run_#{id}",
         target: "response_#{response.id}",
-        partial: "completion_kit/runs/response_row",
-        locals: { run: self, response: response, index: responses.where("id <= ?", response.id).count }
+        html: render_engine_partial("completion_kit/runs/response_row", run: self, response: response, index: responses.where("id <= ?", response.id).count)
       )
     end
 

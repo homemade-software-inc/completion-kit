@@ -5,6 +5,6 @@
       <h1 class="ck-title"><%= run.name %></h1>
       <p class="ck-meta-copy"><%= link_to run.prompt.display_name, prompt_path(run.prompt), class: "ck-link" %>&ensp;<span class="ck-chip" style="text-transform: none;"><%= run.prompt.llm_model %></span></p>
     </div>
-    <%= render "actions", run: run %>
+    <%= render "completion_kit/runs/actions", run: run %>
   </section>
 </div>
