@@ -1,4 +1,9 @@
 <div id="run_status_header">
+  <% if run.status == "failed" %>
+    <div class="ck-flash ck-flash--alert">
+      <%= run.error_message.presence || "Run failed. Check your provider configuration and try again." %>
+    </div>
+  <% end %>
   <section class="ck-page-header">
     <div>
       <p class="ck-kicker"><span class="<%= ck_run_dot(run) %>"></span> <%= run.status.capitalize %></p>

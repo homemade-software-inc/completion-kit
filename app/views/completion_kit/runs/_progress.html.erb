@@ -10,10 +10,6 @@
         <div style="width: <%= pct %>%; height: 100%; background: var(--ck-accent); transition: width 0.3s;"></div>
       </div>
     </div>
-  <% elsif run.status == "failed" %>
-    <div class="ck-flash ck-flash--alert" style="margin-top: 1rem;">
-      <%= run.error_message.presence || "Run failed. Check your provider configuration and try again." %>
-    </div>
   <% elsif run.status == "completed" && run.progress_total.to_i > 0 %>
     <div style="margin: 1.5rem 0;">
       <div class="ck-split" style="margin-bottom: 0.35rem;">
