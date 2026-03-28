@@ -16,6 +16,7 @@ module CompletionKit
         rubric_text: rubric_text, human_examples: human_examples)
 
       response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
+      raise StandardError, response if response.start_with?("Error:")
       parse_judge_response(response)
     rescue Faraday::Error
       raise
