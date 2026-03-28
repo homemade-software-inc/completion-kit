@@ -9,6 +9,10 @@
 
 <div class="ck-run-config">
   <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Created</span>
+    <time datetime="<%= @run.created_at.iso8601 %>" data-local-time><%= @run.created_at.utc.strftime("%Y-%m-%d %H:%M UTC") %></time>
+  </div>
+  <div class="ck-run-config__row">
     <span class="ck-run-config__key">Prompt</span>
     <details class="ck-details" style="flex: 1;">
       <summary class="ck-details__summary"><%= @run.prompt.template.truncate(80) %></summary>
