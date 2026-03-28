@@ -847,6 +847,11 @@ tr:hover .ck-chip--publish {
   transition: all 0.15s;
 }
 
+.ck-icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 .ck-icon-btn:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: var(--ck-line-strong);
