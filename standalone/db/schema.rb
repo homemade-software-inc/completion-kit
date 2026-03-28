@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_27_202302) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_28_012522) do
   create_table "completion_kit_criteria", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -108,6 +108,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_202302) do
   create_table "completion_kit_runs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "dataset_id"
+    t.text "error_message"
     t.string "judge_model"
     t.string "name"
     t.integer "progress_current", default: 0

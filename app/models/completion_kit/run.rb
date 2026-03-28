@@ -56,7 +56,7 @@ module CompletionKit
         return false
       end
 
-      update!(status: "generating", progress_current: 0, progress_total: rows.length)
+      update!(status: "generating", progress_current: 0, progress_total: rows.length, error_message: nil)
       responses.destroy_all
       broadcast_ui
 
@@ -85,12 +85,12 @@ module CompletionKit
 
       true
     rescue Faraday::Error => e
-      update_columns(status: "failed")
+      update_columns(status: "failed", error_message: e.message)
       errors.add(:base, e.message)
       broadcast_ui
       false
     rescue StandardError => e
-      update_columns(status: "failed") if persisted?
+      update_columns(status: "failed", error_message: e.message) if persisted?
       errors.add(:base, e.message)
       broadcast_ui if persisted?
       false
@@ -98,7 +98,7 @@ module CompletionKit
 
     def judge_responses!
       total_evaluations = responses.count * metrics.count
-      update!(status: "judging", progress_current: 0, progress_total: total_evaluations)
+      update!(status: "judging", progress_current: 0, progress_total: total_evaluations, error_message: nil)
       broadcast_ui
 
       judge = JudgeService.new(ApiConfig.for_model(judge_model).merge(judge_model: judge_model))
@@ -138,12 +138,12 @@ module CompletionKit
       broadcast_ui
       true
     rescue Faraday::Error => e
-      update_columns(status: "failed")
+      update_columns(status: "failed", error_message: e.message)
       errors.add(:base, e.message)
       broadcast_ui
       false
     rescue StandardError => e
-      update_columns(status: "failed") if persisted?
+      update_columns(status: "failed", error_message: e.message) if persisted?
       errors.add(:base, e.message)
       broadcast_ui if persisted?
       false
@@ -156,7 +156,7 @@ module CompletionKit
         created_at: created_at, updated_at: updated_at,
         responses_count: responses.count, avg_score: avg_score,
         progress_current: progress_current, progress_total: progress_total,
-        metric_ids: metric_ids
+        error_message: error_message, metric_ids: metric_ids
       }
     end
 

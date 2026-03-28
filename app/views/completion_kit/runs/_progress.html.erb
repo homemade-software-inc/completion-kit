@@ -12,8 +12,7 @@
     </div>
   <% elsif run.status == "failed" %>
     <div class="ck-flash ck-flash--alert" style="margin-top: 1rem;">
-      <% error_resp = run.responses.where("response_text LIKE 'Error:%'").last %>
-      <%= error_resp&.response_text || "Run failed. Check your provider configuration and try again." %>
+      <%= run.error_message.presence || "Run failed. Check your provider configuration and try again." %>
     </div>
   <% elsif run.status == "completed" && run.progress_total.to_i > 0 %>
     <div style="margin: 1.5rem 0;">

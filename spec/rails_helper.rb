@@ -96,6 +96,7 @@ ActiveRecord::Schema.define do
     t.string :status
     t.integer :progress_current, default: 0
     t.integer :progress_total, default: 0
+    t.text :error_message
     t.timestamps
   end
 
