@@ -1586,7 +1586,7 @@ select.ck-input {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.65rem 0;
+  padding: 0.65rem 0.75rem;
   border-bottom: 1px solid var(--ck-line);
   text-decoration: none;
   color: inherit;
