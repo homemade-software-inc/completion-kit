@@ -4,8 +4,10 @@
   <span class="ck-response-row__score">
     <% if response.reviewed? %>
       <span class="<%= ck_badge_classes(ck_score_kind(response.score)) %>"><%= response.score %></span>
-    <% else %>
-      <span class="ck-chip">Pending</span>
+    <% elsif run.status == "failed" %>
+      <span class="<%= ck_badge_classes(:failed) %>">Failed</span>
+    <% elsif run.status == "judging" %>
+      <span class="<%= ck_badge_classes(:running) %>">Judging</span>
     <% end %>
   </span>
 <% end %>
