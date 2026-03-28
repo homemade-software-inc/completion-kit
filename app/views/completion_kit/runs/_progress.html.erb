@@ -1,14 +1,2 @@
 <div id="run_progress">
-  <% if run.status == "generating" || run.status == "judging" %>
-    <div style="margin: 1.5rem 0;">
-      <div class="ck-split" style="margin-bottom: 0.35rem;">
-        <p class="ck-kicker"><%= run.status == "generating" ? "Generating responses..." : "Judging responses..." %></p>
-        <p class="ck-meta-copy" style="font-size: 0.8rem;"><%= run.progress_current %> / <%= run.progress_total %></p>
-      </div>
-      <div style="background: var(--ck-surface-soft); border-radius: 4px; overflow: hidden; height: 4px;">
-        <% pct = run.progress_total > 0 ? (run.progress_current.to_f / run.progress_total * 100).round : 0 %>
-        <div style="width: <%= pct %>%; height: 100%; background: var(--ck-accent); transition: width 0.3s;"></div>
-      </div>
-    </div>
-  <% end %>
 </div>
