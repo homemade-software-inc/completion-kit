@@ -1180,7 +1180,8 @@ select.ck-input {
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-  vertical-align: middle;
+  vertical-align: text-top;
+  margin-top: 0.2em;
 }
 
 .ck-dot--pending {
