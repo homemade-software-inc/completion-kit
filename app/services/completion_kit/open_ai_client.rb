@@ -62,7 +62,8 @@ module CompletionKit
 
       return STATIC_MODELS unless response.success?
 
-      models = JSON.parse(response.body).fetch("data", []).map { |entry| entry["id"] }.grep(/\Agpt-/).sort
+      all_ids = JSON.parse(response.body).fetch("data", []).map { |entry| entry["id"] }
+      models = all_ids.grep(/\Agpt-/).reject { |id| id.match?(/embed|audio|tts|realtime|search|instruct/) }.sort
       models.map { |id| { id: id, name: id } }.presence || STATIC_MODELS
     rescue StandardError
       STATIC_MODELS
