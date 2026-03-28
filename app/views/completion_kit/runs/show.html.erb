@@ -9,6 +9,10 @@
 
 <div class="ck-run-config">
   <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Prompt</span>
+    <span style="text-transform: none;"><%= @run.prompt.template.truncate(120) %></span>
+  </div>
+  <div class="ck-run-config__row">
     <span class="ck-run-config__key">Dataset</span>
     <% if @run.dataset %>
       <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
@@ -52,7 +56,10 @@
   </div>
 <% end %>
 
-<div id="run_responses" style="margin-top: 1.5rem;">
+<% if valid_responses.any? %>
+  <p class="ck-kicker" style="margin-top: 1.5rem;">Responses</p>
+<% end %>
+<div id="run_responses">
   <% valid_responses.each_with_index do |response, idx| %>
     <%= render "response_row", run: @run, response: response, index: idx + 1 %>
   <% end %>
