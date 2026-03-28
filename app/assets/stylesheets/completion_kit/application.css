@@ -1176,7 +1176,6 @@ select.ck-input {
   border-radius: 50%;
   flex-shrink: 0;
   vertical-align: middle;
-  margin-right: 0.35rem;
 }
 
 .ck-dot--pending {
