@@ -52,7 +52,7 @@
   </div>
 <% end %>
 
-<div id="run_responses">
+<div id="run_responses" style="margin-top: 1.5rem;">
   <% valid_responses.each_with_index do |response, idx| %>
     <%= render "response_row", run: @run, response: response, index: idx + 1 %>
   <% end %>
