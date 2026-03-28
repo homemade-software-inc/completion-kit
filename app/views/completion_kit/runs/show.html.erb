@@ -13,13 +13,6 @@
     <time datetime="<%= @run.created_at.iso8601 %>" data-local-time><%= @run.created_at.utc.strftime("%Y-%m-%d %H:%M UTC") %></time>
   </div>
   <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Prompt</span>
-    <details class="ck-details" style="flex: 1;">
-      <summary class="ck-details__summary"><%= @run.prompt.template.truncate(80) %></summary>
-      <pre class="ck-code ck-code--dark" style="margin-top: 0.5rem;"><%= @run.prompt.template %></pre>
-    </details>
-  </div>
-  <div class="ck-run-config__row">
     <span class="ck-run-config__key">Dataset</span>
     <% if @run.dataset %>
       <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
@@ -41,6 +34,14 @@
       <span class="ck-run-config__key">Metrics</span>
       <span><%= @run.metrics.map(&:name).join(", ") %></span>
     </div>
+  <% end %>
+</div>
+
+<div class="ck-prompt-preview">
+  <p class="ck-kicker">Prompt</p>
+  <p class="ck-prompt-preview__text" id="prompt_text"><%= @run.prompt.template %></p>
+  <% if @run.prompt.template.length > 200 %>
+    <a href="#" class="ck-link" id="prompt_toggle" onclick="var t=document.getElementById('prompt_text');var l=this;if(t.classList.toggle('ck-prompt-preview__text--expanded')){l.textContent='Show less'}else{l.textContent='Show more'};return false">Show more</a>
   <% end %>
 </div>
 

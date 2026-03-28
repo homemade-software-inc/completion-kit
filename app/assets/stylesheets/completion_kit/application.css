@@ -1614,3 +1614,23 @@ select.ck-input {
 .ck-response-row__score {
   flex-shrink: 0;
 }
+
+.ck-prompt-preview {
+  margin-top: 1rem;
+}
+
+.ck-prompt-preview__text {
+  font-size: 0.9rem;
+  color: var(--ck-muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-wrap;
+  margin: 0.35rem 0;
+}
+
+.ck-prompt-preview__text--expanded {
+  -webkit-line-clamp: unset;
+}
