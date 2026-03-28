@@ -10,15 +10,5 @@
         <div style="width: <%= pct %>%; height: 100%; background: var(--ck-accent); transition: width 0.3s;"></div>
       </div>
     </div>
-  <% elsif run.status == "completed" && run.progress_total.to_i > 0 %>
-    <div style="margin: 1.5rem 0;">
-      <div class="ck-split" style="margin-bottom: 0.35rem;">
-        <p class="ck-kicker">Completed</p>
-        <p class="ck-meta-copy" style="font-size: 0.8rem;"><%= run.progress_total %> / <%= run.progress_total %></p>
-      </div>
-      <div style="background: var(--ck-surface-soft); border-radius: 4px; overflow: hidden; height: 4px;">
-        <div style="width: 100%; height: 100%; background: var(--ck-success, #22c55e); transition: width 0.3s;"></div>
-      </div>
-    </div>
   <% end %>
 </div>
