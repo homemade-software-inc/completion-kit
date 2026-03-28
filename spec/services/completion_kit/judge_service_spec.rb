@@ -14,7 +14,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
     service = described_class.new
-    expect(service.evaluate("output")).to eq(score: 0, feedback: "Judge not configured")
+    expect(service.evaluate("output")).to eq(score: 1, feedback: "Judge not configured")
   end
 
   it "builds prompts with 1-5 star scale and parses the judge response" do
@@ -44,7 +44,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
     service = described_class.new
-    expect(service.evaluate("actual")).to eq(score: 0, feedback: "No feedback provided")
+    expect(service.evaluate("actual")).to eq(score: 1, feedback: "No feedback provided")
   end
 
   it "returns an error response when the judge client raises" do
@@ -53,7 +53,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
     service = described_class.new
-    expect(service.evaluate("actual")).to eq(score: 0, feedback: "Error during evaluation: judge timeout")
+    expect(service.evaluate("actual")).to eq(score: 1, feedback: "Error during evaluation: judge timeout")
   end
 
   it "includes criteria, evaluation steps, rubric text, and human examples" do

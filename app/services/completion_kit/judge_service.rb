@@ -7,7 +7,7 @@ module CompletionKit
     end
 
     def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, evaluation_steps: nil, rubric_text: nil, human_examples: nil, **_extras)
-      return { score: 0, feedback: "Judge not configured" } unless @judge_client.configured?
+      return { score: 1, feedback: "Judge not configured" } unless @judge_client.configured?
 
       judge_prompt = build_judge_prompt(output, expected_output, prompt,
         criteria: criteria, evaluation_steps: evaluation_steps,
@@ -18,7 +18,7 @@ module CompletionKit
     rescue Faraday::Error
       raise
     rescue => e
-      { score: 0, feedback: "Error during evaluation: #{e.message}" }
+      { score: 1, feedback: "Error during evaluation: #{e.message}" }
     end
 
     private
@@ -89,10 +89,10 @@ module CompletionKit
       score_match = response.match(/Score:\s*(\d+(?:\.\d+)?)/)
       feedback_match = response.match(/Feedback:\s*(.+)/m)
 
-      score = score_match ? score_match[1].to_f : 0
+      score = score_match ? score_match[1].to_f : 1
       feedback = feedback_match ? feedback_match[1].strip : "No feedback provided"
 
-      score = [[score, 0].max, 5].min
+      score = [[score, 1].max, 5].min
 
       { score: score, feedback: feedback }
     end
