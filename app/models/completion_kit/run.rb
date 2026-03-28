@@ -51,8 +51,9 @@ module CompletionKit
       client = LlmClient.for_model(prompt.llm_model, ApiConfig.for_model(prompt.llm_model))
 
       unless client.configured?
-        errors.add(:base, "LLM API not configured: #{client.configuration_errors.join(', ')}")
-        update_column(:status, "failed") if persisted?
+        msg = "LLM API not configured: #{client.configuration_errors.join(', ')}"
+        errors.add(:base, msg)
+        update_columns(status: "failed", error_message: msg) if persisted?
         return false
       end
 
