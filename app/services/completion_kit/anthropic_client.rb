@@ -53,15 +53,16 @@ module CompletionKit
       require "faraday/retry"
       require "json"
 
-      response = Faraday.get("https://api.anthropic.com/v1/models") do |req|
+      response = Faraday.get("https://api.anthropic.com/v1/models?limit=100") do |req|
         req.headers["x-api-key"] = api_key
         req.headers["anthropic-version"] = "2023-06-01"
       end
 
       return STATIC_MODELS unless response.success?
 
-      models = JSON.parse(response.body).fetch("data", []).map { |entry| entry["id"] }.grep(/\Aclaude-/).sort
-      models.map { |id| { id: id, name: id } }.presence || STATIC_MODELS
+      entries = JSON.parse(response.body).fetch("data", [])
+      models = entries.map { |entry| { id: entry["id"], name: entry["display_name"] || entry["id"] } }
+      models.presence || STATIC_MODELS
     rescue StandardError
       STATIC_MODELS
     end

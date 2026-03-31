@@ -1,0 +1,1 @@
+[  537641ms] [ERROR] WebSocket connection to 'ws://localhost:3000/cable' failed: Error during WebSocket handshake: Unexpected response code: 404 @ http://localhost:3000/assets/turbo-ddc44468c3f2a177272c2635e622ef6a909e2fa74c250a9f98a31a94a87d1d29.js:5691

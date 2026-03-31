@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe CompletionKit::Prompt, type: :model do
   it "exposes the available model list" do
     create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-    expect(described_class.available_models).to include(hash_including(id: "gpt-4.1"))
+    expect(described_class.available_models).to include(hash_including(id: "gpt-5.4-mini"))
   end
 
   it "extracts variables from the template" do

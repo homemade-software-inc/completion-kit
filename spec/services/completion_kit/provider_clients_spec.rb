@@ -41,7 +41,7 @@ RSpec.describe "CompletionKit provider clients", type: :service do
 
     expect(client.generate_completion("prompt", model: "gpt-4.1")).to eq("hello")
     expect(success_request.headers["Authorization"]).to eq("Bearer openai-key")
-    expect(client.available_models).to include(hash_including(id: "gpt-4.1"))
+    expect(client.available_models).to include(hash_including(id: "gpt-5.4-mini"))
     expect(client.configured?).to eq(true)
     expect(client.configuration_errors).to eq([])
 
@@ -58,13 +58,8 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(unconfigured.configuration_errors).to include("OpenAI API key is not configured")
   end
 
-  it "covers OpenAI dynamic model listing branches" do
+  it "covers OpenAI static model listing" do
     client = CompletionKit::OpenAiClient.new(api_key: "openai-key")
-
-    stub_faraday_get(faraday_get_response(success: true, body: { data: [{ id: "gpt-4.1" }, { id: "gpt-4o" }] }.to_json))
-    expect(client.available_models).to eq([{ id: "gpt-4.1", name: "gpt-4.1" }, { id: "gpt-4o", name: "gpt-4o" }])
-
-    stub_faraday_get(faraday_get_response(success: false, body: "nope", status: 500))
     expect(client.available_models).to eq(CompletionKit::OpenAiClient::STATIC_MODELS)
 
     allow(Faraday).to receive(:get).and_raise(StandardError, "boom")

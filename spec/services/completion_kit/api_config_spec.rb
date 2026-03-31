@@ -40,7 +40,7 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
     create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-test2")
     create(:completion_kit_provider_credential, provider: "llama", api_key: "sk-test3")
-    expect(described_class.available_models.map { |model| model[:id] }).to include("gpt-4.1", "claude-3-7-sonnet-latest", "llama-3.1-8b-instruct")
+    expect(described_class.available_models.map { |model| model[:id] }).to include("gpt-5.4-mini", "claude-3-7-sonnet-latest", "llama-3.1-8b-instruct")
   end
 
   it "covers provider fallbacks, stored credentials, and rescue branches" do

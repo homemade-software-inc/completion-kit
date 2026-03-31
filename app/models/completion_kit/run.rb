@@ -19,7 +19,7 @@ module CompletionKit
     def judge_configured?
       judge_model.present? && metrics.any? && ApiConfig.valid_for_model?(judge_model)
     end
-
+  
     def avg_score
       all_reviews = responses.flat_map(&:reviews)
       scores = all_reviews.map(&:ai_score).compact.map(&:to_f)

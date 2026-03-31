@@ -1,9 +1,9 @@
 module CompletionKit
   class OpenAiClient < LlmClient
     STATIC_MODELS = [
-      { id: "gpt-4.1", name: "GPT-4.1" },
-      { id: "gpt-4o", name: "GPT-4o" },
-      { id: "gpt-4o-mini", name: "GPT-4o mini" }
+      { id: "gpt-5.4-mini", name: "GPT-5.4 Mini" },
+      { id: "gpt-4.1-mini", name: "GPT-4.1 Mini" },
+      { id: "gpt-4o-mini", name: "GPT-4o Mini" }
     ].freeze
 
     def generate_completion(prompt, options = {})
@@ -50,22 +50,6 @@ module CompletionKit
     end
 
     def available_models
-      return STATIC_MODELS unless configured?
-
-      require "faraday"
-      require "faraday/retry"
-      require "json"
-
-      response = Faraday.get("https://api.openai.com/v1/models") do |req|
-        req.headers["Authorization"] = "Bearer #{api_key}"
-      end
-
-      return STATIC_MODELS unless response.success?
-
-      all_ids = JSON.parse(response.body).fetch("data", []).map { |entry| entry["id"] }
-      models = all_ids.grep(/\Agpt-/).reject { |id| id.match?(/embed|audio|tts|realtime|search|instruct/) }.sort
-      models.map { |id| { id: id, name: id } }.presence || STATIC_MODELS
-    rescue StandardError
       STATIC_MODELS
     end
 
