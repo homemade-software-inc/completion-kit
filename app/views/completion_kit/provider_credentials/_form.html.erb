@@ -30,33 +30,36 @@
       <%= link_to "Cancel", provider_credentials_path, class: ck_button_classes(:light, variant: :outline) %>
       <%= form.submit(provider_credential.persisted? ? "Save provider" : "Create provider", class: ck_button_classes(:dark)) %>
     </div>
-  </div>
-<% end %>
 
-<% if provider_credential.persisted? %>
-  <%= turbo_stream_from "completion_kit_provider_#{provider_credential.id}" %>
-  <%= render "discovery_status", provider_credential: provider_credential %>
+    <% if provider_credential.persisted? %>
+      <%= turbo_stream_from "completion_kit_provider_#{provider_credential.id}" %>
 
-  <% models = CompletionKit::Model.where(provider: provider_credential.provider).active.order(:model_id) %>
-  <% if models.any? %>
-    <div class="ck-card" style="margin-top: 0.75rem; padding: 1rem;">
-      <details class="ck-model-list-details">
-        <summary class="ck-label" style="cursor: pointer; user-select: none;">Available models (<%= models.count %>)</summary>
-        <div class="ck-model-list">
-          <% models.each do |m| %>
-            <span class="ck-model-list__item">
-              <%= m.display_name || m.model_id %>
-              <% if m.supports_generation && m.supports_judging %>
-                <span class="ck-model-list__badge">gen + judge</span>
-              <% elsif m.supports_generation %>
-                <span class="ck-model-list__badge">gen</span>
-              <% elsif m.supports_judging %>
-                <span class="ck-model-list__badge">judge</span>
-              <% end %>
-            </span>
+      <% models = CompletionKit::Model.where(provider: provider_credential.provider).active.order(:model_id) %>
+      <% if models.any? || provider_credential.discovery_status.present? %>
+        <div class="ck-form-card__footer">
+          <%= render "discovery_status", provider_credential: provider_credential %>
+
+          <% if models.any? %>
+            <details class="ck-model-list-details">
+              <summary class="ck-label" style="cursor: pointer; user-select: none;">Available models (<%= models.count %>)</summary>
+              <div class="ck-model-list">
+                <% models.each do |m| %>
+                  <span class="ck-model-list__item">
+                    <%= m.display_name || m.model_id %>
+                    <% if m.supports_generation && m.supports_judging %>
+                      <span class="ck-model-list__badge">gen + judge</span>
+                    <% elsif m.supports_generation %>
+                      <span class="ck-model-list__badge">gen</span>
+                    <% elsif m.supports_judging %>
+                      <span class="ck-model-list__badge">judge</span>
+                    <% end %>
+                  </span>
+                <% end %>
+              </div>
+            </details>
           <% end %>
         </div>
-      </details>
-    </div>
-  <% end %>
+      <% end %>
+    <% end %>
+  </div>
 <% end %>
