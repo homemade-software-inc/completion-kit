@@ -602,12 +602,9 @@ tr:hover .ck-chip--publish {
   color: var(--ck-muted);
 }
 
-.ck-form-card__footer {
-  margin: 1rem -1.5rem -1.5rem;
-  padding: 0.75rem 1.5rem;
-  border-top: 1px solid var(--ck-line);
-  background: var(--ck-bg-strong);
-  border-radius: 0 0 var(--ck-radius-lg) var(--ck-radius-lg);
+.ck-form-card__models {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
 }
 
 .ck-form-card__footer-header {
@@ -621,7 +618,7 @@ tr:hover .ck-chip--publish {
   flex-shrink: 0;
 }
 
-.ck-form-card__footer .ck-discovery-bar {
+.ck-form-card__models .ck-discovery-bar {
   padding: 0 0 0.25rem;
   border-top: none;
   background: none;

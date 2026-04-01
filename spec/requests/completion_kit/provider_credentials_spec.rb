@@ -43,7 +43,7 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(credential.id)
 
     post "#{base_path}/#{credential.id}/refresh"
-    expect(response).to redirect_to("/completion_kit/provider_credentials")
+    expect(response).to redirect_to("/completion_kit/provider_credentials/#{credential.id}/edit")
   end
 
   it "refresh_all enqueues discovery for all credentials and redirects back" do
