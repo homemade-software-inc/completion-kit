@@ -14,38 +14,26 @@
 
 <% if @provider_credentials.any? %>
   <% default_endpoints = {"openai" => "https://api.openai.com", "anthropic" => "https://api.anthropic.com"} %>
-  <table class="ck-results-table">
-    <thead>
-      <tr>
-        <th>Provider</th>
-        <th>Key</th>
-        <th>Endpoint</th>
-        <th>Prompts</th>
-        <th>Judges</th>
-        <th>Last used</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @provider_credentials.each do |provider_credential| %>
-        <% masked_key = provider_credential.api_key.present? ? "#{provider_credential.api_key[0..6]}#{'•' * 20}#{provider_credential.api_key[-4..]}" : "—" %>
-        <tr onclick="window.location='<%= edit_provider_credential_path(provider_credential) %>'" style="cursor: pointer;">
-          <td><strong><%= provider_credential.display_provider %></strong></td>
-          <td class="ck-meta-copy" style="font-family: var(--ck-mono); font-size: 0.8rem;"><%= masked_key %></td>
-          <td class="ck-meta-copy"><%= provider_credential.api_endpoint.presence || default_endpoints[provider_credential.provider] %></td>
-          <td><%= provider_credential.prompt_count %></td>
-          <td><%= provider_credential.judge_count %></td>
-          <td class="ck-meta-copy"><%= provider_credential.last_used_at ? "#{time_ago_in_words(provider_credential.last_used_at)} ago" : "Never" %></td>
-          <td class="ck-results-table__arrow">&rarr;</td>
-        </tr>
-        <tr class="ck-discovery-row">
-          <td colspan="7">
-            <%= render "discovery_status", provider_credential: provider_credential %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  <div class="ck-provider-list">
+    <% @provider_credentials.each do |provider_credential| %>
+      <% masked_key = provider_credential.api_key.present? ? "#{provider_credential.api_key[0..6]}#{'•' * 12}#{provider_credential.api_key[-4..]}" : "—" %>
+      <a href="<%= edit_provider_credential_path(provider_credential) %>" class="ck-provider-card">
+        <div class="ck-provider-card__header">
+          <span class="ck-provider-card__name"><%= provider_credential.display_provider %></span>
+          <span class="ck-provider-card__key"><%= masked_key %></span>
+        </div>
+
+        <div class="ck-provider-card__meta">
+          <span><%= provider_credential.api_endpoint.presence || default_endpoints[provider_credential.provider] %></span>
+          <span><%= provider_credential.prompt_count %> prompts</span>
+          <span><%= provider_credential.judge_count %> judges</span>
+          <span><%= provider_credential.last_used_at ? "Used #{time_ago_in_words(provider_credential.last_used_at)} ago" : "Never used" %></span>
+        </div>
+
+        <%= render "discovery_status", provider_credential: provider_credential %>
+      </a>
+    <% end %>
+  </div>
 <% else %>
   <div class="ck-empty">
     No providers yet. Add one to start running prompts.
