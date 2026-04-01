@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Run all tests: `bundle exec rake spec` or `bundle exec rspec`
 - Run single test: `bundle exec rspec path/to/spec_file.rb:line_number`
 - Run specific test file: `bundle exec rspec path/to/spec_file.rb`
-- Install migrations: `bin/rails completion_kit:install:migrations`
+- Install engine migrations into standalone: `cd standalone && bin/rails completion_kit:install:migrations` (run locally, commit the generated file, push — Render only runs `db:migrate`)
 - Run migrations: `bin/rails db:migrate`
 - Install gem locally: `bundle exec rake install`
 

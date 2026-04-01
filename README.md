@@ -198,10 +198,28 @@ Set environment variables:
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `COMPLETION_KIT_API_TOKEN` | Bearer token for REST API access | (none — API disabled) |
-| `COMPLETION_KIT_USERNAME` | Web UI basic auth username | `admin` |
-| `COMPLETION_KIT_PASSWORD` | Web UI basic auth password | (none — open in dev) |
+| `COMPLETION_KIT_API_TOKEN` | Bearer token for REST API and MCP access | (none — API disabled) |
+| `COMPLETION_KIT_USERNAME` | Web UI login username | `admin` |
+| `COMPLETION_KIT_PASSWORD` | Web UI login password | (none — open in dev) |
 | `DATABASE_URL` | PostgreSQL connection string (production) | SQLite in dev |
+
+### Deploying to Render
+
+Set the **build command** to `bundle install` and the **pre-deploy command** to:
+
+```
+cd standalone && bin/rails db:migrate
+```
+
+Do not run `completion_kit:install:migrations` on Render. Migration files are committed to the repo. When the engine adds new migrations, install them locally and commit:
+
+```bash
+cd standalone
+bin/rails completion_kit:install:migrations
+bin/rails db:migrate
+```
+
+Then push — Render's `db:migrate` picks up the new file on deploy.
 
 ## Development
 
