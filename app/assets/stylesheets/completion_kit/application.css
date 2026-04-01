@@ -647,6 +647,48 @@ tr:hover .ck-chip--publish {
   color: var(--ck-dim);
 }
 
+.ck-model-list-details summary {
+  list-style: none;
+}
+
+.ck-model-list-details summary::before {
+  content: '▸ ';
+  color: var(--ck-dim);
+}
+
+.ck-model-list-details[open] summary::before {
+  content: '▾ ';
+}
+
+.ck-model-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.ck-model-list__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  font-family: var(--ck-mono);
+  font-size: 0.7rem;
+  color: var(--ck-muted);
+  background: var(--ck-surface-soft);
+  border: 1px solid var(--ck-line);
+  border-radius: 3px;
+}
+
+.ck-model-list__badge {
+  font-size: 0.6rem;
+  color: var(--ck-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .ck-button--warning {
   background: transparent;
   border-color: rgba(245, 158, 11, 0.4);
