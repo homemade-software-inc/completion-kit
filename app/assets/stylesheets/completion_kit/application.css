@@ -610,6 +610,17 @@ tr:hover .ck-chip--publish {
   border-radius: 0 0 var(--ck-radius-lg) var(--ck-radius-lg);
 }
 
+.ck-form-card__footer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ck-form-card__footer-header .ck-icon-btn {
+  flex-shrink: 0;
+}
+
 .ck-form-card__footer .ck-discovery-bar {
   padding: 0 0 0.25rem;
   border-top: none;
