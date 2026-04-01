@@ -31,7 +31,10 @@
     </div>
 
     <div class="ck-field" id="judge-field">
-      <%= form.label :judge_model, "Judge model", class: "ck-label" %>
+      <div class="ck-split">
+        <%= form.label :judge_model, "Judge model", class: "ck-label" %>
+        <%= button_to "Refresh models", refresh_models_path, method: :post, form_class: "inline-block", class: "ck-link", style: "font-size: 0.8rem;" %>
+      </div>
       <% available = CompletionKit::ApiConfig.available_models(scope: :judging) %>
       <% if available.any? %>
         <%= form.select :judge_model, ck_grouped_models(available, run.judge_model), { include_blank: "None" }, { class: "ck-input", id: "run_judge_model" } %>

@@ -36,6 +36,13 @@ module CompletionKit
       redirect_to provider_credentials_path, notice: "Models refreshed."
     end
 
+    def refresh_all
+      ProviderCredential.where(provider: "openai").find_each do |cred|
+        ModelDiscoveryService.new(config: cred.config_hash).refresh!
+      end
+      redirect_back fallback_location: provider_credentials_path, notice: "Models refreshed."
+    end
+
     private
 
     def set_provider_credential

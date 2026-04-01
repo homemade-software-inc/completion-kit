@@ -28,12 +28,15 @@
     </div>
 
     <div class="ck-field">
-      <%= form.label :llm_model, "Generation model", class: "ck-label" %>
+      <div class="ck-split">
+        <%= form.label :llm_model, "Generation model", class: "ck-label" %>
+        <%= button_to "Refresh models", refresh_models_path, method: :post, form_class: "inline-block", class: "ck-link", style: "font-size: 0.8rem;" %>
+      </div>
       <% available = CompletionKit::ApiConfig.available_models(scope: :generation) %>
       <% if available.any? %>
         <%= form.select :llm_model, ck_grouped_models(available, prompt.llm_model), {}, { class: "ck-input" } %>
       <% else %>
-        <p class="ck-meta-copy">No providers configured. <%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %> to select a model.</p>
+        <p class="ck-meta-copy">No models available. <%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %> or refresh models.</p>
       <% end %>
     </div>
 

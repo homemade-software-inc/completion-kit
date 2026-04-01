@@ -47,4 +47,11 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     post "#{base_path}/#{credential.id}/refresh"
     expect(response).to redirect_to("/completion_kit/provider_credentials")
   end
+
+  it "refresh_all triggers discovery for all openai credentials and redirects back" do
+    create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+
+    post "/completion_kit/refresh_models"
+    expect(response).to have_http_status(:redirect)
+  end
 end

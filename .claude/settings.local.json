@@ -7,7 +7,9 @@
       "WebFetch(domain:developers.openai.com)",
       "Bash(bundle exec:*)",
       "Bash(ruby -e \"require ''json''; data = JSON.parse\\(File.read\\(''coverage/.last_run.json''\\)\\); puts data.to_json\")",
-      "Bash(ruby:*)"
+      "Bash(ruby:*)",
+      "Bash(bin/rails runner \":*)",
+      "Bash(bin/rails runner:*)"
     ]
   },
   "enableAllProjectMcpServers": false
