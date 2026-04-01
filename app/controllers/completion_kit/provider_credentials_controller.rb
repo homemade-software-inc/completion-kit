@@ -33,7 +33,7 @@ module CompletionKit
 
     def refresh
       ModelDiscoveryJob.perform_later(@provider_credential.id)
-      redirect_to provider_credentials_path, notice: "Model discovery started."
+      redirect_back fallback_location: provider_credentials_path, notice: "Model discovery started."
     end
 
     def refresh_all
