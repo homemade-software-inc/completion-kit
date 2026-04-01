@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe CompletionKit::ProviderCredential, type: :model do
   before do
-    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!)
+    allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
   end
 
   it "returns config data and delegates to the provider client" do
@@ -25,29 +25,20 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     expect(credential.configured?).to eq(false)
   end
 
-  describe "#refresh_models (after_save callback)" do
-    it "calls ModelDiscoveryService when provider is openai" do
-      discovery = instance_double(CompletionKit::ModelDiscoveryService)
-      allow(CompletionKit::ModelDiscoveryService).to receive(:new).and_return(discovery)
-      expect(discovery).to receive(:refresh!)
-
+  describe "#enqueue_discovery (after_save callback)" do
+    it "enqueues ModelDiscoveryJob on save" do
+      expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(kind_of(Integer))
       create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     end
 
-    it "does not call ModelDiscoveryService for non-openai providers" do
-      expect(CompletionKit::ModelDiscoveryService).not_to receive(:new)
-
+    it "enqueues for all providers including anthropic" do
+      expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(kind_of(Integer))
       create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-test")
     end
 
-    it "silently rescues errors from ModelDiscoveryService" do
-      discovery = instance_double(CompletionKit::ModelDiscoveryService)
-      allow(CompletionKit::ModelDiscoveryService).to receive(:new).and_return(discovery)
-      allow(discovery).to receive(:refresh!).and_raise(StandardError, "network error")
-
-      expect do
-        create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-      end.not_to raise_error
+    it "enqueues for llama provider" do
+      expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(kind_of(Integer))
+      create(:completion_kit_provider_credential, provider: "llama", api_key: "sk-test")
     end
   end
 
@@ -142,6 +133,26 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
       prompt = create(:completion_kit_prompt, llm_model: "gpt-4.1")
       create(:completion_kit_run, prompt: prompt, status: "pending")
       expect(credential.last_used_at).to be_nil
+    end
+  end
+
+  describe "#broadcast_discovery_progress" do
+    it "broadcasts replace with discovery status partial" do
+      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+      expect(credential).to receive(:broadcast_replace_to).with(
+        "completion_kit_provider_#{credential.id}",
+        target: "discovery_status_#{credential.id}",
+        html: kind_of(String)
+      )
+      credential.broadcast_discovery_progress
+    end
+  end
+
+  describe "#broadcast_discovery_complete" do
+    it "delegates to broadcast_discovery_progress" do
+      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+      expect(credential).to receive(:broadcast_discovery_progress)
+      credential.broadcast_discovery_complete
     end
   end
 end

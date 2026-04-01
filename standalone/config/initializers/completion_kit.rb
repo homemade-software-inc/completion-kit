@@ -21,7 +21,7 @@ Rails.application.config.after_initialize do
     cred = CompletionKit::ProviderCredential.find_or_initialize_by(provider: provider)
     cred.api_key = key
     cred.api_endpoint = ENV["LLAMA_API_ENDPOINT"] if provider == "llama"
-    cred.save!
+    cred.save! if cred.changed?
   end
 rescue ActiveRecord::StatementInvalid
 end

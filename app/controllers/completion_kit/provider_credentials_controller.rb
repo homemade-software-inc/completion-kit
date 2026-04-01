@@ -32,29 +32,18 @@ module CompletionKit
     end
 
     def refresh
-      ModelDiscoveryService.new(config: @provider_credential.config_hash).refresh!
-      redirect_to provider_credentials_path, notice: "Models refreshed."
+      ModelDiscoveryJob.perform_later(@provider_credential.id)
+      redirect_to provider_credentials_path, notice: "Model discovery started."
     end
 
     def refresh_all
       ProviderCredential.find_each do |cred|
-        next unless %w[openai anthropic].include?(cred.provider)
-        ModelDiscoveryService.new(config: cred.config_hash).refresh!
+        ModelDiscoveryJob.perform_later(cred.id)
       end
 
       respond_to do |format|
-        format.json do
-          render json: {
-            models_discovered: Model.count,
-            for_generation: Model.for_generation.count,
-            for_judging: Model.for_judging.count,
-            generation_options_html: helpers.ck_model_options_html(:generation),
-            judging_options_html: helpers.ck_model_options_html(:judging)
-          }
-        end
-        format.html do
-          redirect_back fallback_location: provider_credentials_path, notice: "Models refreshed."
-        end
+        format.json { render json: { status: "discovery_started" } }
+        format.html { redirect_back fallback_location: provider_credentials_path, notice: "Model discovery started." }
       end
     end
 

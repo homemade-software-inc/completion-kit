@@ -1,5 +1,6 @@
 module CompletionKit
   class ProviderCredential < ApplicationRecord
+    include Turbo::Broadcastable
     PROVIDERS = %w[openai anthropic llama].freeze
     PROVIDER_LABELS = { "openai" => "OpenAI", "anthropic" => "Anthropic", "llama" => "Llama" }.freeze
 
@@ -16,7 +17,7 @@ module CompletionKit
 
     validates :provider, presence: true, inclusion: { in: PROVIDERS }, uniqueness: true
 
-    after_save :refresh_models
+    after_save :enqueue_discovery
 
     def config_hash
       {
@@ -66,12 +67,26 @@ module CompletionKit
       run&.created_at
     end
 
+    def broadcast_discovery_progress
+      broadcast_replace_to(
+        "completion_kit_provider_#{id}",
+        target: "discovery_status_#{id}",
+        html: render_partial("completion_kit/provider_credentials/discovery_status", provider_credential: self)
+      )
+    end
+
+    def broadcast_discovery_complete
+      broadcast_discovery_progress
+    end
+
     private
 
-    def refresh_models
-      return unless provider == "openai"
-      ModelDiscoveryService.new(config: config_hash).refresh!
-    rescue StandardError
+    def enqueue_discovery
+      ModelDiscoveryJob.perform_later(id)
+    end
+
+    def render_partial(partial, locals)
+      CompletionKit::ApplicationController.render(partial: partial, locals: locals)
     end
   end
 end

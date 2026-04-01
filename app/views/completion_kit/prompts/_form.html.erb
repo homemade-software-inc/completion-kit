@@ -38,6 +38,12 @@
       <% else %>
         <p class="ck-meta-copy">No models available. <%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %> or click refresh after configuring a provider.</p>
       <% end %>
+      <% CompletionKit::ProviderCredential.find_each do |pc| %>
+        <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
+      <% end %>
+      <% CompletionKit::ProviderCredential.where(discovery_status: "discovering").find_each do |pc| %>
+        <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: pc %>
+      <% end %>
     </div>
 
     <div class="ck-actions">

@@ -149,6 +149,15 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.status).to eq("active")
     end
 
+    it "returns empty list when openai fetch returns non-success response" do
+      stub_faraday_get(faraday_response(success: false, status: 401, body: "Unauthorized"))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      expect(CompletionKit::Model.where(provider: "openai").count).to eq(0)
+    end
+
     it "returns empty list when fetch raises an error" do
       allow(Faraday).to receive(:get).and_raise(StandardError, "network down")
 
@@ -355,6 +364,42 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       service.refresh!
 
       expect(CompletionKit::Model.find_by(model_id: "some-model").status).to eq("retired")
+    end
+  end
+
+  describe "progress callback" do
+    let(:service) { described_class.new(config: config) }
+
+    before do
+      allow(service).to receive(:fetch_models).and_return([])
+    end
+
+    it "accepts an optional progress block" do
+      expect { service.refresh! { |current, total| } }.not_to raise_error
+    end
+  end
+
+  describe "progress callback during probing" do
+    let(:service) { described_class.new(config: config) }
+
+    before do
+      allow(service).to receive(:fetch_models).and_return([
+        { id: "gpt-test-1", display_name: nil },
+        { id: "gpt-test-2", display_name: nil }
+      ])
+      allow(service).to receive(:send_probe).and_return(
+        instance_double(Faraday::Response, success?: false, body: "error", status: 400)
+      )
+    end
+
+    it "yields current count and total after each model probe" do
+      progress_updates = []
+      service.refresh! { |current, total| progress_updates << [current, total] }
+      expect(progress_updates).to eq([[1, 2], [2, 2]])
+    end
+
+    it "works without a block" do
+      expect { service.refresh! }.not_to raise_error
     end
   end
 end

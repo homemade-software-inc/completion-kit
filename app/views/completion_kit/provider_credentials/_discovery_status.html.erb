@@ -1,0 +1,29 @@
+<div id="discovery_status_<%= provider_credential.id %>">
+  <% if provider_credential.discovery_status == "discovering" %>
+    <div class="ck-discovery-bar">
+      <div class="ck-discovery-bar__label">
+        Discovering models&hellip;
+        <% if provider_credential.discovery_total > 0 %>
+          <%= provider_credential.discovery_current %>/<%= provider_credential.discovery_total %>
+        <% end %>
+      </div>
+      <% if provider_credential.discovery_total > 0 %>
+        <div class="ck-discovery-bar__track">
+          <div class="ck-discovery-bar__fill" style="width: <%= (provider_credential.discovery_current.to_f / provider_credential.discovery_total * 100).round %>%"></div>
+        </div>
+      <% else %>
+        <div class="ck-discovery-bar__track">
+          <div class="ck-discovery-bar__fill ck-discovery-bar__fill--indeterminate"></div>
+        </div>
+      <% end %>
+    </div>
+  <% elsif provider_credential.discovery_status == "failed" %>
+    <div class="ck-discovery-bar ck-discovery-bar--failed">
+      <div class="ck-discovery-bar__label">Model discovery failed</div>
+    </div>
+  <% elsif provider_credential.discovery_status == "completed" %>
+    <div class="ck-discovery-bar ck-discovery-bar--completed">
+      <div class="ck-discovery-bar__label">Models updated</div>
+    </div>
+  <% end %>
+</div>

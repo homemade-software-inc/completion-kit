@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_01_160331) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_01_195742) do
   create_table "completion_kit_criteria", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -83,6 +83,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_01_160331) do
     t.text "api_endpoint"
     t.text "api_key"
     t.datetime "created_at", null: false
+    t.integer "discovery_current", default: 0
+    t.string "discovery_status"
+    t.integer "discovery_total", default: 0
     t.string "provider", null: false
     t.datetime "updated_at", null: false
     t.index ["provider"], name: "index_completion_kit_provider_credentials_on_provider", unique: true

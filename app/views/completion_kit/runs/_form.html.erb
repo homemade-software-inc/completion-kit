@@ -39,6 +39,12 @@
           <button type="button" class="ck-icon-btn" title="Refresh models" onclick="ckRefreshModels('run_judge_model','judging')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M13.836 2.477a.75.75 0 0 1 .75.75v3.182a.75.75 0 0 1-.75.75h-3.182a.75.75 0 0 1 0-1.5h1.37l-.84-.841a4.5 4.5 0 0 0-7.08.681.75.75 0 0 1-1.264-.808 6 6 0 0 1 9.44-.908l.84.84V3.227a.75.75 0 0 1 .75-.75Zm-.911 7.5A.75.75 0 0 1 13.199 11a6 6 0 0 1-9.44.908l-.84-.84v1.68a.75.75 0 0 1-1.5 0V9.567a.75.75 0 0 1 .75-.75h3.182a.75.75 0 0 1 0 1.5h-1.37l.84.841a4.5 4.5 0 0 0 7.08-.681.75.75 0 0 1 1.024-.274Z" clip-rule="evenodd"/></svg></button>
         </div>
         <p class="ck-field-hint" id="judge-hint"></p>
+        <% CompletionKit::ProviderCredential.find_each do |pc| %>
+          <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
+        <% end %>
+        <% CompletionKit::ProviderCredential.where(discovery_status: "discovering").find_each do |pc| %>
+          <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: pc %>
+        <% end %>
       <% else %>
         <p class="ck-field-hint" style="color: var(--ck-warning);">No judge models available.&ensp;<%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %></p>
         <%= form.hidden_field :judge_model, value: nil, id: "run_judge_model" %>

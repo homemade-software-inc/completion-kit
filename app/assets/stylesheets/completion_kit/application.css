@@ -550,6 +550,49 @@ tr:hover .ck-chip--publish {
   margin-top: 0.5rem;
 }
 
+.ck-discovery-bar {
+  padding: 0.5rem 0;
+  font-size: 0.8rem;
+  color: var(--ck-muted);
+}
+
+.ck-discovery-bar__label {
+  margin-bottom: 0.25rem;
+  font-family: var(--ck-mono);
+}
+
+.ck-discovery-bar__track {
+  height: 4px;
+  background: var(--ck-surface);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ck-discovery-bar__fill {
+  height: 100%;
+  background: var(--ck-accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.ck-discovery-bar__fill--indeterminate {
+  width: 30%;
+  animation: ck-indeterminate 1.5s infinite ease-in-out;
+}
+
+@keyframes ck-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+.ck-discovery-bar--failed .ck-discovery-bar__label {
+  color: var(--ck-danger);
+}
+
+.ck-discovery-bar--completed .ck-discovery-bar__label {
+  color: var(--ck-success);
+}
+
 .ck-button--warning {
   background: transparent;
   border-color: rgba(245, 158, 11, 0.4);

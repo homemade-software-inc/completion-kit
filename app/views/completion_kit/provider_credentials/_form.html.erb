@@ -30,5 +30,10 @@
       <%= link_to "Cancel", provider_credentials_path, class: ck_button_classes(:light, variant: :outline) %>
       <%= form.submit(provider_credential.persisted? ? "Save provider" : "Create provider", class: ck_button_classes(:dark)) %>
     </div>
+
+    <% if provider_credential.persisted? %>
+      <%= turbo_stream_from "completion_kit_provider_#{provider_credential.id}" %>
+      <%= render "discovery_status", provider_credential: provider_credential %>
+    <% end %>
   </div>
 <% end %>

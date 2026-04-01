@@ -9,10 +9,10 @@ module CompletionKit
       @api_key = config[:api_key]
     end
 
-    def refresh!
+    def refresh!(&on_progress)
       models_with_names = fetch_models
       reconcile(models_with_names)
-      probe_new_models
+      probe_new_models(&on_progress)
     end
 
     private
@@ -70,13 +70,18 @@ module CompletionKit
       active_not_in_api.update_all(status: "retired", retired_at: Time.current)
     end
 
-    def probe_new_models
-      Model.where(provider: @provider, supports_generation: nil, status: "active").find_each do |model|
+    def probe_new_models(&on_progress)
+      unprobed = Model.where(provider: @provider, supports_generation: nil, status: "active")
+      total = unprobed.count
+      current = 0
+      unprobed.find_each do |model|
         probe_generation(model)
         probe_judging(model) if model.supports_generation
         model.probed_at = Time.current
         model.status = "failed" if model.supports_generation == false
         model.save!
+        current += 1
+        on_progress&.call(current, total)
       end
     end
 

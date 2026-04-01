@@ -6,7 +6,7 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
   before do
     allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:available_models).and_return([{ id: "gpt-4.1" }])
     allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:configured?).and_return(true)
-    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!)
+    allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
   end
 
   it "covers index, new, edit, create, update, and invalid branches" do
@@ -38,31 +38,31 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
   end
 
-  it "refresh action triggers model discovery and redirects" do
+  it "refresh action enqueues discovery job and redirects" do
     credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-    discovery = instance_double(CompletionKit::ModelDiscoveryService)
-    allow(CompletionKit::ModelDiscoveryService).to receive(:new).with(config: credential.config_hash).and_return(discovery)
-    expect(discovery).to receive(:refresh!)
+    expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(credential.id)
 
     post "#{base_path}/#{credential.id}/refresh"
     expect(response).to redirect_to("/completion_kit/provider_credentials")
   end
 
-  it "refresh_all triggers discovery for all openai credentials and redirects back" do
-    create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-    create(:completion_kit_provider_credential, provider: "llama", api_key: "llama-key")
+  it "refresh_all enqueues discovery for all credentials and redirects back" do
+    cred1 = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+    cred2 = create(:completion_kit_provider_credential, provider: "llama", api_key: "llama-key")
+
+    expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(cred1.id)
+    expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(cred2.id)
 
     post "/completion_kit/refresh_models"
     expect(response).to have_http_status(:redirect)
   end
 
-  it "refresh_all returns JSON with model counts when requested" do
+  it "refresh_all returns JSON status when requested" do
     create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-    create(:completion_kit_model, provider: "openai", model_id: "gpt-test", supports_generation: true, supports_judging: true)
 
     post "/completion_kit/refresh_models", headers: { "Accept" => "application/json" }
     expect(response).to have_http_status(:ok)
     data = JSON.parse(response.body)
-    expect(data).to include("models_discovered", "for_generation", "for_judging", "generation_options_html", "judging_options_html")
+    expect(data["status"]).to eq("discovery_started")
   end
 end

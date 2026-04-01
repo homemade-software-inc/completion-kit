@@ -1,3 +1,7 @@
+<% @provider_credentials.each do |pc| %>
+  <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
+<% end %>
+
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title">Settings</h1>
@@ -33,6 +37,11 @@
           <td><%= provider_credential.judge_count %></td>
           <td class="ck-meta-copy"><%= provider_credential.last_used_at ? "#{time_ago_in_words(provider_credential.last_used_at)} ago" : "Never" %></td>
           <td class="ck-results-table__arrow">&rarr;</td>
+        </tr>
+        <tr>
+          <td colspan="7" style="padding: 0; border: none;">
+            <%= render "discovery_status", provider_credential: provider_credential %>
+          </td>
         </tr>
       <% end %>
     </tbody>
