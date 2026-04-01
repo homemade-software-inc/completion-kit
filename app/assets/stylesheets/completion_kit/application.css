@@ -852,6 +852,16 @@ tr:hover .ck-chip--publish {
   height: 16px;
 }
 
+.ck-select-with-action {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ck-select-with-action .ck-input {
+  flex: 1;
+}
+
 .ck-icon-btn:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: var(--ck-line-strong);
