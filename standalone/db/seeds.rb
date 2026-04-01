@@ -15,30 +15,54 @@ end
 accuracy = CompletionKit::Metric.find_or_create_by!(name: "Accuracy") do |m|
   m.instruction = "Does the listing description accurately reflect the property details provided? It must not invent features, amenities, or characteristics that are not in the input."
   m.evaluation_steps = [
-    "Read the property details input carefully",
-    "Check every claim in the listing against the input",
-    "Flag any invented or fabricated details",
-    "Score based on how faithfully the listing represents the actual property"
+    "Read the property details input carefully and note every factual claim",
+    "Cross-reference each claim in the listing against the input data",
+    "Check for invented rooms, features, or amenities not present in the input",
+    "Check for exaggerated proximity, sizes, or counts",
+    "Verify the listing does not omit critical details that would mislead a buyer"
+  ]
+  m.rubric_bands = [
+    { "stars" => 5, "description" => "Every claim in the listing is verifiable from the input. No invented features. No exaggerated sizes or distances. All key property details are represented." },
+    { "stars" => 4, "description" => "One minor embellishment or slight exaggeration (e.g. 'moments from the beach' when input says 200m). All major details are accurate." },
+    { "stars" => 3, "description" => "Mostly accurate but includes one invented detail (e.g. mentions a garden that isn't in the input) or misrepresents a key fact like bedroom count or land size." },
+    { "stars" => 2, "description" => "Multiple fabricated details or significant misrepresentations. A buyer reading this would form a materially incorrect impression of the property." },
+    { "stars" => 1, "description" => "The listing bears little resemblance to the actual property. Major features are invented, key details are wrong, or the property type itself is mischaracterised." }
   ]
 end
 
 persuasiveness = CompletionKit::Metric.find_or_create_by!(name: "Persuasiveness") do |m|
   m.instruction = "Would this listing make a potential buyer want to inspect the property? Does it paint a compelling picture of the lifestyle and appeal?"
   m.evaluation_steps = [
-    "Read the listing as if you were a buyer searching for this type of property",
-    "Does it highlight the most appealing features?",
-    "Does it create a sense of place and lifestyle?",
-    "Would you want to book an inspection after reading this?"
+    "Read the listing as if you were a buyer actively searching for this type of property",
+    "Does it lead with the strongest selling point rather than burying it?",
+    "Does it create a sense of place — can you picture yourself living there?",
+    "Does it connect features to lifestyle benefits rather than just listing specs?",
+    "After reading, would you want to book an inspection?"
+  ]
+  m.rubric_bands = [
+    { "stars" => 5, "description" => "Immediately compelling. Creates a vivid sense of the lifestyle. Key features are positioned as benefits, not just specs. You want to see the property after reading this." },
+    { "stars" => 4, "description" => "Engaging and well-structured. Most features connect to lifestyle benefits. Creates interest but doesn't quite make you reach for the phone." },
+    { "stars" => 3, "description" => "Reads more like a feature list than a story. Covers the basics but doesn't differentiate the property or create emotional appeal." },
+    { "stars" => 2, "description" => "Flat and forgettable. Could describe almost any property in the area. No sense of what makes this one special." },
+    { "stars" => 1, "description" => "Actively off-putting. Dry specification dump, or so generic it suggests the writer didn't read the brief. Zero desire to inspect." }
   ]
 end
 
 tone = CompletionKit::Metric.find_or_create_by!(name: "Tone") do |m|
   m.instruction = "Is the tone professional and appropriate for a real estate listing? It should be confident and appealing without being pushy, exaggerated, or sounding like a used car ad."
   m.evaluation_steps = [
-    "Check for hyperbolic language or excessive exclamation marks",
-    "Look for pressure tactics or urgency that feels forced",
-    "Assess whether it reads like a professional agent wrote it",
-    "Verify it strikes the right balance between informative and engaging"
+    "Count exclamation marks — more than one is a red flag",
+    "Check for pressure language: 'don't miss out', 'won't last', 'act now', 'incredible opportunity'",
+    "Look for superlatives without substance: 'stunning', 'amazing', 'breathtaking' used loosely",
+    "Assess whether it reads like a premium agency listing vs. a Facebook Marketplace post",
+    "Check that confidence comes from specifics, not from volume or intensity"
+  ]
+  m.rubric_bands = [
+    { "stars" => 5, "description" => "Reads like it was written by a top-tier agency. Confident, measured, specific. Lets the property speak for itself. Zero pressure language or empty superlatives." },
+    { "stars" => 4, "description" => "Professional and appropriate. One or two slightly enthusiastic phrases but nothing that undermines credibility." },
+    { "stars" => 3, "description" => "Serviceable but generic. Some stock phrases ('ideal for families', 'great investment') that add nothing. Not embarrassing but not polished." },
+    { "stars" => 2, "description" => "Veers into salesy territory. Multiple exclamation marks, pressure tactics, or breathless superlatives that erode trust." },
+    { "stars" => 1, "description" => "Used-car-ad energy. 'DON'T MISS THIS INCREDIBLE OPPORTUNITY!!!' territory. Would make a serious buyer scroll past." }
   ]
 end
 
