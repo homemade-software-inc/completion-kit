@@ -39,6 +39,12 @@
     <%= yield %>
     </div>
   </main>
+<div class="ck-modal-overlay" id="ck-refresh-modal">
+  <div class="ck-modal">
+    <div class="ck-modal__spinner" id="ck-refresh-spinner"></div>
+    <p class="ck-modal__message" id="ck-refresh-message">Discovering and probing models...</p>
+  </div>
+</div>
 <script>
 document.addEventListener("turbo:load", function() {
   document.querySelectorAll("[data-local-time]").forEach(function(el) {
@@ -46,6 +52,42 @@ document.addEventListener("turbo:load", function() {
     el.textContent = d.toLocaleString(undefined, {year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
   });
 });
+
+function ckRefreshModels(selectId, scope) {
+  if (!confirm("This will discover and probe models from all configured providers. This may take several minutes. Continue?")) return;
+
+  var modal = document.getElementById("ck-refresh-modal");
+  var spinner = document.getElementById("ck-refresh-spinner");
+  var message = document.getElementById("ck-refresh-message");
+  modal.classList.add("ck-modal-overlay--visible");
+  spinner.style.display = "inline-block";
+  message.textContent = "Discovering and probing models...";
+
+  var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+  fetch("/completion_kit/refresh_models", {
+    method: "POST",
+    headers: { "Accept": "application/json", "X-CSRF-Token": csrfToken }
+  })
+  .then(function(resp) { return resp.json(); })
+  .then(function(data) {
+    spinner.style.display = "none";
+    message.textContent = "Done — " + data.models_discovered + " models discovered, " + data.for_generation + " for generation, " + data.for_judging + " for judging.";
+
+    var select = document.getElementById(selectId);
+    if (select) {
+      var key = scope === "judging" ? "judging_options_html" : "generation_options_html";
+      select.innerHTML = data[key];
+    }
+
+    setTimeout(function() { modal.classList.remove("ck-modal-overlay--visible"); }, 2500);
+  })
+  .catch(function(err) {
+    spinner.style.display = "none";
+    message.textContent = "Error: " + err.message;
+    modal.addEventListener("click", function() { modal.classList.remove("ck-modal-overlay--visible"); }, { once: true });
+  });
+}
 </script>
 </body>
 </html>
