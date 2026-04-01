@@ -50,8 +50,19 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
 
   it "refresh_all triggers discovery for all openai credentials and redirects back" do
     create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+    create(:completion_kit_provider_credential, provider: "llama", api_key: "llama-key")
 
     post "/completion_kit/refresh_models"
     expect(response).to have_http_status(:redirect)
+  end
+
+  it "refresh_all returns JSON with model counts when requested" do
+    create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+    create(:completion_kit_model, provider: "openai", model_id: "gpt-test", supports_generation: true, supports_judging: true)
+
+    post "/completion_kit/refresh_models", headers: { "Accept" => "application/json" }
+    expect(response).to have_http_status(:ok)
+    data = JSON.parse(response.body)
+    expect(data).to include("models_discovered", "for_generation", "for_judging", "generation_options_html", "judging_options_html")
   end
 end

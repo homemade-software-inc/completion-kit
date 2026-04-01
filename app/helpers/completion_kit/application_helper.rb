@@ -84,6 +84,12 @@ module CompletionKit
       grouped_options_for_select(groups, selected)
     end
 
+    def ck_model_options_html(scope)
+      models = CompletionKit::ApiConfig.available_models(scope: scope)
+      return "" if models.empty?
+      ck_grouped_models(models)
+    end
+
     def ck_score_kind(score)
       return :pending if score.nil?
       return :high if score >= CompletionKit.config.high_quality_threshold

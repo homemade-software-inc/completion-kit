@@ -91,6 +91,19 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#ck_model_options_html" do
+    it "returns empty string when no models exist for scope" do
+      result = helper.ck_model_options_html(:generation)
+      expect(result).to eq("")
+    end
+
+    it "returns grouped options html when models exist for scope" do
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-test", supports_generation: true, status: "active")
+      result = helper.ck_model_options_html(:generation)
+      expect(result).to include("gpt-test")
+    end
+  end
+
   describe "#ck_score_kind" do
     it "returns the expected score bands" do
       expect(helper.ck_score_kind(nil)).to eq(:pending)

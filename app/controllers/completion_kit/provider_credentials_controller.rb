@@ -37,10 +37,25 @@ module CompletionKit
     end
 
     def refresh_all
-      ProviderCredential.where(provider: "openai").find_each do |cred|
+      ProviderCredential.find_each do |cred|
+        next unless %w[openai anthropic].include?(cred.provider)
         ModelDiscoveryService.new(config: cred.config_hash).refresh!
       end
-      redirect_back fallback_location: provider_credentials_path, notice: "Models refreshed."
+
+      respond_to do |format|
+        format.json do
+          render json: {
+            models_discovered: Model.count,
+            for_generation: Model.for_generation.count,
+            for_judging: Model.for_judging.count,
+            generation_options_html: helpers.ck_model_options_html(:generation),
+            judging_options_html: helpers.ck_model_options_html(:judging)
+          }
+        end
+        format.html do
+          redirect_back fallback_location: provider_credentials_path, notice: "Models refreshed."
+        end
+      end
     end
 
     private
