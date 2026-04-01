@@ -23,7 +23,7 @@
     </div>
   <% elsif provider_credential.discovery_status == "completed" %>
     <div class="ck-discovery-bar ck-discovery-bar--completed">
-      <div class="ck-discovery-bar__label">Models updated <%= time_ago_in_words(provider_credential.updated_at) %> ago</div>
+      <div class="ck-discovery-bar__label">Available models list updated <%= time_ago_in_words(provider_credential.updated_at) %> ago</div>
     </div>
   <% end %>
 </div>
