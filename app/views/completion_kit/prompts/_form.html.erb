@@ -32,8 +32,8 @@
       <% available = CompletionKit::ApiConfig.available_models(scope: :generation) %>
       <% if available.any? %>
         <div class="ck-select-with-action">
-          <%= form.select :llm_model, ck_grouped_models(available, prompt.llm_model), {}, { class: "ck-input" } %>
-          <%= button_to refresh_models_path, method: :post, form_class: "inline-block", class: "ck-icon-btn", title: "Refresh models" do %><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M13.836 2.477a.75.75 0 0 1 .75.75v3.182a.75.75 0 0 1-.75.75h-3.182a.75.75 0 0 1 0-1.5h1.37l-.84-.841a4.5 4.5 0 0 0-7.08.681.75.75 0 0 1-1.264-.808 6 6 0 0 1 9.44-.908l.84.84V3.227a.75.75 0 0 1 .75-.75Zm-.911 7.5A.75.75 0 0 1 13.199 11a6 6 0 0 1-9.44.908l-.84-.84v1.68a.75.75 0 0 1-1.5 0V9.567a.75.75 0 0 1 .75-.75h3.182a.75.75 0 0 1 0 1.5h-1.37l.84.841a4.5 4.5 0 0 0 7.08-.681.75.75 0 0 1 1.024-.274Z" clip-rule="evenodd"/></svg><% end %>
+          <%= form.select :llm_model, ck_grouped_models(available, prompt.llm_model), {}, { class: "ck-input", id: "prompt_llm_model" } %>
+          <button type="button" class="ck-icon-btn" title="Refresh models" onclick="ckRefreshModels('prompt_llm_model','generation')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M13.836 2.477a.75.75 0 0 1 .75.75v3.182a.75.75 0 0 1-.75.75h-3.182a.75.75 0 0 1 0-1.5h1.37l-.84-.841a4.5 4.5 0 0 0-7.08.681.75.75 0 0 1-1.264-.808 6 6 0 0 1 9.44-.908l.84.84V3.227a.75.75 0 0 1 .75-.75Zm-.911 7.5A.75.75 0 0 1 13.199 11a6 6 0 0 1-9.44.908l-.84-.84v1.68a.75.75 0 0 1-1.5 0V9.567a.75.75 0 0 1 .75-.75h3.182a.75.75 0 0 1 0 1.5h-1.37l.84.841a4.5 4.5 0 0 0 7.08-.681.75.75 0 0 1 1.024-.274Z" clip-rule="evenodd"/></svg></button>
         </div>
       <% else %>
         <p class="ck-meta-copy">No models available. <%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %> or click refresh after configuring a provider.</p>
