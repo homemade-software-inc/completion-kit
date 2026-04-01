@@ -631,12 +631,9 @@ tr:hover .ck-chip--publish {
 }
 
 .ck-discovery-bar {
-  padding: 0.4rem 1rem 0.5rem;
+  padding: 0.35rem 0;
   font-size: 0.72rem;
   color: var(--ck-muted);
-  border-top: 1px solid var(--ck-line);
-  border-radius: var(--ck-radius);
-  background: var(--ck-bg-strong);
 }
 
 .ck-discovery-bar__label {
