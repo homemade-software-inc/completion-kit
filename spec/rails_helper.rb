@@ -125,6 +125,21 @@ ActiveRecord::Schema.define do
     t.text :ai_feedback
     t.timestamps
   end
+
+  create_table :completion_kit_models, force: true do |t|
+    t.string :provider, null: false
+    t.string :model_id, null: false
+    t.string :display_name
+    t.string :status, null: false
+    t.boolean :supports_generation
+    t.boolean :supports_judging
+    t.text :generation_error
+    t.text :judging_error
+    t.datetime :probed_at
+    t.datetime :discovered_at
+    t.datetime :retired_at
+    t.timestamps
+  end
 end
 
 FactoryBot.definition_file_paths = [File.expand_path("factories", __dir__)]
