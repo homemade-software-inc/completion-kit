@@ -263,4 +263,98 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.judging_error).to eq("judge exploded")
     end
   end
+
+  describe "#refresh! for anthropic" do
+    let(:config) { { provider: "anthropic", api_key: "anthropic-key" } }
+
+    it "discovers anthropic models with display names and probes them" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [
+          { id: "claude-3-7-sonnet-latest", display_name: "Claude 3.7 Sonnet" }
+        ] }.to_json
+      ))
+      stub_faraday_post(faraday_response(
+        success: true,
+        body: { content: [{ type: "text", text: "Score: 5\nFeedback: Great" }] }.to_json
+      ))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "claude-3-7-sonnet-latest")
+      expect(model.status).to eq("active")
+      expect(model.provider).to eq("anthropic")
+      expect(model.display_name).to eq("Claude 3.7 Sonnet")
+      expect(model.supports_generation).to eq(true)
+      expect(model.supports_judging).to eq(true)
+      expect(model.probed_at).to be_present
+    end
+
+    it "returns empty list when anthropic fetch fails" do
+      stub_faraday_get(faraday_response(
+        success: false,
+        status: 500,
+        body: "Internal Server Error"
+      ))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      expect(CompletionKit::Model.where(provider: "anthropic").count).to eq(0)
+    end
+
+    it "updates display_name on existing anthropic model" do
+      CompletionKit::Model.create!(
+        provider: "anthropic", model_id: "claude-3-7-sonnet-latest", status: "active",
+        supports_generation: true, supports_judging: true, probed_at: 1.hour.ago,
+        discovered_at: 1.day.ago, display_name: nil
+      )
+
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [
+          { id: "claude-3-7-sonnet-latest", display_name: "Claude 3.7 Sonnet" }
+        ] }.to_json
+      ))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "claude-3-7-sonnet-latest")
+      expect(model.display_name).to eq("Claude 3.7 Sonnet")
+    end
+
+    it "marks anthropic model generation as failed on error" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "claude-broken" }] }.to_json
+      ))
+      stub_faraday_post(faraday_response(
+        success: false,
+        status: 400,
+        body: '{"error":{"message":"bad request"}}'
+      ))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "claude-broken")
+      expect(model.supports_generation).to eq(false)
+      expect(model.status).to eq("failed")
+    end
+  end
+
+  describe "#refresh! for unknown provider" do
+    let(:config) { { provider: "unknown", api_key: "key" } }
+
+    it "returns empty models and retires any existing" do
+      CompletionKit::Model.create!(provider: "unknown", model_id: "some-model", status: "active", discovered_at: 1.day.ago)
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      expect(CompletionKit::Model.find_by(model_id: "some-model").status).to eq("retired")
+    end
+  end
 end

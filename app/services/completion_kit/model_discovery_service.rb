@@ -10,35 +10,55 @@ module CompletionKit
     end
 
     def refresh!
-      api_model_ids = fetch_model_ids
-      reconcile(api_model_ids)
+      models_with_names = fetch_models
+      reconcile(models_with_names)
       probe_new_models
     end
 
     private
 
-    def fetch_model_ids
-      response = Faraday.get("https://api.openai.com/v1/models") do |req|
-        req.headers["Authorization"] = "Bearer #{@api_key}"
+    def fetch_models
+      case @provider
+      when "openai" then fetch_openai_models
+      when "anthropic" then fetch_anthropic_models
+      else []
       end
-
-      return [] unless response.success?
-
-      JSON.parse(response.body).fetch("data", []).map { |entry| entry["id"] }
     rescue StandardError
       []
     end
 
-    def reconcile(api_model_ids)
+    def fetch_openai_models
+      response = Faraday.get("https://api.openai.com/v1/models") do |req|
+        req.headers["Authorization"] = "Bearer #{@api_key}"
+      end
+      return [] unless response.success?
+      JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: nil } }
+    end
+
+    def fetch_anthropic_models
+      response = Faraday.get("https://api.anthropic.com/v1/models?limit=100") do |req|
+        req.headers["x-api-key"] = @api_key
+        req.headers["anthropic-version"] = "2023-06-01"
+      end
+      return [] unless response.success?
+      JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["display_name"] } }
+    end
+
+    def reconcile(models_with_names)
+      api_model_ids = models_with_names.map { |m| m[:id] }
+      names_by_id = models_with_names.each_with_object({}) { |m, h| h[m[:id]] = m[:display_name] }
       existing = Model.where(provider: @provider).index_by(&:model_id)
 
       api_model_ids.each do |model_id|
         if existing[model_id]
-          existing[model_id].update!(status: "active", retired_at: nil) if existing[model_id].status == "retired"
+          attrs = { status: "active", retired_at: nil }
+          attrs[:display_name] = names_by_id[model_id] if names_by_id[model_id].present?
+          existing[model_id].update!(attrs) if existing[model_id].status == "retired" || names_by_id[model_id].present?
         else
           Model.create!(
             provider: @provider,
             model_id: model_id,
+            display_name: names_by_id[model_id],
             status: "active",
             discovered_at: Time.current
           )
@@ -61,11 +81,9 @@ module CompletionKit
     end
 
     def probe_generation(model)
-      response = responses_api_call(model.model_id, "Say hello", max_output_tokens: 20)
-
+      response = send_probe(model.model_id, "Say hello", 20)
       if response.success?
-        data = JSON.parse(response.body)
-        text = data.dig("output", 0, "content", 0, "text")
+        text = extract_text(response)
         if text.present?
           model.supports_generation = true
         else
@@ -91,11 +109,9 @@ module CompletionKit
         AI output to evaluate: The sky is blue.
       PROMPT
 
-      response = responses_api_call(model.model_id, judge_input, max_output_tokens: 50)
-
+      response = send_probe(model.model_id, judge_input, 50)
       if response.success?
-        data = JSON.parse(response.body)
-        text = data.dig("output", 0, "content", 0, "text").to_s
+        text = extract_text(response).to_s
         if text.match?(/Score:\s*\d/i)
           model.supports_judging = true
         else
@@ -111,22 +127,47 @@ module CompletionKit
       model.judging_error = e.message
     end
 
-    def responses_api_call(model_id, input, max_output_tokens: 10)
+    def send_probe(model_id, input, max_tokens)
+      if @provider == "openai"
+        openai_probe(model_id, input, max_tokens)
+      else
+        anthropic_probe(model_id, input, max_tokens)
+      end
+    end
+
+    def extract_text(response)
+      data = JSON.parse(response.body)
+      if @provider == "openai"
+        data.dig("output", 0, "content", 0, "text")
+      else
+        data.dig("content", 0, "text")
+      end
+    end
+
+    def openai_probe(model_id, input, max_tokens)
       conn = Faraday.new(url: "https://api.openai.com") do |f|
         f.request :retry, max: 1, interval: 0.5
         f.adapter Faraday.default_adapter
       end
-
       conn.post do |req|
         req.url "/v1/responses"
         req.headers["Content-Type"] = "application/json"
         req.headers["Authorization"] = "Bearer #{@api_key}"
-        req.body = {
-          model: model_id,
-          input: input,
-          max_output_tokens: max_output_tokens,
-          store: false
-        }.to_json
+        req.body = { model: model_id, input: input, max_output_tokens: max_tokens, store: false }.to_json
+      end
+    end
+
+    def anthropic_probe(model_id, input, max_tokens)
+      conn = Faraday.new(url: "https://api.anthropic.com") do |f|
+        f.request :retry, max: 1, interval: 0.5
+        f.adapter Faraday.default_adapter
+      end
+      conn.post do |req|
+        req.url "/v1/messages"
+        req.headers["Content-Type"] = "application/json"
+        req.headers["x-api-key"] = @api_key
+        req.headers["anthropic-version"] = "2023-06-01"
+        req.body = { model: model_id, messages: [{ role: "user", content: input }], max_tokens: max_tokens }.to_json
       end
     end
   end
