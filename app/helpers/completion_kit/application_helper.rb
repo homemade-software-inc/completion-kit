@@ -72,6 +72,12 @@ module CompletionKit
     end
 
     def ck_grouped_models(models, selected = nil)
+      if selected.present? && models.none? { |m| m[:id] == selected }
+        retired = CompletionKit::Model.find_by(model_id: selected)
+        if retired
+          models = models + [{ id: retired.model_id, name: "#{retired.display_name || retired.model_id} (retired)", provider: retired.provider }]
+        end
+      end
       groups = models.group_by { |m| m[:provider] }.map do |provider, ms|
         [ck_provider_label(provider), ms.map { |m| [m[:name], m[:id]] }]
       end

@@ -29,7 +29,7 @@
 
     <div class="ck-field">
       <%= form.label :llm_model, "Generation model", class: "ck-label" %>
-      <% available = CompletionKit::Prompt.available_models %>
+      <% available = CompletionKit::ApiConfig.available_models(scope: :generation) %>
       <% if available.any? %>
         <%= form.select :llm_model, ck_grouped_models(available, prompt.llm_model), {}, { class: "ck-input" } %>
       <% else %>

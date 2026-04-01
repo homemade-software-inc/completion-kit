@@ -64,6 +64,30 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
     credential.destroy!
   end
 
+  it "reads from Model registry when models exist" do
+    create(:completion_kit_model, provider: "openai", model_id: "gpt-4o", display_name: "GPT-4o", supports_generation: true, supports_judging: false)
+    create(:completion_kit_model, provider: "anthropic", model_id: "claude-3", display_name: "Claude 3", supports_generation: false, supports_judging: true)
+
+    gen = described_class.available_models(scope: :generation)
+    expect(gen.map { |m| m[:id] }).to eq(["gpt-4o"])
+    expect(gen.first[:name]).to eq("GPT-4o")
+
+    judge = described_class.available_models(scope: :judging)
+    expect(judge.map { |m| m[:id] }).to eq(["claude-3"])
+
+    all = described_class.available_models(scope: :all)
+    expect(all.length).to eq(2)
+
+    filtered = described_class.available_models(provider: "openai", scope: :generation)
+    expect(filtered.map { |m| m[:id] }).to eq(["gpt-4o"])
+  end
+
+  it "falls back to display_name or model_id for name" do
+    create(:completion_kit_model, provider: "openai", model_id: "gpt-bare", display_name: nil, supports_generation: true)
+    result = described_class.available_models(scope: :generation)
+    expect(result.first[:name]).to eq("gpt-bare")
+  end
+
   it "returns empty models when no providers are configured" do
     expect(described_class.available_models).to eq([])
   end

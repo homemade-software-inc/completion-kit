@@ -53,10 +53,21 @@ module CompletionKit
       client.configuration_errors
     end
 
-    def self.available_models(provider: nil)
+    def self.available_models(provider: nil, scope: :generation)
+      query = case scope
+              when :judging then Model.for_judging
+              when :generation then Model.for_generation
+              else Model.active
+              end
+      query = query.where(provider: provider) if provider.present?
+      models = query.order(:provider, :display_name).map do |m|
+        { id: m.model_id, name: m.display_name || m.model_id, provider: m.provider }
+      end
+
+      return models if models.any?
+
       configured = ProviderCredential.pluck(:provider)
       providers = provider.present? ? [provider.to_s] : configured
-
       providers.flat_map do |provider_name|
         next [] unless configured.include?(provider_name)
         client = LlmClient.for_provider(provider_name, for_provider(provider_name))

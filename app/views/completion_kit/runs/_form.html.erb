@@ -32,7 +32,7 @@
 
     <div class="ck-field" id="judge-field">
       <%= form.label :judge_model, "Judge model", class: "ck-label" %>
-      <% available = CompletionKit::Prompt.available_models %>
+      <% available = CompletionKit::ApiConfig.available_models(scope: :judging) %>
       <% if available.any? %>
         <%= form.select :judge_model, ck_grouped_models(available, run.judge_model), { include_blank: "None" }, { class: "ck-input", id: "run_judge_model" } %>
         <p class="ck-field-hint" id="judge-hint"></p>

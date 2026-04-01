@@ -63,6 +63,34 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#ck_grouped_models" do
+    it "returns grouped options for select" do
+      models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
+      result = helper.ck_grouped_models(models, "gpt-4")
+      expect(result).to include("GPT-4")
+      expect(result).to include("OpenAI")
+    end
+
+    it "appends retired model when selected model is not in list" do
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-old", display_name: "GPT Old", status: "retired")
+      models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
+      result = helper.ck_grouped_models(models, "gpt-old")
+      expect(result).to include("GPT Old (retired)")
+    end
+
+    it "does not append when selected model is already present" do
+      models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
+      result = helper.ck_grouped_models(models, "gpt-4")
+      expect(result).not_to include("retired")
+    end
+
+    it "handles selected model not found in registry" do
+      models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
+      result = helper.ck_grouped_models(models, "nonexistent")
+      expect(result).not_to include("retired")
+    end
+  end
+
   describe "#ck_score_kind" do
     it "returns the expected score bands" do
       expect(helper.ck_score_kind(nil)).to eq(:pending)
