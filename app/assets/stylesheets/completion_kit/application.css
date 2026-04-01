@@ -635,6 +635,7 @@ tr:hover .ck-chip--publish {
   font-size: 0.72rem;
   color: var(--ck-muted);
   border-top: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
   background: var(--ck-bg-strong);
 }
 
