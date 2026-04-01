@@ -15,7 +15,7 @@ module CompletionKit
         credential.broadcast_discovery_progress
       end
 
-      credential.update_columns(discovery_status: "completed")
+      credential.update_columns(discovery_status: "completed", updated_at: Time.current)
       credential.broadcast_discovery_complete
     rescue StandardError
       credential.update_columns(discovery_status: "failed")
