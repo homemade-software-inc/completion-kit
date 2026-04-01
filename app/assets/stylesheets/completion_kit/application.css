@@ -615,6 +615,11 @@ tr:hover .ck-chip--publish {
   gap: 0.5rem;
 }
 
+.ck-form-card__footer-header > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
 .ck-form-card__footer-header .ck-icon-btn {
   flex-shrink: 0;
 }
