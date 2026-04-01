@@ -1,6 +1,6 @@
 module CompletionKit
   class ProviderCredentialsController < ApplicationController
-    before_action :set_provider_credential, only: [:edit, :update]
+    before_action :set_provider_credential, only: [:edit, :update, :refresh]
 
     def index
       @provider_credentials = ProviderCredential.order(:provider)
@@ -29,6 +29,11 @@ module CompletionKit
       else
         render :edit, status: :unprocessable_entity
       end
+    end
+
+    def refresh
+      ModelDiscoveryService.new(config: @provider_credential.config_hash).refresh!
+      redirect_to provider_credentials_path, notice: "Models refreshed."
     end
 
     private

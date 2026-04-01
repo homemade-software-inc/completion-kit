@@ -16,6 +16,8 @@ module CompletionKit
 
     validates :provider, presence: true, inclusion: { in: PROVIDERS }, uniqueness: true
 
+    after_save :refresh_models
+
     def config_hash
       {
         provider: provider,
@@ -62,6 +64,14 @@ module CompletionKit
       runs = Run.where.not(status: "pending").order(created_at: :desc)
       run = runs.find { |r| r.prompt.llm_model&.match?(pattern) || r.judge_model&.match?(pattern) }
       run&.created_at
+    end
+
+    private
+
+    def refresh_models
+      return unless provider == "openai"
+      ModelDiscoveryService.new(config: config_hash).refresh!
+    rescue StandardError
     end
   end
 end

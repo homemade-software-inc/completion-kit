@@ -1,6 +1,10 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::ProviderCredential, type: :model do
+  before do
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!)
+  end
+
   it "returns config data and delegates to the provider client" do
     credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "secret")
     client = instance_double(CompletionKit::OpenAiClient, available_models: [{ id: "gpt-4.1" }], configured?: true)
@@ -19,6 +23,32 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
 
     expect(credential.available_models).to eq([])
     expect(credential.configured?).to eq(false)
+  end
+
+  describe "#refresh_models (after_save callback)" do
+    it "calls ModelDiscoveryService when provider is openai" do
+      discovery = instance_double(CompletionKit::ModelDiscoveryService)
+      allow(CompletionKit::ModelDiscoveryService).to receive(:new).and_return(discovery)
+      expect(discovery).to receive(:refresh!)
+
+      create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+    end
+
+    it "does not call ModelDiscoveryService for non-openai providers" do
+      expect(CompletionKit::ModelDiscoveryService).not_to receive(:new)
+
+      create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-test")
+    end
+
+    it "silently rescues errors from ModelDiscoveryService" do
+      discovery = instance_double(CompletionKit::ModelDiscoveryService)
+      allow(CompletionKit::ModelDiscoveryService).to receive(:new).and_return(discovery)
+      allow(discovery).to receive(:refresh!).and_raise(StandardError, "network error")
+
+      expect do
+        create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+      end.not_to raise_error
+    end
   end
 
   describe "#model_pattern" do

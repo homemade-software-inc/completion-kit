@@ -20,7 +20,9 @@ CompletionKit::Engine.routes.draw do
     resources :responses, only: [:show]
   end
 
-  resources :provider_credentials, only: [:index, :new, :create, :edit, :update]
+  resources :provider_credentials, only: [:index, :new, :create, :edit, :update] do
+    post :refresh, on: :member
+  end
 
   get "api_reference", to: "api_reference#index", as: :api_reference
 
