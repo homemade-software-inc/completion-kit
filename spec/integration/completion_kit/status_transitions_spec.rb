@@ -23,9 +23,9 @@ RSpec.describe "Run status transitions", type: :model do
   it "pending -> generating -> completed (no judge)" do
     run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "No judge")
 
-    stubs.post("/v1/chat/completions") do
+    stubs.post("/v1/responses") do
       [200, { "Content-Type" => "application/json" }, {
-        choices: [{ message: { content: "output" } }]
+        output: [{ type: "message", content: [{ type: "output_text", text: "output" }] }]
       }.to_json]
     end
 
@@ -43,7 +43,7 @@ RSpec.describe "Run status transitions", type: :model do
     CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
 
     call_count = 0
-    stubs.post("/v1/chat/completions") do
+    stubs.post("/v1/responses") do
       call_count += 1
       content = if call_count == 1
                   "Generated output"
@@ -51,7 +51,7 @@ RSpec.describe "Run status transitions", type: :model do
                   "Score: 4\nFeedback: Good"
                 end
       [200, { "Content-Type" => "application/json" }, {
-        choices: [{ message: { content: content } }]
+        output: [{ type: "message", content: [{ type: "output_text", text: content }] }]
       }.to_json]
     end
 
@@ -63,7 +63,7 @@ RSpec.describe "Run status transitions", type: :model do
   it "sets status to failed on generation error" do
     run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "Fail test")
 
-    stubs.post("/v1/chat/completions") do
+    stubs.post("/v1/responses") do
       raise Faraday::ConnectionFailed, "Connection refused"
     end
 
@@ -82,7 +82,7 @@ RSpec.describe "Run status transitions", type: :model do
     CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
     run.responses.create!(input_data: nil, response_text: "Some output")
 
-    stubs.post("/v1/chat/completions") do
+    stubs.post("/v1/responses") do
       raise Faraday::ConnectionFailed, "Connection refused"
     end
 

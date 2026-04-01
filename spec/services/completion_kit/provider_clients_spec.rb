@@ -37,11 +37,13 @@ RSpec.describe "CompletionKit provider clients", type: :service do
 
   it "covers OpenAI client success, error, rescue, and configuration branches" do
     client = CompletionKit::OpenAiClient.new(api_key: "openai-key")
-    success_request = stub_faraday(faraday_response(success: true, body: { choices: [{ message: { content: " hello " } }] }.to_json))
+    success_request = stub_faraday(faraday_response(success: true, body: {
+      output: [{ type: "message", content: [{ type: "output_text", text: " hello " }] }]
+    }.to_json))
 
     expect(client.generate_completion("prompt", model: "gpt-4.1")).to eq("hello")
     expect(success_request.headers["Authorization"]).to eq("Bearer openai-key")
-    expect(client.available_models).to include(hash_including(id: "gpt-5.4-mini"))
+    expect(success_request.path).to eq("/v1/responses")
     expect(client.configured?).to eq(true)
     expect(client.configuration_errors).to eq([])
 

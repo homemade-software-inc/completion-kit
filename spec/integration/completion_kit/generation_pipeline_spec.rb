@@ -29,18 +29,18 @@ RSpec.describe "End-to-end generation pipeline", type: :model do
     end
 
     before do
-      stubs.post("/v1/chat/completions") do |env|
+      stubs.post("/v1/responses") do |env|
         body = JSON.parse(env.body)
-        user_msg = body["messages"].find { |m| m["role"] == "user" }["content"]
+        input = body["input"]
 
-        reply = if user_msg.include?("Release notes")
+        reply = if input.include?("Release notes")
                   "Here is a developer summary of the release notes."
                 else
                   "Here is an executive briefing of the company update."
                 end
 
         [200, { "Content-Type" => "application/json" }, {
-          choices: [{ message: { content: reply } }]
+          output: [{ type: "message", content: [{ type: "output_text", text: reply }] }]
         }.to_json]
       end
 
@@ -75,9 +75,9 @@ RSpec.describe "End-to-end generation pipeline", type: :model do
     let(:stubs) { Faraday::Adapter::Test::Stubs.new }
 
     before do
-      stubs.post("/v1/chat/completions") do
+      stubs.post("/v1/responses") do
         [200, { "Content-Type" => "application/json" }, {
-          choices: [{ message: { content: "Raw prompt response" } }]
+          output: [{ type: "message", content: [{ type: "output_text", text: "Raw prompt response" }] }]
         }.to_json]
       end
 

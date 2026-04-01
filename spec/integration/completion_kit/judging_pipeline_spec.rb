@@ -28,9 +28,9 @@ RSpec.describe "End-to-end judging pipeline", type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_status_header)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_actions)
 
-    stubs.post("/v1/chat/completions") do
+    stubs.post("/v1/responses") do
       [200, { "Content-Type" => "application/json" }, {
-        choices: [{ message: { content: "Score: 4\nFeedback: Relevant and well-structured." } }]
+        output: [{ type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: Relevant and well-structured." }] }]
       }.to_json]
     end
 
@@ -63,9 +63,9 @@ RSpec.describe "End-to-end judging pipeline", type: :model do
     run.judge_responses!
     expect(run.responses.first.reviews.count).to eq(1)
 
-    stubs.post("/v1/chat/completions") do
+    stubs.post("/v1/responses") do
       [200, { "Content-Type" => "application/json" }, {
-        choices: [{ message: { content: "Score: 5\nFeedback: Excellent work." } }]
+        output: [{ type: "message", content: [{ type: "output_text", text: "Score: 5\nFeedback: Excellent work." }] }]
       }.to_json]
     end
 
