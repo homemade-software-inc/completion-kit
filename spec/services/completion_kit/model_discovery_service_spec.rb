@@ -71,6 +71,26 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.retired_at).to be_present
     end
 
+    it "re-activates a retired model that reappears in the API" do
+      CompletionKit::Model.create!(
+        provider: "openai", model_id: "gpt-comeback", status: "retired",
+        supports_generation: true, supports_judging: true, probed_at: 1.day.ago,
+        discovered_at: 2.days.ago, retired_at: 1.day.ago
+      )
+
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-comeback", object: "model" }] }.to_json
+      ))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "gpt-comeback")
+      expect(model.status).to eq("active")
+      expect(model.retired_at).to be_nil
+    end
+
     it "does not re-probe existing models" do
       CompletionKit::Model.create!(
         provider: "openai", model_id: "gpt-4.1-mini", status: "active",
@@ -127,6 +147,120 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.supports_judging).to eq(false)
       expect(model.judging_error).to be_present
       expect(model.status).to eq("active")
+    end
+
+    it "returns empty list when fetch raises an error" do
+      allow(Faraday).to receive(:get).and_raise(StandardError, "network down")
+
+      CompletionKit::Model.create!(provider: "openai", model_id: "gpt-existing", status: "active", discovered_at: 1.day.ago)
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      expect(CompletionKit::Model.find_by(model_id: "gpt-existing").status).to eq("retired")
+    end
+
+    it "marks generation failed with empty response body" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-empty", object: "model" }] }.to_json
+      ))
+      stub_faraday_post(faraday_response(
+        success: true,
+        body: { output: [{ type: "message", content: [{ type: "output_text", text: "" }] }] }.to_json
+      ))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "gpt-empty")
+      expect(model.supports_generation).to eq(false)
+      expect(model.generation_error).to eq("Empty response")
+      expect(model.status).to eq("failed")
+    end
+
+    it "marks generation failed when probe raises StandardError" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-crash", object: "model" }] }.to_json
+      ))
+      allow(Faraday).to receive(:new).and_raise(StandardError, "connection refused")
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "gpt-crash")
+      expect(model.supports_generation).to eq(false)
+      expect(model.generation_error).to eq("connection refused")
+      expect(model.status).to eq("failed")
+    end
+
+    it "marks judging failed when judge probe returns HTTP error" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-judge-err", object: "model" }] }.to_json
+      ))
+
+      call_count = 0
+      builder = instance_double("Faraday::RackBuilder")
+      allow(builder).to receive(:request)
+      allow(builder).to receive(:adapter)
+      connection = instance_double("Faraday::Connection")
+      allow(connection).to receive(:post) do |&block|
+        req = Struct.new(:headers, :body, :path, keyword_init: true) do
+          def url(value); self.path = value; end
+        end.new(headers: {})
+        block.call(req) if block
+        call_count += 1
+        if call_count == 1
+          faraday_response(success: true, body: { output: [{ type: "message", content: [{ type: "output_text", text: "Hello!" }] }] }.to_json)
+        else
+          faraday_response(success: false, status: 500, body: "Internal Server Error")
+        end
+      end
+      allow(Faraday).to receive(:new).and_yield(builder).and_return(connection)
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "gpt-judge-err")
+      expect(model.supports_generation).to eq(true)
+      expect(model.supports_judging).to eq(false)
+      expect(model.judging_error).to include("500")
+    end
+
+    it "marks judging failed when judge probe raises StandardError" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-judge-crash", object: "model" }] }.to_json
+      ))
+
+      call_count = 0
+      builder = instance_double("Faraday::RackBuilder")
+      allow(builder).to receive(:request)
+      allow(builder).to receive(:adapter)
+      connection = instance_double("Faraday::Connection")
+      allow(connection).to receive(:post) do |&block|
+        req = Struct.new(:headers, :body, :path, keyword_init: true) do
+          def url(value); self.path = value; end
+        end.new(headers: {})
+        block.call(req) if block
+        call_count += 1
+        if call_count == 1
+          faraday_response(success: true, body: { output: [{ type: "message", content: [{ type: "output_text", text: "Hello!" }] }] }.to_json)
+        else
+          raise StandardError, "judge exploded"
+        end
+      end
+      allow(Faraday).to receive(:new).and_yield(builder).and_return(connection)
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "gpt-judge-crash")
+      expect(model.supports_generation).to eq(true)
+      expect(model.supports_judging).to eq(false)
+      expect(model.judging_error).to eq("judge exploded")
     end
   end
 end

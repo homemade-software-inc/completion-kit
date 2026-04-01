@@ -38,6 +38,37 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     expect(service.evaluate("actual")).to eq(score: 5, feedback: "Great")
   end
 
+  it "returns score with no-feedback message when only score is present" do
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(client).to receive(:generate_completion).and_return("Score: 3")
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+
+    service = described_class.new
+    expect(service.evaluate("actual")).to eq(score: 3.0, feedback: "No feedback provided")
+  end
+
+  it "returns parse error when response has no score or feedback" do
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(client).to receive(:generate_completion).and_return("I cannot evaluate this")
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+
+    service = described_class.new
+    result = service.evaluate("actual")
+    expect(result[:score]).to eq(1)
+    expect(result[:feedback]).to include("Could not parse judge response")
+  end
+
+  it "raises when LLM returns an Error: prefixed response" do
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(client).to receive(:generate_completion).and_return("Error: 404 - model not found")
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+
+    service = described_class.new
+    result = service.evaluate("actual")
+    expect(result[:score]).to eq(1)
+    expect(result[:feedback]).to include("Error: 404")
+  end
+
   it "returns an error response when the judge client raises" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).and_raise(StandardError, "judge timeout")
