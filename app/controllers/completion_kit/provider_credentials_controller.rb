@@ -32,8 +32,9 @@ module CompletionKit
     end
 
     def refresh
+      @provider_credential.update_columns(discovery_status: "discovering", discovery_current: 0, discovery_total: 0)
       ModelDiscoveryJob.perform_later(@provider_credential.id)
-      redirect_to edit_provider_credential_path(@provider_credential), notice: "Model discovery started."
+      redirect_to edit_provider_credential_path(@provider_credential)
     end
 
     def refresh_all

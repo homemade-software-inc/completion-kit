@@ -82,6 +82,7 @@ module CompletionKit
     private
 
     def enqueue_discovery
+      update_columns(discovery_status: "discovering", discovery_current: 0, discovery_total: 0)
       ModelDiscoveryJob.perform_later(id)
     end
 
