@@ -550,12 +550,32 @@ tr:hover .ck-chip--publish {
   margin-top: 0.5rem;
 }
 
+.ck-discovery-row {
+  background: var(--ck-surface) !important;
+  border-bottom: 1px solid var(--ck-line);
+}
+
+.ck-discovery-row td {
+  padding: 0 !important;
+}
+
+.ck-discovery-row + tr {
+  border-top: none;
+}
+
+.ck-results-table tbody tr + .ck-discovery-row {
+  border-top: none;
+}
+
+.ck-results-table tbody tr:has(+ .ck-discovery-row) {
+  border-bottom: none;
+}
+
 .ck-discovery-bar {
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 1rem 0.5rem;
   font-size: 0.75rem;
   color: var(--ck-muted);
-  background: var(--ck-surface-soft);
-  border-top: 1px solid var(--ck-line);
+  border-top: 1px dashed var(--ck-line);
 }
 
 .ck-discovery-bar__label {
