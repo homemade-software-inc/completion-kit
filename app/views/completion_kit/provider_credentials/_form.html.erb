@@ -42,9 +42,9 @@
     <div class="ck-card ck-form-card__models">
       <div class="ck-form-card__footer-header">
         <%= render "discovery_status", provider_credential: provider_credential %>
-        <%= button_to refresh_provider_credential_path(provider_credential), method: :post, class: "ck-icon-btn", title: "Refresh models" do %>
+        <button type="button" class="ck-icon-btn" title="Refresh models" onclick="fetch('<%= refresh_provider_credential_path(provider_credential) %>', {method:'POST',headers:{'X-CSRF-Token':document.querySelector('meta[name=csrf-token]').content}})">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M13.836 2.477a.75.75 0 0 1 .75.75v3.182a.75.75 0 0 1-.75.75h-3.182a.75.75 0 0 1 0-1.5h1.37l-.84-.841a4.5 4.5 0 0 0-7.08.681.75.75 0 0 1-1.264-.808 6 6 0 0 1 9.44-.908l.84.84V3.227a.75.75 0 0 1 .75-.75Zm-.911 7.5A.75.75 0 0 1 13.199 11a6 6 0 0 1-9.44.908l-.84-.84v1.68a.75.75 0 0 1-1.5 0V9.567a.75.75 0 0 1 .75-.75h3.182a.75.75 0 0 1 0 1.5h-1.37l.84.841a4.5 4.5 0 0 0 7.08-.681.75.75 0 0 1 1.024-.274Z" clip-rule="evenodd"/></svg>
-        <% end %>
+        </button>
       </div>
 
       <% if models.any? %>

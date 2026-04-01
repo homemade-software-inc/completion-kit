@@ -33,8 +33,9 @@ module CompletionKit
 
     def refresh
       @provider_credential.update_columns(discovery_status: "discovering", discovery_current: 0, discovery_total: 0)
+      @provider_credential.broadcast_discovery_progress
       ModelDiscoveryJob.perform_later(@provider_credential.id)
-      redirect_to edit_provider_credential_path(@provider_credential)
+      head :ok
     end
 
     def refresh_all
