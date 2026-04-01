@@ -61,7 +61,7 @@ module CompletionKit
     end
 
     def probe_generation(model)
-      response = responses_api_call(model.model_id, "Say hello", max_output_tokens: 10)
+      response = responses_api_call(model.model_id, "Say hello", max_output_tokens: 20)
 
       if response.success?
         data = JSON.parse(response.body)
