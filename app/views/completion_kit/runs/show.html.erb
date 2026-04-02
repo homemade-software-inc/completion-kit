@@ -38,7 +38,12 @@
 </div>
 
 <div class="ck-prompt-preview">
-  <p class="ck-kicker">Prompt</p>
+  <div class="ck-prompt-preview__header">
+    <p class="ck-kicker">Prompt</p>
+    <% if @run.status == "completed" && @run.responses.joins(:reviews).exists? %>
+      <%= button_to "Suggest improvements", suggest_run_path(@run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" %>
+    <% end %>
+  </div>
   <p class="ck-prompt-preview__text" id="prompt_text"><%= @run.prompt.template %></p>
   <% if @run.prompt.template.length > 200 %>
     <a href="#" class="ck-link" id="prompt_toggle" onclick="var t=document.getElementById('prompt_text');var l=this;if(t.classList.toggle('ck-prompt-preview__text--expanded')){l.textContent='Show less'}else{l.textContent='Show more'};return false">Show more</a>
@@ -55,14 +60,8 @@
 <%= render "progress", run: @run %>
 
 <% valid_responses = @responses.reject { |r| r.response_text&.start_with?("Error:") } %>
-<% judged = valid_responses.any? { |r| r.reviewed? } %>
 
-<% if judged %>
-  <div class="ck-toolbar" style="margin-top: 1.5rem;">
-    <%= link_to "Best first", run_path(@run, sort: "score_desc"), class: params[:sort].blank? || params[:sort] == "score_desc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-    <%= link_to "Worst first", run_path(@run, sort: "score_asc"), class: params[:sort] == "score_asc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
-  </div>
-<% end %>
+<%= render "sort_toolbar", run: @run %>
 
 <% if valid_responses.any? %>
   <p class="ck-kicker" style="margin-top: 1.5rem;">Responses</p>

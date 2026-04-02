@@ -47,21 +47,32 @@ module CompletionKit
     end
 
     def ck_run_dot(run)
-      if run.status == "pending"
-        "ck-dot ck-dot--pending"
-      elsif run.status == "generating" || run.status == "judging"
-        "ck-dot ck-dot--running"
-      elsif run.status == "failed"
-        "ck-dot ck-dot--failed"
-      elsif run.status == "completed"
-        avg = run.avg_score
-        if avg
-          "ck-dot ck-dot--#{ck_score_kind(avg)}"
+      case run.status
+      when "generating", "judging" then "ck-dot ck-dot--running"
+      when "failed" then "ck-dot ck-dot--failed"
+      when "completed" then "ck-dot ck-dot--completed"
+      else "ck-dot ck-dot--pending"
+      end
+    end
+
+    def ck_run_status_label(run)
+      case run.status
+      when "pending" then "Ready to run"
+      when "generating"
+        if run.progress_total.to_i > 0
+          "Generating responses (#{run.progress_current}/#{run.progress_total})"
         else
-          "ck-dot ck-dot--completed"
+          "Generating responses…"
         end
-      else
-        "ck-dot ck-dot--pending"
+      when "judging"
+        if run.progress_total.to_i > 0
+          "Judging (#{run.progress_current}/#{run.progress_total} evaluations)"
+        else
+          "Judging…"
+        end
+      when "completed" then "Completed"
+      when "failed" then "Failed"
+      else run.status.capitalize
       end
     end
 
@@ -96,6 +107,74 @@ module CompletionKit
       return :medium if score >= CompletionKit.config.medium_quality_threshold
 
       :low
+    end
+
+    def ck_word_diff_old(old_text, new_text)
+      diff_tokens(old_text, new_text, :old)
+    end
+
+    def ck_word_diff_new(old_text, new_text)
+      diff_tokens(old_text, new_text, :new)
+    end
+
+    private
+
+    def diff_tokens(old_text, new_text, side)
+      old_words = tokenize_for_diff(old_text)
+      new_words = tokenize_for_diff(new_text)
+      lcs = lcs_table(old_words, new_words)
+      result = []
+      i = old_words.length
+      j = new_words.length
+
+      changes = []
+      while i > 0 || j > 0
+        if i > 0 && j > 0 && old_words[i - 1] == new_words[j - 1]
+          changes.unshift([:equal, old_words[i - 1]])
+          i -= 1
+          j -= 1
+        elsif j > 0 && (i == 0 || lcs[i][j - 1] >= lcs[i - 1][j])
+          changes.unshift([:add, new_words[j - 1]])
+          j -= 1
+        else
+          changes.unshift([:remove, old_words[i - 1]])
+          i -= 1
+        end
+      end
+
+      changes.each do |type, token|
+        escaped = ERB::Util.html_escape(token)
+        case type
+        when :equal
+          result << escaped
+        when :remove
+          result << content_tag(:span, escaped, class: "ck-diff-del") if side == :old
+        when :add
+          result << content_tag(:span, escaped, class: "ck-diff-ins") if side == :new
+        end
+      end
+
+      result.join.html_safe
+    end
+
+    def tokenize_for_diff(text)
+      text.to_s.scan(/\S+|\n| +/)
+    end
+
+    def lcs_table(a, b)
+      m = a.length
+      n = b.length
+      table = Array.new(m + 1) { Array.new(n + 1, 0) }
+      (1..m).each do |i|
+        (1..n).each do |j|
+          table[i][j] = if a[i - 1] == b[j - 1]
+                          table[i - 1][j - 1] + 1
+                        else
+                          [table[i - 1][j], table[i][j - 1]].max
+                        end
+        end
+      end
+      table
     end
   end
 end

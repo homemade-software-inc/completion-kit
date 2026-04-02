@@ -2,7 +2,7 @@ module CompletionKit
   module Api
     module V1
       class PromptsController < BaseController
-        before_action :set_prompt, only: [:show, :update, :destroy, :publish, :new_version]
+        before_action :set_prompt, only: [:show, :update, :destroy, :publish]
 
         def index
           render json: Prompt.order(created_at: :desc)
@@ -22,7 +22,11 @@ module CompletionKit
         end
 
         def update
-          if @prompt.update(prompt_params)
+          if @prompt.runs.exists?
+            new_prompt = @prompt.clone_as_new_version(prompt_params.to_h)
+            new_prompt.publish!
+            render json: new_prompt
+          elsif @prompt.update(prompt_params)
             render json: @prompt
           else
             render json: {errors: @prompt.errors}, status: :unprocessable_entity
@@ -39,15 +43,14 @@ module CompletionKit
           render json: @prompt.reload
         end
 
-        def new_version
-          version = @prompt.clone_as_new_version
-          render json: version, status: :created
-        end
-
         private
 
         def set_prompt
-          @prompt = Prompt.find(params[:id])
+          @prompt = if params[:id].to_s.match?(/\A\d+\z/)
+                      Prompt.find(params[:id])
+                    else
+                      Prompt.current_for(params[:id])
+                    end
         rescue ActiveRecord::RecordNotFound
           not_found
         end

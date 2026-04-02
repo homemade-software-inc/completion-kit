@@ -82,14 +82,17 @@ RSpec.describe "API V1 Prompts", type: :request do
     end
   end
 
-  describe "POST /api/v1/prompts/:id/new_version" do
-    it "clones the prompt as a new version" do
+  describe "PATCH /api/v1/prompts/:id auto-versioning" do
+    it "creates a new version and publishes when prompt has runs" do
       prompt = create(:completion_kit_prompt)
-      post "/completion_kit/api/v1/prompts/#{prompt.id}/new_version", headers: headers
-      expect(response).to have_http_status(:created)
+      create(:completion_kit_run, prompt: prompt)
+
+      patch "/completion_kit/api/v1/prompts/#{prompt.id}", params: {template: "Updated {{content}}"}.to_json, headers: headers
+      expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
-      expect(body["version_number"]).to eq(prompt.version_number + 1)
-      expect(body["family_key"]).to eq(prompt.family_key)
+      expect(body["version_number"]).to eq(2)
+      expect(body["current"]).to be true
+      expect(prompt.reload.template).not_to eq("Updated {{content}}")
     end
   end
 end

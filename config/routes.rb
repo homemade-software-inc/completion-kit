@@ -4,7 +4,6 @@ CompletionKit::Engine.routes.draw do
   resources :prompts do
     member do
       post :publish
-      post :new_version
     end
   end
 
@@ -16,6 +15,8 @@ CompletionKit::Engine.routes.draw do
     member do
       post :generate
       post :judge
+      get :suggestion
+      post :suggest
     end
     resources :responses, only: [:show]
   end
@@ -32,7 +33,6 @@ CompletionKit::Engine.routes.draw do
       resources :prompts do
         member do
           post :publish
-          post :new_version
         end
       end
       resources :runs do

@@ -29,8 +29,8 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
   end
 
   describe "#ck_run_dot" do
-    def stub_run(status, avg_score: nil)
-      instance_double(CompletionKit::Run, status: status, avg_score: avg_score)
+    def stub_run(status)
+      instance_double(CompletionKit::Run, status: status)
     end
 
     it "returns pending dot for pending status" do
@@ -49,13 +49,8 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_run_dot(stub_run("failed"))).to eq("ck-dot ck-dot--failed")
     end
 
-    it "returns score-based dot for completed status with a score" do
-      result = helper.ck_run_dot(stub_run("completed", avg_score: 4.5))
-      expect(result).to eq("ck-dot ck-dot--high")
-    end
-
-    it "returns completed dot for completed status without a score" do
-      expect(helper.ck_run_dot(stub_run("completed", avg_score: nil))).to eq("ck-dot ck-dot--completed")
+    it "returns completed dot for completed status" do
+      expect(helper.ck_run_dot(stub_run("completed"))).to eq("ck-dot ck-dot--completed")
     end
 
     it "returns pending dot for unknown status" do

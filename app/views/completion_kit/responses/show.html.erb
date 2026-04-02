@@ -15,6 +15,14 @@
       <% end %>
     </div>
   </div>
+  <div class="ck-actions">
+    <% if @prev_response %>
+      <%= link_to "← Prev", run_response_path(@run, @prev_response, sort: @sort), class: ck_button_classes(:light, variant: :outline) %>
+    <% end %>
+    <% if @next_response %>
+      <%= link_to "Next →", run_response_path(@run, @next_response, sort: @sort), class: ck_button_classes(:light, variant: :outline) %>
+    <% end %>
+  </div>
 </section>
 
 <section>

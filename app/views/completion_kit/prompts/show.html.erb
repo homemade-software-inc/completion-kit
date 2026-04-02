@@ -12,17 +12,27 @@
     <% if @prompt.description.present? %>
       <p class="ck-meta-copy"><%= @prompt.description %></p>
     <% end %>
+    <div class="ck-endpoint">
+      <code class="ck-endpoint__url" id="prompt_endpoint"><%= request.base_url %><%= api_v1_prompt_path(@prompt.slug) %></code>
+      <button type="button" class="ck-icon-btn" title="Copy endpoint" onclick="navigator.clipboard.writeText(document.getElementById('prompt_endpoint').textContent)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg></button>
+    </div>
   </div>
 
   <div class="ck-actions">
-    <%= link_to "Edit", edit_prompt_path(@prompt), class: ck_button_classes(:light, variant: :outline) %>
-    <%= button_to "New version", new_version_prompt_path(@prompt), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
-    <%= link_to "Run test", new_run_path(prompt_id: @prompt.id), class: ck_button_classes(:dark) %>
+    <% current = @prompt.family_versions.find_by(current: true) || @prompt %>
+    <%= link_to "Edit", edit_prompt_path(current), class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Run test", new_run_path(prompt_id: current.id), class: ck_button_classes(:dark) %>
   </div>
 </section>
 
 <section>
-  <p class="ck-kicker">Template</p>
+  <div class="ck-prompt-preview__header">
+    <p class="ck-kicker">Template</p>
+    <% judged_run = @runs.find { |r| r.status == "completed" && r.responses.joins(:reviews).exists? } %>
+    <% if judged_run %>
+      <%= button_to "Suggest improvements", suggest_run_path(judged_run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" %>
+    <% end %>
+  </div>
   <pre class="ck-code ck-code--dark"><%= @prompt.template %></pre>
 </section>
 

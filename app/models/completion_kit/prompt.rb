@@ -20,7 +20,14 @@ module CompletionKit
     end
 
     def self.current_for(identifier)
-      current_versions.find_by(family_key: identifier) || current_versions.find_by!(name: identifier)
+      current_versions.find_by(family_key: identifier) ||
+        current_versions.find_by(name: identifier) ||
+        current_versions.find { |p| p.slug == identifier.to_s } ||
+        raise(ActiveRecord::RecordNotFound)
+    end
+
+    def slug
+      name.to_s.downcase.strip.gsub(/[^a-z0-9]+/, "-").gsub(/\A-|-\z/, "")
     end
 
     def variables

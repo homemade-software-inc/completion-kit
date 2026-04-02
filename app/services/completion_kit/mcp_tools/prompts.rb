@@ -46,11 +46,6 @@ module CompletionKit
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :publish
         },
-        "prompts_new_version" => {
-          description: "Create a new draft version of a prompt",
-          inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
-          handler: :new_version
-        }
       }.freeze
 
       def self.definitions
@@ -81,7 +76,12 @@ module CompletionKit
 
       def self.update(args)
         prompt = Prompt.find(args["id"])
-        if prompt.update(args.except("id").slice("name", "description", "template", "llm_model"))
+        attrs = args.except("id").slice("name", "description", "template", "llm_model")
+        if prompt.runs.exists?
+          new_prompt = prompt.clone_as_new_version(attrs)
+          new_prompt.publish!
+          text_result(new_prompt.as_json)
+        elsif prompt.update(attrs)
           text_result(prompt.as_json)
         else
           error_result(prompt.errors.full_messages.join(", "))
@@ -97,12 +97,6 @@ module CompletionKit
         prompt = Prompt.find(args["id"])
         prompt.publish!
         text_result(prompt.reload.as_json)
-      end
-
-      def self.new_version(args)
-        prompt = Prompt.find(args["id"])
-        version = prompt.clone_as_new_version
-        text_result(version.as_json)
       end
 
       def self.text_result(data)

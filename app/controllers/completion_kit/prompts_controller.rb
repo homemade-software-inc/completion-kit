@@ -1,6 +1,6 @@
 module CompletionKit
   class PromptsController < ApplicationController
-    before_action :set_prompt, only: [:show, :edit, :update, :destroy, :publish, :new_version]
+    before_action :set_prompt, only: [:show, :edit, :update, :destroy, :publish]
     
     def index
       @prompts = Prompt.current_versions.includes(:runs).order(created_at: :desc)
@@ -32,9 +32,10 @@ module CompletionKit
     def update
       if @prompt.runs.exists?
         new_prompt = @prompt.clone_as_new_version(prompt_params.to_h)
-        redirect_to edit_prompt_path(new_prompt), notice: "Created #{new_prompt.version_label}. The previous version is unchanged because it already has runs."
+        new_prompt.publish!
+        redirect_to prompt_path(new_prompt), notice: "Saved as #{new_prompt.version_label}."
       elsif @prompt.update(prompt_params)
-        redirect_to prompt_path(@prompt), notice: "Prompt version was successfully updated."
+        redirect_to prompt_path(@prompt), notice: "Prompt saved."
       else
         render :edit, status: :unprocessable_entity
       end
@@ -50,11 +51,6 @@ module CompletionKit
       redirect_to prompt_path(@prompt), notice: "#{@prompt.display_name} is now the current version."
     end
 
-    def new_version
-      new_prompt = @prompt.clone_as_new_version
-      redirect_to edit_prompt_path(new_prompt), notice: "Drafted #{new_prompt.display_name}. Review it, then publish when ready."
-    end
-    
     private
     
     def set_prompt

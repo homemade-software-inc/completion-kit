@@ -1,0 +1,8 @@
+<div id="run_sort_toolbar">
+  <% if run.status == "completed" && run.judge_configured? && run.responses.joins(:reviews).exists? %>
+    <div class="ck-toolbar" style="margin-top: 1.5rem;">
+      <%= link_to "Best first", run_path(run, sort: "score_desc"), class: params[:sort].blank? || params[:sort] == "score_desc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+      <%= link_to "Worst first", run_path(run, sort: "score_asc"), class: params[:sort] == "score_asc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+    </div>
+  <% end %>
+</div>

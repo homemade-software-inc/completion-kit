@@ -2,12 +2,12 @@ require "rails_helper"
 
 RSpec.describe CompletionKit::McpTools::Prompts do
   describe ".definitions" do
-    it "returns 7 tool definitions" do
+    it "returns 6 tool definitions" do
       defs = described_class.definitions
-      expect(defs.length).to eq(7)
+      expect(defs.length).to eq(6)
       expect(defs.map { |d| d[:name] }).to match_array(%w[
         prompts_list prompts_get prompts_create prompts_update
-        prompts_delete prompts_publish prompts_new_version
+        prompts_delete prompts_publish
       ])
     end
 
@@ -62,10 +62,12 @@ RSpec.describe CompletionKit::McpTools::Prompts do
       expect(content["current"]).to be true
     end
 
-    it "creates a new version" do
-      result = described_class.call("prompts_new_version", {"id" => prompt.id})
+    it "auto-versions on update when prompt has runs" do
+      create(:completion_kit_run, prompt: prompt)
+      result = described_class.call("prompts_update", {"id" => prompt.id, "template" => "New {{content}}"})
       content = JSON.parse(result[:content].first[:text])
       expect(content["version_number"]).to eq(2)
+      expect(content["current"]).to be true
       expect(CompletionKit::Prompt.count).to eq(2)
     end
 

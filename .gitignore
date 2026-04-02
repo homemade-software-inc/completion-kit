@@ -17,3 +17,5 @@ standalone/db/*.sqlite3-*
 .env
 standalone/.env
 .mcp.json
+settings.local.json
+.playwright-mcp/

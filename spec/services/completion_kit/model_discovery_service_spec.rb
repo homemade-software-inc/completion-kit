@@ -20,12 +20,13 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       def url(value); self.path = value; end
     end
     request = request_class.new(headers: {})
-    builder = instance_double("Faraday::RackBuilder")
+    options = Struct.new(:timeout, :open_timeout).new
     connection = instance_double("Faraday::Connection")
-    allow(builder).to receive(:request)
-    allow(builder).to receive(:adapter)
+    allow(connection).to receive(:options).and_return(options)
+    allow(connection).to receive(:request)
+    allow(connection).to receive(:adapter)
     allow(connection).to receive(:post).and_yield(request).and_return(response)
-    allow(Faraday).to receive(:new).and_yield(builder).and_return(connection)
+    allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
     request
   end
 
@@ -211,10 +212,11 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       ))
 
       call_count = 0
-      builder = instance_double("Faraday::RackBuilder")
-      allow(builder).to receive(:request)
-      allow(builder).to receive(:adapter)
+      options = Struct.new(:timeout, :open_timeout).new
       connection = instance_double("Faraday::Connection")
+      allow(connection).to receive(:options).and_return(options)
+      allow(connection).to receive(:request)
+      allow(connection).to receive(:adapter)
       allow(connection).to receive(:post) do |&block|
         req = Struct.new(:headers, :body, :path, keyword_init: true) do
           def url(value); self.path = value; end
@@ -227,7 +229,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
           faraday_response(success: false, status: 500, body: "Internal Server Error")
         end
       end
-      allow(Faraday).to receive(:new).and_yield(builder).and_return(connection)
+      allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
 
       service = described_class.new(config: config)
       service.refresh!
@@ -245,10 +247,11 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       ))
 
       call_count = 0
-      builder = instance_double("Faraday::RackBuilder")
-      allow(builder).to receive(:request)
-      allow(builder).to receive(:adapter)
+      options = Struct.new(:timeout, :open_timeout).new
       connection = instance_double("Faraday::Connection")
+      allow(connection).to receive(:options).and_return(options)
+      allow(connection).to receive(:request)
+      allow(connection).to receive(:adapter)
       allow(connection).to receive(:post) do |&block|
         req = Struct.new(:headers, :body, :path, keyword_init: true) do
           def url(value); self.path = value; end
@@ -261,7 +264,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
           raise StandardError, "judge exploded"
         end
       end
-      allow(Faraday).to receive(:new).and_yield(builder).and_return(connection)
+      allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
 
       service = described_class.new(config: config)
       service.refresh!

@@ -1,6 +1,6 @@
 module CompletionKit
   class RunsController < ApplicationController
-    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :judge]
+    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :judge, :suggest, :suggestion]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
@@ -59,6 +59,7 @@ module CompletionKit
     end
 
     def generate
+      @run.update!(status: "generating", progress_current: 0, progress_total: 0, error_message: nil)
       GenerateJob.perform_later(@run.id)
       redirect_to run_path(@run)
     end
@@ -69,6 +70,18 @@ module CompletionKit
       end
       JudgeJob.perform_later(@run.id)
       redirect_to run_path(@run)
+    end
+
+    def suggest
+      service = PromptImprovementService.new(@run)
+      result = service.suggest
+      session["suggestion_#{@run.id}"] = result
+      redirect_to suggestion_run_path(@run)
+    end
+
+    def suggestion
+      @suggestion = session["suggestion_#{@run.id}"]
+      redirect_to run_path(@run), alert: "No suggestion available. Generate one first." unless @suggestion
     end
 
     private

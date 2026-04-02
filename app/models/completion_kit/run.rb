@@ -60,6 +60,7 @@ module CompletionKit
       update!(status: "generating", progress_current: 0, progress_total: rows.length, error_message: nil)
       responses.destroy_all
       broadcast_ui
+      broadcast_clear_responses
 
       rows.each_with_index do |row, index|
         input = row.empty? ? nil : row.to_json
@@ -167,6 +168,7 @@ module CompletionKit
       broadcast_progress
       broadcast_status_header
       broadcast_actions
+      broadcast_sort_toolbar
     end
 
     def render_engine_partial(partial, locals)
@@ -177,11 +179,13 @@ module CompletionKit
     end
 
     def broadcast_progress
+      reload
       broadcast_replace_to(
         "completion_kit_run_#{id}",
         target: "run_progress",
         html: render_engine_partial("completion_kit/runs/progress", run: self)
       )
+      broadcast_status_header
     end
 
     def broadcast_status_header
@@ -197,6 +201,22 @@ module CompletionKit
         "completion_kit_run_#{id}",
         target: "run_actions",
         html: render_engine_partial("completion_kit/runs/actions", run: self)
+      )
+    end
+
+    def broadcast_sort_toolbar
+      broadcast_replace_to(
+        "completion_kit_run_#{id}",
+        target: "run_sort_toolbar",
+        html: render_engine_partial("completion_kit/runs/sort_toolbar", run: self)
+      )
+    end
+
+    def broadcast_clear_responses
+      broadcast_replace_to(
+        "completion_kit_run_#{id}",
+        target: "run_responses",
+        html: '<div id="run_responses"></div>'
       )
     end
 

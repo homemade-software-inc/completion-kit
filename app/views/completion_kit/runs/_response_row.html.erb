@@ -1,4 +1,4 @@
-<%= link_to run_response_path(run, response), class: "ck-response-row", id: "response_#{response.id}" do %>
+<%= link_to run_response_path(run, response, sort: params[:sort]), class: "ck-response-row", id: "response_#{response.id}" do %>
   <span class="ck-response-row__index">#<%= index %></span>
   <span class="ck-response-row__text"><%= truncate(response.response_text.to_s, length: 160) %></span>
   <span class="ck-response-row__score">

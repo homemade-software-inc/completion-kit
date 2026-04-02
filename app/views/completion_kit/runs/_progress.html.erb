@@ -1,2 +1,18 @@
 <div id="run_progress">
+  <% if run.status == "generating" || run.status == "judging" %>
+    <div class="ck-discovery-bar">
+      <div class="ck-discovery-bar__label">
+        <%= ck_run_status_label(run) %>
+      </div>
+      <% if run.progress_total.to_i > 0 %>
+        <div class="ck-discovery-bar__track">
+          <div class="ck-discovery-bar__fill" style="width: <%= (run.progress_current.to_f / run.progress_total * 100).round %>%"></div>
+        </div>
+      <% else %>
+        <div class="ck-discovery-bar__track">
+          <div class="ck-discovery-bar__fill ck-discovery-bar__fill--indeterminate"></div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 </div>

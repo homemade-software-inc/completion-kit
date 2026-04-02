@@ -74,7 +74,7 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).to include("prevented this prompt from being saved")
   end
 
-  it "creates a new version instead of mutating a prompt with existing runs" do
+  it "creates a new version and publishes it when prompt has existing runs" do
     prompt = create(:completion_kit_prompt, name: "Versioned Prompt", family_key: "family-1", version_number: 1)
     create(:completion_kit_run, prompt: prompt)
 
@@ -82,9 +82,11 @@ RSpec.describe "CompletionKit prompts", type: :request do
       patch "#{base_path}/#{prompt.id}", params: { prompt: { name: "Versioned Prompt", template: "Updated {{content}}", llm_model: "gpt-4o" } }
     end.to change(CompletionKit::Prompt, :count).by(1)
 
-    expect(response).to redirect_to(%r{/completion_kit/prompts/\d+/edit})
+    new_prompt = CompletionKit::Prompt.order(:id).last
+    expect(response).to redirect_to(%r{/completion_kit/prompts/\d+})
     expect(prompt.reload.template).to eq("Summarize {{content}} for {{audience}}")
-    expect(CompletionKit::Prompt.order(:id).last.version_number).to eq(2)
+    expect(new_prompt.version_number).to eq(2)
+    expect(new_prompt.current).to eq(true)
   end
 
   it "publishes a version as current" do
@@ -98,18 +100,6 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(draft_prompt.reload.current).to eq(true)
   end
 
-  it "creates a new draft version from an existing version" do
-    prompt = create(:completion_kit_prompt, name: "Family Prompt", family_key: "family-3", version_number: 1)
-
-    expect do
-      post "/completion_kit/prompts/#{prompt.id}/new_version"
-    end.to change(CompletionKit::Prompt, :count).by(1)
-
-    new_prompt = CompletionKit::Prompt.order(:id).last
-    expect(response).to redirect_to("/completion_kit/prompts/#{new_prompt.id}/edit")
-    expect(new_prompt.current).to eq(false)
-    expect(new_prompt.version_number).to eq(2)
-  end
 
   it "destroys a prompt" do
     prompt = create(:completion_kit_prompt)
