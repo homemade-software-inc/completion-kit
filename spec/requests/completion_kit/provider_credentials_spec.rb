@@ -47,23 +47,24 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(response).to have_http_status(:ok)
   end
 
-  it "refresh_all enqueues discovery for all credentials and redirects back" do
+  it "refresh_all enqueues discovery for all credentials" do
     cred1 = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     cred2 = create(:completion_kit_provider_credential, provider: "llama", api_key: "llama-key")
+    allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:broadcast_discovery_progress)
 
     expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(cred1.id)
     expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(cred2.id)
 
     post "/completion_kit/refresh_models"
-    expect(response).to have_http_status(:redirect)
+    expect(response).to have_http_status(:ok)
   end
 
-  it "refresh_all returns JSON status when requested" do
-    create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+  it "refresh_all sets discovering status on each credential" do
+    cred = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+    allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:broadcast_discovery_progress)
 
-    post "/completion_kit/refresh_models", headers: { "Accept" => "application/json" }
-    expect(response).to have_http_status(:ok)
-    data = JSON.parse(response.body)
-    expect(data["status"]).to eq("discovery_started")
+    post "/completion_kit/refresh_models"
+    cred.reload
+    expect(cred.discovery_status).to eq("discovering")
   end
 end

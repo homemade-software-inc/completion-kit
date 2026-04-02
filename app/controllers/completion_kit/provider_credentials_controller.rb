@@ -33,6 +33,7 @@ module CompletionKit
 
     def refresh
       @provider_credential.update_columns(discovery_status: "discovering", discovery_current: 0, discovery_total: 0)
+      @provider_credential.reload
       @provider_credential.broadcast_discovery_progress
       ModelDiscoveryJob.perform_later(@provider_credential.id)
       head :ok
@@ -40,13 +41,13 @@ module CompletionKit
 
     def refresh_all
       ProviderCredential.find_each do |cred|
+        cred.update_columns(discovery_status: "discovering", discovery_current: 0, discovery_total: 0)
+        cred.reload
+        cred.broadcast_discovery_progress
         ModelDiscoveryJob.perform_later(cred.id)
       end
 
-      respond_to do |format|
-        format.json { render json: { status: "discovery_started" } }
-        format.html { redirect_back fallback_location: provider_credentials_path, notice: "Model discovery started." }
-      end
+      head :ok
     end
 
     private

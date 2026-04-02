@@ -149,9 +149,10 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
   end
 
   describe "#broadcast_discovery_complete" do
-    it "delegates to broadcast_discovery_progress" do
+    it "delegates to broadcast_discovery_progress and broadcast_model_dropdowns" do
       credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
       expect(credential).to receive(:broadcast_discovery_progress)
+      expect(credential).to receive(:broadcast_model_dropdowns)
       credential.broadcast_discovery_complete
     end
   end
