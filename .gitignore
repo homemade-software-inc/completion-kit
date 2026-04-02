@@ -16,3 +16,4 @@ standalone/db/*.sqlite3
 standalone/db/*.sqlite3-*
 .env
 standalone/.env
+.mcp.json

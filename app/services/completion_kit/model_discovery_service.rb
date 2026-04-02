@@ -151,6 +151,8 @@ module CompletionKit
 
     def openai_probe(model_id, input, max_tokens)
       conn = Faraday.new(url: "https://api.openai.com") do |f|
+        f.options.timeout = 15
+        f.options.open_timeout = 5
         f.request :retry, max: 1, interval: 0.5
         f.adapter Faraday.default_adapter
       end
@@ -164,6 +166,8 @@ module CompletionKit
 
     def anthropic_probe(model_id, input, max_tokens)
       conn = Faraday.new(url: "https://api.anthropic.com") do |f|
+        f.options.timeout = 15
+        f.options.open_timeout = 5
         f.request :retry, max: 1, interval: 0.5
         f.adapter Faraday.default_adapter
       end

@@ -7,18 +7,22 @@ module CompletionKit
       return unless credential
 
       credential.update_columns(discovery_status: "discovering", discovery_current: 0, discovery_total: 0)
+      credential.reload
       credential.broadcast_discovery_progress
 
       service = ModelDiscoveryService.new(config: credential.config_hash)
       service.refresh! do |current, total|
         credential.update_columns(discovery_current: current, discovery_total: total)
+        credential.reload
         credential.broadcast_discovery_progress
       end
 
       credential.update_columns(discovery_status: "completed", updated_at: Time.current)
+      credential.reload
       credential.broadcast_discovery_complete
     rescue StandardError
       credential.update_columns(discovery_status: "failed")
+      credential.reload
       credential.broadcast_discovery_progress
     end
   end

@@ -676,7 +676,7 @@ tr:hover .ck-chip--publish {
 }
 
 .ck-discovery-bar--completed .ck-discovery-bar__label {
-  color: var(--ck-dim);
+  color: var(--ck-muted);
 }
 
 .ck-model-list-details summary {
