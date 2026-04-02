@@ -140,4 +140,40 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
     expect(run.reload.judge_model).to eq("gpt-4.1")
   end
+
+  it "suggest action stores suggestion in session and redirects to suggestion page" do
+    run = create(:completion_kit_run, prompt: prompt)
+    service = instance_double(CompletionKit::PromptImprovementService)
+    allow(CompletionKit::PromptImprovementService).to receive(:new).with(run).and_return(service)
+    allow(service).to receive(:suggest).and_return({
+      reasoning: "Improve clarity",
+      suggested_template: "Better prompt",
+      original_template: prompt.template
+    })
+
+    post "#{base_path}/#{run.id}/suggest"
+    expect(response).to redirect_to("#{base_path}/#{run.id}/suggestion")
+  end
+
+  it "suggestion action renders suggestion when present in session" do
+    run = create(:completion_kit_run, prompt: prompt)
+    service = instance_double(CompletionKit::PromptImprovementService)
+    allow(CompletionKit::PromptImprovementService).to receive(:new).with(run).and_return(service)
+    allow(service).to receive(:suggest).and_return({
+      reasoning: "Improve clarity",
+      suggested_template: "Better prompt",
+      original_template: prompt.template
+    })
+
+    post "#{base_path}/#{run.id}/suggest"
+    get "#{base_path}/#{run.id}/suggestion"
+    expect(response).to have_http_status(:ok)
+  end
+
+  it "suggestion action redirects when no suggestion in session" do
+    run = create(:completion_kit_run, prompt: prompt)
+
+    get "#{base_path}/#{run.id}/suggestion"
+    expect(response).to redirect_to("#{base_path}/#{run.id}")
+  end
 end

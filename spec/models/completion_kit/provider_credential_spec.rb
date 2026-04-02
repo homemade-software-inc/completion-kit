@@ -156,4 +156,25 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
       credential.broadcast_discovery_complete
     end
   end
+
+  describe "#broadcast_model_dropdowns" do
+    it "broadcasts replacement HTML for model selects" do
+      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+
+      expect(Turbo::StreamsChannel).to receive(:broadcast_action_to).with(
+        "completion_kit_provider_#{credential.id}",
+        action: :replace,
+        target: "prompt_llm_model",
+        html: kind_of(String)
+      )
+      expect(Turbo::StreamsChannel).to receive(:broadcast_action_to).with(
+        "completion_kit_provider_#{credential.id}",
+        action: :replace,
+        target: "run_judge_model",
+        html: kind_of(String)
+      )
+
+      credential.send(:broadcast_model_dropdowns)
+    end
+  end
 end

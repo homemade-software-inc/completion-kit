@@ -12,6 +12,17 @@ RSpec.describe CompletionKit::Prompt, type: :model do
     expect(prompt.variables).to eq(%w[name audience])
   end
 
+  it "finds a prompt by slug fallback in current_for" do
+    prompt = create(
+      :completion_kit_prompt,
+      name: "My Cool Prompt",
+      family_key: "unrelated-key",
+      version_number: 1
+    )
+
+    expect(described_class.current_for("my-cool-prompt")).to eq(prompt)
+  end
+
   it "supports current lookup, display helpers, cloning, and publishing" do
     prompt = create(
       :completion_kit_prompt,

@@ -83,6 +83,24 @@ RSpec.describe CompletionKit::Run, type: :model do
         hash_including(target: "run_actions")
       )
     end
+
+    it "broadcast_sort_toolbar calls broadcast_replace_to with run_sort_toolbar target" do
+      allow(run).to receive(:broadcast_sort_toolbar).and_call_original
+      run.send(:broadcast_sort_toolbar)
+      expect(run).to have_received(:broadcast_replace_to).with(
+        "completion_kit_run_#{run.id}",
+        hash_including(target: "run_sort_toolbar")
+      )
+    end
+
+    it "broadcast_clear_responses calls broadcast_replace_to with run_responses target" do
+      allow(run).to receive(:broadcast_clear_responses).and_call_original
+      run.send(:broadcast_clear_responses)
+      expect(run).to have_received(:broadcast_replace_to).with(
+        "completion_kit_run_#{run.id}",
+        hash_including(target: "run_responses")
+      )
+    end
   end
 
   describe "#generate_responses!" do

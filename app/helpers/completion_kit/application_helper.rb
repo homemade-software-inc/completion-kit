@@ -151,6 +151,9 @@ module CompletionKit
           result << content_tag(:span, escaped, class: "ck-diff-del") if side == :old
         when :add
           result << content_tag(:span, escaped, class: "ck-diff-ins") if side == :new
+# :nocov:
+        else nil
+# :nocov:
         end
       end
 

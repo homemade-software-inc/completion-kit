@@ -107,4 +107,71 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_score_kind(2.0)).to eq(:low)
     end
   end
+
+  describe "#ck_run_status_label" do
+    def stub_run(status, progress_current: 0, progress_total: 0)
+      instance_double(CompletionKit::Run, status: status, progress_current: progress_current, progress_total: progress_total)
+    end
+
+    it "returns Ready to run for pending" do
+      expect(helper.ck_run_status_label(stub_run("pending"))).to eq("Ready to run")
+    end
+
+    it "returns generating with progress when progress_total > 0" do
+      expect(helper.ck_run_status_label(stub_run("generating", progress_current: 3, progress_total: 10))).to eq("Generating responses (3/10)")
+    end
+
+    it "returns generating without progress when progress_total is 0" do
+      expect(helper.ck_run_status_label(stub_run("generating", progress_total: 0))).to include("Generating")
+    end
+
+    it "returns judging with progress when progress_total > 0" do
+      expect(helper.ck_run_status_label(stub_run("judging", progress_current: 2, progress_total: 8))).to eq("Judging (2/8 evaluations)")
+    end
+
+    it "returns judging without progress when progress_total is 0" do
+      expect(helper.ck_run_status_label(stub_run("judging", progress_total: 0))).to include("Judging")
+    end
+
+    it "returns Completed for completed" do
+      expect(helper.ck_run_status_label(stub_run("completed"))).to eq("Completed")
+    end
+
+    it "returns Failed for failed" do
+      expect(helper.ck_run_status_label(stub_run("failed"))).to eq("Failed")
+    end
+
+    it "capitalizes unknown statuses" do
+      expect(helper.ck_run_status_label(stub_run("mystery"))).to eq("Mystery")
+    end
+  end
+
+  describe "#ck_word_diff_old" do
+    it "marks removed words in old text and skips additions" do
+      result = helper.ck_word_diff_old("hello world", "hello universe")
+      expect(result).to include("ck-diff-del")
+      expect(result).to include("world")
+      expect(result).not_to include("ck-diff-ins")
+    end
+
+    it "returns unchanged text when texts are identical" do
+      result = helper.ck_word_diff_old("hello world", "hello world")
+      expect(result).not_to include("ck-diff")
+      expect(result).to include("hello")
+    end
+  end
+
+  describe "#ck_word_diff_new" do
+    it "marks added words in new text and skips removals" do
+      result = helper.ck_word_diff_new("hello world", "hello universe")
+      expect(result).to include("ck-diff-ins")
+      expect(result).to include("universe")
+      expect(result).not_to include("ck-diff-del")
+    end
+
+    it "handles nil inputs" do
+      result = helper.ck_word_diff_new(nil, "hello")
+      expect(result).to include("hello")
+    end
+  end
 end

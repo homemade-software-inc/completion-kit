@@ -26,6 +26,13 @@ RSpec.describe "API V1 Prompts", type: :request do
       expect(JSON.parse(response.body)["id"]).to eq(prompt.id)
     end
 
+    it "finds a prompt by slug (non-numeric id)" do
+      prompt = create(:completion_kit_prompt, name: "My Cool Prompt")
+      get "/completion_kit/api/v1/prompts/my-cool-prompt", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["id"]).to eq(prompt.id)
+    end
+
     it "returns 404 for missing prompt" do
       get "/completion_kit/api/v1/prompts/999999", headers: headers
       expect(response).to have_http_status(:not_found)
