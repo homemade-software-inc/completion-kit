@@ -18,16 +18,17 @@
 
     <div class="ck-field">
       <%= form.label :prompt_id, "Prompt", class: "ck-label" %>
-      <%= form.select :prompt_id, @prompts.map { |p| [p.display_name, p.id] }, { include_blank: "Select a prompt" }, { class: "ck-input" } %>
+      <%= form.select :prompt_id, @prompts.map { |p| [p.display_name, p.id, { "data-has-variables" => p.variables.any? ? "1" : "0" }] }, { include_blank: "Select a prompt" }, { class: "ck-input", id: "run_prompt_id" } %>
     </div>
 
-    <div class="ck-field">
+    <div class="ck-field" id="dataset-field">
       <%= form.label :dataset_id, "Dataset", class: "ck-label" %>
       <% if @datasets.empty? %>
         <p class="ck-meta-copy">No datasets yet. <%= link_to "Create a dataset", new_dataset_path, class: "ck-link" %> first.</p>
       <% else %>
-        <%= form.select :dataset_id, @datasets.map { |d| [d.name, d.id] }, { include_blank: "Select a dataset" }, { class: "ck-input" } %>
+        <%= form.select :dataset_id, @datasets.map { |d| [d.name, d.id] }, { include_blank: "Select a dataset" }, { class: "ck-input", id: "run_dataset_id" } %>
       <% end %>
+      <p class="ck-field-hint" id="dataset-hint" style="display: none; color: var(--ck-warning);">This prompt uses variables. Select a dataset to provide values.</p>
     </div>
 
     <div class="ck-field" id="judge-field">
@@ -105,6 +106,13 @@ function updateRunForm() {
     if (judgeHint) judgeHint.textContent = 'Select a judge model to enable judging.';
   }
 
+  var datasetEl = document.getElementById('run_dataset_id');
+  var datasetHint = document.getElementById('dataset-hint');
+  var dataset = datasetEl ? datasetEl.value : '';
+  var selectedOption = promptEl ? promptEl.options[promptEl.selectedIndex] : null;
+  var hasVars = selectedOption && selectedOption.dataset.hasVariables === '1';
+  if (datasetHint) datasetHint.style.display = (hasVars && !dataset) ? '' : 'none';
+
   var valid = prompt !== '';
   if (judge && metrics.length === 0) valid = false;
   if (!judge && metrics.length > 0) valid = false;
@@ -121,8 +129,10 @@ function ckQuickAddCriteria(metricIds) {
 
 var judgeEl = document.getElementById('run_judge_model');
 var promptEl = document.getElementById('run_prompt_id');
+var datasetEl = document.getElementById('run_dataset_id');
 if (judgeEl) judgeEl.addEventListener('change', updateRunForm);
 if (promptEl) promptEl.addEventListener('change', updateRunForm);
+if (datasetEl) datasetEl.addEventListener('change', updateRunForm);
 document.querySelectorAll('input[name="run[metric_ids][]"]').forEach(function(cb) {
   cb.addEventListener('change', updateRunForm);
 });
