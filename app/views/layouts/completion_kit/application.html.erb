@@ -47,11 +47,18 @@ document.addEventListener("turbo:load", function() {
   });
 });
 
+var ckRefreshing = false;
 function ckRefreshModels() {
+  if (ckRefreshing) return;
+  ckRefreshing = true;
+  var btn = document.querySelector('.ck-icon-btn[title="Refresh models"]');
+  if (btn) btn.classList.add('ck-icon-btn--spinning');
   var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
   fetch("/completion_kit/refresh_models", {
     method: "POST",
     headers: { "X-CSRF-Token": csrfToken }
+  }).finally(function() {
+    setTimeout(function() { ckRefreshing = false; if (btn) btn.classList.remove('ck-icon-btn--spinning'); }, 3000);
   });
 }
 </script>

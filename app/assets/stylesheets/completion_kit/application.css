@@ -1039,6 +1039,19 @@ tr:hover .ck-chip--publish {
   color: var(--ck-danger);
 }
 
+.ck-icon-btn--spinning svg {
+  animation: ck-spin 0.8s linear infinite;
+}
+
+.ck-icon-btn--spinning {
+  pointer-events: none;
+  color: var(--ck-accent);
+}
+
+@keyframes ck-spin {
+  to { transform: rotate(360deg); }
+}
+
 .ck-add-btn {
   display: inline-flex;
   align-items: center;
