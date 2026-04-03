@@ -2,7 +2,7 @@ module CompletionKit
   class PromptImprovementService
     def initialize(run)
       @run = run
-      @prompt = run.prompt
+      @prompt = run.prompt.family_versions.find_by(current: true) || run.prompt
     end
 
     def suggest

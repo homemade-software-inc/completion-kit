@@ -1,3 +1,5 @@
+<% current_prompt = @run.prompt.family_versions.find_by(current: true) || @run.prompt %>
+
 <ol class="ck-breadcrumb">
   <li><%= link_to "Runs", runs_path %></li>
   <li><%= link_to @run.name, run_path(@run) %></li>
@@ -7,12 +9,12 @@
 <section class="ck-page-header">
   <div>
     <p class="ck-kicker"><span class="ck-dot ck-dot--running" style="animation: none; background: var(--ck-accent);"></span> Prompt improvement</p>
-    <h1 class="ck-title"><%= @run.prompt.name %></h1>
+    <h1 class="ck-title"><%= current_prompt.name %></h1>
     <p class="ck-meta-copy">Based on <%= @run.responses.count %> responses scored <%= @run.avg_score %>/5</p>
   </div>
   <div class="ck-actions">
     <%= link_to "Back to run", run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
-    <%= button_to "Apply suggestion", prompt_path(@run.prompt), method: :patch, params: { prompt: { template: @suggestion["suggested_template"] } }, class: ck_button_classes(:dark), form_class: "inline-block" %>
+    <%= button_to "Apply suggestion", prompt_path(current_prompt), method: :patch, params: { prompt: { template: @suggestion["suggested_template"] } }, class: ck_button_classes(:dark), form_class: "inline-block" %>
   </div>
 </section>
 
@@ -25,7 +27,7 @@
   <div class="ck-suggest-diff__pane">
     <div class="ck-suggest-diff__header">
       <span class="ck-suggest-diff__label ck-suggest-diff__label--before">Current prompt</span>
-      <span class="ck-suggest-diff__version"><%= @run.prompt.version_label %></span>
+      <span class="ck-suggest-diff__version"><%= current_prompt.version_label %></span>
     </div>
     <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(@suggestion["original_template"], @suggestion["suggested_template"]) %></pre>
   </div>
