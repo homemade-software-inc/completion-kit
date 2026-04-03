@@ -69,7 +69,7 @@ document.addEventListener("turbo:before-stream-render", function(event) {
     var btn = document.querySelector('.ck-icon-btn[title="Refresh models"]');
     if (btn) btn.classList.remove('ck-icon-btn--spinning');
     var status = document.getElementById('refresh-status');
-    if (status) { status.textContent = 'Models updated.'; setTimeout(function() { status.textContent = ''; }, 3000); }
+    if (status) { status.textContent = 'Models updated.'; setTimeout(function() { status.textContent = '\u00a0'; }, 3000); }
   }
 });
 </script>

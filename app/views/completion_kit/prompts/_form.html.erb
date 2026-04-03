@@ -41,7 +41,7 @@
       <% CompletionKit::ProviderCredential.find_each do |pc| %>
         <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
       <% end %>
-      <p class="ck-field-hint" id="refresh-status"></p>
+      <p class="ck-field-hint" id="refresh-status" style="min-height: 1.4em;">&nbsp;</p>
     </div>
 
     <div class="ck-actions">
