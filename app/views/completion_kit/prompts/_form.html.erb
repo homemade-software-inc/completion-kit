@@ -40,7 +40,7 @@
       <% end %>
       <% CompletionKit::ProviderCredential.find_each do |pc| %>
         <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
-        <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: pc %>
+        <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: pc, show_completed: false %>
       <% end %>
     </div>
 

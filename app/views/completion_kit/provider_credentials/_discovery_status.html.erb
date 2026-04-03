@@ -21,7 +21,7 @@
     <div class="ck-discovery-bar ck-discovery-bar--failed">
       <div class="ck-discovery-bar__label">Model discovery failed</div>
     </div>
-  <% elsif provider_credential.discovery_status == "completed" %>
+  <% elsif provider_credential.discovery_status == "completed" && local_assigns.fetch(:show_completed, true) %>
     <div class="ck-discovery-bar ck-discovery-bar--completed">
       <div class="ck-discovery-bar__label">Available models list updated <%= time_ago_in_words(provider_credential.updated_at) %> ago</div>
     </div>
