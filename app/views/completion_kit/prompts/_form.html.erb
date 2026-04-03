@@ -40,8 +40,6 @@
       <% end %>
       <% CompletionKit::ProviderCredential.find_each do |pc| %>
         <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
-      <% end %>
-      <% CompletionKit::ProviderCredential.where(discovery_status: "discovering").find_each do |pc| %>
         <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: pc %>
       <% end %>
     </div>
