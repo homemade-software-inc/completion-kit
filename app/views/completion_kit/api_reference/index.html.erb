@@ -26,18 +26,36 @@ end %>
           <p class="ck-meta-copy">No API token configured. Set <code>COMPLETION_KIT_API_TOKEN</code> to enable API access.</p>
         <% end %>
       </div>
-      <div>
-        <p class="ck-kicker">Published Prompts</p>
-        <p style="font-family: var(--ck-mono); font-size: 0.85rem; margin: 0.5rem 0;">
-          <span class="ck-chip"><%= @published_prompts.count %></span>
-        </p>
-      </div>
     </div>
   </div>
 </div>
 
+<% if @published_prompts.any? %>
+  <div class="ck-api-prompts-section">
+    <p class="ck-kicker">Your prompts</p>
+    <% @published_prompts.each do |p| %>
+      <div class="ck-api-prompt-card">
+        <div class="ck-api-prompt-card__top">
+          <div>
+            <strong class="ck-api-prompt-card__name"><%= p.name %></strong>
+            <% if p.description.present? %>
+              <p class="ck-api-prompt-card__desc"><%= p.description %></p>
+            <% end %>
+          </div>
+          <span class="ck-chip" style="text-transform: none; flex-shrink: 0;"><%= p.llm_model %></span>
+        </div>
+        <div class="ck-api-prompt-card__url">
+          <code class="ck-endpoint__url" id="prompt_ep_<%= p.id %>"><%= @base_url %>/api/v1/prompts/<%= p.slug %></code>
+          <button type="button" class="ck-icon-btn" title="Copy endpoint" onclick="navigator.clipboard.writeText(document.getElementById('prompt_ep_<%= p.id %>').textContent)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg></button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
 <div class="ck-api-tabs">
-  <input type="radio" name="ck-api-tab" id="ck-tab-prompts" class="ck-api-tabs__radio" checked>
+  <input type="radio" name="ck-api-tab" id="ck-tab-mcp" class="ck-api-tabs__radio" checked>
+  <input type="radio" name="ck-api-tab" id="ck-tab-prompts" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-runs" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-responses" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-datasets" class="ck-api-tabs__radio">
@@ -46,7 +64,8 @@ end %>
   <input type="radio" name="ck-api-tab" id="ck-tab-providers" class="ck-api-tabs__radio">
 
   <nav class="ck-api-tabs__nav">
-    <label for="ck-tab-prompts" class="ck-api-tabs__label">Prompts <span class="ck-api-tabs__count">7</span></label>
+    <label for="ck-tab-mcp" class="ck-api-tabs__label">MCP <span class="ck-api-tabs__count">35</span></label>
+    <label for="ck-tab-prompts" class="ck-api-tabs__label">Prompts <span class="ck-api-tabs__count">6</span></label>
     <label for="ck-tab-runs" class="ck-api-tabs__label">Runs <span class="ck-api-tabs__count">7</span></label>
     <label for="ck-tab-responses" class="ck-api-tabs__label">Responses <span class="ck-api-tabs__count">2</span></label>
     <label for="ck-tab-datasets" class="ck-api-tabs__label">Datasets <span class="ck-api-tabs__count">5</span></label>
@@ -56,6 +75,62 @@ end %>
   </nav>
 
   <div class="ck-api-tabs__panels">
+
+    <div class="ck-api-tabs__panel">
+      <h2 class="ck-section-title">MCP Server</h2>
+      <p class="ck-copy">Connect Claude Code, Cursor, or any <a href="https://modelcontextprotocol.io" class="ck-link">MCP</a> client to manage prompts, runs, datasets, and metrics conversationally. 35 tools over streamable HTTP.</p>
+
+      <div class="ck-mcp-install-grid">
+        <div class="ck-mcp-install-card">
+          <div class="ck-mcp-install-card__header">
+            <span class="ck-mcp-install-card__icon">&#9654;</span>
+            Claude Code
+          </div>
+          <div class="ck-api-example">
+            <pre class="ck-code ck-code--dark">claude mcp add completion-kit \
+  --transport http \
+  --url <%= @base_url %>/mcp \
+  --header "Authorization: Bearer <%= token_display %>"</pre>
+          </div>
+        </div>
+        <div class="ck-mcp-install-card">
+          <div class="ck-mcp-install-card__header">
+            <span class="ck-mcp-install-card__icon">{}</span>
+            Cursor / Generic
+          </div>
+          <div class="ck-api-example">
+            <pre class="ck-code ck-code--dark">{
+  "mcpServers": {
+    "completion-kit": {
+      "url": "<%= @base_url %>/mcp",
+      "headers": {
+        "Authorization": "Bearer <%= token_display %>"
+      }
+    }
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="ck-api-endpoint" style="padding-top: 1.5rem;">
+        <p class="ck-kicker" style="margin-bottom: 0.75rem;">Available tools</p>
+        <% grouped = CompletionKit::McpDispatcher.tool_definitions.group_by { |t| t[:name].split("_").first } %>
+        <% grouped.each do |group, tools| %>
+          <div class="ck-mcp-tool-group">
+            <p class="ck-mcp-tool-group__label"><%= group %> <span class="ck-api-tabs__count"><%= tools.size %></span></p>
+            <div class="ck-mcp-tools">
+              <% tools.each do |tool| %>
+                <div class="ck-mcp-tool">
+                  <code class="ck-mcp-tool__name"><%= tool[:name] %></code>
+                  <span class="ck-mcp-tool__desc"><%= tool[:description] %></span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
 
     <div class="ck-api-tabs__panel">
       <h2 class="ck-section-title">Prompts</h2>
@@ -86,10 +161,6 @@ end %>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/prompts/:id/publish</p>
         <p class="ck-meta-copy">Publish a prompt version, making it the current version in its family.</p>
-      </div>
-      <div class="ck-api-endpoint">
-        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/prompts/:id/new_version</p>
-        <p class="ck-meta-copy">Clone a prompt as a new version in the same family. Returns the new version.</p>
       </div>
     </div>
 

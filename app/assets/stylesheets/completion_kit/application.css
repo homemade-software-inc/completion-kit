@@ -1592,14 +1592,10 @@ select.ck-input {
   border: 1px solid var(--ck-line);
   border-radius: 4px;
   background: var(--ck-surface);
-  color: var(--ck-muted);
+  color: var(--ck-dim);
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.ck-api-example:hover .ck-api-copy {
   opacity: 1;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
 .ck-api-copy:hover {
@@ -1683,6 +1679,7 @@ select.ck-input {
   display: none;
 }
 
+#ck-tab-mcp:checked ~ .ck-api-tabs__nav label[for="ck-tab-mcp"],
 #ck-tab-prompts:checked ~ .ck-api-tabs__nav label[for="ck-tab-prompts"],
 #ck-tab-runs:checked ~ .ck-api-tabs__nav label[for="ck-tab-runs"],
 #ck-tab-responses:checked ~ .ck-api-tabs__nav label[for="ck-tab-responses"],
@@ -1695,13 +1692,14 @@ select.ck-input {
   border-left-color: var(--ck-accent);
 }
 
-#ck-tab-prompts:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(1),
-#ck-tab-runs:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(2),
-#ck-tab-responses:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(3),
-#ck-tab-datasets:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(4),
-#ck-tab-metrics:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(5),
-#ck-tab-criteria:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(6),
-#ck-tab-providers:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(7) {
+#ck-tab-mcp:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(1),
+#ck-tab-prompts:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(2),
+#ck-tab-runs:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(3),
+#ck-tab-responses:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(4),
+#ck-tab-datasets:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(5),
+#ck-tab-metrics:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(6),
+#ck-tab-criteria:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(7),
+#ck-tab-providers:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(8) {
   display: block;
 }
 
@@ -1727,6 +1725,7 @@ select.ck-input {
     font-size: 0.75rem;
   }
 
+  #ck-tab-mcp:checked ~ .ck-api-tabs__nav label[for="ck-tab-mcp"],
   #ck-tab-prompts:checked ~ .ck-api-tabs__nav label[for="ck-tab-prompts"],
   #ck-tab-runs:checked ~ .ck-api-tabs__nav label[for="ck-tab-runs"],
   #ck-tab-responses:checked ~ .ck-api-tabs__nav label[for="ck-tab-responses"],
@@ -1966,5 +1965,152 @@ select.ck-input {
 
 .ck-suggest-full {
   margin: 1.5rem 0;
+}
+
+.ck-mcp-tools {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+  background: var(--ck-line);
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
+  overflow: hidden;
+}
+
+.ck-mcp-tool {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--ck-surface);
+}
+
+.ck-mcp-tool__name {
+  font-family: var(--ck-mono);
+  font-size: 0.75rem;
+  color: var(--ck-accent);
+  white-space: nowrap;
+  min-width: 14rem;
+}
+
+.ck-mcp-tool__desc {
+  font-size: 0.8rem;
+  color: var(--ck-muted);
+}
+
+.ck-mcp-install-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.ck-mcp-install-card {
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
+  overflow: hidden;
+  background: var(--ck-bg-strong);
+}
+
+.ck-mcp-install-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  font-family: var(--ck-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ck-text);
+  border-bottom: 1px solid var(--ck-line);
+  background: var(--ck-surface);
+}
+
+.ck-mcp-install-card__icon {
+  color: var(--ck-accent);
+  font-size: 0.65rem;
+}
+
+.ck-mcp-install-card .ck-api-example {
+  margin: 0;
+}
+
+.ck-mcp-install-card .ck-code {
+  border-radius: 0;
+  border: none;
+  font-size: 0.72rem;
+  padding: 1rem 1rem 1.1rem;
+  line-height: 1.7;
+}
+
+.ck-mcp-tool-group {
+  margin-bottom: 1.25rem;
+}
+
+.ck-mcp-tool-group:last-child {
+  margin-bottom: 0;
+}
+
+.ck-mcp-tool-group__label {
+  font-family: var(--ck-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ck-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ck-api-prompts-section {
+  margin-top: 1.5rem;
+}
+
+.ck-api-prompts-section .ck-kicker {
+  margin-bottom: 0.75rem;
+}
+
+.ck-api-prompt-card {
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
+  background: var(--ck-surface);
+  margin-bottom: 0.65rem;
+  overflow: hidden;
+}
+
+.ck-api-prompt-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem 0.6rem;
+}
+
+.ck-api-prompt-card__name {
+  font-size: 0.9rem;
+  color: var(--ck-text);
+}
+
+.ck-api-prompt-card__desc {
+  font-size: 0.78rem;
+  color: var(--ck-muted);
+  margin: 0.2rem 0 0;
+  line-height: 1.4;
+}
+
+.ck-api-prompt-card__url {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: var(--ck-bg-strong);
+  border-top: 1px solid var(--ck-line);
+}
+
+.ck-api-prompt-card__url .ck-endpoint__url {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
