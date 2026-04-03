@@ -57,10 +57,20 @@ function ckRefreshModels() {
   fetch("/completion_kit/refresh_models", {
     method: "POST",
     headers: { "X-CSRF-Token": csrfToken }
-  }).finally(function() {
-    setTimeout(function() { ckRefreshing = false; if (btn) btn.classList.remove('ck-icon-btn--spinning'); }, 3000);
   });
 }
+
+document.addEventListener("turbo:before-stream-render", function(event) {
+  var target = event.target.getAttribute("target");
+  if (target && target.startsWith("discovery_status_")) {
+    var html = event.target.querySelector("template").innerHTML;
+    if (html.includes("ck-discovery-bar--completed") || html.includes("ck-discovery-bar--failed") || !html.includes("ck-discovery-bar")) {
+      ckRefreshing = false;
+      var btn = document.querySelector('.ck-icon-btn[title="Refresh models"]');
+      if (btn) btn.classList.remove('ck-icon-btn--spinning');
+    }
+  }
+});
 </script>
 </body>
 </html>
