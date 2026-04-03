@@ -24,9 +24,10 @@
         <tr onclick="window.location='<%= prompt_path(prompt) %>'" style="cursor: pointer;">
           <td><strong><%= prompt.name %></strong> <span class="ck-chip ck-chip--soft"><%= prompt.version_label %></span></td>
           <td><span class="ck-chip"><%= prompt.llm_model %></span></td>
-          <td><%= prompt.runs.size %></td>
+          <% family_runs = CompletionKit::Run.where(prompt_id: prompt.family_versions.select(:id)) %>
+          <td><%= family_runs.count %></td>
           <td>
-            <% last_run = prompt.runs.max_by(&:created_at) %>
+            <% last_run = family_runs.order(created_at: :desc).first %>
             <% if last_run %>
               <%= time_ago_in_words(last_run.created_at) %> ago
             <% else %>
