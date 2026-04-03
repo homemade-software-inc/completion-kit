@@ -86,30 +86,14 @@ end %>
             <span class="ck-mcp-install-card__icon">&#9654;</span>
             Claude Code
           </div>
-          <div class="ck-api-example">
-            <pre class="ck-code ck-code--dark">claude mcp add completion-kit \
-  --transport http \
-  --url <%= @base_url %>/mcp \
-  --header "Authorization: Bearer <%= token_display %>"</pre>
-          </div>
+          <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "claude mcp add completion-kit \\\n  --transport http \\\n  --url #{@base_url}/mcp \\\n  --header \"Authorization: Bearer #{token_display}\"" %>
         </div>
         <div class="ck-mcp-install-card">
           <div class="ck-mcp-install-card__header">
             <span class="ck-mcp-install-card__icon">{}</span>
             Cursor / Generic
           </div>
-          <div class="ck-api-example">
-            <pre class="ck-code ck-code--dark">{
-  "mcpServers": {
-    "completion-kit": {
-      "url": "<%= @base_url %>/mcp",
-      "headers": {
-        "Authorization": "Bearer <%= token_display %>"
-      }
-    }
-  }
-}</pre>
-          </div>
+          <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "{\n  \"mcpServers\": {\n    \"completion-kit\": {\n      \"url\": \"#{@base_url}/mcp\",\n      \"headers\": {\n        \"Authorization\": \"Bearer #{token_display}\"\n      }\n    }\n  }\n}" %>
         </div>
       </div>
 
