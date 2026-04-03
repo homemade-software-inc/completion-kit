@@ -28,7 +28,7 @@
 <section>
   <div class="ck-prompt-preview__header">
     <p class="ck-kicker">Prompt</p>
-    <% judged_run = @runs.find { |r| r.status == "completed" && r.responses.joins(:reviews).exists? } %>
+    <% judged_run = @runs.select { |r| r.prompt_id == @prompt.id && r.status == "completed" }.find { |r| r.responses.joins(:reviews).exists? } %>
     <% if judged_run %>
       <%= button_to "Suggest improvements", suggest_run_path(judged_run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" %>
     <% end %>
