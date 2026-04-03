@@ -32,7 +32,7 @@
     <% if judged_run %>
       <%= button_to "Suggest improvements", suggest_run_path(judged_run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" %>
     <% else %>
-      <p class="ck-hint"><%= link_to "Run a test with judging", new_run_path(prompt_id: @prompt.id), class: "ck-link" %> to get AI-suggested improvements.</p>
+      <p class="ck-hint"><%= link_to "Run a test with judging configured", new_run_path(prompt_id: @prompt.id), class: "ck-link" %> to get AI-suggested improvements.</p>
     <% end %>
   </div>
   <pre class="ck-code ck-code--dark"><%= @prompt.template %></pre>
