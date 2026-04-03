@@ -22,7 +22,7 @@
     <tbody>
       <% @prompts.each do |prompt| %>
         <tr onclick="window.location='<%= prompt_path(prompt) %>'" style="cursor: pointer;">
-          <td><strong><%= prompt.name %></strong></td>
+          <td><strong><%= prompt.name %></strong> <span class="ck-chip ck-chip--soft"><%= prompt.version_label %></span></td>
           <td><span class="ck-chip"><%= prompt.llm_model %></span></td>
           <td><%= prompt.runs.size %></td>
           <td>
