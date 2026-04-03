@@ -20,7 +20,10 @@ end %>
         <p class="ck-kicker">Authentication</p>
         <% if @token.present? %>
           <p style="font-family: var(--ck-mono); font-size: 0.85rem; margin: 0.5rem 0;">
-            <span class="ck-chip ck-token-toggle" onclick="ckToggleToken(this)" data-masked="<%= token_display %>" data-real="<%= @token %>" style="cursor: pointer;" title="Set via COMPLETION_KIT_API_TOKEN. Click to reveal and copy."><%= token_display %></span>
+            <span class="ck-chip ck-token-toggle" onclick="ckToggleToken(this)" data-masked="<%= token_display %>" data-real="<%= @token %>" style="cursor: pointer;" title="Click to reveal"><%= token_display %></span>
+            <button type="button" class="ck-icon-btn" title="Copy token" onclick="var b=this;navigator.clipboard.writeText('<%= @token %>').then(function(){b.classList.add('ck-api-copy--done');setTimeout(function(){b.classList.remove('ck-api-copy--done')},1500)})">
+              <%= heroicon_tag "clipboard-document", variant: :outline, size: 14 %>
+            </button>
           </p>
         <% else %>
           <p class="ck-meta-copy">No API token configured. Set <code>COMPLETION_KIT_API_TOKEN</code> to enable API access.</p>
