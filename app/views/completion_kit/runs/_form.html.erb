@@ -42,8 +42,8 @@
         <p class="ck-field-hint" id="judge-hint"></p>
         <% CompletionKit::ProviderCredential.find_each do |pc| %>
           <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
-          <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: pc, show_completed: false %>
         <% end %>
+        <p class="ck-field-hint" id="refresh-status"></p>
       <% else %>
         <p class="ck-field-hint" style="color: var(--ck-warning);">No judge models available.&ensp;<%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %></p>
         <%= form.hidden_field :judge_model, value: nil, id: "run_judge_model" %>

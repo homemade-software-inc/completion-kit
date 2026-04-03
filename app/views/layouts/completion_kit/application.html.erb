@@ -53,6 +53,8 @@ function ckRefreshModels() {
   ckRefreshing = true;
   var btn = document.querySelector('.ck-icon-btn[title="Refresh models"]');
   if (btn) btn.classList.add('ck-icon-btn--spinning');
+  var status = document.getElementById('refresh-status');
+  if (status) status.textContent = 'Refreshing models\u2026';
   var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
   fetch("/completion_kit/refresh_models", {
     method: "POST",
@@ -62,13 +64,12 @@ function ckRefreshModels() {
 
 document.addEventListener("turbo:before-stream-render", function(event) {
   var target = event.target.getAttribute("target");
-  if (target && target.startsWith("discovery_status_")) {
-    var html = event.target.querySelector("template").innerHTML;
-    if (html.includes("ck-discovery-bar--completed") || html.includes("ck-discovery-bar--failed") || !html.includes("ck-discovery-bar")) {
-      ckRefreshing = false;
-      var btn = document.querySelector('.ck-icon-btn[title="Refresh models"]');
-      if (btn) btn.classList.remove('ck-icon-btn--spinning');
-    }
+  if (target === "prompt_llm_model" || target === "run_judge_model") {
+    ckRefreshing = false;
+    var btn = document.querySelector('.ck-icon-btn[title="Refresh models"]');
+    if (btn) btn.classList.remove('ck-icon-btn--spinning');
+    var status = document.getElementById('refresh-status');
+    if (status) { status.textContent = 'Models updated.'; setTimeout(function() { status.textContent = ''; }, 3000); }
   }
 });
 </script>
