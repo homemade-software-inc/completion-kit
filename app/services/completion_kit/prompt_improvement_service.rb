@@ -72,9 +72,9 @@ module CompletionKit
       prompt_match = text.match(/IMPROVED_PROMPT:\s*\n(.*)/m)
 
       {
-        reasoning: reasoning_match ? reasoning_match[1].strip : "No reasoning provided.",
-        suggested_template: prompt_match ? prompt_match[1].strip : text.strip,
-        original_template: @prompt.template
+        "reasoning" => reasoning_match ? reasoning_match[1].strip : "No reasoning provided.",
+        "suggested_template" => prompt_match ? prompt_match[1].strip : text.strip,
+        "original_template" => @prompt.template
       }
     end
   end

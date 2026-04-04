@@ -27,9 +27,9 @@ RSpec.describe CompletionKit::PromptImprovementService do
 
       result = described_class.new(run).suggest
 
-      expect(result[:reasoning]).to include("prompt lacks specificity")
-      expect(result[:suggested_template]).to include("{{text}}")
-      expect(result[:original_template]).to eq("Summarize {{text}}")
+      expect(result["reasoning"]).to include("prompt lacks specificity")
+      expect(result["suggested_template"]).to include("{{text}}")
+      expect(result["original_template"]).to eq("Summarize {{text}}")
     end
 
     it "handles LLM response missing REASONING/IMPROVED_PROMPT sections" do
@@ -39,8 +39,8 @@ RSpec.describe CompletionKit::PromptImprovementService do
 
       result = described_class.new(run).suggest
 
-      expect(result[:reasoning]).to eq("No reasoning provided.")
-      expect(result[:suggested_template]).to eq("Just a plain text response with no sections")
+      expect(result["reasoning"]).to eq("No reasoning provided.")
+      expect(result["suggested_template"]).to eq("Just a plain text response with no sections")
     end
 
     it "includes metric averages and overall score in the meta-prompt" do
