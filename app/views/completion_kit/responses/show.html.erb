@@ -16,12 +16,8 @@
     </div>
     <p class="ck-meta-copy">
       <%= link_to @run.prompt.display_name, prompt_path(@run.prompt), class: "ck-link" %>
-      &ensp;<span class="ck-chip ck-chip--soft" style="text-transform: none;"><%= @run.prompt.llm_model %></span>
       <% if @run.dataset %>
         &ensp;&middot;&ensp;<%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
-      <% end %>
-      <% if @run.judge_model.present? %>
-        &ensp;&middot;&ensp;Judged by <span style="text-transform: none;"><%= @run.judge_model %></span>
       <% end %>
     </p>
   </div>
@@ -41,7 +37,10 @@
 </section>
 
 <section class="ck-card--spaced">
-  <p class="ck-kicker">Response</p>
+  <div class="ck-prompt-preview__header">
+    <p class="ck-kicker">Response</p>
+    <span class="ck-chip ck-chip--soft" style="text-transform: none;"><%= @run.prompt.llm_model %></span>
+  </div>
   <pre class="ck-code"><%= @response.response_text %></pre>
 </section>
 
@@ -54,7 +53,12 @@
 
 <% if @reviews.any? %>
   <section class="ck-card--spaced">
-    <p class="ck-kicker">Review</p>
+    <div class="ck-prompt-preview__header">
+      <p class="ck-kicker">Review</p>
+      <% if @run.judge_model.present? %>
+        <span class="ck-chip ck-chip--soft" style="text-transform: none;"><%= @run.judge_model %></span>
+      <% end %>
+    </div>
 
     <div class="ck-review-list">
       <% @reviews.each do |review| %>
