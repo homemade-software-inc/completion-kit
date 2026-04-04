@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_04_013536) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_04_015118) do
   create_table "completion_kit_criteria", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -142,6 +142,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_04_013536) do
   end
 
   create_table "completion_kit_suggestions", force: :cascade do |t|
+    t.datetime "applied_at"
     t.datetime "created_at", null: false
     t.text "original_template"
     t.integer "prompt_id", null: false
