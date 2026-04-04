@@ -50,7 +50,7 @@
       <% @reviews.each do |review| %>
         <div class="ck-review-card">
           <div class="ck-review-card__header">
-            <span class="ck-review-card__metric"><%= review.metric_name %></span>
+            <span class="ck-review-card__metric"><% if review.metric %><%= link_to review.metric_name, metric_path(review.metric), class: "ck-link" %><% else %><%= review.metric_name %><% end %></span>
             <div class="ck-inline">
               <% if review.ai_score %>
                 <% 5.times do |i| %>

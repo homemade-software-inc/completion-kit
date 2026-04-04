@@ -23,7 +23,7 @@
         <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
           <td><strong><%= metric.name %></strong></td>
           <td class="ck-meta-copy"><%= truncate(metric.instruction.to_s, length: 80).presence || "None" %></td>
-          <td class="ck-meta-copy"><%= metric.criterias.map(&:name).join(", ").presence || "None" %></td>
+          <td class="ck-meta-copy"><%= metric.criterias.any? ? metric.criterias.map { |c| link_to(c.name, criteria_path(c), class: "ck-link") }.join(", ").html_safe : "None" %></td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
       <% end %>
