@@ -15,9 +15,9 @@
       <% end %>
     </div>
     <p class="ck-meta-copy">
-      <%= link_to @run.prompt.display_name, prompt_path(@run.prompt), class: "ck-link" %>
+      <span class="ck-run-config__key">Prompt</span> <%= link_to @run.prompt.display_name, prompt_path(@run.prompt), class: "ck-link" %>
       <% if @run.dataset %>
-        &ensp;&middot;&ensp;<%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
+        &ensp;&middot;&ensp;<span class="ck-run-config__key">Dataset</span> <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
       <% end %>
     </p>
   </div>
