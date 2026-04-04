@@ -8,12 +8,13 @@ module CompletionKit
       @judge_client = LlmClient.for_model(@judge_model, ApiConfig.for_model(@judge_model))
     end
 
-    def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, evaluation_steps: nil, rubric_text: nil, human_examples: nil, **_extras)
+    def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, evaluation_steps: nil, rubric_text: nil, human_examples: nil, input_data: nil, **_extras)
       return { score: 1, feedback: "Judge not configured" } unless @judge_client.configured?
 
       judge_prompt = build_judge_prompt(output, expected_output, prompt,
         criteria: criteria, evaluation_steps: evaluation_steps,
-        rubric_text: rubric_text, human_examples: human_examples)
+        rubric_text: rubric_text, human_examples: human_examples,
+        input_data: input_data)
 
       response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
       raise StandardError, response if response.start_with?("Error:")
@@ -26,7 +27,7 @@ module CompletionKit
 
     private
 
-    def build_judge_prompt(output, expected_output, prompt, criteria: nil, evaluation_steps: nil, rubric_text: nil, human_examples: nil)
+    def build_judge_prompt(output, expected_output, prompt, criteria: nil, evaluation_steps: nil, rubric_text: nil, human_examples: nil, input_data: nil)
       judge_prompt = <<~PROMPT
         You are an expert evaluator. You MUST respond with ONLY two lines in this exact format, nothing else:
 
@@ -57,6 +58,7 @@ module CompletionKit
       judge_prompt += <<~PROMPT
 
         Original prompt: #{prompt || "Not provided"}
+        #{input_data.present? ? "Input data: #{input_data}" : ""}
         #{expected_output.present? ? "Expected output: #{expected_output}" : ""}
         AI output to evaluate: #{output}
       PROMPT
