@@ -35,6 +35,10 @@
       <span><%= @run.metrics.map { |m| link_to(m.name, metric_path(m), class: "ck-link") }.join(", ").html_safe %></span>
     </div>
   <% end %>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Temperature</span>
+    <span><%= @run.temperature %></span>
+  </div>
 </div>
 
 <div class="ck-prompt-preview">

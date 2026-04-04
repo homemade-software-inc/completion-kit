@@ -65,7 +65,7 @@ module CompletionKit
       rows.each_with_index do |row, index|
         input = row.empty? ? nil : row.to_json
         rendered = CsvProcessor.apply_variables(prompt, row)
-        response_text = client.generate_completion(rendered, model: prompt.llm_model)
+        response_text = client.generate_completion(rendered, model: prompt.llm_model, temperature: temperature)
 
         resp = responses.create!(
           input_data: input,
@@ -155,7 +155,7 @@ module CompletionKit
     def as_json(options = {})
       {
         id: id, name: name, status: status, prompt_id: prompt_id,
-        dataset_id: dataset_id, judge_model: judge_model,
+        dataset_id: dataset_id, judge_model: judge_model, temperature: temperature,
         created_at: created_at, updated_at: updated_at,
         responses_count: responses.count, avg_score: avg_score,
         progress_current: progress_current, progress_total: progress_total,

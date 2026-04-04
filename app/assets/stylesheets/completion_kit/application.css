@@ -1879,6 +1879,91 @@ select.ck-input {
   -webkit-line-clamp: unset;
 }
 
+.ck-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ck-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--ck-line-strong);
+  border-radius: 2px;
+  outline: none;
+}
+
+.ck-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ck-accent);
+  cursor: pointer;
+  border: 2px solid var(--ck-bg);
+}
+
+.ck-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ck-accent);
+  cursor: pointer;
+  border: 2px solid var(--ck-bg);
+}
+
+.ck-slider-value {
+  font-family: var(--ck-mono);
+  font-size: 0.85rem;
+  color: var(--ck-text);
+  min-width: 2rem;
+  text-align: right;
+}
+
+.ck-info-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--ck-line-strong);
+  color: var(--ck-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: help;
+  vertical-align: middle;
+  margin-left: 0.35rem;
+  position: relative;
+}
+
+.ck-info-toggle:hover + .ck-info-popup,
+.ck-info-popup:hover {
+  display: block;
+}
+
+.ck-info-popup {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--ck-surface);
+  border: 1px solid var(--ck-line-strong);
+  border-radius: var(--ck-radius);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ck-text);
+  width: 320px;
+  z-index: 10;
+  font-weight: 400;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .ck-suggest-reasoning {
   margin: 1.5rem 0;
   padding: 1.25rem 1.5rem;

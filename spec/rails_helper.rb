@@ -100,6 +100,7 @@ ActiveRecord::Schema.define do
     t.integer :progress_current, default: 0
     t.integer :progress_total, default: 0
     t.text :error_message
+    t.float :temperature, default: 1.0
     t.timestamps
   end
 

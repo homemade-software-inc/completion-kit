@@ -31,6 +31,20 @@
       <p class="ck-field-hint" id="dataset-hint" style="display: none; color: var(--ck-warning);">This prompt uses variables. Select a dataset to provide values.</p>
     </div>
 
+    <div class="ck-field">
+      <label class="ck-label" for="run_temperature" style="position: relative;">
+        Temperature
+        <span class="ck-info-toggle">?</span>
+        <div class="ck-info-popup">
+          Controls how random the model's output is. Lower values make the model more focused and deterministic — it'll pick the most likely words. Higher values introduce more variety and creativity, but also more risk of odd phrasing. Most LLMs default to 1.0. For evaluation, try different values to see how your prompt performs under varying conditions.
+        </div>
+      </label>
+      <div class="ck-slider-row">
+        <%= form.range_field :temperature, min: 0, max: 1, step: 0.1, class: "ck-slider", id: "run_temperature", oninput: "document.getElementById('temp-value').textContent = this.value" %>
+        <span class="ck-slider-value" id="temp-value"><%= run.temperature || 1.0 %></span>
+      </div>
+    </div>
+
     <div class="ck-field" id="judge-field">
       <%= form.label :judge_model, "Judge model", class: "ck-label" %>
       <% available = CompletionKit::ApiConfig.available_models(scope: :judging) %>
