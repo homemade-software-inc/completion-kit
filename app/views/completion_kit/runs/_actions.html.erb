@@ -5,6 +5,10 @@
     <%= link_to "Edit", edit_run_path(run), class: ck_button_classes(:light, variant: :outline) + " disabled", "aria-disabled": "true", tabindex: "-1" %>
   <% else %>
     <%= link_to "Edit", edit_run_path(run), class: ck_button_classes(:light, variant: :outline) %>
-    <%= button_to run.responses.any? ? "Rerun" : "Start", generate_run_path(run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+    <% if run.status == "pending" %>
+      <%= button_to "Start", generate_run_path(run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+    <% elsif run.status == "failed" %>
+      <%= button_to "Retry", generate_run_path(run), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
+    <% end %>
   <% end %>
 </div>
