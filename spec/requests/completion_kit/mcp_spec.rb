@@ -139,5 +139,31 @@ RSpec.describe "MCP endpoint", type: :request do
       expect(body["error"]["code"]).to eq(-32601)
       expect(body["id"]).to be_nil
     end
+
+    it "returns JSON-RPC error for RecordNotFound" do
+      post mcp_path, params: {jsonrpc: "2.0", id: 10, method: "tools/call", params: {
+        name: "prompts_get", arguments: {id: 999999}
+      }}.to_json, headers: session_headers
+      body = JSON.parse(response.body)
+      expect(body["error"]["code"]).to eq(-32602)
+    end
+
+    it "returns JSON-RPC error for RecordInvalid" do
+      post mcp_path, params: {jsonrpc: "2.0", id: 11, method: "tools/call", params: {
+        name: "prompts_create", arguments: {name: "", template: "", llm_model: ""}
+      }}.to_json, headers: session_headers
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "returns JSON-RPC error for unexpected StandardError" do
+      allow(CompletionKit::McpDispatcher).to receive(:dispatch)
+        .and_raise(StandardError, "something broke")
+      post mcp_path, params: {jsonrpc: "2.0", id: 12, method: "tools/call", params: {
+        name: "prompts_list", arguments: {}
+      }}.to_json, headers: session_headers
+      body = JSON.parse(response.body)
+      expect(body["error"]["code"]).to eq(-32603)
+      expect(body["error"]["message"]).to eq("something broke")
+    end
   end
 end

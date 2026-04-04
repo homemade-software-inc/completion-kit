@@ -96,6 +96,21 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(run.reload.metric_ids).to eq([metric.id])
   end
 
+  it "creates a new run when updating a run with responses" do
+    run = create(:completion_kit_run, prompt: prompt, name: "Original")
+    run.responses.create!(response_text: "Some output")
+
+    expect do
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Updated", prompt_id: prompt.id } }
+    end.to change(CompletionKit::Run, :count).by(1)
+
+    new_run = CompletionKit::Run.order(:id).last
+    expect(new_run.name).to eq("Updated")
+    expect(new_run.status).to eq("pending")
+    expect(response).to redirect_to("/completion_kit/runs/#{new_run.id}")
+    expect(run.reload.name).to eq("Original")
+  end
+
   it "renders edit when update is invalid" do
     run = create(:completion_kit_run, prompt: prompt)
 
