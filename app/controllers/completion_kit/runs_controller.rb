@@ -44,9 +44,13 @@ module CompletionKit
     end
 
     def update
-      if @run.update(run_params.except(:metric_ids))
+      if @run.responses.any?
+        new_run = Run.create!(run_params.except(:metric_ids).to_h.merge(status: "pending"))
+        replace_run_metrics(new_run, params[:run][:metric_ids]) if params[:run].key?(:metric_ids)
+        redirect_to run_path(new_run), notice: "Saved as a new run. The previous run and its results are preserved."
+      elsif @run.update(run_params.except(:metric_ids))
         replace_run_metrics(@run, params[:run][:metric_ids]) if params[:run].key?(:metric_ids)
-        redirect_to run_path(@run), notice: "Run was successfully updated."
+        redirect_to run_path(@run), notice: "Run saved."
       else
         load_form_collections
         render :edit, status: :unprocessable_entity
