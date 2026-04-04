@@ -1,6 +1,6 @@
 module CompletionKit
   class RunsController < ApplicationController
-    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :judge, :suggest, :suggestion]
+    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :judge, :suggest, :suggestion, :apply_suggestion]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
@@ -91,6 +91,21 @@ module CompletionKit
     def suggestion
       @suggestion = @run.suggestions.order(created_at: :desc).first
       return redirect_to run_path(@run), alert: "No suggestion available. Generate one first." unless @suggestion
+    end
+
+    def apply_suggestion
+      suggestion = @run.suggestions.order(created_at: :desc).first
+      return redirect_to run_path(@run), alert: "No suggestion to apply." unless suggestion
+
+      prompt = @run.prompt
+      if prompt.runs.exists?
+        new_prompt = prompt.clone_as_new_version(template: suggestion.suggested_template)
+        new_prompt.publish!
+      else
+        prompt.update!(template: suggestion.suggested_template)
+      end
+      suggestion.update!(applied_at: Time.current)
+      redirect_to prompt_path(new_prompt || prompt), notice: "Suggestion applied."
     end
 
     private

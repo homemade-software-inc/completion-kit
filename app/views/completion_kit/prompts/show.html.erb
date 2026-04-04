@@ -125,3 +125,32 @@
   </section>
 <% end %>
 
+<% suggestions = CompletionKit::Suggestion.where(prompt_id: @prompt.family_versions.select(:id)).order(created_at: :desc) %>
+<% if suggestions.any? %>
+  <section class="ck-card--spaced">
+    <p class="ck-kicker">Suggestions</p>
+    <table class="ck-results-table" style="margin-top: 0.5rem;">
+      <thead>
+        <tr>
+          <th>Run</th>
+          <th>Reasoning</th>
+          <th>Applied</th>
+          <th>When</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% suggestions.each do |s| %>
+          <tr onclick="window.location='<%= suggestion_run_path(s.run) %>'" style="cursor: pointer;">
+            <td><strong><%= s.run.name %></strong></td>
+            <td class="ck-meta-copy"><%= truncate(s.reasoning.to_s, length: 100) %></td>
+            <td><%= s.applied_at? ? content_tag(:span, "Applied", class: "ck-chip", style: "background: var(--ck-success-soft); color: var(--ck-success);") : "&mdash;".html_safe %></td>
+            <td class="ck-meta-copy"><%= time_ago_in_words(s.created_at) %> ago</td>
+            <td class="ck-results-table__arrow">&rarr;</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+<% end %>
+

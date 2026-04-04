@@ -6,6 +6,7 @@ class CreateCompletionKitSuggestions < ActiveRecord::Migration[7.1]
       t.text :reasoning
       t.text :suggested_template
       t.text :original_template
+      t.datetime :applied_at
       t.timestamps
     end
   end

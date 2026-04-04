@@ -17,6 +17,7 @@ CompletionKit::Engine.routes.draw do
       post :judge
       get :suggestion
       post :suggest
+      post :apply_suggestion
     end
     resources :responses, only: [:show]
   end

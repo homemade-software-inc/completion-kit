@@ -12,7 +12,11 @@
   </div>
   <div class="ck-actions">
     <%= link_to "Back to run", run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
-    <%= button_to "Apply suggestion", prompt_path(@run.prompt), method: :patch, params: { prompt: { template: @suggestion.suggested_template } }, class: ck_button_classes(:dark), form_class: "inline-block" %>
+    <% unless @suggestion.applied_at? %>
+      <%= button_to "Apply suggestion", apply_suggestion_run_path(@run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+    <% else %>
+      <span class="ck-chip" style="background: var(--ck-success-soft); color: var(--ck-success);">Applied</span>
+    <% end %>
   </div>
 </section>
 

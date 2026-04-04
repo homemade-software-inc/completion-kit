@@ -151,6 +151,7 @@ ActiveRecord::Schema.define do
     t.text :reasoning
     t.text :suggested_template
     t.text :original_template
+    t.datetime :applied_at
     t.timestamps
   end
 end
