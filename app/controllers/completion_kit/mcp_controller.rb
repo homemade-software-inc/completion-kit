@@ -30,6 +30,12 @@ module CompletionKit
       render json: jsonrpc_error(request_body.dig("id"), -32601, e.message), status: :ok
     rescue McpDispatcher::InvalidParams => e
       render json: jsonrpc_error(request_body.dig("id"), -32602, e.message), status: :ok
+    rescue ActiveRecord::RecordNotFound => e
+      render json: jsonrpc_error(request_body&.dig("id"), -32602, e.message), status: :ok
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::InvalidForeignKey => e
+      render json: jsonrpc_error(request_body&.dig("id"), -32602, e.message), status: :ok
+    rescue StandardError => e
+      render json: jsonrpc_error(request_body&.dig("id"), -32603, e.message), status: :ok
     end
 
     def destroy
