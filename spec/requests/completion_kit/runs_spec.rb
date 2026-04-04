@@ -161,33 +161,25 @@ RSpec.describe "CompletionKit runs", type: :request do
     service = instance_double(CompletionKit::PromptImprovementService)
     allow(CompletionKit::PromptImprovementService).to receive(:new).with(run).and_return(service)
     allow(service).to receive(:suggest).and_return({
-      reasoning: "Improve clarity",
-      suggested_template: "Better prompt",
-      original_template: prompt.template
+      "reasoning" => "Improve clarity",
+      "suggested_template" => "Better prompt",
+      "original_template" => prompt.template
     })
 
-    post "#{base_path}/#{run.id}/suggest"
+    expect { post "#{base_path}/#{run.id}/suggest" }.to change(CompletionKit::Suggestion, :count).by(1)
     expect(response).to redirect_to("#{base_path}/#{run.id}/suggestion")
   end
 
-  it "suggestion action renders suggestion when present in session" do
+  it "suggestion action renders suggestion when present" do
     run = create(:completion_kit_run, prompt: prompt)
-    service = instance_double(CompletionKit::PromptImprovementService)
-    allow(CompletionKit::PromptImprovementService).to receive(:new).with(run).and_return(service)
-    allow(service).to receive(:suggest).and_return({
-      reasoning: "Improve clarity",
-      suggested_template: "Better prompt",
-      original_template: prompt.template
-    })
+    CompletionKit::Suggestion.create!(run: run, prompt: prompt, reasoning: "Improve clarity", suggested_template: "Better prompt", original_template: prompt.template)
 
-    post "#{base_path}/#{run.id}/suggest"
     get "#{base_path}/#{run.id}/suggestion"
     expect(response).to have_http_status(:ok)
   end
 
-  it "suggestion action redirects when no suggestion in cache" do
+  it "suggestion action redirects when no suggestion exists" do
     run = create(:completion_kit_run, prompt: prompt)
-    Rails.cache.delete("suggestion_#{run.id}")
 
     get "#{base_path}/#{run.id}/suggestion"
     expect(response).to redirect_to("#{base_path}/#{run.id}")

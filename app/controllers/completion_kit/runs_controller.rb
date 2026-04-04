@@ -79,12 +79,17 @@ module CompletionKit
     def suggest
       service = PromptImprovementService.new(@run)
       result = service.suggest
-      Rails.cache.write("suggestion_#{@run.id}", result, expires_in: 1.hour)
+      @run.suggestions.create!(
+        prompt: @run.prompt,
+        reasoning: result["reasoning"],
+        suggested_template: result["suggested_template"],
+        original_template: result["original_template"]
+      )
       redirect_to suggestion_run_path(@run)
     end
 
     def suggestion
-      @suggestion = Rails.cache.read("suggestion_#{@run.id}")
+      @suggestion = @run.suggestions.order(created_at: :desc).first
       return redirect_to run_path(@run), alert: "No suggestion available. Generate one first." unless @suggestion
     end
 

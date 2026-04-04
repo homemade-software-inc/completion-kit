@@ -9,6 +9,7 @@ module CompletionKit
     has_many :responses, dependent: :destroy
     has_many :run_metrics, -> { order(:position) }, dependent: :destroy
     has_many :metrics, through: :run_metrics
+    has_many :suggestions, dependent: :destroy
 
     validates :name, presence: true
     validates :status, inclusion: { in: STATUSES }

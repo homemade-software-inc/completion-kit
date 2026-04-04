@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_04_010350) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_04_013536) do
   create_table "completion_kit_criteria", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -139,6 +139,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_04_010350) do
     t.datetime "updated_at", null: false
     t.index ["dataset_id"], name: "index_completion_kit_runs_on_dataset_id"
     t.index ["prompt_id"], name: "index_completion_kit_runs_on_prompt_id"
+  end
+
+  create_table "completion_kit_suggestions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "original_template"
+    t.integer "prompt_id", null: false
+    t.text "reasoning"
+    t.integer "run_id", null: false
+    t.text "suggested_template"
+    t.datetime "updated_at", null: false
+    t.index ["prompt_id"], name: "index_completion_kit_suggestions_on_prompt_id"
+    t.index ["run_id"], name: "index_completion_kit_suggestions_on_run_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|

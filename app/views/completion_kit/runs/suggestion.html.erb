@@ -12,13 +12,13 @@
   </div>
   <div class="ck-actions">
     <%= link_to "Back to run", run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
-    <%= button_to "Apply suggestion", prompt_path(@run.prompt), method: :patch, params: { prompt: { template: @suggestion["suggested_template"] } }, class: ck_button_classes(:dark), form_class: "inline-block" %>
+    <%= button_to "Apply suggestion", prompt_path(@run.prompt), method: :patch, params: { prompt: { template: @suggestion.suggested_template } }, class: ck_button_classes(:dark), form_class: "inline-block" %>
   </div>
 </section>
 
 <div class="ck-suggest-reasoning">
   <p class="ck-kicker">Why these changes</p>
-  <div class="ck-suggest-reasoning__body"><%= simple_format(@suggestion["reasoning"]) %></div>
+  <div class="ck-suggest-reasoning__body"><%= simple_format(@suggestion.reasoning) %></div>
 </div>
 
 <div class="ck-suggest-diff">
@@ -27,17 +27,17 @@
       <span class="ck-suggest-diff__label ck-suggest-diff__label--before">Current prompt</span>
       <span class="ck-suggest-diff__version"><%= @run.prompt.version_label %></span>
     </div>
-    <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(@suggestion["original_template"], @suggestion["suggested_template"]) %></pre>
+    <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(@suggestion.original_template, @suggestion.suggested_template) %></pre>
   </div>
   <div class="ck-suggest-diff__pane">
     <div class="ck-suggest-diff__header">
       <span class="ck-suggest-diff__label ck-suggest-diff__label--after">Suggested prompt</span>
     </div>
-    <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(@suggestion["original_template"], @suggestion["suggested_template"]) %></pre>
+    <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(@suggestion.original_template, @suggestion.suggested_template) %></pre>
   </div>
 </div>
 
 <div class="ck-suggest-full">
   <p class="ck-kicker">Full suggested prompt</p>
-  <pre class="ck-code ck-code--dark"><%= @suggestion["suggested_template"] %></pre>
+  <pre class="ck-code ck-code--dark"><%= @suggestion.suggested_template %></pre>
 </div>

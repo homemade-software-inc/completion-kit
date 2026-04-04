@@ -144,6 +144,15 @@ ActiveRecord::Schema.define do
     t.datetime :retired_at
     t.timestamps
   end
+
+  create_table :completion_kit_suggestions, force: true do |t|
+    t.references :run, null: false
+    t.references :prompt, null: false
+    t.text :reasoning
+    t.text :suggested_template
+    t.text :original_template
+    t.timestamps
+  end
 end
 
 FactoryBot.definition_file_paths = [File.expand_path("factories", __dir__)]
