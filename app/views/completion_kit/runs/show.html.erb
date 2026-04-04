@@ -44,9 +44,10 @@
 <div class="ck-prompt-preview">
   <div class="ck-prompt-preview__header">
     <p class="ck-kicker">Prompt</p>
-    <% if @run.suggestions.any? %>
-      <%= link_to "View suggestion", suggestion_run_path(@run), class: ck_button_classes(:light, variant: :outline) + " ck-button--sm" %>
-    <% elsif @run.status == "completed" && @run.responses.joins(:reviews).exists? %>
+    <% if @run.status == "completed" && @run.responses.joins(:reviews).exists? %>
+      <% if @run.suggestions.any? %>
+        <%= link_to "View suggestion", suggestion_run_path(@run), class: ck_button_classes(:light, variant: :outline) + " ck-button--sm" %>
+      <% end %>
       <%= button_to "Suggest improvements", suggest_run_path(@run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" %>
     <% end %>
   </div>
