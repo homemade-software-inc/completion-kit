@@ -44,7 +44,12 @@
 
 <% if @reviews.any? %>
   <section class="ck-card--spaced">
-    <p class="ck-kicker">Review</p>
+    <div class="ck-prompt-preview__header">
+      <p class="ck-kicker">Review</p>
+      <% if @run.judge_model.present? %>
+        <span class="ck-chip ck-chip--soft" style="text-transform: none;">Judged by <%= @run.judge_model %></span>
+      <% end %>
+    </div>
 
     <div class="ck-review-list">
       <% @reviews.each do |review| %>
