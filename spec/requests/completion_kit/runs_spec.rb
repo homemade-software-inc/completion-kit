@@ -185,8 +185,9 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to have_http_status(:ok)
   end
 
-  it "suggestion action redirects when no suggestion in session" do
+  it "suggestion action redirects when no suggestion in cache" do
     run = create(:completion_kit_run, prompt: prompt)
+    Rails.cache.delete("suggestion_#{run.id}")
 
     get "#{base_path}/#{run.id}/suggestion"
     expect(response).to redirect_to("#{base_path}/#{run.id}")
