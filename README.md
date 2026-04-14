@@ -159,23 +159,20 @@ Set environment variables:
 | `COMPLETION_KIT_PASSWORD` | Web UI login password | (none — open in dev) |
 | `DATABASE_URL` | PostgreSQL connection string (production) | SQLite in dev |
 
-### Deploying to Render
+### Deploying
 
-Set the **build command** to `bundle install` and the **pre-deploy command** to:
+Any Rails-friendly host works — Fly, Heroku, Render, self-managed Docker, etc. Point your host at a Postgres instance via `DATABASE_URL`, set the environment variables above, and run `cd standalone && bin/rails db:migrate` on each deploy.
 
-```
-cd standalone && bin/rails db:migrate
-```
-
-Do not run `completion_kit:install:migrations` on Render. Migration files are committed to the repo. When the engine adds new migrations, install them locally and commit:
+When the gem ships a new engine migration, install it into your standalone app locally and commit the generated file before pushing:
 
 ```bash
 cd standalone
 bin/rails completion_kit:install:migrations
 bin/rails db:migrate
+git add db/migrate/ && git commit -m "install new engine migration"
 ```
 
-Then push — Render's `db:migrate` picks up the new file on deploy.
+That way your host's `db:migrate` picks up the new file on the next deploy. Don't run `completion_kit:install:migrations` on the host itself — migration files are source artifacts, they belong in git.
 
 ## Development
 
