@@ -10,6 +10,8 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     steps:
       - name: Checkout
@@ -30,3 +32,11 @@ jobs:
         with:
           name: coverage
           path: coverage/
+
+      - name: Notify Slack on failure
+        if: failure() && github.event_name == 'push' && env.SLACK_WEBHOOK_URL != ''
+        run: |
+          payload=$(jq -n \
+            --arg text "CI failed on ${GITHUB_REPOSITORY} (${GITHUB_REF_NAME}) at ${GITHUB_SHA:0:7} by ${GITHUB_ACTOR}. Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            '{text: $text}')
+          curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
