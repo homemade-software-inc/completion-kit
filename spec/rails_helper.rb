@@ -28,6 +28,9 @@ class CompletionKitSpecApp < Rails::Application
   config.consider_all_requests_local = true
   config.action_dispatch.show_exceptions = :none
   config.paths["config/routes.rb"] = File.join(DUMMY_APP_ROOT, "config/routes.rb")
+  config.active_record.encryption.primary_key = "test-primary-key-must-be-32-char"
+  config.active_record.encryption.deterministic_key = "test-deterministic-key-32-chars!"
+  config.active_record.encryption.key_derivation_salt = "test-key-derivation-salt-32-char"
 end
 
 Rails.application ||= CompletionKitSpecApp.instance

@@ -39,6 +39,16 @@ LLAMA_API_ENDPOINT=...
 
 Available models are discovered dynamically from each provider's API.
 
+### Encryption keys
+
+Provider API keys are stored using [Rails Active Record encryption](https://guides.rubyonrails.org/active_record_encryption.html), so the host app must have encryption keys configured. If you haven't set them up already:
+
+```bash
+bin/rails db:encryption:init
+```
+
+Copy the generated keys into `config/credentials.yml.enc` under `active_record_encryption`, or set the equivalent environment variables. CompletionKit won't boot without valid keys in production.
+
 ## Authentication
 
 CompletionKit requires authentication in production. In development, routes are open by default (with a log warning).
@@ -70,111 +80,57 @@ Only one mode can be active — setting both raises a `ConfigurationError`.
 2. Create a test run and paste CSV data (headers match variable names)
 3. Generate outputs, run AI review, inspect scored results
 
-## REST API
+## Programmatic access
 
-CompletionKit provides a JSON API for programmatic access to all resources.
-
-### Configuration
+CompletionKit exposes every resource through both a REST JSON API and an MCP server. Both share the same bearer-token auth, so configure once and use either interface:
 
 ```ruby
-CompletionKit.configure do |config|
-  config.api_token = ENV['COMPLETION_KIT_API_TOKEN']
-end
+# config/initializers/completion_kit.rb
+CompletionKit.configure { |c| c.api_token = ENV["COMPLETION_KIT_API_TOKEN"] }
 ```
 
-### Authentication
+### Concepts
 
-All API requests require a bearer token:
+These are the objects you'll work with, whether through the UI, the REST API, or the MCP server:
 
-```bash
-curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:3000/completion_kit/api/v1/prompts
-```
+- **Prompt** — A named, versioned template with `{{variable}}` placeholders. Publishing a prompt freezes its template so runs always reference a known version; editing a published prompt creates a new version.
+- **Dataset** — A CSV of real inputs. Column headers match the prompt's `{{variable}}` names, and each row becomes one test case.
+- **Run** — A single execution of a prompt against a dataset. Tracks progress, stores outputs, and records which metrics were used for scoring.
+- **Response** — The model's output for one row of the dataset, with any reviews attached.
+- **Metric** — One evaluation dimension: a name, an instruction, evaluation steps, and 1–5-star rubric bands. The judge uses a metric to score a response.
+- **Criteria** — A named, reusable bundle of metrics you can apply to a run in one step.
+- **Provider Credential** — An API key for a model provider (OpenAI, Anthropic, Llama). Encrypted at rest using Rails' Active Record encryption, and never returned through the API.
 
-### Endpoints
-
-| Resource | Endpoints |
-|----------|-----------|
-| Prompts | `GET/POST /api/v1/prompts`, `GET/PATCH/DELETE /api/v1/prompts/:id`, `POST /api/v1/prompts/:id/publish`, `POST /api/v1/prompts/:id/new_version` |
-| Runs | `GET/POST /api/v1/runs`, `GET/PATCH/DELETE /api/v1/runs/:id`, `POST /api/v1/runs/:id/generate`, `POST /api/v1/runs/:id/judge` |
-| Responses | `GET /api/v1/runs/:run_id/responses`, `GET /api/v1/runs/:run_id/responses/:id` |
-| Datasets | `GET/POST /api/v1/datasets`, `GET/PATCH/DELETE /api/v1/datasets/:id` |
-| Metrics | `GET/POST /api/v1/metrics`, `GET/PATCH/DELETE /api/v1/metrics/:id` |
-| Criteria | `GET/POST /api/v1/criteria`, `GET/PATCH/DELETE /api/v1/criteria/:id` |
-| Provider Credentials | `GET/POST /api/v1/provider_credentials`, `GET/PATCH/DELETE /api/v1/provider_credentials/:id` |
-
-### Examples
-
-**Create a prompt:**
+### REST API
 
 ```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:3000/completion_kit/api/v1/prompts
+
 curl -X POST http://localhost:3000/completion_kit/api/v1/prompts \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name": "summarizer", "template": "Summarize: {{text}}", "llm_model": "gpt-4.1"}'
+  -d '{"name":"summarizer","template":"Summarize: {{text}}","llm_model":"gpt-4.1"}'
 ```
 
-**Create a run and generate responses:**
+Mount the engine, then visit **`/completion_kit/api_reference`** in your running app for per-endpoint documentation with copy-to-clipboard curl examples pre-filled with your token.
 
-```bash
-curl -X POST http://localhost:3000/completion_kit/api/v1/runs \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"prompt_id": 1, "dataset_id": 1}'
+### MCP server
 
-curl -X POST http://localhost:3000/completion_kit/api/v1/runs/1/generate \
-  -H "Authorization: Bearer YOUR_TOKEN"
-
-curl -X POST http://localhost:3000/completion_kit/api/v1/runs/1/judge \
-  -H "Authorization: Bearer YOUR_TOKEN"
-
-curl http://localhost:3000/completion_kit/api/v1/runs/1/responses \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-## MCP Server
-
-CompletionKit includes a built-in [Model Context Protocol](https://modelcontextprotocol.io) server. Any Rails app mounting the engine automatically gets an MCP endpoint that IDE agents (Claude Code, Cursor, etc.) can connect to.
-
-### Configuration
-
-The MCP server reuses the same API token as the REST API:
-
-```ruby
-CompletionKit.configure do |config|
-  config.api_token = ENV['COMPLETION_KIT_API_TOKEN']
-end
-```
-
-### Connecting
-
-Point your MCP client at the `/mcp` endpoint within the engine mount path. For example, if mounted at `/completion_kit`:
+CompletionKit also runs a [Model Context Protocol](https://modelcontextprotocol.io) server at the `/mcp` path within the engine mount, exposing the same resources as 36 tools (one per CRUD action plus process actions like `runs_generate` and `prompts_publish`). Point Claude Code, Cursor, or any other MCP client at it:
 
 ```json
 {
   "mcpServers": {
     "completion-kit": {
       "url": "https://your-app.com/completion_kit/mcp",
-      "headers": {
-        "Authorization": "Bearer YOUR_TOKEN"
-      }
+      "headers": { "Authorization": "Bearer YOUR_TOKEN" }
     }
   }
 }
 ```
 
-### Available Tools
-
-The MCP server exposes 36 tools covering all resources:
-
-| Resource | Tools |
-|----------|-------|
-| Prompts | `prompts_list`, `prompts_get`, `prompts_create`, `prompts_update`, `prompts_delete`, `prompts_publish`, `prompts_new_version` |
-| Runs | `runs_list`, `runs_get`, `runs_create`, `runs_update`, `runs_delete`, `runs_generate`, `runs_judge` |
-| Responses | `responses_list`, `responses_get` |
-| Datasets | `datasets_list`, `datasets_get`, `datasets_create`, `datasets_update`, `datasets_delete` |
-| Metrics | `metrics_list`, `metrics_get`, `metrics_create`, `metrics_update`, `metrics_delete` |
-| Criteria | `criteria_list`, `criteria_get`, `criteria_create`, `criteria_update`, `criteria_delete` |
-| Provider Credentials | `provider_credentials_list`, `provider_credentials_get`, `provider_credentials_create`, `provider_credentials_update`, `provider_credentials_delete` |
+The in-app API reference page also ships install snippets you can copy straight into your MCP client config.
 
 ## Standalone App
 
