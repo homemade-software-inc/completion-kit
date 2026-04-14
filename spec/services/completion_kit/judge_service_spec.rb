@@ -99,4 +99,16 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
       )
     ).to eq(score: 3.0, feedback: "Calibrated")
   end
+
+  it "includes input_data in the judge prompt when provided" do
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(client).to receive(:generate_completion)
+      .with(include("Input data: {customer: acme}"), model: "gpt-4.1")
+      .and_return("Score: 5\nFeedback: Accurate")
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+
+    service = described_class.new
+    expect(service.evaluate("actual", nil, "prompt", input_data: "{customer: acme}"))
+      .to eq(score: 5.0, feedback: "Accurate")
+  end
 end

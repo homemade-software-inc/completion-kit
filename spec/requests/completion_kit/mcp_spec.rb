@@ -155,6 +155,34 @@ RSpec.describe "MCP endpoint", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "returns JSON-RPC InvalidParams when a tool raises ActiveRecord::RecordInvalid" do
+      invalid_record = CompletionKit::Prompt.new
+      invalid_record.errors.add(:name, "can't be blank")
+      allow(CompletionKit::McpDispatcher).to receive(:dispatch)
+        .and_raise(ActiveRecord::RecordInvalid.new(invalid_record))
+
+      post mcp_path, params: {jsonrpc: "2.0", id: 13, method: "tools/call", params: {
+        name: "prompts_create", arguments: {}
+      }}.to_json, headers: session_headers
+
+      body = JSON.parse(response.body)
+      expect(body["error"]["code"]).to eq(-32602)
+      expect(body["error"]["message"]).to include("Name can't be blank")
+    end
+
+    it "returns JSON-RPC InvalidParams when a tool raises ActiveRecord::InvalidForeignKey" do
+      allow(CompletionKit::McpDispatcher).to receive(:dispatch)
+        .and_raise(ActiveRecord::InvalidForeignKey, "foreign key constraint violated")
+
+      post mcp_path, params: {jsonrpc: "2.0", id: 14, method: "tools/call", params: {
+        name: "prompts_delete", arguments: {id: 1}
+      }}.to_json, headers: session_headers
+
+      body = JSON.parse(response.body)
+      expect(body["error"]["code"]).to eq(-32602)
+      expect(body["error"]["message"]).to include("foreign key")
+    end
+
     it "returns JSON-RPC error for unexpected StandardError" do
       allow(CompletionKit::McpDispatcher).to receive(:dispatch)
         .and_raise(StandardError, "something broke")

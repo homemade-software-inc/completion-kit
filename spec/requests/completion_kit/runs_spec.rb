@@ -111,6 +111,17 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(run.reload.name).to eq("Original")
   end
 
+  it "carries metric_ids onto the new run when updating a run with responses" do
+    run = create(:completion_kit_run, prompt: prompt, name: "Original")
+    run.responses.create!(response_text: "Some output")
+    metric = create(:completion_kit_metric)
+
+    patch "#{base_path}/#{run.id}", params: { run: { name: "Updated", prompt_id: prompt.id, metric_ids: [metric.id] } }
+
+    new_run = CompletionKit::Run.order(:id).last
+    expect(new_run.metric_ids).to eq([metric.id])
+  end
+
   it "renders edit when update is invalid" do
     run = create(:completion_kit_run, prompt: prompt)
 
@@ -183,5 +194,34 @@ RSpec.describe "CompletionKit runs", type: :request do
 
     get "#{base_path}/#{run.id}/suggestion"
     expect(response).to redirect_to("#{base_path}/#{run.id}")
+  end
+
+  it "apply_suggestion clones the prompt as a new published version and marks the suggestion applied" do
+    prompt.publish!
+    run = create(:completion_kit_run, prompt: prompt)
+    suggestion = CompletionKit::Suggestion.create!(
+      run: run, prompt: prompt,
+      reasoning: "Clearer framing",
+      suggested_template: "Improved prompt body",
+      original_template: prompt.template
+    )
+
+    expect { post "#{base_path}/#{run.id}/apply_suggestion" }
+      .to change(CompletionKit::Prompt, :count).by(1)
+
+    new_prompt = CompletionKit::Prompt.order(:id).last
+    expect(new_prompt.template).to eq("Improved prompt body")
+    expect(new_prompt.published_at).to be_present
+    expect(response).to redirect_to("/completion_kit/prompts/#{new_prompt.id}")
+    expect(suggestion.reload.applied_at).to be_present
+  end
+
+  it "apply_suggestion redirects with an alert when the run has no suggestion" do
+    run = create(:completion_kit_run, prompt: prompt)
+
+    post "#{base_path}/#{run.id}/apply_suggestion"
+
+    expect(response).to redirect_to("#{base_path}/#{run.id}")
+    expect(flash[:alert]).to eq("No suggestion to apply.")
   end
 end

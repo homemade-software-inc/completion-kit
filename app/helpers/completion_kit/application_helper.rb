@@ -144,16 +144,12 @@ module CompletionKit
 
       changes.each do |type, token|
         escaped = ERB::Util.html_escape(token)
-        case type
-        when :equal
+        if type == :equal
           result << escaped
-        when :remove
-          result << content_tag(:span, escaped, class: "ck-diff-del") if side == :old
-        when :add
-          result << content_tag(:span, escaped, class: "ck-diff-ins") if side == :new
-# :nocov:
-        else nil
-# :nocov:
+        elsif type == :remove && side == :old
+          result << content_tag(:span, escaped, class: "ck-diff-del")
+        elsif type == :add && side == :new
+          result << content_tag(:span, escaped, class: "ck-diff-ins")
         end
       end
 

@@ -97,15 +97,10 @@ module CompletionKit
       suggestion = @run.suggestions.order(created_at: :desc).first
       return redirect_to run_path(@run), alert: "No suggestion to apply." unless suggestion
 
-      prompt = @run.prompt
-      if prompt.runs.exists?
-        new_prompt = prompt.clone_as_new_version(template: suggestion.suggested_template)
-        new_prompt.publish!
-      else
-        prompt.update!(template: suggestion.suggested_template)
-      end
+      new_prompt = @run.prompt.clone_as_new_version(template: suggestion.suggested_template)
+      new_prompt.publish!
       suggestion.update!(applied_at: Time.current)
-      redirect_to prompt_path(new_prompt || prompt), notice: "Suggestion applied."
+      redirect_to prompt_path(new_prompt), notice: "Suggestion applied."
     end
 
     private
