@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.png" alt="CompletionKit logo" width="120" />
+</p>
+
 # CompletionKit
 
 [![CI](https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml)
