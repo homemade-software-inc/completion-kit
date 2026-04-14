@@ -2,9 +2,10 @@
   <% if provider_credential.discovery_status == "discovering" %>
     <div class="ck-discovery-bar">
       <div class="ck-discovery-bar__label">
-        Discovering models&hellip;
         <% if provider_credential.discovery_total > 0 %>
-          <%= provider_credential.discovery_current %>/<%= provider_credential.discovery_total %>
+          Testing models&hellip; <%= provider_credential.discovery_current %>/<%= provider_credential.discovery_total %>
+        <% else %>
+          Fetching model list&hellip;
         <% end %>
       </div>
       <% if provider_credential.discovery_total > 0 %>

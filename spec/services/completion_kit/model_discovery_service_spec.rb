@@ -9,9 +9,21 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
     instance_double("Faraday::Response", success?: success, body: body, status: status)
   end
 
+  def faraday_connection_stub
+    @faraday_connection_stub ||= begin
+      options = Struct.new(:timeout, :open_timeout).new
+      conn = instance_double("Faraday::Connection")
+      allow(conn).to receive(:options).and_return(options)
+      allow(conn).to receive(:request)
+      allow(conn).to receive(:adapter)
+      allow(Faraday).to receive(:new).and_yield(conn).and_return(conn)
+      conn
+    end
+  end
+
   def stub_faraday_get(response)
     request = Struct.new(:headers).new({})
-    allow(Faraday).to receive(:get).and_yield(request).and_return(response)
+    allow(faraday_connection_stub).to receive(:get).and_yield(request).and_return(response)
     request
   end
 
@@ -20,13 +32,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       def url(value); self.path = value; end
     end
     request = request_class.new(headers: {})
-    options = Struct.new(:timeout, :open_timeout).new
-    connection = instance_double("Faraday::Connection")
-    allow(connection).to receive(:options).and_return(options)
-    allow(connection).to receive(:request)
-    allow(connection).to receive(:adapter)
-    allow(connection).to receive(:post).and_yield(request).and_return(response)
-    allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
+    allow(faraday_connection_stub).to receive(:post).and_yield(request).and_return(response)
     request
   end
 
@@ -194,7 +200,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
         success: true,
         body: { data: [{ id: "gpt-crash", object: "model" }] }.to_json
       ))
-      allow(Faraday).to receive(:new).and_raise(StandardError, "connection refused")
+      allow(faraday_connection_stub).to receive(:post).and_raise(StandardError, "connection refused")
 
       service = described_class.new(config: config)
       service.refresh!
@@ -212,12 +218,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       ))
 
       call_count = 0
-      options = Struct.new(:timeout, :open_timeout).new
-      connection = instance_double("Faraday::Connection")
-      allow(connection).to receive(:options).and_return(options)
-      allow(connection).to receive(:request)
-      allow(connection).to receive(:adapter)
-      allow(connection).to receive(:post) do |&block|
+      allow(faraday_connection_stub).to receive(:post) do |&block|
         req = Struct.new(:headers, :body, :path, keyword_init: true) do
           def url(value); self.path = value; end
         end.new(headers: {})
@@ -229,7 +230,6 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
           faraday_response(success: false, status: 500, body: "Internal Server Error")
         end
       end
-      allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
 
       service = described_class.new(config: config)
       service.refresh!
@@ -247,12 +247,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       ))
 
       call_count = 0
-      options = Struct.new(:timeout, :open_timeout).new
-      connection = instance_double("Faraday::Connection")
-      allow(connection).to receive(:options).and_return(options)
-      allow(connection).to receive(:request)
-      allow(connection).to receive(:adapter)
-      allow(connection).to receive(:post) do |&block|
+      allow(faraday_connection_stub).to receive(:post) do |&block|
         req = Struct.new(:headers, :body, :path, keyword_init: true) do
           def url(value); self.path = value; end
         end.new(headers: {})
@@ -264,7 +259,6 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
           raise StandardError, "judge exploded"
         end
       end
-      allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
 
       service = described_class.new(config: config)
       service.refresh!

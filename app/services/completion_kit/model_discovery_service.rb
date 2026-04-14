@@ -23,12 +23,18 @@ module CompletionKit
       when "anthropic" then fetch_anthropic_models
       else []
       end
-    rescue StandardError
-      []
+    end
+
+    def fetch_connection(base_url)
+      Faraday.new(url: base_url) do |f|
+        f.options.timeout = 15
+        f.options.open_timeout = 5
+        f.adapter Faraday.default_adapter
+      end
     end
 
     def fetch_openai_models
-      response = Faraday.get("https://api.openai.com/v1/models") do |req|
+      response = fetch_connection("https://api.openai.com").get("/v1/models") do |req|
         req.headers["Authorization"] = "Bearer #{@api_key}"
       end
       return [] unless response.success?
@@ -36,7 +42,7 @@ module CompletionKit
     end
 
     def fetch_anthropic_models
-      response = Faraday.get("https://api.anthropic.com/v1/models?limit=100") do |req|
+      response = fetch_connection("https://api.anthropic.com").get("/v1/models?limit=100") do |req|
         req.headers["x-api-key"] = @api_key
         req.headers["anthropic-version"] = "2023-06-01"
       end
