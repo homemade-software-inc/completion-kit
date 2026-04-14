@@ -9,11 +9,13 @@
 ![dependencies](https://img.shields.io/badge/dependencies-7-blue)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-blue?logo=dependabot)](https://github.com/homemade-software-inc/completion-kit/network/updates)
 
-You need to know whether your prompts produce the output you expect, consistently, across real data. CompletionKit gives you that.
+You need to know whether your prompts produce the output you expect, consistently, across real data. CompletionKit gives you that, inside your Rails app.
 
-Mount it in any Rails app, feed it a prompt and a CSV of real inputs, and it runs every row through the model. Then it scores each output using configurable metrics and rubrics, flags regressions, and lets you compare versions side by side. When you change a prompt, you re-run the same dataset and see exactly what got better and what broke.
+Mount the engine, bring your prompts and datasets, and every input runs through a model you pick. Each output is scored against your own metrics and rubrics by an LLM-as-judge. When you change a prompt, re-run the same dataset and see exactly what got better and what broke — and when the scores tell you something's off, CompletionKit can suggest an improved version of the prompt based on the reviews, which you inspect as a diff and apply as a new version.
 
-It's the difference between "this prompt seems to work" and "this prompt scores 8.4 across 200 inputs, up from 7.1 last version."
+Drive it from the web UI, from the REST API, or from Claude Code and other MCP-aware agents via the built-in Model Context Protocol server. All three share the same state — your prompts, runs, datasets, and scores are one source of truth.
+
+It's the difference between "this prompt seems to work" and "this prompt scores 4.3 out of 5 across 200 inputs, up from 3.8 last version."
 
 ![Prompts index](docs/screenshots/prompts.png)
 
