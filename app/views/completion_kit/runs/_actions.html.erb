@@ -1,6 +1,6 @@
 <div class="ck-actions" id="run_actions">
   <% running = run.status == "generating" || run.status == "judging" %>
-  <%= button_to run_path(run), method: :delete, form_class: "inline-block", class: "ck-icon-btn", title: "Delete run", disabled: running, data: { turbo_confirm: "Delete this run and all its responses?" } do %><%= heroicon_tag "trash", variant: :outline, size: 16 %><% end %>
+  <%= button_to run_path(run), method: :delete, form_class: "inline-block", class: "ck-icon-btn", title: "Delete run", "aria-label": "Delete run", disabled: running, data: { turbo_confirm: "Delete this run and all its responses?" } do %><%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
   <% if running %>
     <%= link_to "Edit", edit_run_path(run), class: ck_button_classes(:light, variant: :outline) + " disabled", "aria-disabled": "true", tabindex: "-1" %>
   <% else %>

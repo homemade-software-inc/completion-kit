@@ -20,9 +20,9 @@ end %>
         <p class="ck-kicker">Authentication</p>
         <% if @token.present? %>
           <div style="display: flex; align-items: center; gap: 0.4rem; margin: 0.5rem 0;">
-            <span class="ck-chip ck-token-toggle" onclick="ckToggleToken(this)" data-masked="<%= token_display %>" data-real="<%= @token %>" style="cursor: pointer;" title="Click to reveal"><%= token_display %></span>
-            <button type="button" class="ck-icon-btn" title="Copy token" onclick="var b=this;navigator.clipboard.writeText('<%= @token %>').then(function(){b.classList.add('ck-api-copy--done');setTimeout(function(){b.classList.remove('ck-api-copy--done')},1500)})">
-              <%= heroicon_tag "clipboard-document", variant: :outline, size: 14 %>
+            <button type="button" class="ck-chip ck-token-toggle" onclick="ckToggleToken(this)" data-masked="<%= token_display %>" data-real="<%= @token %>" aria-label="Reveal API token" aria-pressed="false" style="cursor: pointer;"><%= token_display %></button>
+            <button type="button" class="ck-icon-btn" title="Copy token" aria-label="Copy API token" onclick="var b=this;navigator.clipboard.writeText('<%= @token %>').then(function(){b.classList.add('ck-api-copy--done');setTimeout(function(){b.classList.remove('ck-api-copy--done')},1500)})">
+              <%= heroicon_tag "clipboard-document", variant: :outline, size: 14, "aria-hidden": "true" %>
             </button>
           </div>
         <% else %>
@@ -49,7 +49,7 @@ end %>
         </div>
         <div class="ck-api-prompt-card__url">
           <code class="ck-endpoint__url" id="prompt_ep_<%= p.id %>"><%= @base_url %>/api/v1/prompts/<%= p.slug %></code>
-          <button type="button" class="ck-icon-btn" title="Copy endpoint" onclick="navigator.clipboard.writeText(document.getElementById('prompt_ep_<%= p.id %>').textContent)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg></button>
+          <button type="button" class="ck-icon-btn" title="Copy endpoint" aria-label="Copy endpoint URL" onclick="navigator.clipboard.writeText(document.getElementById('prompt_ep_<%= p.id %>').textContent)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg></button>
         </div>
       </div>
     <% end %>
@@ -284,6 +284,8 @@ end %>
 function ckToggleToken(el) {
   var showing = el.textContent === el.dataset.masked;
   el.textContent = showing ? el.dataset.real : el.dataset.masked;
+  el.setAttribute('aria-pressed', showing ? 'true' : 'false');
+  el.setAttribute('aria-label', showing ? 'Hide API token' : 'Reveal API token');
   navigator.clipboard.writeText(el.dataset.real).then(function() {
     el.classList.add('ck-api-copy--done');
     setTimeout(function() { el.classList.remove('ck-api-copy--done'); }, 1500);

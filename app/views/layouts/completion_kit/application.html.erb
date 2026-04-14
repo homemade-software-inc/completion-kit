@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>CompletionKit</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -31,7 +31,7 @@
   <main class="ck-main">
     <div class="ck-wrap">
     <% flash.each do |type, message| %>
-      <div class="ck-flash <%= type.to_s == "notice" ? "ck-flash--notice" : "ck-flash--alert" %>">
+      <div class="ck-flash <%= type.to_s == "notice" ? "ck-flash--notice" : "ck-flash--alert" %>" role="<%= type.to_s == "notice" ? "status" : "alert" %>">
         <%= message %>
       </div>
     <% end %>

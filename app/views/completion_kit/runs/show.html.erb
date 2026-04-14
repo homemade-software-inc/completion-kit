@@ -52,7 +52,7 @@
   </div>
   <p class="ck-prompt-preview__text" id="prompt_text"><%= @run.prompt.template %></p>
   <% if @run.prompt.template.length > 200 %>
-    <a href="#" class="ck-link" id="prompt_toggle" onclick="var t=document.getElementById('prompt_text');var l=this;if(t.classList.toggle('ck-prompt-preview__text--expanded')){l.textContent='Show less'}else{l.textContent='Show more'};return false">Show more</a>
+    <button type="button" class="ck-link" id="prompt_toggle" aria-expanded="false" aria-controls="prompt_text" onclick="var t=document.getElementById('prompt_text');var l=this;var expanded=t.classList.toggle('ck-prompt-preview__text--expanded');l.textContent=expanded?'Show less':'Show more';l.setAttribute('aria-expanded',expanded?'true':'false')">Show more</button>
   <% end %>
 </div>
 

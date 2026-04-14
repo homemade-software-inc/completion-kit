@@ -1,6 +1,6 @@
 <div class="ck-api-example">
   <pre class="ck-code ck-code--dark"><%= cmd %></pre>
-  <button type="button" class="ck-api-copy" onclick="ckCopyExample(this)" data-real-token="<%= real_token %>" data-display-token="<%= token %>">
-    <%= heroicon_tag "clipboard-document", variant: :outline, size: 14 %>
+  <button type="button" class="ck-api-copy" aria-label="Copy example to clipboard" onclick="ckCopyExample(this)" data-real-token="<%= real_token %>" data-display-token="<%= token %>">
+    <%= heroicon_tag "clipboard-document", variant: :outline, size: 14, "aria-hidden": "true" %>
   </button>
 </div>
