@@ -29,6 +29,12 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
     expect(described_class.for_model("unknown")).to eq({})
   end
 
+  it "returns openrouter config from ENV" do
+    allow(ENV).to receive(:[]).and_call_original
+    allow(ENV).to receive(:[]).with("OPENROUTER_API_KEY").and_return("or-env-key")
+    expect(described_class.for_provider("openrouter")).to eq(api_key: "or-env-key", provider: "openrouter")
+  end
+
   it "delegates validity and errors to the model-specific client" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true, configuration_errors: ["none"])
 

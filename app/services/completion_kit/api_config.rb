@@ -20,6 +20,8 @@ module CompletionKit
                      api_key: CompletionKit.config.llama_api_key || ENV["LLAMA_API_KEY"],
                      api_endpoint: CompletionKit.config.llama_api_endpoint || ENV["LLAMA_API_ENDPOINT"]
                    }
+                 when "openrouter"
+                   { provider: "openrouter", api_key: ENV["OPENROUTER_API_KEY"] }
                  else
                    {}
                  end

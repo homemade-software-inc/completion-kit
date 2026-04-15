@@ -76,7 +76,12 @@ module CompletionKit
       end
     end
 
-    PROVIDER_LABELS = { "openai" => "OpenAI", "anthropic" => "Anthropic", "llama" => "Llama" }.freeze
+    PROVIDER_LABELS = {
+      "openai" => "OpenAI",
+      "anthropic" => "Anthropic",
+      "llama" => "Llama / Ollama / Custom endpoint",
+      "openrouter" => "OpenRouter"
+    }.freeze
 
     def ck_provider_label(provider)
       PROVIDER_LABELS[provider.to_s] || provider.to_s.titleize
@@ -89,10 +94,19 @@ module CompletionKit
           models = models + [{ id: retired.model_id, name: "#{retired.display_name || retired.model_id} (retired)", provider: retired.provider }]
         end
       end
-      groups = models.group_by { |m| m[:provider] }.map do |provider, ms|
-        [ck_provider_label(provider), ms.map { |m| [m[:name], m[:id]] }]
+
+      groups = models.group_by do |m|
+        if m[:provider] == "openrouter"
+          upstream = m[:id].to_s.split("/", 2).first
+          "OpenRouter — #{upstream}"
+        else
+          ck_provider_label(m[:provider])
+        end
       end
-      grouped_options_for_select(groups, selected)
+
+      ordered_keys = groups.keys.sort_by { |label| [label.start_with?("OpenRouter") ? 1 : 0, label] }
+      grouped = ordered_keys.map { |label| [label, groups[label].map { |m| [m[:name], m[:id]] }] }
+      grouped_options_for_select(grouped, selected)
     end
 
     def ck_model_options_html(scope)

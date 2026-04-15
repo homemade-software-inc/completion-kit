@@ -12,6 +12,7 @@ module CompletionKit
     def refresh!(&on_progress)
       models_with_names = fetch_models
       reconcile(models_with_names)
+      return if @provider == "openrouter"
       probe_new_models(&on_progress)
     end
 
@@ -21,6 +22,7 @@ module CompletionKit
       case @provider
       when "openai" then fetch_openai_models
       when "anthropic" then fetch_anthropic_models
+      when "openrouter" then fetch_openrouter_models
       else []
       end
     end
@@ -50,6 +52,21 @@ module CompletionKit
       JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["display_name"] } }
     end
 
+    def fetch_openrouter_models
+      response = fetch_connection("https://openrouter.ai").get("/api/v1/models") do |req|
+        req.headers["Authorization"] = "Bearer #{@api_key}"
+        req.headers["HTTP-Referer"] = "https://completionkit.com"
+        req.headers["X-Title"] = "CompletionKit"
+      end
+      return [] unless response.success?
+      JSON.parse(response.body).fetch("data", []).filter_map do |entry|
+        next nil if entry["deprecated"] == true
+        context_length = entry["context_length"].to_i
+        next nil if context_length < 8192
+        { id: entry["id"], display_name: entry["name"] }
+      end
+    end
+
     def reconcile(models_with_names)
       api_model_ids = models_with_names.map { |m| m[:id] }
       names_by_id = models_with_names.each_with_object({}) { |m, h| h[m[:id]] = m[:display_name] }
@@ -61,13 +78,18 @@ module CompletionKit
           attrs[:display_name] = names_by_id[model_id] if names_by_id[model_id].present?
           existing[model_id].update!(attrs) if existing[model_id].status == "retired" || names_by_id[model_id].present?
         else
-          Model.create!(
+          attrs = {
             provider: @provider,
             model_id: model_id,
             display_name: names_by_id[model_id],
             status: "active",
             discovered_at: Time.current
-          )
+          }
+          if @provider == "openrouter"
+            attrs[:supports_generation] = true
+            attrs[:probed_at] = nil
+          end
+          Model.create!(attrs)
         end
       end
 

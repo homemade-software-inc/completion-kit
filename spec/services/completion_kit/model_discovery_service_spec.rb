@@ -351,6 +351,60 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
     end
   end
 
+  describe "#refresh! for openrouter" do
+    let(:config) { { provider: "openrouter", api_key: "or-test" } }
+
+    let(:openrouter_response_body) do
+      {
+        data: [
+          { id: "openai/gpt-4o-mini", name: "GPT-4o Mini", context_length: 128_000 },
+          { id: "anthropic/claude-3.5-sonnet", name: "Claude 3.5 Sonnet", context_length: 200_000 },
+          { id: "tiny/legacy-2k", name: "Legacy 2k", context_length: 2_048 },
+          { id: "deprecated/old-model", name: "Old Model", context_length: 32_000, deprecated: true }
+        ]
+      }.to_json
+    end
+
+    it "discovers openrouter models, filters by context length and deprecation, marks supports_generation true without probing" do
+      stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      models = CompletionKit::Model.where(provider: "openrouter")
+      expect(models.pluck(:model_id)).to contain_exactly(
+        "openai/gpt-4o-mini",
+        "anthropic/claude-3.5-sonnet"
+      )
+      expect(models.where(supports_generation: true).count).to eq(2)
+      expect(models.where("probed_at IS NOT NULL").count).to eq(0)
+    end
+
+    it "does not call any probe methods for openrouter" do
+      stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
+
+      service = described_class.new(config: config)
+      expect(service).not_to receive(:probe_generation)
+      expect(service).not_to receive(:probe_judging)
+      service.refresh!
+    end
+
+    it "stores display_name from the openrouter API name field" do
+      stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
+      described_class.new(config: config).refresh!
+      expect(CompletionKit::Model.find_by(model_id: "openai/gpt-4o-mini").display_name).to eq("GPT-4o Mini")
+    end
+
+    it "returns empty list when openrouter fetch fails" do
+      stub_faraday_get(faraday_response(success: false, status: 401, body: "Unauthorized"))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      expect(CompletionKit::Model.where(provider: "openrouter").count).to eq(0)
+    end
+  end
+
   describe "#refresh! for unknown provider" do
     let(:config) { { provider: "unknown", api_key: "key" } }
 

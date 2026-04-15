@@ -1,8 +1,13 @@
 module CompletionKit
   class ProviderCredential < ApplicationRecord
     include Turbo::Broadcastable
-    PROVIDERS = %w[openai anthropic llama].freeze
-    PROVIDER_LABELS = { "openai" => "OpenAI", "anthropic" => "Anthropic", "llama" => "Llama" }.freeze
+    PROVIDERS = %w[openai anthropic llama openrouter].freeze
+    PROVIDER_LABELS = {
+      "openai" => "OpenAI",
+      "anthropic" => "Anthropic",
+      "llama" => "Llama / Ollama / Custom endpoint",
+      "openrouter" => "OpenRouter"
+    }.freeze
 
     encrypts :api_key
 
@@ -41,32 +46,25 @@ module CompletionKit
       false
     end
 
-    def model_pattern
-      case provider
-      when "openai" then /\Agpt-/
-      when "anthropic" then /\Aclaude-/
-      when "llama" then /llama/i
-      end
-    end
-
     def prompt_count
-      pattern = model_pattern
-      return 0 unless pattern
-      Prompt.all.count { |p| p.llm_model&.match?(pattern) }
+      model_ids = Model.where(provider: provider).pluck(:model_id)
+      return 0 if model_ids.empty?
+      Prompt.where(llm_model: model_ids, current: true).count
     end
 
     def judge_count
-      pattern = model_pattern
-      return 0 unless pattern
-      Run.where.not(judge_model: [nil, ""]).all.count { |r| r.judge_model.match?(pattern) }
+      model_ids = Model.where(provider: provider).pluck(:model_id)
+      return 0 if model_ids.empty?
+      Run.where(judge_model: model_ids).count
     end
 
     def last_used_at
-      pattern = model_pattern
-      return nil unless pattern
-      runs = Run.where.not(status: "pending").order(created_at: :desc)
-      run = runs.find { |r| r.prompt.llm_model&.match?(pattern) || r.judge_model&.match?(pattern) }
-      run&.created_at
+      model_ids = Model.where(provider: provider).pluck(:model_id)
+      return nil if model_ids.empty?
+      prompt_ids = Prompt.where(llm_model: model_ids).pluck(:id)
+      Run.where("prompt_id IN (?) OR judge_model IN (?)", prompt_ids, model_ids)
+         .where.not(status: "pending")
+         .maximum(:created_at)
     end
 
     def broadcast_discovery_progress

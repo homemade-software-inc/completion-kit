@@ -28,6 +28,8 @@ module CompletionKit
         AnthropicClient.new(config)
       when "llama"
         LlamaClient.new(config)
+      when "openrouter"
+        OpenRouterClient.new(config)
       else
         raise ArgumentError, "Unsupported provider: #{provider_name}"
       end

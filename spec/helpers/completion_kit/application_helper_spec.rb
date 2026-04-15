@@ -86,6 +86,33 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#ck_grouped_models with openrouter" do
+    it "splits openrouter models into optgroups by upstream namespace" do
+      models = [
+        { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", provider: "openai" },
+        { id: "openai/gpt-4o-mini", name: "GPT-4o Mini", provider: "openrouter" },
+        { id: "openai/gpt-5", name: "GPT-5", provider: "openrouter" },
+        { id: "anthropic/claude-sonnet", name: "Claude Sonnet", provider: "openrouter" },
+        { id: "meta-llama/llama-3.3-70b", name: "Llama 3.3 70B", provider: "openrouter" }
+      ]
+      html = helper.ck_grouped_models(models)
+      expect(html).to include('label="OpenAI"')
+      expect(html).to include('label="OpenRouter — openai"')
+      expect(html).to include('label="OpenRouter — anthropic"')
+      expect(html).to include('label="OpenRouter — meta-llama"')
+    end
+
+    it "groups direct providers as before" do
+      models = [
+        { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", provider: "openai" },
+        { id: "claude-sonnet-4-6", name: "Claude Sonnet 4.6", provider: "anthropic" }
+      ]
+      html = helper.ck_grouped_models(models)
+      expect(html).to include('label="OpenAI"')
+      expect(html).to include('label="Anthropic"')
+    end
+  end
+
   describe "#ck_model_options_html" do
     it "returns empty string when no models exist for scope" do
       result = helper.ck_model_options_html(:generation)

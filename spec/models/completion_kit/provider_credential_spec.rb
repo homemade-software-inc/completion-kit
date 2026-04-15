@@ -5,6 +5,25 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
   end
 
+  describe "PROVIDERS and PROVIDER_LABELS" do
+    it "includes openrouter as a valid provider" do
+      expect(CompletionKit::ProviderCredential::PROVIDERS).to include("openrouter")
+    end
+
+    it "labels openrouter as 'OpenRouter'" do
+      expect(CompletionKit::ProviderCredential::PROVIDER_LABELS["openrouter"]).to eq("OpenRouter")
+    end
+
+    it "labels llama as 'Llama / Ollama / Custom endpoint'" do
+      expect(CompletionKit::ProviderCredential::PROVIDER_LABELS["llama"]).to eq("Llama / Ollama / Custom endpoint")
+    end
+
+    it "validates that provider is in the PROVIDERS list" do
+      cred = CompletionKit::ProviderCredential.new(provider: "openrouter", api_key: "or-test")
+      expect(cred).to be_valid
+    end
+  end
+
   it "returns config data and delegates to the provider client" do
     credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "secret")
     client = instance_double(CompletionKit::OpenAiClient, available_models: [{ id: "gpt-4.1" }], configured?: true)
@@ -42,97 +61,68 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     end
   end
 
-  describe "#model_pattern" do
-    it "returns correct regex for each provider" do
-      expect(build(:completion_kit_provider_credential, provider: "openai").model_pattern).to eq(/\Agpt-/)
-      expect(build(:completion_kit_provider_credential, provider: "anthropic").model_pattern).to eq(/\Aclaude-/)
-      expect(build(:completion_kit_provider_credential, provider: "llama").model_pattern).to eq(/llama/i)
+  describe "credential counters" do
+    let(:openai_cred) { create(:completion_kit_provider_credential, provider: "openai", api_key: "test") }
+
+    before do
+      CompletionKit::Model.create!(provider: "openai", model_id: "gpt-4.1-mini",
+        status: "active", supports_generation: true, supports_judging: true)
+      CompletionKit::Model.create!(provider: "openai", model_id: "gpt-5.4-mini",
+        status: "active", supports_generation: true)
+      CompletionKit::Model.create!(provider: "anthropic", model_id: "claude-sonnet-4-6",
+        status: "active", supports_generation: true)
     end
 
-    it "returns nil for unknown provider" do
-      cred = build(:completion_kit_provider_credential, provider: "openai")
-      allow(cred).to receive(:provider).and_return("unknown")
-      expect(cred.model_pattern).to be_nil
-      expect(cred.prompt_count).to eq(0)
-      expect(cred.judge_count).to eq(0)
-      expect(cred.last_used_at).to be_nil
-    end
-  end
+    describe "#prompt_count" do
+      it "counts prompts whose llm_model is in the provider's discovered Model table" do
+        create(:completion_kit_prompt, llm_model: "gpt-4.1-mini")
+        create(:completion_kit_prompt, llm_model: "gpt-5.4-mini")
+        create(:completion_kit_prompt, llm_model: "claude-sonnet-4-6")
+        expect(openai_cred.prompt_count).to eq(2)
+      end
 
-  describe "#prompt_count" do
-    it "counts prompts using models from this provider" do
-      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-      create(:completion_kit_prompt, llm_model: "gpt-4.1")
-      create(:completion_kit_prompt, llm_model: "gpt-4.1-mini")
-      create(:completion_kit_prompt, llm_model: "claude-3.5-sonnet")
-      expect(credential.prompt_count).to eq(2)
-    end
+      it "counts only current prompt versions" do
+        family_key = SecureRandom.hex(8)
+        create(:completion_kit_prompt, llm_model: "gpt-4.1-mini",
+          family_key: family_key, version_number: 1, current: false)
+        create(:completion_kit_prompt, llm_model: "gpt-4.1-mini",
+          family_key: family_key, version_number: 2, current: true)
+        expect(openai_cred.prompt_count).to eq(1)
+      end
 
-    it "returns 0 for prompts with nil llm_model" do
-      credential = create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-test")
-      expect(credential.prompt_count).to eq(0)
+      it "returns 0 when no models match the provider" do
+        expect(openai_cred.prompt_count).to eq(0)
+      end
     end
 
-    it "handles prompts with nil llm_model gracefully" do
-      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-      prompt = create(:completion_kit_prompt, llm_model: "gpt-4.1")
-      prompt.update_column(:llm_model, nil)
-      expect(credential.prompt_count).to eq(0)
-    end
-  end
-
-  describe "#judge_count" do
-    it "counts runs using judge models from this provider" do
-      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-      create(:completion_kit_run, judge_model: "gpt-4.1")
-      create(:completion_kit_run, judge_model: "claude-3.5-sonnet")
-      create(:completion_kit_run, judge_model: nil)
-      create(:completion_kit_run, judge_model: "")
-      expect(credential.judge_count).to eq(1)
-    end
-  end
-
-  describe "#last_used_at" do
-    it "returns the most recent run time for this provider" do
-      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-      prompt = create(:completion_kit_prompt, llm_model: "gpt-4.1")
-      old_run = create(:completion_kit_run, prompt: prompt, status: "completed", created_at: 2.days.ago)
-      recent_run = create(:completion_kit_run, prompt: prompt, status: "completed", created_at: 1.hour.ago)
-      expect(credential.last_used_at).to be_within(1.second).of(recent_run.created_at)
+    describe "#judge_count" do
+      it "counts runs whose judge_model is in the provider's Model table" do
+        prompt = create(:completion_kit_prompt, llm_model: "gpt-4.1-mini")
+        create(:completion_kit_run, prompt: prompt, judge_model: "gpt-5.4-mini")
+        create(:completion_kit_run, prompt: prompt, judge_model: "claude-sonnet-4-6")
+        expect(openai_cred.judge_count).to eq(1)
+      end
     end
 
-    it "returns nil when never used" do
-      credential = create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-test")
-      expect(credential.last_used_at).to be_nil
-    end
+    describe "#last_used_at" do
+      it "returns the timestamp of the most recent non-pending run using this provider" do
+        prompt = create(:completion_kit_prompt, llm_model: "gpt-4.1-mini")
+        create(:completion_kit_run, prompt: prompt, status: "completed",
+          created_at: 2.days.ago)
+        new_run = create(:completion_kit_run, prompt: prompt, status: "completed",
+          created_at: 1.hour.ago)
+        expect(openai_cred.last_used_at).to be_within(1.second).of(new_run.created_at)
+      end
 
-    it "finds runs where provider is used as judge" do
-      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-      prompt = create(:completion_kit_prompt, llm_model: "claude-3.5-sonnet")
-      run = create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4.1", status: "completed")
-      expect(credential.last_used_at).to be_within(1.second).of(run.created_at)
-    end
+      it "ignores pending runs" do
+        prompt = create(:completion_kit_prompt, llm_model: "gpt-4.1-mini")
+        create(:completion_kit_run, prompt: prompt, status: "pending", created_at: 1.minute.ago)
+        expect(openai_cred.last_used_at).to be_nil
+      end
 
-    it "handles runs with nil judge_model" do
-      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-      prompt = create(:completion_kit_prompt, llm_model: "gpt-4.1")
-      create(:completion_kit_run, prompt: prompt, judge_model: nil, status: "completed")
-      expect(credential.last_used_at).not_to be_nil
-    end
-
-    it "handles runs where prompt has nil llm_model and nil judge_model" do
-      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-      prompt = create(:completion_kit_prompt, llm_model: "claude-3.5-sonnet")
-      prompt.update_column(:llm_model, nil)
-      create(:completion_kit_run, prompt: prompt, judge_model: nil, status: "completed")
-      expect(credential.last_used_at).to be_nil
-    end
-
-    it "skips pending runs" do
-      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-      prompt = create(:completion_kit_prompt, llm_model: "gpt-4.1")
-      create(:completion_kit_run, prompt: prompt, status: "pending")
-      expect(credential.last_used_at).to be_nil
+      it "returns nil when no runs use this provider's models" do
+        expect(openai_cred.last_used_at).to be_nil
+      end
     end
   end
 
