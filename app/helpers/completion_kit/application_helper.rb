@@ -79,7 +79,7 @@ module CompletionKit
     PROVIDER_LABELS = {
       "openai" => "OpenAI",
       "anthropic" => "Anthropic",
-      "llama" => "Llama / Ollama / Custom endpoint",
+      "ollama" => "Ollama / local endpoint",
       "openrouter" => "OpenRouter"
     }.freeze
 

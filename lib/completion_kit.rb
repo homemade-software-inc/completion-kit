@@ -5,15 +5,15 @@ module CompletionKit
   class ConfigurationError < StandardError; end
 
   class Configuration
-    attr_accessor :openai_api_key, :anthropic_api_key, :llama_api_key, :llama_api_endpoint
+    attr_accessor :openai_api_key, :anthropic_api_key, :ollama_api_key, :ollama_api_endpoint
     attr_accessor :judge_model, :high_quality_threshold, :medium_quality_threshold
     attr_accessor :username, :password, :auth_strategy, :api_token
 
     def initialize
       @openai_api_key = ENV['OPENAI_API_KEY']
       @anthropic_api_key = ENV['ANTHROPIC_API_KEY']
-      @llama_api_key = ENV['LLAMA_API_KEY']
-      @llama_api_endpoint = ENV['LLAMA_API_ENDPOINT']
+      @ollama_api_key = ENV['OLLAMA_API_KEY']
+      @ollama_api_endpoint = ENV['OLLAMA_API_ENDPOINT']
 
       @judge_model = "gpt-4.1"
       @high_quality_threshold = 4

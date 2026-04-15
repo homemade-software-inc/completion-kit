@@ -49,7 +49,7 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
 
   it "refresh_all enqueues discovery for all credentials" do
     cred1 = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
-    cred2 = create(:completion_kit_provider_credential, provider: "llama", api_key: "llama-key")
+    cred2 = create(:completion_kit_provider_credential, provider: "ollama", api_key: "ollama-key")
     allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:broadcast_discovery_progress)
 
     expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(cred1.id)

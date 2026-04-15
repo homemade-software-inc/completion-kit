@@ -5,27 +5,27 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
     original_values = {
       openai: CompletionKit.config.openai_api_key,
       anthropic: CompletionKit.config.anthropic_api_key,
-      llama_key: CompletionKit.config.llama_api_key,
-      llama_endpoint: CompletionKit.config.llama_api_endpoint
+      ollama_key: CompletionKit.config.ollama_api_key,
+      ollama_endpoint: CompletionKit.config.ollama_api_endpoint
     }
 
     example.run
   ensure
     CompletionKit.config.openai_api_key = original_values[:openai]
     CompletionKit.config.anthropic_api_key = original_values[:anthropic]
-    CompletionKit.config.llama_api_key = original_values[:llama_key]
-    CompletionKit.config.llama_api_endpoint = original_values[:llama_endpoint]
+    CompletionKit.config.ollama_api_key = original_values[:ollama_key]
+    CompletionKit.config.ollama_api_endpoint = original_values[:ollama_endpoint]
   end
 
   it "returns provider-specific config for supported models and empty config otherwise" do
     CompletionKit.config.openai_api_key = "openai-key"
     CompletionKit.config.anthropic_api_key = "anthropic-key"
-    CompletionKit.config.llama_api_key = "llama-key"
-    CompletionKit.config.llama_api_endpoint = "https://llama.example.test"
+    CompletionKit.config.ollama_api_key = "ollama-key"
+    CompletionKit.config.ollama_api_endpoint = "https://ollama.example.test"
 
     expect(described_class.for_model("gpt-4.1")).to eq(api_key: "openai-key", provider: "openai")
     expect(described_class.for_model("claude-3-7-sonnet-latest")).to eq(api_key: "anthropic-key", provider: "anthropic")
-    expect(described_class.for_model("llama-3.1-8b-instruct")).to eq(api_key: "llama-key", api_endpoint: "https://llama.example.test", provider: "llama")
+    expect(described_class.for_provider("ollama")).to eq(api_key: "ollama-key", api_endpoint: "https://ollama.example.test", provider: "ollama")
     expect(described_class.for_model("unknown")).to eq({})
   end
 
@@ -45,8 +45,11 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
 
     create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-test2")
-    create(:completion_kit_provider_credential, provider: "llama", api_key: "sk-test3")
-    expect(described_class.available_models.map { |model| model[:id] }).to include("gpt-5.4-mini", "claude-3-7-sonnet-latest", "llama-3.1-8b-instruct")
+    create(:completion_kit_provider_credential, provider: "ollama", api_key: "sk-test3")
+    ollama_client = instance_double(CompletionKit::OllamaClient, available_models: [{ id: "llama3.3", name: "llama3.3" }])
+    allow(CompletionKit::LlmClient).to receive(:for_provider).and_call_original
+    allow(CompletionKit::LlmClient).to receive(:for_provider).with("ollama", hash_including(provider: "ollama")).and_return(ollama_client)
+    expect(described_class.available_models.map { |model| model[:id] }).to include("gpt-5.4-mini", "claude-3-7-sonnet-latest", "llama3.3")
   end
 
   it "covers provider fallbacks, stored credentials, and rescue branches" do
@@ -55,11 +58,10 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
 
     allow(CompletionKit::LlmClient).to receive(:for_provider).with("openai", hash_including(api_key: "db-openai")).and_return(client)
     allow(CompletionKit::LlmClient).to receive(:for_provider).with("anthropic", hash_including(provider: "anthropic")).and_raise(StandardError, "down")
-    allow(CompletionKit::LlmClient).to receive(:for_provider).with("llama", hash_including(provider: "llama")).and_raise(StandardError, "down")
+    allow(CompletionKit::LlmClient).to receive(:for_provider).with("ollama", hash_including(provider: "ollama")).and_raise(StandardError, "down")
 
     expect(described_class.for_provider("unknown")).to eq({})
     expect(described_class.provider_for_model("custom-openai")).to eq("openai")
-    expect(described_class.provider_for_model("llama-special")).to eq("llama")
     expect(described_class.provider_for_model("mystery")).to eq(nil)
     expect(described_class.available_models(provider: "openai")).to eq([{ id: "custom-openai", name: "Custom OpenAI", provider: "openai" }])
 

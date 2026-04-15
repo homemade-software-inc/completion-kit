@@ -13,8 +13,8 @@ RSpec.describe "CompletionKit boot smoke" do
     original_values = {
       openai: CompletionKit.config.openai_api_key,
       anthropic: CompletionKit.config.anthropic_api_key,
-      llama_key: CompletionKit.config.llama_api_key,
-      llama_endpoint: CompletionKit.config.llama_api_endpoint,
+      ollama_key: CompletionKit.config.ollama_api_key,
+      ollama_endpoint: CompletionKit.config.ollama_api_endpoint,
       judge_model: CompletionKit.config.judge_model
     }
 
@@ -22,8 +22,8 @@ RSpec.describe "CompletionKit boot smoke" do
   ensure
     CompletionKit.config.openai_api_key = original_values[:openai]
     CompletionKit.config.anthropic_api_key = original_values[:anthropic]
-    CompletionKit.config.llama_api_key = original_values[:llama_key]
-    CompletionKit.config.llama_api_endpoint = original_values[:llama_endpoint]
+    CompletionKit.config.ollama_api_key = original_values[:ollama_key]
+    CompletionKit.config.ollama_api_endpoint = original_values[:ollama_endpoint]
     CompletionKit.config.judge_model = original_values[:judge_model]
   end
 
@@ -44,15 +44,15 @@ RSpec.describe "CompletionKit boot smoke" do
     CompletionKit.configure do |config|
       config.openai_api_key = "configured-openai"
       config.anthropic_api_key = "configured-anthropic"
-      config.llama_api_key = "configured-llama"
-      config.llama_api_endpoint = "https://llama.example.test"
+      config.ollama_api_key = "configured-ollama"
+      config.ollama_api_endpoint = "https://ollama.example.test"
       config.judge_model = "claude-3-7-sonnet-latest"
     end
 
     expect(CompletionKit.config.openai_api_key).to eq("configured-openai")
     expect(CompletionKit.config.anthropic_api_key).to eq("configured-anthropic")
-    expect(CompletionKit.config.llama_api_key).to eq("configured-llama")
-    expect(CompletionKit.config.llama_api_endpoint).to eq("https://llama.example.test")
+    expect(CompletionKit.config.ollama_api_key).to eq("configured-ollama")
+    expect(CompletionKit.config.ollama_api_endpoint).to eq("https://ollama.example.test")
     expect(CompletionKit.config.judge_model).to eq("claude-3-7-sonnet-latest")
 
     expect { CompletionKit.configure }.not_to raise_error
@@ -69,15 +69,15 @@ RSpec.describe "CompletionKit boot smoke" do
     allow(ENV).to receive(:[]).and_call_original
     allow(ENV).to receive(:[]).with("OPENAI_API_KEY").and_return("env-openai")
     allow(ENV).to receive(:[]).with("ANTHROPIC_API_KEY").and_return("env-anthropic")
-    allow(ENV).to receive(:[]).with("LLAMA_API_KEY").and_return("env-llama")
-    allow(ENV).to receive(:[]).with("LLAMA_API_ENDPOINT").and_return("https://env-llama.example.test")
+    allow(ENV).to receive(:[]).with("OLLAMA_API_KEY").and_return("env-ollama")
+    allow(ENV).to receive(:[]).with("OLLAMA_API_ENDPOINT").and_return("https://env-ollama.example.test")
 
     config = CompletionKit::Configuration.new
 
     expect(config.openai_api_key).to eq("env-openai")
     expect(config.anthropic_api_key).to eq("env-anthropic")
-    expect(config.llama_api_key).to eq("env-llama")
-    expect(config.llama_api_endpoint).to eq("https://env-llama.example.test")
+    expect(config.ollama_api_key).to eq("env-ollama")
+    expect(config.ollama_api_endpoint).to eq("https://env-ollama.example.test")
     expect(config.judge_model).to eq("gpt-4.1")
     expect(config.high_quality_threshold).to eq(4)
     expect(config.medium_quality_threshold).to eq(3)

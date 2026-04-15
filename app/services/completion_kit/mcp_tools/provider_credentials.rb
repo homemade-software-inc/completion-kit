@@ -17,7 +17,7 @@ module CompletionKit
           inputSchema: {
             type: "object",
             properties: {
-              provider: {type: "string", enum: ["openai", "anthropic", "llama"]},
+              provider: {type: "string", enum: ["openai", "anthropic", "ollama", "openrouter"]},
               api_key: {type: "string"},
               api_endpoint: {type: "string"}
             },

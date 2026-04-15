@@ -14,8 +14,8 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
       expect(CompletionKit::ProviderCredential::PROVIDER_LABELS["openrouter"]).to eq("OpenRouter")
     end
 
-    it "labels llama as 'Llama / Ollama / Custom endpoint'" do
-      expect(CompletionKit::ProviderCredential::PROVIDER_LABELS["llama"]).to eq("Llama / Ollama / Custom endpoint")
+    it "labels ollama as 'Ollama / local endpoint'" do
+      expect(CompletionKit::ProviderCredential::PROVIDER_LABELS["ollama"]).to eq("Ollama / local endpoint")
     end
 
     it "validates that provider is in the PROVIDERS list" do
@@ -55,9 +55,9 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
       create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-test")
     end
 
-    it "enqueues for llama provider" do
+    it "enqueues for ollama provider" do
       expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(kind_of(Integer))
-      create(:completion_kit_provider_credential, provider: "llama", api_key: "sk-test")
+      create(:completion_kit_provider_credential, provider: "ollama", api_key: "sk-test")
     end
   end
 

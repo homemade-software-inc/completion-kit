@@ -1,11 +1,11 @@
 module CompletionKit
   class ProviderCredential < ApplicationRecord
     include Turbo::Broadcastable
-    PROVIDERS = %w[openai anthropic llama openrouter].freeze
+    PROVIDERS = %w[openai anthropic ollama openrouter].freeze
     PROVIDER_LABELS = {
       "openai" => "OpenAI",
       "anthropic" => "Anthropic",
-      "llama" => "Llama / Ollama / Custom endpoint",
+      "ollama" => "Ollama / local endpoint",
       "openrouter" => "OpenRouter"
     }.freeze
 

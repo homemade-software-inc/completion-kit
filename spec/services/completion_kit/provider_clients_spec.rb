@@ -108,53 +108,50 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(client.available_models).to eq(CompletionKit::AnthropicClient::STATIC_MODELS)
   end
 
-  it "covers Llama client success, error, rescue, and configuration branches" do
-    client = CompletionKit::LlamaClient.new(api_key: "llama-key", api_endpoint: "https://llama.example.test")
+  it "covers Ollama client success, error, rescue, and configuration branches" do
+    client = CompletionKit::OllamaClient.new(api_key: "ollama-key", api_endpoint: "https://ollama.example.test")
     success_request = stub_faraday(faraday_response(success: true, body: { choices: [{ text: " hello " }] }.to_json))
 
-    expect(client.generate_completion("prompt", model: "llama-3.1-8b-instruct")).to eq("hello")
-    expect(success_request.headers["Authorization"]).to eq("Bearer llama-key")
-    expect(client.available_models).to eq([{ id: "llama-3.1-8b-instruct", name: "Llama 3.1 8B Instruct" }, { id: "llama-3.1-70b-instruct", name: "Llama 3.1 70B Instruct" }])
+    expect(client.generate_completion("prompt", model: "llama3.3")).to eq("hello")
+    expect(success_request.headers["Authorization"]).to eq("Bearer ollama-key")
     expect(client.configured?).to eq(true)
     expect(client.configuration_errors).to eq([])
 
     stub_faraday(faraday_response(success: false, status: 500, body: "broken"))
     expect(client.generate_completion("prompt")).to eq("Error: 500 - broken")
 
-    allow(Faraday).to receive(:new).and_raise(StandardError, "llama down")
-    expect(client.generate_completion("prompt")).to eq("Error: llama down")
+    allow(Faraday).to receive(:new).and_raise(StandardError, "ollama down")
+    expect(client.generate_completion("prompt")).to eq("Error: ollama down")
 
-    missing_endpoint = CompletionKit::LlamaClient.new(api_key: "llama-key", api_endpoint: nil)
+    no_key = CompletionKit::OllamaClient.new(api_endpoint: "https://ollama.example.test")
+    request = stub_faraday(faraday_response(success: true, body: { choices: [{ text: "ok" }] }.to_json))
+    expect(no_key.generate_completion("prompt")).to eq("ok")
+    expect(request.headers["Authorization"]).to be_nil
+
+    missing_endpoint = CompletionKit::OllamaClient.new(api_key: "ollama-key", api_endpoint: nil)
     allow(missing_endpoint).to receive(:api_endpoint).and_return(nil)
     expect(missing_endpoint.configured?).to eq(false)
-    expect(missing_endpoint.configuration_errors).to include("Llama API endpoint is not configured")
-
-    missing_key = CompletionKit::LlamaClient.new(api_endpoint: nil)
-    allow(missing_key).to receive(:api_key).and_return(nil)
-    allow(missing_key).to receive(:api_endpoint).and_return(nil)
-    expect(missing_key.generate_completion("prompt")).to eq("Error: API credentials not configured")
-    expect(missing_key.configuration_errors).to include("Llama API key is not configured")
-    expect(missing_key.available_models).to eq(CompletionKit::LlamaClient::STATIC_MODELS)
+    expect(missing_endpoint.configuration_errors).to include("Ollama API endpoint is not configured")
+    expect(missing_endpoint.generate_completion("prompt")).to eq("Error: API endpoint not configured")
+    expect(missing_endpoint.available_models).to eq([])
   end
 
-  it "covers Llama dynamic model listing branches" do
-    client = CompletionKit::LlamaClient.new(api_key: "llama-key", api_endpoint: "https://llama.example.test")
+  it "covers Ollama dynamic model listing branches" do
+    client = CompletionKit::OllamaClient.new(api_key: "ollama-key", api_endpoint: "https://ollama.example.test")
 
-    request = stub_faraday_get(faraday_get_response(success: true, body: { data: [{ id: "llama-custom" }] }.to_json))
-    expect(client.available_models).to eq([{ id: "llama-custom", name: "llama-custom" }])
-    expect(request.headers["Authorization"]).to eq("Bearer llama-key")
+    request = stub_faraday_get(faraday_get_response(success: true, body: { data: [{ id: "llama3.3" }] }.to_json))
+    expect(client.available_models).to eq([{ id: "llama3.3", name: "llama3.3" }])
+    expect(request.headers["Authorization"]).to eq("Bearer ollama-key")
 
     stub_faraday_get(faraday_get_response(success: false, body: "nope", status: 500))
-    expect(client.available_models).to eq(CompletionKit::LlamaClient::STATIC_MODELS)
+    expect(client.available_models).to eq([])
 
     allow(Faraday).to receive(:get).and_raise(StandardError, "boom")
-    expect(client.available_models).to eq(CompletionKit::LlamaClient::STATIC_MODELS)
+    expect(client.available_models).to eq([])
 
-    missing_key = CompletionKit::LlamaClient.new(api_key: "llama-key", api_endpoint: "https://llama.example.test")
-    allow(missing_key).to receive(:configured?).and_return(true)
-    allow(missing_key).to receive(:api_key).and_return(nil)
-    request = stub_faraday_get(faraday_get_response(success: true, body: { data: [] }.to_json))
-    expect(missing_key.available_models).to eq(CompletionKit::LlamaClient::STATIC_MODELS)
+    no_key_client = CompletionKit::OllamaClient.new(api_endpoint: "https://ollama.example.test")
+    request = stub_faraday_get(faraday_get_response(success: true, body: { data: [{ id: "qwen2.5" }] }.to_json))
+    expect(no_key_client.available_models).to eq([{ id: "qwen2.5", name: "qwen2.5" }])
     expect(request.headers["Authorization"]).to be_nil
   end
 end

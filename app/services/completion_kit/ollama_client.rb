@@ -1,30 +1,25 @@
 module CompletionKit
-  class LlamaClient < LlmClient
-    STATIC_MODELS = [
-      { id: "llama-3.1-8b-instruct", name: "Llama 3.1 8B Instruct" },
-      { id: "llama-3.1-70b-instruct", name: "Llama 3.1 70B Instruct" }
-    ].freeze
-
+  class OllamaClient < LlmClient
     def generate_completion(prompt, options = {})
-      return "Error: API credentials not configured" unless configured?
-      
+      return "Error: API endpoint not configured" unless configured?
+
       require "faraday"
       require "faraday/retry"
       require "json"
-      
-      model = options[:model] || STATIC_MODELS.first[:id]
+
+      model = options[:model]
       max_tokens = options[:max_tokens] || 1000
       temperature = options[:temperature] || 0.7
-      
+
       conn = Faraday.new(url: api_endpoint) do |f|
         f.request :retry, max: 2, interval: 0.5
         f.adapter Faraday.default_adapter
       end
-      
+
       response = conn.post do |req|
         req.url "/v1/completions"
         req.headers["Content-Type"] = "application/json"
-        req.headers["Authorization"] = "Bearer #{api_key}"
+        req.headers["Authorization"] = "Bearer #{api_key}" if api_key.present?
         req.body = {
           model: model,
           prompt: prompt,
@@ -32,7 +27,7 @@ module CompletionKit
           temperature: temperature
         }.to_json
       end
-      
+
       if response.success?
         data = JSON.parse(response.body)
         data["choices"][0]["text"].strip
@@ -44,7 +39,7 @@ module CompletionKit
     end
 
     def available_models
-      return STATIC_MODELS unless configured?
+      return [] unless configured?
 
       require "faraday"
       require "faraday/retry"
@@ -54,33 +49,32 @@ module CompletionKit
         req.headers["Authorization"] = "Bearer #{api_key}" if api_key.present?
       end
 
-      return STATIC_MODELS unless response.success?
+      return [] unless response.success?
 
       models = JSON.parse(response.body).fetch("data", []).map { |entry| entry["id"] }.sort
-      models.map { |id| { id: id, name: id } }.presence || STATIC_MODELS
+      models.map { |id| { id: id, name: id } }
     rescue StandardError
-      STATIC_MODELS
+      []
     end
 
     def configured?
-      api_key.present? && api_endpoint.present?
+      api_endpoint.present?
     end
 
     def configuration_errors
       errors = []
-      errors << "Llama API key is not configured" unless api_key.present?
-      errors << "Llama API endpoint is not configured" unless api_endpoint.present?
+      errors << "Ollama API endpoint is not configured" unless api_endpoint.present?
       errors
     end
 
     private
 
     def api_key
-      @config[:api_key] || ENV["LLAMA_API_KEY"]
+      @config[:api_key] || ENV["OLLAMA_API_KEY"]
     end
-    
+
     def api_endpoint
-      (@config[:api_endpoint] || ENV["LLAMA_API_ENDPOINT"] || "https://api.llama.ai").to_s.delete_suffix("/")
+      (@config[:api_endpoint] || ENV["OLLAMA_API_ENDPOINT"] || "http://localhost:11434/v1").to_s.delete_suffix("/")
     end
   end
 end

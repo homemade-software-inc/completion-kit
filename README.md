@@ -105,7 +105,7 @@ These are the objects you'll work with, whether through the UI, the REST API, or
 - **Response** — The model's output for one row of the dataset, with any reviews attached.
 - **Metric** — One evaluation dimension: a name, an instruction, evaluation steps, and 1–5-star rubric bands. The judge uses a metric to score a response.
 - **Criteria** — A named, reusable bundle of metrics you can apply to a run in one step.
-- **Provider Credential** — An API key for a model provider (OpenAI, Anthropic, Llama). Encrypted at rest using Rails' Active Record encryption, and never returned through the API.
+- **Provider Credential** — An API key for a model provider (OpenAI, Anthropic, Ollama, OpenRouter). Encrypted at rest using Rails' Active Record encryption, and never returned through the API.
 
 ### REST API
 

@@ -26,8 +26,8 @@ module CompletionKit
         OpenAiClient.new(config)
       when "anthropic"
         AnthropicClient.new(config)
-      when "llama"
-        LlamaClient.new(config)
+      when "ollama"
+        OllamaClient.new(config)
       when "openrouter"
         OpenRouterClient.new(config)
       else

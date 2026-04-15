@@ -14,11 +14,11 @@ module CompletionKit
                    { provider: "openai", api_key: CompletionKit.config.openai_api_key || ENV["OPENAI_API_KEY"] }
                  when "anthropic"
                    { provider: "anthropic", api_key: CompletionKit.config.anthropic_api_key || ENV["ANTHROPIC_API_KEY"] }
-                 when "llama"
+                 when "ollama"
                    {
-                     provider: "llama",
-                     api_key: CompletionKit.config.llama_api_key || ENV["LLAMA_API_KEY"],
-                     api_endpoint: CompletionKit.config.llama_api_endpoint || ENV["LLAMA_API_ENDPOINT"]
+                     provider: "ollama",
+                     api_key: CompletionKit.config.ollama_api_key || ENV["OLLAMA_API_KEY"],
+                     api_endpoint: CompletionKit.config.ollama_api_endpoint || ENV["OLLAMA_API_ENDPOINT"]
                    }
                  when "openrouter"
                    { provider: "openrouter", api_key: ENV["OPENROUTER_API_KEY"] }
@@ -38,8 +38,6 @@ module CompletionKit
         "openai"
       when /\Aclaude-/
         "anthropic"
-      when /llama/i
-        "llama"
       else
         nil
       end
