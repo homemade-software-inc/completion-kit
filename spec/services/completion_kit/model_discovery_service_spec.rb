@@ -405,6 +405,80 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
     end
   end
 
+  describe "#refresh! for ollama" do
+    let(:config) { { provider: "ollama", api_key: nil, api_endpoint: "http://localhost:11434/v1" } }
+
+    let(:ollama_response_body) do
+      {
+        data: [
+          { id: "llama3.3:70b", object: "model" },
+          { id: "qwen2.5:7b", object: "model" },
+          { id: "mistral:latest", object: "model" }
+        ]
+      }.to_json
+    end
+
+    it "discovers ollama models and marks supports_generation true without probing" do
+      stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      models = CompletionKit::Model.where(provider: "ollama")
+      expect(models.pluck(:model_id)).to contain_exactly(
+        "llama3.3:70b",
+        "qwen2.5:7b",
+        "mistral:latest"
+      )
+      expect(models.where(supports_generation: true).count).to eq(3)
+      expect(models.where("probed_at IS NOT NULL").count).to eq(0)
+      expect(models.find_by(model_id: "llama3.3:70b").display_name).to eq("llama3.3:70b")
+    end
+
+    it "handles an empty ollama response" do
+      stub_faraday_get(faraday_response(success: true, body: { data: [] }.to_json))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      expect(CompletionKit::Model.where(provider: "ollama").count).to eq(0)
+    end
+
+    it "does not call any probe methods for ollama" do
+      stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+
+      service = described_class.new(config: config)
+      expect(service).not_to receive(:probe_generation)
+      expect(service).not_to receive(:probe_judging)
+      service.refresh!
+    end
+
+    it "returns empty when api_endpoint is nil" do
+      service = described_class.new(config: { provider: "ollama", api_key: nil, api_endpoint: nil })
+      service.refresh!
+
+      expect(CompletionKit::Model.where(provider: "ollama").count).to eq(0)
+    end
+
+    it "returns empty list when ollama fetch fails" do
+      stub_faraday_get(faraday_response(success: false, status: 500, body: "Internal Server Error"))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      expect(CompletionKit::Model.where(provider: "ollama").count).to eq(0)
+    end
+
+    it "sends Authorization header when api_key is present" do
+      request = stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+
+      service = described_class.new(config: { provider: "ollama", api_key: "secret", api_endpoint: "http://localhost:11434/v1" })
+      service.refresh!
+
+      expect(request.headers["Authorization"]).to eq("Bearer secret")
+    end
+  end
+
   describe "#refresh! for unknown provider" do
     let(:config) { { provider: "unknown", api_key: "key" } }
 

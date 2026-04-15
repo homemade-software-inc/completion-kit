@@ -15,7 +15,8 @@ Rails.application.config.after_initialize do
   {
     "openai" => ENV["OPENAI_API_KEY"],
     "anthropic" => ENV["ANTHROPIC_API_KEY"],
-    "ollama" => ENV["OLLAMA_API_KEY"]
+    "ollama" => ENV["OLLAMA_API_KEY"],
+    "openrouter" => ENV["OPENROUTER_API_KEY"]
   }.each do |provider, key|
     next unless key.present?
     cred = CompletionKit::ProviderCredential.find_or_initialize_by(provider: provider)

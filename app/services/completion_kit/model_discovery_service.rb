@@ -7,12 +7,13 @@ module CompletionKit
     def initialize(config:)
       @provider = config[:provider]
       @api_key = config[:api_key]
+      @api_endpoint = config[:api_endpoint]
     end
 
     def refresh!(&on_progress)
       models_with_names = fetch_models
       reconcile(models_with_names)
-      return if @provider == "openrouter"
+      return if %w[openrouter ollama].include?(@provider)
       probe_new_models(&on_progress)
     end
 
@@ -23,6 +24,7 @@ module CompletionKit
       when "openai" then fetch_openai_models
       when "anthropic" then fetch_anthropic_models
       when "openrouter" then fetch_openrouter_models
+      when "ollama" then fetch_ollama_models
       else []
       end
     end
@@ -67,6 +69,16 @@ module CompletionKit
       end
     end
 
+    def fetch_ollama_models
+      return [] if @api_endpoint.nil?
+      base_url = @api_endpoint.to_s.delete_suffix("/")
+      response = fetch_connection(base_url).get("/models") do |req|
+        req.headers["Authorization"] = "Bearer #{@api_key}" if @api_key.present?
+      end
+      return [] unless response.success?
+      JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
+    end
+
     def reconcile(models_with_names)
       api_model_ids = models_with_names.map { |m| m[:id] }
       names_by_id = models_with_names.each_with_object({}) { |m, h| h[m[:id]] = m[:display_name] }
@@ -85,7 +97,7 @@ module CompletionKit
             status: "active",
             discovered_at: Time.current
           }
-          if @provider == "openrouter"
+          if %w[openrouter ollama].include?(@provider)
             attrs[:supports_generation] = true
             attrs[:probed_at] = nil
           end
