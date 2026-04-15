@@ -61,8 +61,9 @@ module CompletionKit
     def last_used_at
       model_ids = Model.where(provider: provider).pluck(:model_id)
       return nil if model_ids.empty?
-      prompt_ids = Prompt.where(llm_model: model_ids).pluck(:id)
-      Run.where("prompt_id IN (?) OR judge_model IN (?)", prompt_ids, model_ids)
+      prompt_scope = Prompt.where(llm_model: model_ids).select(:id)
+      Run.where("prompt_id IN (:prompts) OR judge_model IN (:models)",
+                prompts: prompt_scope, models: model_ids)
          .where.not(status: "pending")
          .maximum(:created_at)
     end

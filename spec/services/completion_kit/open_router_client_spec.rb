@@ -83,9 +83,10 @@ RSpec.describe CompletionKit::OpenRouterClient, type: :service do
       expect(result).to include("Error: 500")
     end
 
-    it "raises Faraday errors" do
+    it "rescues Faraday errors and returns an error string" do
       allow(faraday_connection_stub).to receive(:post).and_raise(Faraday::ConnectionFailed.new("nope"))
-      expect { described_class.new(config).generate_completion("hi") }.to raise_error(Faraday::Error)
+      result = described_class.new(config).generate_completion("hi")
+      expect(result).to eq("Error: nope")
     end
 
     it "rescues other StandardErrors and returns an error string" do

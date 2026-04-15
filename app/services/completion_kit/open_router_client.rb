@@ -42,8 +42,6 @@ module CompletionKit
       else
         "Error: #{response.status} - #{response.body}"
       end
-    rescue Faraday::Error
-      raise
     rescue => e
       "Error: #{e.message}"
     end
