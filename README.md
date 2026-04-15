@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.png" alt="CompletionKit logo" width="120" />
+  <img src="https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/logo.png" alt="CompletionKit logo" width="120" />
 </p>
 
 # CompletionKit
@@ -17,11 +17,11 @@ Drive it from the web UI, from the REST API, or from Claude Code and other MCP-a
 
 It's the difference between "this prompt seems to work" and "this prompt scores 4.3 out of 5 across 200 inputs, up from 3.8 last version."
 
-![Prompts index](docs/screenshots/prompts.png)
+![Prompts index](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/prompts.png)
 
-![Prompt detail with metrics and rubrics](docs/screenshots/prompt-detail.png)
+![Prompt detail with metrics and rubrics](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/prompt-detail.png)
 
-![Test run with scored results](docs/screenshots/test-run.png)
+![Test run with scored results](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/test-run.png)
 
 ## Setup
 
