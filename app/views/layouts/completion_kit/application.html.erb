@@ -6,7 +6,7 @@
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
-  <%= favicon_link_tag "completion_kit/logo-symbol.png" %>
+  <%= favicon_link_tag "completion_kit/logo.svg", type: "image/svg+xml" %>
   <%= stylesheet_link_tag "completion_kit/application", media: "all" %>
   <%= javascript_include_tag "turbo", type: "module" %>
   <%= action_cable_meta_tag %>
@@ -14,7 +14,7 @@
 <body class="ck-app">
   <header class="ck-topbar">
     <div class="ck-wrap ck-topbar__inner">
-      <%= link_to (main_app.respond_to?(:root_path) ? main_app.root_path : prompts_path), class: "ck-brand" do %><%= image_tag "completion_kit/logo-device.svg", alt: "CompletionKit", style: "height: 52px; width: auto; margin-bottom: 10px;" %> CompletionKit<% end %>
+      <%= link_to (main_app.respond_to?(:root_path) ? main_app.root_path : prompts_path), class: "ck-brand" do %><%= image_tag "completion_kit/logo.svg", alt: "CompletionKit", style: "height: 52px; width: auto; margin-bottom: 10px;" %> CompletionKit<% end %>
 
       <nav class="ck-nav">
         <% active = ->(path) { request.path.start_with?(path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) } %>
