@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Initial public release of CompletionKit as a mountable Rails engine for
-testing and evaluating GenAI prompts. This section will become `0.1.0`
-when the first version is tagged and pushed to RubyGems.
+## [0.1.0] - 2026-04-15
+
+Initial public release of CompletionKit, a Rails engine for testing and
+evaluating GenAI prompts across multiple providers.
 
 ### Added
 
@@ -19,9 +20,12 @@ when the first version is tagged and pushed to RubyGems.
   criteria.
 - **Provider credentials** — encrypted storage for LLM API keys with
   auto-seeding from environment variables, masked display, and per-provider
-  usage stats.
+  usage stats. Supports OpenAI, Anthropic, Ollama (or any OpenAI-compatible
+  local endpoint), and OpenRouter.
 - **Model discovery** — asynchronous fetching of available models per
-  provider with real-time progress updates.
+  provider with real-time progress updates. OpenRouter and Ollama discovery
+  trust the upstream API's model list and skip per-model probing, keeping
+  discovery fast for providers that publish capability metadata.
 - **REST JSON API** — Bearer token authenticated API exposing full CRUD
   for Prompts, Runs, Datasets, Metrics, Criteria, and ProviderCredentials;
   nested read-only Responses under Runs; and `POST /api/v1/runs/:id/generate`
@@ -33,6 +37,8 @@ when the first version is tagged and pushed to RubyGems.
 - **Web UI** — session-based login, onboarding dashboard showing only
   remaining setup steps, prompt and run management, Turbo Stream live
   updates for run progress and response rows, and a progress bar partial.
+  Model dropdowns are grouped by provider, with OpenRouter models split
+  further by upstream namespace.
 - **Background jobs** — `GenerateJob` and `JudgeJob` for async processing,
   with Solid Queue configured in the standalone app.
 - **Suggestion history** — AI-assisted prompt improvement suggestions
@@ -47,10 +53,12 @@ when the first version is tagged and pushed to RubyGems.
   verify claims against the actual input, not just the output.
 - **API reference page** — per-endpoint documentation with params,
   copy-to-clipboard examples, and MCP tab shown by default.
-- **Standalone demo app** — bundled Rails app under `standalone/` for
-  local development and self-hosting, with dotenv support.
-- **CI/CD** — GitHub Actions workflow, Dependabot, and CodeQL analysis.
+- **Standalone app** — bundled Rails app under `standalone/` for local
+  development and self-hosting, with dotenv support and Active Record
+  encryption for stored provider API keys.
+- **CI/CD** — GitHub Actions workflow and Dependabot.
 - **100% test coverage** — line and branch coverage enforced in CI across
-  400+ RSpec examples.
+  440+ RSpec examples.
 
-[Unreleased]: https://github.com/homemade-software-inc/completion-kit/commits/main
+[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/homemade-software-inc/completion-kit/releases/tag/v0.1.0
