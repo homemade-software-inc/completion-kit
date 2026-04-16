@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CompletionKit — Prompt regression testing for every model you use</title>
+  <meta name="description" content="Prompt testing across OpenAI, Anthropic, Ollama, and any model OpenRouter supports. Score outputs against custom rubrics, get AI-driven improvement suggestions, ship with confidence." />
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/style.css" />
+
+  <meta property="og:title" content="CompletionKit — Prompt regression testing for every model you use" />
+  <meta property="og:description" content="Prompt testing across OpenAI, Anthropic, Ollama, and any model OpenRouter supports." />
+  <meta property="og:image" content="https://completionkit.com/og.png" />
+  <meta property="og:url" content="https://completionkit.com" />
+  <meta property="og:type" content="website" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="CompletionKit" />
+  <meta name="twitter:description" content="Prompt testing across OpenAI, Anthropic, Ollama, and any model OpenRouter supports." />
+  <meta name="twitter:image" content="https://completionkit.com/og.png" />
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="wrap">
+    <a href="/" class="brand"><img src="/img/logo.png" alt="" /> CompletionKit</a>
+    <div class="links">
+      <a href="https://github.com/homemade-software-inc/completion-kit#readme">Docs</a>
+      <a href="https://github.com/homemade-software-inc/completion-kit">GitHub</a>
+      <a href="https://rubygems.org/gems/completion-kit">RubyGems</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+<div class="wrap">
+
+  <section class="hero">
+    <h1>Prompt testing across OpenAI, Anthropic, Ollama, and any model OpenRouter supports.</h1>
+    <h2>Score every output against your own rubric. Tune any input — prompt, model, temperature, dataset — and watch what actually moves the numbers.</h2>
+    <div class="cta-row">
+      <code class="cta-primary">gem install completion-kit</code>
+      <a class="cta-secondary" href="https://github.com/homemade-software-inc/completion-kit">View on GitHub</a>
+    </div>
+    <img class="screenshot" src="/img/prompts.png" alt="CompletionKit prompts index showing a published prompt with run history" />
+  </section>
+
+  <section>
+    <h2>The problem</h2>
+    <p>You change a prompt. You think it works better. You ship it. Two weeks later, an edge case you forgot to test surfaces in production. Your manual sanity-check on five inputs missed it because manual sanity-checks always miss it.</p>
+    <p>CompletionKit catches that before deploy. You bring real data, you bring rubrics, the LLM-as-judge scores every output, and when you change the prompt you re-run the same dataset and see exactly what got better and what broke.</p>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <ol>
+      <li><strong>Bring a dataset.</strong> Upload a CSV of real inputs, or feed it via the REST API.</li>
+      <li><strong>Write a prompt.</strong> Use <code>{{variable}}</code> placeholders matching your CSV headers. CompletionKit versions it for you.</li>
+      <li><strong>Run, score, iterate.</strong> Pick a model (or several), run the dataset, score with custom rubrics, and ship the version that scores best.</li>
+    </ol>
+    <img class="screenshot" src="/img/prompt-detail.png" alt="CompletionKit prompt detail view with the prompt template, suggestion CTA, and a run row" />
+  </section>
+
+  <section>
+    <h2>How CompletionKit compares</h2>
+    <table class="compare">
+      <thead>
+        <tr>
+          <th>&nbsp;</th>
+          <th>OpenAI Evals</th>
+          <th>Anthropic Workbench</th>
+          <th>Braintrust</th>
+          <th>Langfuse</th>
+          <th>Promptfoo</th>
+          <th>CompletionKit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Multi-provider</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr>
+          <td>Local models (Ollama, etc.)</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr>
+          <td>Custom rubrics with bands</td>
+          <td class="partial">Partial</td>
+          <td class="partial">Partial</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr>
+          <td>AI suggestions from your data</td>
+          <td class="no">No</td>
+          <td class="partial">Generic</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr>
+          <td>Versioned prompts via API</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr>
+          <td>MCP server</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr class="us">
+          <td>Free + open source</td>
+          <td class="partial">Partial</td>
+          <td class="partial">Partial</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Features</h2>
+    <div class="feature-grid">
+      <div class="feature">
+        <h3>Multi-model</h3>
+        <p>OpenAI, Anthropic, Ollama (or any OpenAI-compatible local endpoint), and 100+ models via OpenRouter — one tool, all of them.</p>
+      </div>
+      <div class="feature">
+        <h3>Custom rubrics</h3>
+        <p>Define metrics with 1–5 star bands. The LLM-as-judge scores every output against your rubric, not a generic "is this good?" prompt.</p>
+      </div>
+      <div class="feature">
+        <h3>Versioned prompts</h3>
+        <p>Every prompt is versioned. Edit a published prompt and it forks a new version automatically. History is preserved.</p>
+      </div>
+      <div class="feature">
+        <h3>AI-driven suggestions</h3>
+        <p>When the scores tell you something's off, ask CompletionKit for an improved prompt. The suggestion is grounded in the LLM judge's actual feedback on your runs.</p>
+      </div>
+      <div class="feature">
+        <h3>REST API + MCP server</h3>
+        <p>Every resource is exposed via a bearer-token REST API and a built-in Model Context Protocol server (36 tools). Drive it from a UI, an HTTP client, or directly from agents like Claude Code.</p>
+      </div>
+      <div class="feature">
+        <h3>Free, MIT-licensed</h3>
+        <p>Open source. Self-hostable. 100% test coverage. No per-seat pricing, no SaaS lock-in, no vendor account required.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Install</h2>
+    <p>Add to your Gemfile:</p>
+    <pre>gem "completion-kit"</pre>
+    <p>Then run:</p>
+    <pre>bin/rails generate completion_kit:install
+bin/rails db:migrate</pre>
+    <p>Set your provider keys via environment variables:</p>
+    <pre>OPENAI_API_KEY=...
+ANTHROPIC_API_KEY=...
+OPENROUTER_API_KEY=...</pre>
+    <p>Or run the bundled standalone Rails app — see the <a href="https://github.com/homemade-software-inc/completion-kit#standalone-app">README</a>.</p>
+  </section>
+
+  <section>
+    <h2>FAQ</h2>
+    <h3>Which providers does it support?</h3>
+    <p>OpenAI, Anthropic, Ollama (or any OpenAI-compatible local endpoint), and 100+ models via OpenRouter.</p>
+    <h3>Does it work outside Rails?</h3>
+    <p>CompletionKit ships as a Rails engine, but it includes a bundled standalone Rails app you can deploy as a hosted service without writing any Rails code yourself.</p>
+    <h3>Is it free?</h3>
+    <p>Yes. MIT-licensed, free forever, no usage limits, no telemetry.</p>
+    <h3>Who made it?</h3>
+    <p>Built by <a href="https://homemade.software">Homemade Software</a>.</p>
+  </section>
+
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Made by <a href="https://homemade.software">Homemade Software</a></span>
+    <span><a href="https://github.com/homemade-software-inc/completion-kit/blob/main/MIT-LICENSE">MIT License</a> &middot; <a href="https://github.com/homemade-software-inc/completion-kit">GitHub</a> &middot; <a href="https://rubygems.org/gems/completion-kit">RubyGems</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

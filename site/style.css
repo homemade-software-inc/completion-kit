@@ -1,0 +1,211 @@
+:root {
+  --bg: #ffffff;
+  --fg: #0f172a;
+  --fg-dim: #475569;
+  --accent: #06b6d4;
+  --accent-dark: #0891b2;
+  --code-bg: #0f172a;
+  --code-fg: #f1f5f9;
+  --border: #e2e8f0;
+  --max-width: 720px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+a { color: var(--accent-dark); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.wrap {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.2rem;
+}
+
+nav.topbar {
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 0;
+}
+
+nav.topbar .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+nav.topbar img { height: 32px; width: auto; }
+
+nav.topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--fg);
+}
+
+nav.topbar .links { display: flex; gap: 1.4rem; font-size: 0.95rem; }
+
+main { padding: 3rem 0; }
+
+section + section { margin-top: 4rem; }
+
+h1 {
+  font-size: 2.2rem;
+  line-height: 1.2;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 1.15rem;
+  margin: 1.5rem 0 0.5rem 0;
+}
+
+.hero h2 {
+  font-weight: 400;
+  color: var(--fg-dim);
+  font-size: 1.2rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+  margin: 1.5rem 0;
+}
+
+.cta-primary, .cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid var(--border);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.cta-primary {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  border-color: var(--code-bg);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.cta-primary:hover { background: #1e293b; }
+
+.cta-secondary {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.cta-secondary:hover { border-color: var(--accent); color: var(--accent-dark); }
+
+pre, code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+pre {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+p code {
+  background: #f1f5f9;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+}
+
+img.screenshot {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin: 1.5rem 0;
+}
+
+table.compare {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.92rem;
+}
+
+table.compare th, table.compare td {
+  border: 1px solid var(--border);
+  padding: 0.6rem 0.7rem;
+  text-align: center;
+}
+
+table.compare th { background: #f8fafc; font-weight: 600; }
+table.compare td:first-child, table.compare th:first-child { text-align: left; }
+table.compare td.yes { color: var(--accent-dark); font-weight: 700; }
+table.compare td.no { color: #cbd5e1; }
+table.compare td.partial { color: #94a3b8; }
+table.compare tr.us { background: #ecfeff; }
+table.compare tr.us td:first-child { font-weight: 700; }
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin: 1.5rem 0;
+}
+
+.feature-grid .feature {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.2rem;
+}
+
+.feature-grid .feature h3 { margin-top: 0; font-size: 1.05rem; }
+.feature-grid .feature p { margin: 0.5rem 0 0 0; color: var(--fg-dim); font-size: 0.95rem; }
+
+@media (max-width: 600px) {
+  h1 { font-size: 1.8rem; }
+  .feature-grid { grid-template-columns: 1fr; }
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem 0;
+  margin-top: 4rem;
+  font-size: 0.9rem;
+  color: var(--fg-dim);
+}
+
+footer .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
