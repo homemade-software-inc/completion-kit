@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-04-15
+## [0.1.0.rc1] - 2026-04-15
+
+Release candidate 1 for 0.1.0. Published to RubyGems as
+`completion-kit 0.1.0.rc1` for pre-release validation before cutting
+the real 0.1.0.
 
 Initial public release of CompletionKit, a Rails engine for testing and
 evaluating GenAI prompts across multiple providers.
@@ -60,5 +64,5 @@ evaluating GenAI prompts across multiple providers.
 - **100% test coverage** — line and branch coverage enforced in CI across
   440+ RSpec examples.
 
-[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/homemade-software-inc/completion-kit/releases/tag/v0.1.0
+[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0.rc1...HEAD
+[0.1.0.rc1]: https://github.com/homemade-software-inc/completion-kit/releases/tag/v0.1.0.rc1
