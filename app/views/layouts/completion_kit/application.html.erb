@@ -24,6 +24,9 @@
         <%= link_to "Runs", runs_path, class: active.(runs_path) %>
         <%= link_to "Settings", provider_credentials_path, class: active.(provider_credentials_path) %>
         <%= link_to "API", api_reference_path, class: active.(api_reference_path) %>
+        <% if main_app.respond_to?(:logout_path) %>
+          <%= button_to "Log out", main_app.logout_path, method: :delete, class: ck_button_classes(:light, variant: :outline) %>
+        <% end %>
       </nav>
     </div>
   </header>
