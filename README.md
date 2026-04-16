@@ -2,10 +2,10 @@
   <img src="https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/logo.png" alt="CompletionKit" width="360" />
 </p>
 
-# CompletionKit
-
-[![CI](https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml)
-![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+<p align="center">
+  <a href="https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml"><img src="https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <img src="https://img.shields.io/badge/coverage-100%25-brightgreen" alt="coverage" />
+</p>
 
 Your prompts need tests too.
 
