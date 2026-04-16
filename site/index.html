@@ -31,45 +31,60 @@
   </div>
 </nav>
 
-<main>
+<!-- ═══ HERO (dark) ═══ -->
 
-  <section class="hero">
-    <div class="wrap--wide">
-      <h1>Prompt testing across OpenAI, Anthropic, Ollama, and any model OpenRouter supports.</h1>
-      <p class="sub">Score every output against your own rubric. Tune any input — prompt, model, temperature, dataset — and watch what actually moves the numbers.</p>
-      <div class="cta-row">
-        <code class="cta cta--primary">gem install completion-kit</code>
-        <a class="cta cta--secondary" href="https://github.com/homemade-software-inc/completion-kit">View on GitHub</a>
-      </div>
-      <img class="screenshot screenshot--hero" src="/img/prompts.png" alt="CompletionKit prompts index showing a published prompt with run history" />
+<section class="hero">
+  <div class="wrap--wide">
+    <h1>Prompt testing across OpenAI, Anthropic, Ollama, and any model OpenRouter&nbsp;supports.</h1>
+    <p class="sub">Score every output against your own rubric. Tune any input — prompt, model, temperature, dataset — and watch what actually moves the numbers.</p>
+    <div class="cta-row">
+      <code class="cta cta--primary">gem install completion-kit</code>
+      <a class="cta cta--secondary" href="https://github.com/homemade-software-inc/completion-kit">View on GitHub</a>
     </div>
-  </section>
+    <img class="screenshot" src="/img/prompts.png" alt="CompletionKit prompts index showing a published prompt with run history" />
+  </div>
+</section>
 
-  <section class="reveal">
+<!-- ═══ LIGHT BODY ═══ -->
+
+<div class="content-body">
+
+  <section class="light reveal">
     <div class="wrap">
       <h2>The problem</h2>
-      <div class="problem">
-        <p>You change a prompt. You think it works better. You ship it. Two weeks later, an edge case you forgot to test surfaces in production. Your manual sanity-check on five inputs missed it because manual sanity-checks always miss it.</p>
-        <p>CompletionKit catches that before deploy. You bring real data, you bring rubrics, the LLM-as-judge scores every output, and when you change the prompt you re-run the same dataset and see exactly what got better and what broke.</p>
+      <p class="problem-quote">You change a prompt. You think it works better. You ship it. Two weeks later, an edge case you forgot to test surfaces in production.</p>
+      <p class="problem-answer">Your manual sanity-check on five inputs missed it because manual sanity-checks always miss it. CompletionKit catches that before deploy. You bring real data, you bring rubrics, the LLM-as-judge scores every output, and when you change the prompt you re-run the same dataset and see exactly what got better and what broke.</p>
+    </div>
+  </section>
+
+  <section class="light reveal">
+    <div class="wrap--wide">
+      <div class="split">
+        <div>
+          <h2>How it works</h2>
+          <ol class="steps">
+            <li>
+              <strong>Bring a dataset.</strong>
+              <p>Upload a CSV of real inputs, or feed it via the REST API.</p>
+            </li>
+            <li>
+              <strong>Write a prompt.</strong>
+              <p>Use <code>{{variable}}</code> placeholders matching your CSV headers. CompletionKit versions it for you.</p>
+            </li>
+            <li>
+              <strong>Run, score, iterate.</strong>
+              <p>Pick a model (or several), run the dataset, score with custom rubrics, and ship the version that scores best.</p>
+            </li>
+          </ol>
+        </div>
+        <img class="screenshot" src="/img/prompt-detail.png" alt="CompletionKit prompt detail view" />
       </div>
     </div>
   </section>
 
-  <section class="reveal">
-    <div class="wrap">
-      <h2>How it works</h2>
-      <ol class="steps">
-        <li><strong>Bring a dataset.</strong> Upload a CSV of real inputs, or feed it via the REST API.</li>
-        <li><strong>Write a prompt.</strong> Use <code>{{variable}}</code> placeholders matching your CSV headers. CompletionKit versions it for you.</li>
-        <li><strong>Run, score, iterate.</strong> Pick a model (or several), run the dataset, score with custom rubrics, and ship the version that scores best.</li>
-      </ol>
-      <img class="screenshot" src="/img/prompt-detail.png" alt="CompletionKit prompt detail view with the prompt template, suggestion CTA, and a run row" />
-    </div>
-  </section>
-
-  <section class="reveal">
+  <section class="light reveal">
     <div class="wrap--wide">
-      <h2 style="max-width: var(--max-prose); margin-left: auto; margin-right: auto;">How CompletionKit compares</h2>
+      <h2 style="max-width:var(--max-prose);margin-left:auto;margin-right:auto;">How CompletionKit compares</h2>
       <div class="compare-wrap">
         <table class="compare">
           <thead>
@@ -85,7 +100,7 @@
           </thead>
           <tbody>
             <tr><td>Multi-provider</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
-            <tr><td>Local models (Ollama, etc.)</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+            <tr><td>Local models (Ollama)</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
             <tr><td>Custom rubrics with bands</td><td class="partial">Partial</td><td class="partial">Partial</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
             <tr><td>AI suggestions from your data</td><td class="no">No</td><td class="partial">Generic</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
             <tr><td>Versioned prompts via API</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="no">No</td><td class="yes">Yes</td></tr>
@@ -97,9 +112,9 @@
     </div>
   </section>
 
-  <section class="reveal">
+  <section class="light reveal">
     <div class="wrap--wide">
-      <h2 style="max-width: var(--max-prose); margin-left: auto; margin-right: auto;">Features</h2>
+      <h2 style="max-width:var(--max-prose);margin-left:auto;margin-right:auto;">Features</h2>
       <div class="features">
         <div class="feature-card">
           <h3>Multi-model</h3>
@@ -129,7 +144,7 @@
     </div>
   </section>
 
-  <section class="install-section reveal">
+  <section class="light install reveal">
     <div class="wrap">
       <h2>Install</h2>
       <p>Add to your Gemfile:</p>
@@ -145,7 +160,7 @@ OPENROUTER_API_KEY=...</pre>
     </div>
   </section>
 
-  <section class="reveal">
+  <section class="light reveal">
     <div class="wrap">
       <h2>FAQ</h2>
       <div class="faq-item">
@@ -154,7 +169,7 @@ OPENROUTER_API_KEY=...</pre>
       </div>
       <div class="faq-item">
         <h3>Does it work outside Rails?</h3>
-        <p>CompletionKit ships as a Rails engine, but it includes a bundled standalone Rails app you can deploy as a hosted service without writing any Rails code yourself. You don't need to be a Rails developer to run it.</p>
+        <p>CompletionKit ships as a Rails engine, but it includes a bundled standalone Rails app you can deploy as a hosted service without writing any Rails code yourself.</p>
       </div>
       <div class="faq-item">
         <h3>Is it free?</h3>
@@ -167,7 +182,9 @@ OPENROUTER_API_KEY=...</pre>
     </div>
   </section>
 
-</main>
+</div>
+
+<!-- ═══ FOOTER (dark) ═══ -->
 
 <footer>
   <div class="inner">
@@ -186,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!('IntersectionObserver' in window)) { els.forEach(function(e) { e.classList.add('visible'); }); return; }
   var obs = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) { if (entry.isIntersecting) { entry.target.classList.add('visible'); obs.unobserve(entry.target); } });
-  }, { threshold: 0.1 });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
   els.forEach(function(el) { obs.observe(el); });
 });
 </script>
