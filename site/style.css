@@ -20,8 +20,8 @@
   --border-light: #ece8e2;
   --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
-  --max-prose: 720px;
-  --max-wide: 960px;
+  --max-prose: 780px;
+  --max-wide: 1060px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,8 +29,8 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 
 body {
   font-family: var(--sans);
-  font-size: 17px;
-  line-height: 1.7;
+  font-size: 18px;
+  line-height: 1.75;
   color: var(--fg);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -58,14 +58,14 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .brand {
-  display: flex; align-items: center; gap: 0.7rem;
+  display: flex; align-items: center; gap: 0.6rem;
   font-family: var(--mono); font-weight: 700; font-size: 1.25rem;
-  color: #fff; letter-spacing: -0.02em;
+  color: var(--accent); letter-spacing: -0.02em;
 }
-.brand:hover { color: #fff; text-decoration: none; }
-.brand img { height: 36px; width: auto; }
+.brand:hover { color: var(--accent); text-decoration: none; }
+.brand img { height: 52px; width: auto; }
 
-.nav-links { display: flex; gap: 1.5rem; font-size: 0.9rem; font-weight: 500; }
+.nav-links { display: flex; gap: 1.5rem; font-size: 0.95rem; font-weight: 500; }
 .nav-links a { color: var(--dark-muted); }
 .nav-links a:hover { color: #fff; }
 
@@ -97,17 +97,17 @@ img { max-width: 100%; height: auto; display: block; }
 .hero .wrap--wide { position: relative; z-index: 1; }
 
 .hero h1 {
-  font-family: var(--sans); font-weight: 900;
-  font-size: clamp(2.4rem, 5.5vw, 3.6rem);
-  line-height: 1.12; letter-spacing: -0.03em;
+  font-family: var(--sans); font-weight: 800;
+  font-size: clamp(2.6rem, 6vw, 4rem);
+  line-height: 1.1; letter-spacing: -0.03em;
   color: #fff;
-  max-width: 820px; margin: 0 auto 1.5rem;
+  max-width: 900px; margin: 0 auto 1.5rem;
   animation: fadeUp 0.7s ease both;
 }
 
 .hero .sub {
-  font-size: 1.15rem; line-height: 1.65; color: var(--dark-muted);
-  max-width: 580px; margin: 0 auto 2.5rem;
+  font-size: 1.25rem; line-height: 1.65; color: var(--dark-muted);
+  max-width: 640px; margin: 0 auto 2.5rem;
   animation: fadeUp 0.7s ease 0.12s both;
 }
 
@@ -181,8 +181,8 @@ section.light:first-child { border-top: none; }
 
 section.light h2 {
   font-family: var(--sans); font-weight: 700;
-  font-size: 1.8rem; line-height: 1.2; letter-spacing: -0.02em;
-  margin-bottom: 1.2rem; color: var(--fg);
+  font-size: 2.1rem; line-height: 1.2; letter-spacing: -0.02em;
+  margin-bottom: 1.4rem; color: var(--fg);
 }
 
 section.light p { color: var(--fg-dim); margin-bottom: 1rem; }
