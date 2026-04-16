@@ -9,7 +9,7 @@
 .idea/
 spec/dummy/tmp/
 .superpowers/
-standalone/config/master.key
+**/master.key
 standalone/tmp/
 standalone/log/*.log
 standalone/db/*.sqlite3
