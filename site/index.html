@@ -64,16 +64,16 @@
           <h2>How it works</h2>
           <ol class="steps">
             <li>
-              <strong>Bring a dataset.</strong>
-              <p>Upload a CSV of real inputs, or feed it via the REST API.</p>
+              <strong>Write a prompt.</strong>
+              <p>Start here. If your prompt uses variable inputs, add <code>{{placeholders}}</code> and upload a CSV. If it doesn't, just run it as-is.</p>
             </li>
             <li>
-              <strong>Write a prompt.</strong>
-              <p>Use <code>{{variable}}</code> placeholders matching your CSV headers. CompletionKit versions it for you.</p>
+              <strong>Define what "good" looks like.</strong>
+              <p>Create metrics with a scoring scale. The LLM judge uses them to score every output.</p>
             </li>
             <li>
               <strong>Run, score, iterate.</strong>
-              <p>Pick a model (or several), run the dataset, score with criteria you define, and ship the version that scores best.</p>
+              <p>Pick a model, run it, read the scores. Change the prompt, the model, the temperature. Re-run and see what moved.</p>
             </li>
           </ol>
         </div>
