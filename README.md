@@ -7,9 +7,9 @@
 [![CI](https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml)
 ![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
-Prompt testing across OpenAI, Anthropic, Ollama, and any model OpenRouter supports.
+Your prompts need tests too.
 
-Score every output against your own rubric. Tune any input — prompt template, variables, model, temperature, dataset — and watch what actually moves the numbers. When the scores tell you something's off, CompletionKit suggests an improved prompt grounded in the LLM judge's actual feedback on your runs. You inspect the diff, apply it as a new version, re-run the same dataset, and see what changed.
+Run every prompt against real data. Score each output with an LLM judge against criteria you define. Change anything: the prompt, the model, the temperature, the dataset. Re-run and see exactly what got better and what broke. When the scores tell you something's off, CompletionKit suggests an improved prompt based on the judge's actual feedback on your runs. You inspect the diff, apply it as a new version, and verify the improvement.
 
 It's the difference between "this prompt seems to work" and "this prompt scores 4.3 out of 5 across 200 inputs, up from 3.8 last version."
 
@@ -100,20 +100,20 @@ Only one mode can be active.
 ## How it works
 
 1. **Create a prompt** with `{{variable}}` placeholders
-2. **Upload a dataset** — a CSV where column headers match the variable names
-3. **Run it** against a model and score outputs with an LLM-as-judge against your custom rubrics
-4. **Iterate** — change the prompt, the model, the temperature, or the dataset and re-run. CompletionKit versions your prompts so you can always compare against previous results.
-5. **Get suggestions** — when scores drop, ask CompletionKit for an AI-generated improvement. The suggestion is grounded in the judge's actual per-response feedback, not generic prompt-engineering advice. Inspect the diff and apply it as a new version.
+2. **Upload a dataset.** A CSV where column headers match the variable names.
+3. **Run it** against a model and score outputs with an LLM judge against criteria you define.
+4. **Iterate.** Change the prompt, the model, the temperature, or the dataset and re-run. CompletionKit versions your prompts so you can always compare against previous results.
+5. **Get suggestions.** When scores drop, ask CompletionKit for an AI-generated improvement. The suggestion is based on the judge's actual per-response feedback, not generic prompt-engineering advice. Inspect the diff and apply it as a new version.
 
 ## Concepts
 
-- **Prompt** — A versioned template with `{{variable}}` placeholders. Publishing freezes the template; editing a published prompt creates a new version.
-- **Dataset** — A CSV of real inputs. Each row becomes one test case.
-- **Run** — One execution of a prompt against a dataset. Captures every input (model, temperature, metrics) and stores all outputs and scores.
-- **Response** — The model's output for one dataset row, with reviews attached.
-- **Metric** — An evaluation dimension with a name, instruction, evaluation steps, and 1-5 star rubric bands. The LLM judge uses this to score each response.
-- **Criteria** — A reusable bundle of metrics.
-- **Provider Credential** — An API key for a model provider. Encrypted at rest, never returned through the API.
+- **Prompt.** A versioned template with `{{variable}}` placeholders. Publishing freezes the template; editing a published prompt creates a new version.
+- **Dataset.** A CSV of real inputs. Each row becomes one test case.
+- **Run.** One execution of a prompt against a dataset. Captures every input (model, temperature, metrics) and stores all outputs and scores.
+- **Response.** The model's output for one dataset row, with reviews attached.
+- **Metric.** An evaluation dimension with a name, instruction, evaluation steps, and a 1-5 star scoring scale. The LLM judge uses this to score each response.
+- **Criteria.** A reusable bundle of metrics.
+- **Provider Credential.** An API key for a model provider. Encrypted at rest, never returned through the API.
 
 ## REST API
 

@@ -171,6 +171,13 @@ img { max-width: 100%; height: auto; display: block; }
 /* ═══════ LIGHT SECTIONS ═══════ */
 
 .content-body { background: var(--bg); }
+.content-body::before {
+  content: '';
+  display: block;
+  height: 100px;
+  background: linear-gradient(to bottom, var(--dark), var(--bg));
+  margin-bottom: -100px;
+}
 
 section.light {
   padding: 5rem 0;
