@@ -66,13 +66,23 @@ Set these as environment variables or configure them in the generated initialize
 
 ### Encryption
 
-Provider API keys are stored using [Active Record encryption](https://guides.rubyonrails.org/active_record_encryption.html). The host app must have encryption keys configured:
+Provider API keys are encrypted at rest using [Active Record encryption](https://guides.rubyonrails.org/active_record_encryption.html). You need three encryption keys configured before the app will boot in production.
+
+Generate them:
 
 ```bash
 bin/rails db:encryption:init
 ```
 
-Copy the generated keys into `config/credentials.yml.enc` or set the equivalent environment variables.
+Then set them as environment variables:
+
+```bash
+COMPLETION_KIT_ENCRYPTION_PRIMARY_KEY=<generated value>
+COMPLETION_KIT_ENCRYPTION_DETERMINISTIC_KEY=<generated value>
+COMPLETION_KIT_ENCRYPTION_KEY_DERIVATION_SALT=<generated value>
+```
+
+Or add them to `config/credentials.yml.enc` under `active_record_encryption`. In development, the standalone app uses built-in fallback values so you can skip this step locally.
 
 ## Authentication
 
