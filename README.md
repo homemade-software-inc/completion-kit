@@ -166,9 +166,8 @@ Any Rails-friendly host works (Fly, Heroku, Render, Docker, etc.). Point it at a
 | `COMPLETION_KIT_API_TOKEN` | Bearer token for REST API and MCP | (none, API disabled) |
 | `COMPLETION_KIT_USERNAME` | Web UI login username | `admin` |
 | `COMPLETION_KIT_PASSWORD` | Web UI login password | (none, open in dev) |
-| `COMPLETION_KIT_ENCRYPTION_PRIMARY_KEY` | AR encryption key | (required in production) |
-| `COMPLETION_KIT_ENCRYPTION_DETERMINISTIC_KEY` | AR encryption key | (required in production) |
-| `COMPLETION_KIT_ENCRYPTION_KEY_DERIVATION_SALT` | AR encryption key | (required in production) |
+
+You also need the three `COMPLETION_KIT_ENCRYPTION_*` keys from the [Encryption](#encryption) section above.
 
 When the gem ships a new migration, install it locally and commit before pushing:
 
