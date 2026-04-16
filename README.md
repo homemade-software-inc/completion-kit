@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/logo.png" alt="CompletionKit logo" width="120" />
+  <img src="https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/logo.png" alt="CompletionKit" width="360" />
 </p>
 
 # CompletionKit
