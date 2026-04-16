@@ -6,16 +6,14 @@
 
 [![CI](https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml)
 ![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
-![dependencies](https://img.shields.io/badge/dependencies-7-blue)
-[![Dependabot](https://img.shields.io/badge/dependabot-enabled-blue?logo=dependabot)](https://github.com/homemade-software-inc/completion-kit/network/updates)
 
-You need to know whether your prompts produce the output you expect, consistently, across real data. CompletionKit gives you that, inside your Rails app.
+Prompt testing across OpenAI, Anthropic, Ollama, and any model OpenRouter supports.
 
-Mount the engine, bring your prompts and datasets, and every input runs through a model you pick. Each output is scored against your own metrics and rubrics by an LLM-as-judge. When you change a prompt, re-run the same dataset and see exactly what got better and what broke — and when the scores tell you something's off, CompletionKit can suggest an improved version of the prompt based on the reviews, which you inspect as a diff and apply as a new version.
-
-Drive it from the web UI, from the REST API, or from Claude Code and other MCP-aware agents via the built-in Model Context Protocol server. All three share the same state — your prompts, runs, datasets, and scores are one source of truth.
+Score every output against your own rubric. Tune any input — prompt template, variables, model, temperature, dataset — and watch what actually moves the numbers. When the scores tell you something's off, CompletionKit suggests an improved prompt grounded in the LLM judge's actual feedback on your runs. You inspect the diff, apply it as a new version, re-run the same dataset, and see what changed.
 
 It's the difference between "this prompt seems to work" and "this prompt scores 4.3 out of 5 across 200 inputs, up from 3.8 last version."
+
+**[completionkit.com](https://completionkit.com)** | **[RubyGems](https://rubygems.org/gems/completion-kit)**
 
 ![Prompts index](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/prompts.png)
 
@@ -23,7 +21,24 @@ It's the difference between "this prompt seems to work" and "this prompt scores 
 
 ![Test run with scored results](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/test-run.png)
 
-## Setup
+## Quick Start
+
+### Run the standalone app
+
+The fastest way to start. No existing Rails app needed.
+
+```bash
+git clone https://github.com/homemade-software-inc/completion-kit.git
+cd completion-kit/standalone
+bundle install
+bin/rails completion_kit:install:migrations
+bin/rails db:migrate
+bin/rails server
+```
+
+Visit `http://localhost:3000`. Add a provider credential (Settings), create a prompt, upload a CSV dataset, and run it.
+
+### Or mount as an engine in your existing Rails app
 
 ```ruby
 gem "completion-kit"
@@ -34,26 +49,30 @@ bin/rails generate completion_kit:install
 bin/rails db:migrate
 ```
 
-Set your provider keys via environment variables or the generated initializer:
+The engine mounts at `/completion_kit` in your app.
 
-```bash
-OPENAI_API_KEY=...
-ANTHROPIC_API_KEY=...
-LLAMA_API_KEY=...
-LLAMA_API_ENDPOINT=...
-```
+## Providers
 
-Available models are discovered dynamically from each provider's API.
+CompletionKit discovers available models from each provider's API automatically.
 
-### Encryption keys
+| Provider | Env vars | What it covers |
+|----------|----------|----------------|
+| **OpenAI** | `OPENAI_API_KEY` | GPT-5, GPT-4.1, GPT-4o, etc. |
+| **Anthropic** | `ANTHROPIC_API_KEY` | Claude Opus, Sonnet, Haiku |
+| **Ollama / local endpoint** | `OLLAMA_API_ENDPOINT` (default: `http://localhost:11434/v1`) | Any model you've `ollama pull`-ed, or any OpenAI-compatible local server (vLLM, LM Studio, llama.cpp) |
+| **OpenRouter** | `OPENROUTER_API_KEY` | 100+ models from 30+ providers through one API key |
 
-Provider API keys are stored using [Rails Active Record encryption](https://guides.rubyonrails.org/active_record_encryption.html), so the host app must have encryption keys configured. If you haven't set them up already:
+Set these as environment variables or configure them in the generated initializer. You can also add provider credentials through the web UI under Settings.
+
+### Encryption
+
+Provider API keys are stored using [Active Record encryption](https://guides.rubyonrails.org/active_record_encryption.html). The host app must have encryption keys configured:
 
 ```bash
 bin/rails db:encryption:init
 ```
 
-Copy the generated keys into `config/credentials.yml.enc` under `active_record_encryption`, or set the equivalent environment variables. CompletionKit won't boot without valid keys in production.
+Copy the generated keys into `config/credentials.yml.enc` or set the equivalent environment variables.
 
 ## Authentication
 
@@ -62,7 +81,6 @@ CompletionKit requires authentication in production. In development, routes are 
 ### Basic Auth (recommended for simple setups)
 
 ```ruby
-# config/initializers/completion_kit.rb
 CompletionKit.configure do |c|
   c.username = "admin"
   c.password = ENV["COMPLETION_KIT_PASSWORD"]
@@ -72,58 +90,49 @@ end
 ### Custom Auth (Devise, etc.)
 
 ```ruby
-# config/initializers/completion_kit.rb
 CompletionKit.configure do |c|
   c.auth_strategy = ->(controller) { controller.authenticate_user! }
 end
 ```
 
-Only one mode can be active — setting both raises a `ConfigurationError`.
+Only one mode can be active.
 
-## Usage
+## How it works
 
-1. Create a prompt with `{{variable}}` placeholders
-2. Create a test run and paste CSV data (headers match variable names)
-3. Generate outputs, run AI review, inspect scored results
+1. **Create a prompt** with `{{variable}}` placeholders
+2. **Upload a dataset** — a CSV where column headers match the variable names
+3. **Run it** against a model and score outputs with an LLM-as-judge against your custom rubrics
+4. **Iterate** — change the prompt, the model, the temperature, or the dataset and re-run. CompletionKit versions your prompts so you can always compare against previous results.
+5. **Get suggestions** — when scores drop, ask CompletionKit for an AI-generated improvement. The suggestion is grounded in the judge's actual per-response feedback, not generic prompt-engineering advice. Inspect the diff and apply it as a new version.
 
-## Programmatic access
+## Concepts
 
-CompletionKit exposes every resource through both a REST JSON API and an MCP server. Both share the same bearer-token auth, so configure once and use either interface:
+- **Prompt** — A versioned template with `{{variable}}` placeholders. Publishing freezes the template; editing a published prompt creates a new version.
+- **Dataset** — A CSV of real inputs. Each row becomes one test case.
+- **Run** — One execution of a prompt against a dataset. Captures every input (model, temperature, metrics) and stores all outputs and scores.
+- **Response** — The model's output for one dataset row, with reviews attached.
+- **Metric** — An evaluation dimension with a name, instruction, evaluation steps, and 1-5 star rubric bands. The LLM judge uses this to score each response.
+- **Criteria** — A reusable bundle of metrics.
+- **Provider Credential** — An API key for a model provider. Encrypted at rest, never returned through the API.
+
+## REST API
+
+Every resource is accessible via a bearer-token JSON API:
 
 ```ruby
-# config/initializers/completion_kit.rb
 CompletionKit.configure { |c| c.api_token = ENV["COMPLETION_KIT_API_TOKEN"] }
 ```
-
-### Concepts
-
-These are the objects you'll work with, whether through the UI, the REST API, or the MCP server:
-
-- **Prompt** — A named, versioned template with `{{variable}}` placeholders. Publishing a prompt freezes its template so runs always reference a known version; editing a published prompt creates a new version.
-- **Dataset** — A CSV of real inputs. Column headers match the prompt's `{{variable}}` names, and each row becomes one test case.
-- **Run** — A single execution of a prompt against a dataset. Tracks progress, stores outputs, and records which metrics were used for scoring.
-- **Response** — The model's output for one row of the dataset, with any reviews attached.
-- **Metric** — One evaluation dimension: a name, an instruction, evaluation steps, and 1–5-star rubric bands. The judge uses a metric to score a response.
-- **Criteria** — A named, reusable bundle of metrics you can apply to a run in one step.
-- **Provider Credential** — An API key for a model provider (OpenAI, Anthropic, Ollama, OpenRouter). Encrypted at rest using Rails' Active Record encryption, and never returned through the API.
-
-### REST API
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
   http://localhost:3000/completion_kit/api/v1/prompts
-
-curl -X POST http://localhost:3000/completion_kit/api/v1/prompts \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"summarizer","template":"Summarize: {{text}}","llm_model":"gpt-4.1"}'
 ```
 
-Mount the engine, then visit **`/completion_kit/api_reference`** in your running app for per-endpoint documentation with copy-to-clipboard curl examples pre-filled with your token.
+Visit `/completion_kit/api_reference` in your running app for per-endpoint docs with copy-to-clipboard curl examples.
 
-### MCP server
+## MCP server
 
-CompletionKit also runs a [Model Context Protocol](https://modelcontextprotocol.io) server at the `/mcp` path within the engine mount, exposing the same resources as 36 tools (one per CRUD action plus process actions like `runs_generate` and `prompts_publish`). Point Claude Code, Cursor, or any other MCP client at it:
+CompletionKit runs a [Model Context Protocol](https://modelcontextprotocol.io) server at `/completion_kit/mcp`, exposing every resource as tools that MCP-aware clients (Claude Code, Cursor, etc.) can drive directly:
 
 ```json
 {
@@ -136,40 +145,22 @@ CompletionKit also runs a [Model Context Protocol](https://modelcontextprotocol.
 }
 ```
 
-The in-app API reference page also ships install snippets you can copy straight into your MCP client config.
+The in-app API reference page has install snippets you can copy straight into your MCP client config.
 
-## Standalone App
+## Deploying the standalone app
 
-CompletionKit ships with a standalone Rails app you can deploy as a hosted service.
-
-### Quick Start
-
-```bash
-cd standalone
-bundle install
-bin/rails completion_kit:install:migrations
-bin/rails db:migrate
-bin/rails server
-```
-
-Visit `http://localhost:3000` for the home page, or `http://localhost:3000/completion_kit` for the engine UI.
-
-### Configuration
-
-Set environment variables:
+Any Rails-friendly host works (Fly, Heroku, Render, Docker, etc.). Point it at a Postgres instance via `DATABASE_URL`, set your provider env vars, and run `cd standalone && bin/rails db:migrate` on each deploy.
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `COMPLETION_KIT_API_TOKEN` | Bearer token for REST API and MCP access | (none — API disabled) |
+| `COMPLETION_KIT_API_TOKEN` | Bearer token for REST API and MCP | (none, API disabled) |
 | `COMPLETION_KIT_USERNAME` | Web UI login username | `admin` |
-| `COMPLETION_KIT_PASSWORD` | Web UI login password | (none — open in dev) |
-| `DATABASE_URL` | PostgreSQL connection string (production) | SQLite in dev |
+| `COMPLETION_KIT_PASSWORD` | Web UI login password | (none, open in dev) |
+| `COMPLETION_KIT_ENCRYPTION_PRIMARY_KEY` | AR encryption key | (required in production) |
+| `COMPLETION_KIT_ENCRYPTION_DETERMINISTIC_KEY` | AR encryption key | (required in production) |
+| `COMPLETION_KIT_ENCRYPTION_KEY_DERIVATION_SALT` | AR encryption key | (required in production) |
 
-### Deploying
-
-Any Rails-friendly host works — Fly, Heroku, Render, self-managed Docker, etc. Point your host at a Postgres instance via `DATABASE_URL`, set the environment variables above, and run `cd standalone && bin/rails db:migrate` on each deploy.
-
-When the gem ships a new engine migration, install it into your standalone app locally and commit the generated file before pushing:
+When the gem ships a new migration, install it locally and commit before pushing:
 
 ```bash
 cd standalone
@@ -178,14 +169,9 @@ bin/rails db:migrate
 git add db/migrate/ && git commit -m "install new engine migration"
 ```
 
-That way your host's `db:migrate` picks up the new file on the next deploy. Don't run `completion_kit:install:migrations` on the host itself — migration files are source artifacts, they belong in git.
+## Contributing
 
-## Development
-
-```bash
-bundle install
-bundle exec rspec
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and pull request guidelines.
 
 ## License
 
