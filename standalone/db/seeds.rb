@@ -164,4 +164,188 @@ responses_data.each do |rd|
   end
 end
 
+conciseness = CompletionKit::Metric.find_or_create_by!(name: "Conciseness") do |m|
+  m.instruction = "Is the summary the right length? It should be exactly 2 sentences and convey the essential property information without filler."
+  m.evaluation_steps = [
+    "Count the sentences. Exactly 2 is ideal.",
+    "Check that every word earns its place. No filler, no padding.",
+    "Verify the summary would work as a search-result snippet."
+  ]
+  m.rubric_bands = [
+    { "stars" => 5, "description" => "Exactly 2 sentences. Every word earns its place. Works perfectly as a search snippet." },
+    { "stars" => 3, "description" => "Close to 2 sentences but slightly too long or includes filler words that add nothing." },
+    { "stars" => 1, "description" => "Way too long, way too short, or reads like a full listing crammed into two lines." }
+  ]
+end
+
+completeness = CompletionKit::Metric.find_or_create_by!(name: "Completeness") do |m|
+  m.instruction = "Does the summary capture what a buyer scanning search results would most want to know? Key selling point, location, and property type at minimum."
+  m.evaluation_steps = [
+    "Check for property type and bedroom count",
+    "Check for location or suburb name",
+    "Check for the single strongest selling point"
+  ]
+  m.rubric_bands = [
+    { "stars" => 5, "description" => "Covers property type, location, and the standout feature. A buyer knows immediately whether to click through." },
+    { "stars" => 3, "description" => "Covers basics but misses the hook. You know what it is but not why you'd care." },
+    { "stars" => 1, "description" => "Missing critical information. You can't tell what kind of property it is or where." }
+  ]
+end
+
+local_relevance = CompletionKit::Metric.find_or_create_by!(name: "Local Relevance") do |m|
+  m.instruction = "Does the neighbourhood description reflect the specific character of this area? It should feel like the writer has actually been there, not like a generic suburb template."
+  m.evaluation_steps = [
+    "Does it name specific streets, landmarks, or local institutions?",
+    "Could this description apply to any suburb, or is it clearly about this one?",
+    "Does it match the known character of the area?"
+  ]
+  m.rubric_bands = [
+    { "stars" => 5, "description" => "Clearly about this specific neighbourhood. Names local landmarks or captures the area's known character accurately." },
+    { "stars" => 3, "description" => "Broadly correct but could describe several similar suburbs. Generic 'great cafes and parks' territory." },
+    { "stars" => 1, "description" => "Wrong vibe entirely, or so generic it adds nothing. Could be any suburb in Australia." }
+  ]
+end
+
+engagement = CompletionKit::Metric.find_or_create_by!(name: "Engagement") do |m|
+  m.instruction = "Does the neighbourhood guide make you want to live there? It should paint a picture of the lifestyle, not just list amenities."
+  m.evaluation_steps = [
+    "After reading, can you picture a typical Saturday morning in this neighbourhood?",
+    "Does it connect amenities to lifestyle rather than just listing them?",
+    "Would a buyer feel emotionally pulled toward the area?"
+  ]
+  m.rubric_bands = [
+    { "stars" => 5, "description" => "You can picture yourself there. The writing connects place to lifestyle. Creates genuine pull." },
+    { "stars" => 3, "description" => "Pleasant but forgettable. Lists amenities without connecting them to how life actually feels there." },
+    { "stars" => 1, "description" => "Dry, clinical, or completely fails to convey any sense of place. Reads like a council report." }
+  ]
+end
+
+summary_criteria = CompletionKit::Criteria.find_or_create_by!(name: "Search Snippet Quality") do |c|
+  c.description = "Assessment criteria for property search-result summaries"
+end
+[accuracy, conciseness, completeness].each_with_index do |metric, i|
+  CompletionKit::CriteriaMembership.find_or_create_by!(criteria: summary_criteria, metric: metric) do |cm|
+    cm.position = i + 1
+  end
+end
+
+neighbourhood_criteria = CompletionKit::Criteria.find_or_create_by!(name: "Neighbourhood Guide Quality") do |c|
+  c.description = "Assessment criteria for neighbourhood lifestyle descriptions"
+end
+[accuracy, local_relevance, engagement].each_with_index do |metric, i|
+  CompletionKit::CriteriaMembership.find_or_create_by!(criteria: neighbourhood_criteria, metric: metric) do |cm|
+    cm.position = i + 1
+  end
+end
+
+summary_prompt = CompletionKit::Prompt.find_or_create_by!(name: "Property Summary") do |p|
+  p.description = "Generates a 2-sentence search-result snippet from property details"
+  p.template = "Write a 2-sentence property summary for use in search results. Include the key selling point and the property type. Be factual and concise.\n\n{{property_details}}"
+  p.llm_model = "gpt-4.1-mini"
+end
+
+summary_run = CompletionKit::Run.find_or_create_by!(name: "Property Summary — v1 #1") do |r|
+  r.prompt = summary_prompt
+  r.dataset = dataset
+  r.judge_model = "gpt-4.1-mini"
+  r.status = "completed"
+  r.progress_current = 15
+  r.progress_total = 15
+end
+
+[accuracy, conciseness, completeness].each_with_index do |metric, i|
+  CompletionKit::RunMetric.find_or_create_by!(run: summary_run, metric: metric) do |rm|
+    rm.position = i + 1
+  end
+end
+
+summary_responses = [
+  { input: csv_data.lines[1].strip.tr('"', ''),
+    text: "Renovated 3-bedroom weatherboard in Brunswick with original hardwood floors and a north-facing backyard. Walking distance to Sydney Road trams and zoned for Brunswick Secondary College.",
+    scores: { "Accuracy" => [5, "All details verifiable from the input."], "Conciseness" => [5, "Exactly 2 sentences, no filler."], "Completeness" => [5, "Property type, location, key features, and school zone covered."] } },
+  { input: csv_data.lines[2].strip.tr('"', ''),
+    text: "Level 12 ocean-view apartment in Surfers Paradise with resort-style facilities and secure parking. Currently tenanted at $650/week, 200m from the beach.",
+    scores: { "Accuracy" => [5, "All claims match the input."], "Conciseness" => [5, "Two tight sentences."], "Completeness" => [4, "Covers the essentials but doesn't mention the 87sqm size which buyers would want."] } },
+  { input: csv_data.lines[3].strip.tr('"', ''),
+    text: "Fully restored 1890s colonial homestead on 42 acres in Daylesford with five bedrooms, a guest cottage, and heritage gardens. Ninety minutes from Melbourne.",
+    scores: { "Accuracy" => [5, "Faithful to the input."], "Conciseness" => [5, "Two sentences, well-packed."], "Completeness" => [5, "Property type, era, land size, key features, and distance to Melbourne all present."] } },
+  { input: csv_data.lines[4].strip.tr('"', ''),
+    text: "Compact 1-bedroom art deco studio in Potts Point with harbour glimpses from the shared rooftop terrace. Walk to Kings Cross station, strata $900/quarter.",
+    scores: { "Accuracy" => [5, "All details match."], "Conciseness" => [5, "Two sentences."], "Completeness" => [4, "Good but 'compact' understates 38sqm. Size might be worth mentioning explicitly."] } },
+  { input: csv_data.lines[5].strip.tr('"', ''),
+    text: "Classic 4-bedroom Queenslander in Paddington with city skyline views from the rear deck. Quiet street, 3km to Brisbane CBD, near Suncorp Stadium.",
+    scores: { "Accuracy" => [5, "Matches the input."], "Conciseness" => [5, "Two sentences."], "Completeness" => [5, "Property type, style, key feature, and location context all covered."] } }
+]
+
+summary_responses.each do |rd|
+  response = summary_run.responses.find_or_create_by!(input_data: rd[:input]) do |r|
+    r.response_text = rd[:text]
+  end
+  rd[:scores].each do |metric_name, (score, feedback)|
+    metric = CompletionKit::Metric.find_by!(name: metric_name)
+    response.reviews.find_or_create_by!(metric: metric) do |review|
+      review.metric_name = metric_name
+      review.instruction = metric.instruction
+      review.status = "evaluated"
+      review.ai_score = score
+      review.ai_feedback = feedback
+    end
+  end
+end
+
+neighbourhood_prompt = CompletionKit::Prompt.find_or_create_by!(name: "Neighbourhood Guide") do |p|
+  p.description = "Generates a lifestyle paragraph about the area surrounding a property"
+  p.template = "Write a short paragraph about the neighbourhood and lifestyle around this property. Focus on what it's like to live there, not the property itself. Under 100 words.\n\n{{property_details}}"
+  p.llm_model = "claude-sonnet-4-6"
+end
+
+neighbourhood_run = CompletionKit::Run.find_or_create_by!(name: "Neighbourhood Guide — v1 #1") do |r|
+  r.prompt = neighbourhood_prompt
+  r.dataset = dataset
+  r.judge_model = "gpt-4.1-mini"
+  r.status = "completed"
+  r.progress_current = 15
+  r.progress_total = 15
+end
+
+[accuracy, local_relevance, engagement].each_with_index do |metric, i|
+  CompletionKit::RunMetric.find_or_create_by!(run: neighbourhood_run, metric: metric) do |rm|
+    rm.position = i + 1
+  end
+end
+
+neighbourhood_responses = [
+  { input: csv_data.lines[1].strip.tr('"', ''),
+    text: "Brunswick is Melbourne's inner north at its most liveable. Sydney Road is the spine of the neighbourhood: trams, Lebanese bakeries, vintage shops, and cheap pho all within a few blocks. Weekend mornings mean coffee at one of a dozen roasters, a lap of the Merri Creek trail, and groceries from the organic co-op. It's the kind of suburb where your neighbours know your dog's name and the local pub has live music on Thursdays.",
+    scores: { "Accuracy" => [5, "Sydney Road, trams, Merri Creek, inner north positioning all accurate."], "Local Relevance" => [5, "Names specific landmarks and captures Brunswick's character precisely."], "Engagement" => [5, "The dog's name detail and Thursday pub music paint a vivid, specific picture of the lifestyle."] } },
+  { input: csv_data.lines[2].strip.tr('"', ''),
+    text: "Surfers Paradise lives up to the name if you like your mornings with salt air and your evenings with options. The beach is the obvious draw, but the light-rail connects you to Broadbeach dining and Pacific Fair shopping without touching a car. The foreshore parklands are the local living room: runners, families, and tourists sharing the same stretch of green between the high-rises and the sand.",
+    scores: { "Accuracy" => [4, "Light rail and Broadbeach connection accurate. Pacific Fair is technically in Broadbeach, not Surfers, but accessible."], "Local Relevance" => [4, "Captures the Surfers vibe well but could distinguish it more from the broader Gold Coast."], "Engagement" => [4, "Good sensory detail with the salt air opener. The 'local living room' metaphor works."] } },
+  { input: csv_data.lines[3].strip.tr('"', ''),
+    text: "Daylesford is the spa country town that Melbourne escapes to. Mineral springs, galleries, and restaurants that punch well above their weight for a town of 3,000. The Saturday market at the old railway station is the social hub. Hepburn Springs is a five-minute drive. The pace is deliberately slow and the community is tight: you'll see the same faces at the general store and the bookshop.",
+    scores: { "Accuracy" => [5, "Mineral springs, market, Hepburn Springs proximity all accurate. Town character well captured."], "Local Relevance" => [5, "Deeply specific to Daylesford. The market, general store, and bookshop details could only be this town."], "Engagement" => [5, "Makes you want to move there. The 'deliberately slow' framing is perfect for the audience."] } },
+  { input: csv_data.lines[4].strip.tr('"', ''),
+    text: "Potts Point is Sydney's most walkable neighbourhood. The strip of cafes and restaurants along Macleay Street has enough range to eat somewhere different every night for a month. The Botanic Gardens and the harbour foreshore are a ten-minute walk. Kings Cross station puts the CBD five minutes away. It's dense and urban but with enough old fig trees and art deco architecture to feel like a village inside the city.",
+    scores: { "Accuracy" => [5, "Macleay Street, Kings Cross station, Botanic Gardens proximity all correct."], "Local Relevance" => [5, "Captures Potts Point specifically, not just generic Sydney. The Macleay Street and fig trees details are spot on."], "Engagement" => [4, "Solid sense of place. The 'village inside the city' line lands well but could push the lifestyle picture harder."] } },
+  { input: csv_data.lines[5].strip.tr('"', ''),
+    text: "Paddington is where Brisbane's Queenslander charm meets inner-city convenience. Given Road and Latrobe Terrace have the cafes and weekend brunch crowds, while Suncorp Stadium brings the energy on game nights. Caxton Street is the pub precinct, but the quieter residential streets behind it are the real appeal: wide verandahs, mango trees, and a pace that feels a decade behind the CBD three kilometres away.",
+    scores: { "Accuracy" => [5, "Given Road, Latrobe Terrace, Suncorp, Caxton Street all correctly placed. CBD distance matches."], "Local Relevance" => [5, "Deeply specific to Paddington, Brisbane. The mango trees and wide verandahs are quintessential details."], "Engagement" => [5, "The contrast between game-night energy and quiet residential streets is exactly how locals describe Paddington."] } }
+]
+
+neighbourhood_responses.each do |rd|
+  response = neighbourhood_run.responses.find_or_create_by!(input_data: rd[:input]) do |r|
+    r.response_text = rd[:text]
+  end
+  rd[:scores].each do |metric_name, (score, feedback)|
+    metric = CompletionKit::Metric.find_by!(name: metric_name)
+    response.reviews.find_or_create_by!(metric: metric) do |review|
+      review.metric_name = metric_name
+      review.instruction = metric.instruction
+      review.status = "evaluated"
+      review.ai_score = score
+      review.ai_feedback = feedback
+    end
+  end
+end
+
 puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews"
