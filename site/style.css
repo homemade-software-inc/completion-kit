@@ -304,6 +304,8 @@ footer .inner {
 
 footer a { color: var(--fg-dim); }
 footer a:hover { color: var(--accent); }
+.footer-brand { font-family: var(--mono); font-weight: 500; font-size: 0.95rem; color: var(--fg-dim); }
+.footer-brand:hover { color: var(--accent); }
 .footer-links { display: flex; gap: 1.2rem; }
 
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.65s ease, transform 0.65s ease; }
@@ -334,5 +336,5 @@ footer a:hover { color: var(--accent); }
   .nav-links { gap: 0.7rem; font-size: 0.75rem; }
   .problem-quote { font-size: 1.15rem; padding-left: 1rem; }
   footer .inner { flex-direction: column; align-items: center; text-align: center; gap: 1.5rem; }
-  footer img { height: 50px !important; }
+  .footer-brand { font-size: 0.88rem; }
 }
