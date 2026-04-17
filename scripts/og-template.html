@@ -2,35 +2,60 @@
 <html>
 <head>
 <meta charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap" />
 <style>
   body { margin: 0; }
   .card {
     width: 1200px;
     height: 630px;
-    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-    color: white;
-    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #080b14;
+    color: #e2e8f0;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
     padding: 80px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
+    overflow: hidden;
   }
-  .card .top { display: flex; align-items: center; gap: 24px; }
-  .card .top img { width: 96px; height: 96px; }
-  .card .top h1 { margin: 0; font-size: 56px; letter-spacing: -1px; }
-  .card .tagline { font-size: 44px; line-height: 1.2; font-weight: 600; max-width: 1000px; }
-  .card .footer { font-size: 24px; opacity: 0.85; }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% 40%, rgba(6,182,212,0.08) 0%, transparent 70%);
+  }
+  .card > * { position: relative; }
+  .card .top { display: flex; align-items: center; gap: 16px; }
+  .card .top img { width: 52px; height: 52px; }
+  .card .top h1 {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: #06b6d4;
+    letter-spacing: -0.5px;
+  }
+  .card .tagline {
+    font-size: 52px;
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    color: #fff;
+    max-width: 900px;
+  }
+  .card .footer { font-size: 22px; color: #64748b; }
+  .card .footer span { color: #06b6d4; }
 </style>
 </head>
 <body>
 <div class="card">
   <div class="top">
-    <img src="../docs/logo.png" alt="" />
+    <img src="../site/favicon.png" alt="" />
     <h1>CompletionKit</h1>
   </div>
-  <div class="tagline">Prompt testing across OpenAI, Anthropic, Ollama, and any model OpenRouter supports.</div>
-  <div class="footer">completionkit.com &middot; free, MIT-licensed</div>
+  <div class="tagline">Your prompts need tests too.</div>
+  <div class="footer"><span>completionkit.com</span> &middot; free, open source, MIT-licensed</div>
 </div>
 </body>
 </html>
