@@ -312,6 +312,7 @@ footer a:hover { color: var(--accent); }
 @media (max-width: 768px) {
   .hero { padding: 6rem 0 3rem; }
   .hero h1 { font-size: 2rem; }
+  .hero .screenshot { max-height: 300px; object-fit: cover; object-position: top; }
   .split { grid-template-columns: 1fr; gap: 2rem; }
   .split .screenshot { order: -1; }
   .features { grid-template-columns: 1fr; }
@@ -319,13 +320,19 @@ footer a:hover { color: var(--accent); }
   .compare th, .compare td { padding: 0.5rem 0.35rem; }
   section { padding: 3.5rem 0; }
   .problem-quote { font-size: 1.3rem; }
-  .nav-links { gap: 1rem; font-size: 0.85rem; }
+  .nav-links { gap: 0.8rem; font-size: 0.8rem; }
 }
 
 @media (max-width: 480px) {
   .hero h1 { font-size: 1.7rem; }
+  .hero .sub { font-size: 1.05rem; }
   .cta-row { flex-direction: column; align-items: stretch; }
   .cta { justify-content: center; }
-  .topbar .inner { gap: 0.5rem; }
+  .topbar .inner { padding: 0.7rem 1rem; }
+  .brand { font-size: 1rem; }
+  .brand img { height: 36px; }
+  .nav-links { gap: 0.7rem; font-size: 0.75rem; }
   .problem-quote { font-size: 1.15rem; padding-left: 1rem; }
+  footer .inner { flex-direction: column; align-items: center; text-align: center; gap: 1.5rem; }
+  footer img { height: 50px !important; }
 }
