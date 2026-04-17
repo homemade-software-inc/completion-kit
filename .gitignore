@@ -19,3 +19,4 @@ standalone/.env
 .mcp.json
 settings.local.json
 .playwright-mcp/
+completion-kit-*.gem
