@@ -17,8 +17,8 @@
     </div>
 
     <div class="ck-field ck-field--spacious">
-      <p class="ck-section-title">Evaluation Instruction</p>
-      <p class="ck-hint">What should the evaluator assess? This is the core instruction sent to the judge model.</p>
+      <p class="ck-section-title">Instruction</p>
+      <p class="ck-hint">What should the judge assess? This instruction is sent to the LLM judge when scoring outputs.</p>
       <%= form.text_area :instruction, rows: 8, class: "ck-input ck-input--area", placeholder: "Evaluate whether the output..." %>
     </div>
 

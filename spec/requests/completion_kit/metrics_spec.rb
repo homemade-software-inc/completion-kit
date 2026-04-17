@@ -12,7 +12,7 @@ RSpec.describe "CompletionKit metrics", type: :request do
 
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Evaluation Instruction")
+    expect(response.body).to include("Instruction")
 
     get "#{base_path}/#{metric.id}"
     expect(response).to have_http_status(:ok)

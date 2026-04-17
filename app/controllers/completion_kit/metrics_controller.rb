@@ -4,6 +4,8 @@ module CompletionKit
 
     def index
       @metrics = Metric.order(:name)
+      @criterias = Criteria.includes(:metrics).order(:name)
+      @ungrouped = Metric.left_joins(:criteria_memberships).where(completion_kit_criteria_memberships: { id: nil }).order(:name)
     end
 
     def show

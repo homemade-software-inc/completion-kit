@@ -1,34 +1,62 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title">Metrics</h1>
-    <p class="ck-lead">Scoring dimensions used by the judge model to evaluate responses. Each metric defines what to assess, the evaluation steps, and a rubric for star ratings. Group metrics into <%= link_to "Criteria", criteria_path, class: "ck-link" %> for reuse across runs.</p>
+    <p class="ck-lead">Scoring dimensions used by the judge model to evaluate responses. Each metric defines what to assess and a scoring scale. Group metrics into criteria for reuse across runs.</p>
   </div>
   <div class="ck-actions">
+    <%= link_to "New criteria", new_criterion_path, class: ck_button_classes(:light, variant: :outline) %>
     <%= link_to "New metric", new_metric_path, class: ck_button_classes(:dark) %>
   </div>
 </section>
 
-<% if @metrics.any? %>
-  <table class="ck-results-table">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Instruction</th>
-        <th>Criteria</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @metrics.each do |metric| %>
-        <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
-          <td><strong><%= metric.name %></strong></td>
-          <td class="ck-meta-copy"><%= truncate(metric.instruction.to_s, length: 80).presence || "None" %></td>
-          <td class="ck-meta-copy"><%= metric.criterias.any? ? metric.criterias.map { |c| link_to(c.name, criterion_path(c), class: "ck-link", onclick: "event.stopPropagation()") }.join(", ").html_safe : "None" %></td>
-          <td class="ck-results-table__arrow">&rarr;</td>
-        </tr>
+<% @criterias.each do |criteria| %>
+  <section class="ck-card ck-card--spaced">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+      <p class="ck-kicker" style="margin: 0;"><%= link_to criteria.name, criterion_path(criteria), class: "ck-link" %></p>
+      <%= link_to "Edit", edit_criterion_path(criteria), class: ck_button_classes(:light, variant: :outline) + " ck-button--sm" %>
+    </div>
+    <% if criteria.description.present? %>
+      <p class="ck-meta-copy" style="margin-bottom: 1rem;"><%= criteria.description %></p>
+    <% end %>
+    <% if criteria.ordered_metrics.any? %>
+      <div class="ck-list ck-list--compact">
+        <% criteria.ordered_metrics.each do |metric| %>
+          <div class="ck-item" onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
+            <div>
+              <p class="ck-item-title"><%= metric.name %></p>
+              <% if metric.instruction.present? %>
+                <p class="ck-copy"><%= truncate(metric.instruction.to_s, length: 120) %></p>
+              <% end %>
+            </div>
+            <span class="ck-results-table__arrow">&rarr;</span>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="ck-meta-copy">No metrics in this criteria yet.</p>
+    <% end %>
+  </section>
+<% end %>
+
+<% if @ungrouped.any? %>
+  <section class="ck-card ck-card--spaced">
+    <p class="ck-kicker" style="margin-bottom: 0.75rem;">Ungrouped</p>
+    <div class="ck-list ck-list--compact">
+      <% @ungrouped.each do |metric| %>
+        <div class="ck-item" onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
+          <div>
+            <p class="ck-item-title"><%= metric.name %></p>
+            <% if metric.instruction.present? %>
+              <p class="ck-copy"><%= truncate(metric.instruction.to_s, length: 120) %></p>
+            <% end %>
+          </div>
+          <span class="ck-results-table__arrow">&rarr;</span>
+        </div>
       <% end %>
-    </tbody>
-  </table>
-<% else %>
-  <div class="ck-empty">No metrics yet.</div>
+    </div>
+  </section>
+<% end %>
+
+<% if @criterias.empty? && @ungrouped.empty? %>
+  <div class="ck-empty">No metrics yet. <%= link_to "Create one", new_metric_path, class: "ck-link" %>.</div>
 <% end %>
