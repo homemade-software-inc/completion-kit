@@ -1,0 +1,41 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li>Criteria</li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Criteria</h1>
+    <p class="ck-lead">Named bundles of metrics. Apply a bundle to a run to score outputs against every metric in the bundle at once.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "New criteria", new_criterion_path, class: ck_button_classes(:dark) %>
+  </div>
+</section>
+
+<% if @criterias.any? %>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Metrics</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @criterias.each do |criteria| %>
+        <tr onclick="window.location='<%= criterion_path(criteria) %>'" style="cursor: pointer;">
+          <td><strong><%= criteria.name %></strong></td>
+          <td class="ck-meta-copy"><%= truncate(criteria.description.to_s, length: 90).presence || "—" %></td>
+          <td class="ck-meta-copy"><%= criteria.metrics.any? ? criteria.metrics.map(&:name).join(", ") : "empty" %></td>
+          <td class="ck-results-table__arrow">&rarr;</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="ck-empty">
+    <p>No criteria bundles yet. <%= link_to "Create one", new_criterion_path, class: "ck-link" %> if you want to group multiple metrics and apply them together.</p>
+  </div>
+<% end %>

@@ -3,9 +3,7 @@ module CompletionKit
     before_action :set_metric, only: [:show, :edit, :update, :destroy]
 
     def index
-      @metrics = Metric.order(:name)
-      @criterias = Criteria.includes(:metrics).order(:name)
-      @ungrouped = Metric.left_joins(:criteria_memberships).where(completion_kit_criteria_memberships: { id: nil }).order(:name)
+      @metrics = Metric.includes(:criterias).order(:name)
     end
 
     def show

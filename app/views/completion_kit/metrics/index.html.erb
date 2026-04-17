@@ -1,65 +1,42 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title">Metrics</h1>
-    <p class="ck-lead">Scoring dimensions the LLM judge uses to evaluate each response. Group metrics into criteria to apply them as a bundle.</p>
+    <p class="ck-lead">Scoring dimensions the judge uses to evaluate each response. Each metric defines one thing to assess and a 1-5 scale.</p>
   </div>
   <div class="ck-actions">
-    <%= link_to "New criteria", new_criterion_path, class: ck_button_classes(:light, variant: :outline) %>
     <%= link_to "New metric", new_metric_path, class: ck_button_classes(:dark) %>
   </div>
 </section>
 
-<% @criterias.each do |criteria| %>
-  <section style="margin-top: 2.5rem;">
-    <header style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.5rem; gap: 1rem;">
-      <h2 style="margin: 0; font-size: 1.35rem; letter-spacing: -0.01em;"><%= link_to criteria.name, criterion_path(criteria), class: "ck-link" %></h2>
-      <div style="display: flex; gap: 0.5rem; align-items: center;">
-        <span style="color: var(--ck-muted); font-size: 0.85rem;"><%= pluralize(criteria.metrics.size, "metric") %></span>
-        <%= link_to "Edit", edit_criterion_path(criteria), class: ck_button_classes(:light, variant: :outline) + " ck-button--sm" %>
-      </div>
-    </header>
-    <% if criteria.description.present? %>
-      <p class="ck-meta-copy" style="margin: 0 0 0.75rem 0;"><%= criteria.description %></p>
-    <% end %>
-    <% if criteria.ordered_metrics.any? %>
-      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-        <% criteria.ordered_metrics.each do |metric| %>
-          <%= link_to metric.name, metric_path(metric), style: "padding: 0.45rem 0.85rem; border: 1px solid var(--ck-line); border-radius: 999px; color: var(--ck-text); background: var(--ck-surface); font-size: 0.9rem; text-decoration: none;" %>
-        <% end %>
-      </div>
-    <% else %>
-      <p class="ck-meta-copy">No metrics in this criteria yet.</p>
-    <% end %>
-  </section>
-<% end %>
-
 <% if @metrics.any? %>
-  <section style="margin-top: 3rem;">
-    <header style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.75rem; gap: 1rem;">
-      <h2 style="margin: 0; font-size: 1.35rem; letter-spacing: -0.01em;">All metrics</h2>
-      <span style="color: var(--ck-muted); font-size: 0.85rem;"><%= pluralize(@metrics.size, "metric") %></span>
-    </header>
-    <table class="ck-results-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Instruction</th>
-          <th>Used in</th>
-          <th></th>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Instruction</th>
+        <th>Bundled in</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @metrics.each do |metric| %>
+        <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
+          <td><strong><%= metric.name %></strong></td>
+          <td class="ck-meta-copy"><%= truncate(metric.instruction.to_s, length: 90).presence || "—" %></td>
+          <td class="ck-meta-copy"><%= metric.criterias.any? ? metric.criterias.map(&:name).join(", ") : "—" %></td>
+          <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
-      </thead>
-      <tbody>
-        <% @metrics.each do |metric| %>
-          <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
-            <td><strong><%= metric.name %></strong></td>
-            <td class="ck-meta-copy"><%= truncate(metric.instruction.to_s, length: 90).presence || "—" %></td>
-            <td class="ck-meta-copy"><%= metric.criterias.any? ? metric.criterias.map(&:name).join(", ") : "ungrouped" %></td>
-            <td class="ck-results-table__arrow">&rarr;</td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </section>
+      <% end %>
+    </tbody>
+  </table>
+
+  <% if @metrics.size >= 2 %>
+    <p class="ck-meta-copy" style="margin-top: 1.5rem; text-align: center;">
+      Use the same metrics on multiple runs? <%= link_to "Bundle them into a criteria →", criteria_path, class: "ck-link" %>
+    </p>
+  <% end %>
 <% else %>
-  <div class="ck-empty">No metrics yet. <%= link_to "Create one", new_metric_path, class: "ck-link" %>.</div>
+  <div class="ck-empty">
+    <p>No metrics yet. <%= link_to "Create your first metric", new_metric_path, class: "ck-link" %> to start scoring prompt outputs.</p>
+  </div>
 <% end %>

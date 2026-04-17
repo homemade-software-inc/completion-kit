@@ -3,7 +3,7 @@ module CompletionKit
     before_action :set_criteria, only: [:show, :edit, :update, :destroy]
 
     def index
-      redirect_to metrics_path
+      @criterias = Criteria.includes(:metrics).order(:name)
     end
 
     def show
@@ -43,7 +43,7 @@ module CompletionKit
 
     def destroy
       @criteria.destroy
-      redirect_to metrics_path, notice: "Criteria was successfully destroyed."
+      redirect_to criteria_path, notice: "Criteria was successfully destroyed."
     end
 
     private
