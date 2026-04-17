@@ -8,8 +8,7 @@ RSpec.describe "CompletionKit criteria", type: :request do
     criteria = create(:completion_kit_criteria)
 
     get base_path
-    expect(response).to have_http_status(:ok)
-    expect(response.body).to include(criteria.name)
+    expect(response).to redirect_to("/completion_kit/metrics")
 
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)
@@ -42,6 +41,6 @@ RSpec.describe "CompletionKit criteria", type: :request do
       delete "#{base_path}/#{criteria.id}"
     end.to change(CompletionKit::Criteria, :count).by(-1)
 
-    expect(response).to redirect_to("/completion_kit/criteria")
+    expect(response).to redirect_to("/completion_kit/metrics")
   end
 end
