@@ -114,7 +114,6 @@ module CompletionKit
             response.expected_output,
             prompt.template,
             criteria: metric.respond_to?(:instruction) ? metric.instruction.to_s : "",
-            evaluation_steps: metric.respond_to?(:evaluation_steps) ? metric.evaluation_steps : nil,
             rubric_text: metric.respond_to?(:display_rubric_text) ? metric.display_rubric_text : nil,
             input_data: response.input_data
           )

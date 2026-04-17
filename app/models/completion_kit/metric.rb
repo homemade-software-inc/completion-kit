@@ -13,7 +13,6 @@ module CompletionKit
     has_many :reviews, dependent: :nullify
 
     serialize :rubric_bands, coder: JSON
-    serialize :evaluation_steps, coder: JSON
 
     validates :name, presence: true
     validates :key, uniqueness: true, allow_nil: true
@@ -74,7 +73,7 @@ module CompletionKit
     def as_json(options = {})
       {
         id: id, name: name, key: key, instruction: instruction,
-        evaluation_steps: evaluation_steps, rubric_bands: rubric_bands,
+        rubric_bands: rubric_bands,
         created_at: created_at, updated_at: updated_at
       }
     end
@@ -86,7 +85,6 @@ module CompletionKit
     end
 
     def set_defaults
-      self.evaluation_steps ||= []
       self.rubric_bands = self.class.default_rubric_bands if rubric_bands.blank?
     end
 

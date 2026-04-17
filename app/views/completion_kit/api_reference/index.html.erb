@@ -232,7 +232,7 @@ end %>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics</p>
         <p class="ck-meta-copy">Create a metric.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>instruction</code>, <code>evaluation_steps</code> (array), <code>rubric_bands</code> (array of {stars, description})</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>instruction</code>, <code>rubric_bands</code> (array of {stars, description})</p>
         <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/metrics \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"relevance\", \"instruction\": \"Is the response relevant?\"}'" %>
       </div>
       <div class="ck-api-endpoint">

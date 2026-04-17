@@ -78,10 +78,10 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     expect(service.evaluate("actual")).to eq(score: 1, feedback: "Error during evaluation: judge timeout")
   end
 
-  it "includes criteria, evaluation steps, rubric text, and human examples in prompt" do
+  it "includes criteria, rubric text, and human examples in prompt" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).with(
-      include("Criteria:", "Check for accuracy", "Evaluation steps:", "Step one", "Custom rubric", "Calibration examples:", "score=4"),
+      include("Criteria:", "Check for accuracy", "Custom rubric", "Calibration examples:", "score=4"),
       model: "gpt-4.1"
     ).and_return("Score: 3\nFeedback: Calibrated")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
@@ -93,7 +93,6 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
         "expected",
         "prompt",
         criteria: "Check for accuracy",
-        evaluation_steps: ["Step one"],
         rubric_text: "Custom rubric",
         human_examples: [{ input_data: "{x:1}", response_text: "draft", human_score: 4, human_feedback: "Good" }]
       )

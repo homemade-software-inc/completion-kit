@@ -14,13 +14,6 @@ end
 
 accuracy = CompletionKit::Metric.find_or_create_by!(name: "Accuracy") do |m|
   m.instruction = "Does the listing description accurately reflect the property details provided? It must not invent features, amenities, or characteristics that are not in the input."
-  m.evaluation_steps = [
-    "Read the property details input carefully and note every factual claim",
-    "Cross-reference each claim in the listing against the input data",
-    "Check for invented rooms, features, or amenities not present in the input",
-    "Check for exaggerated proximity, sizes, or counts",
-    "Verify the listing does not omit critical details that would mislead a buyer"
-  ]
   m.rubric_bands = [
     { "stars" => 5, "description" => "Every claim in the listing is verifiable from the input. No invented features. No exaggerated sizes or distances. All key property details are represented." },
     { "stars" => 4, "description" => "One minor embellishment or slight exaggeration (e.g. 'moments from the beach' when input says 200m). All major details are accurate." },
@@ -32,13 +25,6 @@ end
 
 persuasiveness = CompletionKit::Metric.find_or_create_by!(name: "Persuasiveness") do |m|
   m.instruction = "Would this listing make a potential buyer want to inspect the property? Does it paint a compelling picture of the lifestyle and appeal?"
-  m.evaluation_steps = [
-    "Read the listing as if you were a buyer actively searching for this type of property",
-    "Does it lead with the strongest selling point rather than burying it?",
-    "Does it create a sense of place — can you picture yourself living there?",
-    "Does it connect features to lifestyle benefits rather than just listing specs?",
-    "After reading, would you want to book an inspection?"
-  ]
   m.rubric_bands = [
     { "stars" => 5, "description" => "Immediately compelling. Creates a vivid sense of the lifestyle. Key features are positioned as benefits, not just specs. You want to see the property after reading this." },
     { "stars" => 4, "description" => "Engaging and well-structured. Most features connect to lifestyle benefits. Creates interest but doesn't quite make you reach for the phone." },
@@ -50,13 +36,6 @@ end
 
 tone = CompletionKit::Metric.find_or_create_by!(name: "Tone") do |m|
   m.instruction = "Is the tone professional and appropriate for a real estate listing? It should be confident and appealing without being pushy, exaggerated, or sounding like a used car ad."
-  m.evaluation_steps = [
-    "Count exclamation marks — more than one is a red flag",
-    "Check for pressure language: 'don't miss out', 'won't last', 'act now', 'incredible opportunity'",
-    "Look for superlatives without substance: 'stunning', 'amazing', 'breathtaking' used loosely",
-    "Assess whether it reads like a premium agency listing vs. a Facebook Marketplace post",
-    "Check that confidence comes from specifics, not from volume or intensity"
-  ]
   m.rubric_bands = [
     { "stars" => 5, "description" => "Reads like it was written by a top-tier agency. Confident, measured, specific. Lets the property speak for itself. Zero pressure language or empty superlatives." },
     { "stars" => 4, "description" => "Professional and appropriate. One or two slightly enthusiastic phrases but nothing that undermines credibility." },
@@ -166,11 +145,6 @@ end
 
 conciseness = CompletionKit::Metric.find_or_create_by!(name: "Conciseness") do |m|
   m.instruction = "Is the summary the right length? It should be exactly 2 sentences and convey the essential property information without filler."
-  m.evaluation_steps = [
-    "Count the sentences. Exactly 2 is ideal.",
-    "Check that every word earns its place. No filler, no padding.",
-    "Verify the summary would work as a search-result snippet."
-  ]
   m.rubric_bands = [
     { "stars" => 5, "description" => "Exactly 2 sentences. Every word earns its place. Works perfectly as a search snippet." },
     { "stars" => 3, "description" => "Close to 2 sentences but slightly too long or includes filler words that add nothing." },
@@ -180,11 +154,6 @@ end
 
 completeness = CompletionKit::Metric.find_or_create_by!(name: "Completeness") do |m|
   m.instruction = "Does the summary capture what a buyer scanning search results would most want to know? Key selling point, location, and property type at minimum."
-  m.evaluation_steps = [
-    "Check for property type and bedroom count",
-    "Check for location or suburb name",
-    "Check for the single strongest selling point"
-  ]
   m.rubric_bands = [
     { "stars" => 5, "description" => "Covers property type, location, and the standout feature. A buyer knows immediately whether to click through." },
     { "stars" => 3, "description" => "Covers basics but misses the hook. You know what it is but not why you'd care." },
@@ -194,11 +163,6 @@ end
 
 local_relevance = CompletionKit::Metric.find_or_create_by!(name: "Local Relevance") do |m|
   m.instruction = "Does the neighbourhood description reflect the specific character of this area? It should feel like the writer has actually been there, not like a generic suburb template."
-  m.evaluation_steps = [
-    "Does it name specific streets, landmarks, or local institutions?",
-    "Could this description apply to any suburb, or is it clearly about this one?",
-    "Does it match the known character of the area?"
-  ]
   m.rubric_bands = [
     { "stars" => 5, "description" => "Clearly about this specific neighbourhood. Names local landmarks or captures the area's known character accurately." },
     { "stars" => 3, "description" => "Broadly correct but could describe several similar suburbs. Generic 'great cafes and parks' territory." },
@@ -208,11 +172,6 @@ end
 
 engagement = CompletionKit::Metric.find_or_create_by!(name: "Engagement") do |m|
   m.instruction = "Does the neighbourhood guide make you want to live there? It should paint a picture of the lifestyle, not just list amenities."
-  m.evaluation_steps = [
-    "After reading, can you picture a typical Saturday morning in this neighbourhood?",
-    "Does it connect amenities to lifestyle rather than just listing them?",
-    "Would a buyer feel emotionally pulled toward the area?"
-  ]
   m.rubric_bands = [
     { "stars" => 5, "description" => "You can picture yourself there. The writing connects place to lifestyle. Creates genuine pull." },
     { "stars" => 3, "description" => "Pleasant but forgettable. Lists amenities without connecting them to how life actually feels there." },

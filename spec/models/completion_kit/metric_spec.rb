@@ -5,7 +5,6 @@ RSpec.describe CompletionKit::Metric, type: :model do
     metric = described_class.create!(name: "Default metric")
 
     expect(metric.instruction).to be_nil
-    expect(metric.evaluation_steps).to eq([])
     expect(metric.rubric_bands.length).to eq(5)
     expect(metric.rubric_bands.first).to include("stars" => 5)
     expect(metric.rubric_bands.last).to include("stars" => 1)

@@ -32,14 +32,13 @@ RSpec.describe CompletionKit::McpTools::Metrics do
       expect(content["name"]).to eq("Tone")
     end
 
-    it "creates a metric with evaluation_steps and rubric_bands" do
+    it "creates a metric with rubric_bands" do
       result = described_class.call("metrics_create", {
         "name" => "Full", "instruction" => "Test",
-        "evaluation_steps" => ["Step 1", "Step 2"],
         "rubric_bands" => [{"stars" => 5, "description" => "Perfect"}]
       })
       content = JSON.parse(result[:content].first[:text])
-      expect(content["evaluation_steps"]).to eq(["Step 1", "Step 2"])
+      expect(content["rubric_bands"].find { |b| b["stars"] == 5 }["description"]).to eq("Perfect")
     end
 
     it "updates a metric" do

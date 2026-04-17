@@ -8,11 +8,11 @@ module CompletionKit
       @judge_client = LlmClient.for_model(@judge_model, ApiConfig.for_model(@judge_model))
     end
 
-    def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, evaluation_steps: nil, rubric_text: nil, human_examples: nil, input_data: nil, **_extras)
+    def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, rubric_text: nil, human_examples: nil, input_data: nil, **_extras)
       return { score: 1, feedback: "Judge not configured" } unless @judge_client.configured?
 
       judge_prompt = build_judge_prompt(output, expected_output, prompt,
-        criteria: criteria, evaluation_steps: evaluation_steps,
+        criteria: criteria,
         rubric_text: rubric_text, human_examples: human_examples,
         input_data: input_data)
 
@@ -27,7 +27,7 @@ module CompletionKit
 
     private
 
-    def build_judge_prompt(output, expected_output, prompt, criteria: nil, evaluation_steps: nil, rubric_text: nil, human_examples: nil, input_data: nil)
+    def build_judge_prompt(output, expected_output, prompt, criteria: nil, rubric_text: nil, human_examples: nil, input_data: nil)
       judge_prompt = <<~PROMPT
         You are an expert evaluator. You MUST respond with ONLY two lines in this exact format, nothing else:
 
@@ -42,10 +42,6 @@ module CompletionKit
 
       if criteria.present?
         judge_prompt += "\nCriteria: #{criteria}\n"
-      end
-
-      if evaluation_steps.present? && evaluation_steps.any?
-        judge_prompt += "\nEvaluation steps:\n#{evaluation_steps.each_with_index.map { |step, i| "#{i + 1}. #{step}" }.join("\n")}\n"
       end
 
       if human_examples.present?

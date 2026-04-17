@@ -19,17 +19,6 @@
 </section>
 <% end %>
 
-<% if @metric.evaluation_steps.present? && @metric.evaluation_steps.any? %>
-<section class="ck-card">
-  <p class="ck-kicker">Evaluation Steps</p>
-  <ol class="ck-step-list">
-    <% @metric.evaluation_steps.each do |step| %>
-      <li><%= step %></li>
-    <% end %>
-  </ol>
-</section>
-<% end %>
-
 <section class="ck-card ck-card--spaced">
   <p class="ck-kicker">Rubric</p>
   <div class="ck-rubric-display">

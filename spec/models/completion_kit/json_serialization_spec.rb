@@ -39,7 +39,7 @@ RSpec.describe "JSON serialization" do
 
     it "includes expected attributes" do
       json = metric.as_json
-      expect(json.keys).to match_array(%i[id name key instruction evaluation_steps rubric_bands created_at updated_at])
+      expect(json.keys).to match_array(%i[id name key instruction rubric_bands created_at updated_at])
     end
   end
 

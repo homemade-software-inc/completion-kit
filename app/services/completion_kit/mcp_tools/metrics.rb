@@ -18,7 +18,6 @@ module CompletionKit
             type: "object",
             properties: {
               name: {type: "string"}, instruction: {type: "string"},
-              evaluation_steps: {type: "array", items: {type: "string"}},
               rubric_bands: {type: "array", items: {type: "object", properties: {stars: {type: "integer"}, description: {type: "string"}}}}
             },
             required: ["name"]
@@ -31,7 +30,6 @@ module CompletionKit
             type: "object",
             properties: {
               id: {type: "integer"}, name: {type: "string"}, instruction: {type: "string"},
-              evaluation_steps: {type: "array", items: {type: "string"}},
               rubric_bands: {type: "array", items: {type: "object", properties: {stars: {type: "integer"}, description: {type: "string"}}}}
             },
             required: ["id"]
@@ -63,7 +61,7 @@ module CompletionKit
       end
 
       def self.create(args)
-        metric = Metric.new(args.slice("name", "instruction", "evaluation_steps", "rubric_bands"))
+        metric = Metric.new(args.slice("name", "instruction", "rubric_bands"))
         if metric.save
           text_result(metric.as_json)
         else
@@ -73,7 +71,7 @@ module CompletionKit
 
       def self.update(args)
         metric = Metric.find(args["id"])
-        if metric.update(args.except("id").slice("name", "instruction", "evaluation_steps", "rubric_bands"))
+        if metric.update(args.except("id").slice("name", "instruction", "rubric_bands"))
           text_result(metric.as_json)
         else
           error_result(metric.errors.full_messages.join(", "))

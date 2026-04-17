@@ -22,27 +22,6 @@
       <%= form.text_area :instruction, rows: 8, class: "ck-input ck-input--area", placeholder: "Evaluate whether the output..." %>
     </div>
 
-    <div class="ck-field ck-field--spacious" data-controller="evaluation-steps">
-      <p class="ck-section-title">Evaluation Steps</p>
-      <p class="ck-hint">Steps the evaluator follows during assessment.</p>
-
-      <div data-evaluation-steps-target="list">
-        <% Array(metric.evaluation_steps).each_with_index do |step, index| %>
-          <div class="ck-step-row" data-evaluation-steps-target="row">
-            <input type="text" name="metric[evaluation_steps][]" value="<%= step %>" class="ck-input" />
-            <button type="button" class="ck-icon-btn" data-action="evaluation-steps#remove" aria-label="Remove step">
-              <%= heroicon_tag "trash", variant: :outline, size: 16 %>
-            </button>
-          </div>
-        <% end %>
-      </div>
-
-      <button type="button" class="ck-add-btn" data-action="evaluation-steps#add">
-        <%= heroicon_tag "plus", variant: :outline, size: 14 %>
-        Add step
-      </button>
-    </div>
-
     <div class="ck-field ck-field--spacious">
       <p class="ck-section-title">Rubric</p>
       <p class="ck-hint">What each star rating means for this metric.</p>
