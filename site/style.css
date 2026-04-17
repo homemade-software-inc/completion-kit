@@ -238,7 +238,7 @@ section p:last-child { margin-bottom: 0; }
 
 .compare td.yes { color: var(--accent); font-weight: 700; }
 .compare td.no { color: #475569; }
-.compare td.partial { color: #d97706; font-weight: 500; font-size: 0.82rem; }
+.compare td.partial { color: #475569; font-size: 0.82rem; }
 
 .compare th:last-child, .compare td:last-child {
   background: var(--accent-glow);
