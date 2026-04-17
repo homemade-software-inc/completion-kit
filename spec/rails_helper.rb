@@ -53,7 +53,6 @@ ActiveRecord::Schema.define do
   create_table :completion_kit_metrics, force: true do |t|
     t.string :name
     t.text :instruction
-    t.text :evaluation_steps
     t.text :rubric_bands
     t.string :key
     t.timestamps
