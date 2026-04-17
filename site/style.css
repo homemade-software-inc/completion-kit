@@ -173,12 +173,14 @@ section p { color: var(--fg-dim); margin-bottom: 1rem; }
 section p:last-child { margin-bottom: 0; }
 
 .problem-quote {
-  font-family: var(--sans); font-style: italic;
-  font-size: 1.55rem; line-height: 1.45; letter-spacing: -0.01em;
+  font-family: var(--mono); font-weight: 500;
+  font-size: 1.35rem; line-height: 1.55; letter-spacing: -0.01em;
   color: var(--fg); max-width: 640px;
   margin: 0 auto 1.5rem;
-  padding-left: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-surface);
   border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
 }
 
 .problem-answer {
@@ -236,7 +238,7 @@ section p:last-child { margin-bottom: 0; }
 
 .compare td.yes { color: var(--accent); font-weight: 700; }
 .compare td.no { color: #475569; }
-.compare td.partial { color: var(--fg-faint); font-style: italic; font-size: 0.82rem; }
+.compare td.partial { color: #d97706; font-weight: 500; font-size: 0.82rem; }
 
 .compare th:last-child, .compare td:last-child {
   background: var(--accent-glow);
