@@ -70,11 +70,11 @@
       <% if @all_metrics.empty? %>
         <p class="ck-field-hint" style="color: var(--ck-warning);">No metrics yet.&ensp;<%= link_to "Create a metric", new_metric_path, class: "ck-link" %></p>
       <% else %>
-        <% if @criterias.any? %>
+        <% if @metric_groups.any? %>
           <p class="ck-meta-copy" style="margin-bottom: 0.5rem;">
             Quick add:&ensp;
-            <% @criterias.each do |c| %>
-              <span class="ck-chip" style="cursor: pointer;" onclick="ckQuickAddCriteria(<%= c.metric_ids.to_json %>)"><%= c.name %></span>&ensp;
+            <% @metric_groups.each do |g| %>
+              <span class="ck-chip" style="cursor: pointer;" onclick="ckQuickAddMetricGroup(<%= g.metric_ids.to_json %>)"><%= g.name %></span>&ensp;
             <% end %>
           </p>
         <% end %>
@@ -112,7 +112,7 @@ function updateRunForm() {
   } else if (judge && metrics.length === 0) {
     if (judgeField) judgeField.className = 'ck-field ck-field--info';
     if (metricsField) metricsField.className = 'ck-field ck-field--info';
-    if (metricsHint) metricsHint.textContent = 'Select at least one metric or criteria to enable judging.';
+    if (metricsHint) metricsHint.textContent = 'Select at least one metric or group to enable judging.';
   } else if (!judge && metrics.length > 0) {
     if (judgeField) judgeField.className = 'ck-field ck-field--info';
     if (judgeHint) judgeHint.textContent = 'Select a judge model to enable judging.';
@@ -131,7 +131,7 @@ function updateRunForm() {
   if (submitBtn) submitBtn.disabled = !valid;
 }
 
-function ckQuickAddCriteria(metricIds) {
+function ckQuickAddMetricGroup(metricIds) {
   metricIds.forEach(function(id) {
     var cb = document.getElementById('run_metric_' + id);
     if (cb) cb.checked = true;

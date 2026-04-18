@@ -1,25 +1,25 @@
 <ol class="ck-breadcrumb">
   <li><%= link_to "Metrics", metrics_path %></li>
-  <li><%= @criteria.name %></li>
+  <li><%= @metric_group.name %></li>
 </ol>
 
 <section class="ck-page-header">
   <div>
-    <h1 class="ck-title"><%= @criteria.name %></h1>
-    <% if @criteria.description.present? %>
-      <p class="ck-lead"><%= @criteria.description %></p>
+    <h1 class="ck-title"><%= @metric_group.name %></h1>
+    <% if @metric_group.description.present? %>
+      <p class="ck-lead"><%= @metric_group.description %></p>
     <% end %>
   </div>
   <div class="ck-actions">
-    <%= link_to "Edit", edit_criterion_path(@criteria), class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Edit", edit_metric_group_path(@metric_group), class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
 
 <section class="ck-card">
   <p class="ck-kicker">Metrics</p>
-  <% if @criteria.metrics.any? %>
+  <% if @metric_group.metrics.any? %>
     <div class="ck-list ck-list--compact">
-      <% @criteria.metrics.each do |metric| %>
+      <% @metric_group.metrics.each do |metric| %>
         <div class="ck-item">
           <div>
             <p class="ck-item-title"><%= link_to metric.name, metric_path(metric), class: "ck-link" %></p>
@@ -31,6 +31,6 @@
       <% end %>
     </div>
   <% else %>
-    <p class="ck-copy">No metrics in this criteria yet.</p>
+    <p class="ck-copy">No metrics in this group yet.</p>
   <% end %>
 </section>

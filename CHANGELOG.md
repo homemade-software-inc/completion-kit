@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `Criteria` renamed to `Metric Group` across the entire product.
+  REST API paths `/api/v1/criteria` → `/api/v1/metric_groups`. MCP tools
+  `criteria_*` → `metric_groups_*`. Ruby class `CompletionKit::Criteria` →
+  `CompletionKit::MetricGroup`, `CompletionKit::CriteriaMembership` →
+  `CompletionKit::MetricGroupMembership`. Web routes `/completion_kit/criteria` →
+  `/completion_kit/metric_groups`. Database tables renamed in place; no
+  data migration needed. No backwards-compatibility aliases.
+
 ## [0.1.0.rc1] - 2026-04-15
 
 Release candidate 1 for 0.1.0. Published to RubyGems as

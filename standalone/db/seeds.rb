@@ -45,11 +45,11 @@ tone = CompletionKit::Metric.find_or_create_by!(name: "Tone") do |m|
   ]
 end
 
-criteria = CompletionKit::Criteria.find_or_create_by!(name: "Listing Quality") do |c|
+listing_group = CompletionKit::MetricGroup.find_or_create_by!(name: "Listing Quality") do |c|
   c.description = "Full quality assessment for property listing descriptions"
 end
 [accuracy, persuasiveness, tone].each_with_index do |metric, i|
-  CompletionKit::CriteriaMembership.find_or_create_by!(criteria: criteria, metric: metric) do |cm|
+  CompletionKit::MetricGroupMembership.find_or_create_by!(metric_group: listing_group, metric: metric) do |cm|
     cm.position = i + 1
   end
 end
@@ -179,20 +179,20 @@ engagement = CompletionKit::Metric.find_or_create_by!(name: "Engagement") do |m|
   ]
 end
 
-summary_criteria = CompletionKit::Criteria.find_or_create_by!(name: "Search Snippet Quality") do |c|
+summary_group = CompletionKit::MetricGroup.find_or_create_by!(name: "Search Snippet Quality") do |c|
   c.description = "Assessment criteria for property search-result summaries"
 end
 [accuracy, conciseness, completeness].each_with_index do |metric, i|
-  CompletionKit::CriteriaMembership.find_or_create_by!(criteria: summary_criteria, metric: metric) do |cm|
+  CompletionKit::MetricGroupMembership.find_or_create_by!(metric_group: summary_group, metric: metric) do |cm|
     cm.position = i + 1
   end
 end
 
-neighbourhood_criteria = CompletionKit::Criteria.find_or_create_by!(name: "Neighbourhood Guide Quality") do |c|
+neighbourhood_group = CompletionKit::MetricGroup.find_or_create_by!(name: "Neighbourhood Guide Quality") do |c|
   c.description = "Assessment criteria for neighbourhood lifestyle descriptions"
 end
 [accuracy, local_relevance, engagement].each_with_index do |metric, i|
-  CompletionKit::CriteriaMembership.find_or_create_by!(criteria: neighbourhood_criteria, metric: metric) do |cm|
+  CompletionKit::MetricGroupMembership.find_or_create_by!(metric_group: neighbourhood_group, metric: metric) do |cm|
     cm.position = i + 1
   end
 end

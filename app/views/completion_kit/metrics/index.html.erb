@@ -14,7 +14,7 @@
       <tr>
         <th>Name</th>
         <th>Instruction</th>
-        <th>Bundled in</th>
+        <th>In groups</th>
         <th></th>
       </tr>
     </thead>
@@ -23,7 +23,7 @@
         <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
           <td><strong><%= metric.name %></strong></td>
           <td class="ck-meta-copy"><%= truncate(metric.instruction.to_s, length: 90).presence || "—" %></td>
-          <td class="ck-meta-copy"><%= metric.criterias.any? ? metric.criterias.map(&:name).join(", ") : "—" %></td>
+          <td class="ck-meta-copy"><%= metric.metric_groups.any? ? metric.metric_groups.map(&:name).join(", ") : "—" %></td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
       <% end %>
@@ -32,7 +32,7 @@
 
   <% if @metrics.size >= 2 %>
     <p class="ck-meta-copy" style="margin-top: 1.5rem; text-align: center;">
-      Use the same metrics on multiple runs? <%= link_to "Bundle them into a criteria →", criteria_path, class: "ck-link" %>
+      Use the same metrics on multiple runs? <%= link_to "Group them into a metric group →", metric_groups_path, class: "ck-link" %>
     </p>
   <% end %>
 <% else %>

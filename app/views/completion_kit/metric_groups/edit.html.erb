@@ -1,0 +1,13 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li><%= link_to @metric_group.name, metric_group_path(@metric_group) %></li>
+  <li>Edit</li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Edit metric group</h1>
+  </div>
+</section>
+
+<%= render "form", metric_group: @metric_group %>

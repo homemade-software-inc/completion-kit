@@ -1,0 +1,41 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li>Metric groups</li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Metric groups</h1>
+    <p class="ck-lead">Named groups of metrics. Apply a group to a run to score outputs against every metric in the group at once.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "New metric group", new_metric_group_path, class: ck_button_classes(:dark) %>
+  </div>
+</section>
+
+<% if @metric_groups.any? %>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Metrics</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @metric_groups.each do |metric_group| %>
+        <tr onclick="window.location='<%= metric_group_path(metric_group) %>'" style="cursor: pointer;">
+          <td><strong><%= metric_group.name %></strong></td>
+          <td class="ck-meta-copy"><%= truncate(metric_group.description.to_s, length: 90).presence || "—" %></td>
+          <td class="ck-meta-copy"><%= metric_group.metrics.any? ? metric_group.metrics.map(&:name).join(", ") : "empty" %></td>
+          <td class="ck-results-table__arrow">&rarr;</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="ck-empty">
+    <p>No metric groups yet. <%= link_to "Create one", new_metric_group_path, class: "ck-link" %> if you want to group multiple metrics and apply them together.</p>
+  </div>
+<% end %>

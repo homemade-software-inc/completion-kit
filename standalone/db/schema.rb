@@ -10,24 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_04_015118) do
-  create_table "completion_kit_criteria", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.text "description"
-    t.string "name", null: false
-    t.datetime "updated_at", null: false
-  end
-
-  create_table "completion_kit_criteria_memberships", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.integer "criteria_id", null: false
-    t.integer "metric_id", null: false
-    t.integer "position"
-    t.datetime "updated_at", null: false
-    t.index ["criteria_id"], name: "index_completion_kit_criteria_memberships_on_criteria_id"
-    t.index ["metric_id"], name: "index_completion_kit_criteria_memberships_on_metric_id"
-  end
-
+ActiveRecord::Schema[8.1].define(version: 2026_04_18_214544) do
   create_table "completion_kit_datasets", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "csv_data", null: false
@@ -35,9 +18,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_04_015118) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "completion_kit_metric_group_memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "metric_group_id", null: false
+    t.integer "metric_id", null: false
+    t.integer "position"
+    t.datetime "updated_at", null: false
+    t.index ["metric_group_id"], name: "idx_on_metric_group_id_10d87ecba5"
+    t.index ["metric_id"], name: "index_completion_kit_metric_group_memberships_on_metric_id"
+  end
+
+  create_table "completion_kit_metric_groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "completion_kit_metrics", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.text "evaluation_steps"
     t.text "instruction"
     t.string "key"
     t.string "name", null: false
@@ -275,8 +274,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_04_015118) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
-  add_foreign_key "completion_kit_criteria_memberships", "completion_kit_criteria", column: "criteria_id"
-  add_foreign_key "completion_kit_criteria_memberships", "completion_kit_metrics", column: "metric_id"
+  add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metric_groups", column: "metric_group_id"
+  add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metrics", column: "metric_id"
   add_foreign_key "completion_kit_responses", "completion_kit_runs", column: "run_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_metrics", column: "metric_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_responses", column: "response_id"

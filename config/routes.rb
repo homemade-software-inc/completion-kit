@@ -9,7 +9,7 @@ CompletionKit::Engine.routes.draw do
 
   resources :datasets
   resources :metrics
-  resources :criteria, controller: "criteria"
+  resources :metric_groups
 
   resources :runs do
     member do
@@ -45,7 +45,7 @@ CompletionKit::Engine.routes.draw do
       end
       resources :datasets
       resources :metrics
-      resources :criteria, controller: "criteria"
+      resources :metric_groups
       resources :provider_credentials
     end
   end

@@ -3,7 +3,7 @@ module CompletionKit
     before_action :set_metric, only: [:show, :edit, :update, :destroy]
 
     def index
-      @metrics = Metric.includes(:criterias).order(:name)
+      @metrics = Metric.includes(:metric_groups).order(:name)
     end
 
     def show

@@ -112,7 +112,7 @@ module CompletionKit
     def load_form_collections
       @prompts = Prompt.order(:name)
       @datasets = Dataset.order(:name)
-      @criterias = Criteria.includes(:metrics).order(:name)
+      @metric_groups = MetricGroup.includes(:metrics).order(:name)
       @all_metrics = Metric.order(:name)
     end
 

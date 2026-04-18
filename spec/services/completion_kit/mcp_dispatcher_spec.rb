@@ -79,9 +79,9 @@ RSpec.describe CompletionKit::McpDispatcher do
       expect(content.first["name"]).to eq("M1")
     end
 
-    it "calls a criteria tool through dispatcher" do
-      create(:completion_kit_criteria, name: "C1")
-      result = described_class.dispatch("tools/call", {"name" => "criteria_list", "arguments" => {}})
+    it "calls a metric_groups tool through dispatcher" do
+      create(:completion_kit_metric_group, name: "C1")
+      result = described_class.dispatch("tools/call", {"name" => "metric_groups_list", "arguments" => {}})
       content = JSON.parse(result[:content].first[:text])
       expect(content.first["name"]).to eq("C1")
     end

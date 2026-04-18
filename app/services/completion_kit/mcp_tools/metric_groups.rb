@@ -1,19 +1,19 @@
 module CompletionKit
   module McpTools
-    module Criteria
+    module MetricGroups
       TOOLS = {
-        "criteria_list" => {
-          description: "List all criteria",
+        "metric_groups_list" => {
+          description: "List all metric groups",
           inputSchema: {type: "object", properties: {}, required: []},
           handler: :list
         },
-        "criteria_get" => {
-          description: "Get a criteria by ID",
+        "metric_groups_get" => {
+          description: "Get a metric group by ID",
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :get
         },
-        "criteria_create" => {
-          description: "Create a criteria grouping metrics",
+        "metric_groups_create" => {
+          description: "Create a metric group",
           inputSchema: {
             type: "object",
             properties: {
@@ -24,8 +24,8 @@ module CompletionKit
           },
           handler: :create
         },
-        "criteria_update" => {
-          description: "Update a criteria",
+        "metric_groups_update" => {
+          description: "Update a metric group",
           inputSchema: {
             type: "object",
             properties: {
@@ -36,8 +36,8 @@ module CompletionKit
           },
           handler: :update
         },
-        "criteria_delete" => {
-          description: "Delete a criteria",
+        "metric_groups_delete" => {
+          description: "Delete a metric group",
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :delete
         }
@@ -53,36 +53,36 @@ module CompletionKit
       end
 
       def self.list(_args)
-        text_result(CompletionKit::Criteria.order(created_at: :desc).map(&:as_json))
+        text_result(CompletionKit::MetricGroup.order(created_at: :desc).map(&:as_json))
       end
 
       def self.get(args)
-        text_result(CompletionKit::Criteria.find(args["id"]).as_json)
+        text_result(CompletionKit::MetricGroup.find(args["id"]).as_json)
       end
 
       def self.create(args)
-        criteria = CompletionKit::Criteria.new(args.slice("name", "description"))
-        if criteria.save
-          replace_metric_memberships(criteria, args["metric_ids"])
-          text_result(criteria.reload.as_json)
+        metric_group = CompletionKit::MetricGroup.new(args.slice("name", "description"))
+        if metric_group.save
+          replace_metric_memberships(metric_group, args["metric_ids"])
+          text_result(metric_group.reload.as_json)
         else
-          error_result(criteria.errors.full_messages.join(", "))
+          error_result(metric_group.errors.full_messages.join(", "))
         end
       end
 
       def self.update(args)
-        criteria = CompletionKit::Criteria.find(args["id"])
-        if criteria.update(args.except("id", "metric_ids").slice("name", "description"))
-          replace_metric_memberships(criteria, args["metric_ids"]) if args.key?("metric_ids")
-          text_result(criteria.reload.as_json)
+        metric_group = CompletionKit::MetricGroup.find(args["id"])
+        if metric_group.update(args.except("id", "metric_ids").slice("name", "description"))
+          replace_metric_memberships(metric_group, args["metric_ids"]) if args.key?("metric_ids")
+          text_result(metric_group.reload.as_json)
         else
-          error_result(criteria.errors.full_messages.join(", "))
+          error_result(metric_group.errors.full_messages.join(", "))
         end
       end
 
       def self.delete(args)
-        CompletionKit::Criteria.find(args["id"]).destroy!
-        text_result("Criteria #{args["id"]} deleted")
+        CompletionKit::MetricGroup.find(args["id"]).destroy!
+        text_result("Metric group #{args["id"]} deleted")
       end
 
       def self.text_result(data)
@@ -94,11 +94,11 @@ module CompletionKit
         {content: [{type: "text", text: message}], isError: true}
       end
 
-      def self.replace_metric_memberships(criteria, metric_ids)
+      def self.replace_metric_memberships(metric_group, metric_ids)
         return unless metric_ids
-        criteria.criteria_memberships.delete_all
+        metric_group.metric_group_memberships.delete_all
         Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
-          criteria.criteria_memberships.create!(metric_id: metric_id, position: index + 1)
+          metric_group.metric_group_memberships.create!(metric_id: metric_id, position: index + 1)
         end
       end
     end

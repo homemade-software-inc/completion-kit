@@ -122,7 +122,7 @@ Only one mode can be active.
 - **Run.** One execution of a prompt against a dataset. Captures every input (model, temperature, metrics) and stores all outputs and scores.
 - **Response.** The model's output for one dataset row, with reviews attached.
 - **Metric.** An evaluation dimension with a name, instruction, evaluation steps, and a 1-5 star scoring scale. The LLM judge uses this to score each response.
-- **Criteria.** A reusable bundle of metrics.
+- **Metric Group.** A reusable group of metrics you can apply to a run as a set.
 - **Provider Credential.** An API key for a model provider. Encrypted at rest, never returned through the API.
 
 ## REST API

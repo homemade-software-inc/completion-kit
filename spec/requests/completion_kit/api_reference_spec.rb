@@ -11,7 +11,7 @@ RSpec.describe "CompletionKit API reference", type: :request do
     expect(response.body).to include("Responses")
     expect(response.body).to include("Datasets")
     expect(response.body).to include("Metrics")
-    expect(response.body).to include("Criteria")
+    expect(response.body).to include("Metric Groups")
     expect(response.body).to include("Provider Credentials")
     expect(response.body).to include("ck-api-endpoint")
     expect(response.body).to include("ck-api-copy")

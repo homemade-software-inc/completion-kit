@@ -43,11 +43,11 @@ RSpec.describe "JSON serialization" do
     end
   end
 
-  describe "CompletionKit::Criteria#as_json" do
-    let(:criteria) { create(:completion_kit_criteria, :with_metrics) }
+  describe "CompletionKit::MetricGroup#as_json" do
+    let(:metric_group) { create(:completion_kit_metric_group, :with_metrics) }
 
     it "includes metric_ids" do
-      json = criteria.as_json
+      json = metric_group.as_json
       expect(json.keys).to include(:metric_ids)
       expect(json[:metric_ids]).to be_an(Array)
       expect(json[:metric_ids].length).to be > 0

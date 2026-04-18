@@ -19,7 +19,7 @@
       <nav class="ck-nav">
         <% active = ->(path) { request.path.start_with?(path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) } %>
         <%= link_to "Prompts", prompts_path, class: active.(prompts_path) %>
-        <%= link_to "Metrics", metrics_path, class: request.path.start_with?(metrics_path) || request.path.start_with?(criteria_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Metrics", metrics_path, class: request.path.start_with?(metrics_path) || request.path.start_with?(metric_groups_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
         <%= link_to "Datasets", datasets_path, class: active.(datasets_path) %>
         <%= link_to "Runs", runs_path, class: active.(runs_path) %>
         <%= link_to "Settings", provider_credentials_path, class: active.(provider_credentials_path) %>

@@ -33,7 +33,7 @@ module CompletionKit
         McpTools::Responses.definitions +
         McpTools::Datasets.definitions +
         McpTools::Metrics.definitions +
-        McpTools::Criteria.definitions +
+        McpTools::MetricGroups.definitions +
         McpTools::ProviderCredentials.definitions
     end
 
@@ -44,7 +44,7 @@ module CompletionKit
       when /\Aresponses_/            then McpTools::Responses.call(name, arguments)
       when /\Adatasets_/             then McpTools::Datasets.call(name, arguments)
       when /\Ametrics_/              then McpTools::Metrics.call(name, arguments)
-      when /\Acriteria_/             then McpTools::Criteria.call(name, arguments)
+      when /\Ametric_groups_/        then McpTools::MetricGroups.call(name, arguments)
       when /\Aprovider_credentials_/ then McpTools::ProviderCredentials.call(name, arguments)
       else raise MethodNotFound, "Unknown tool: #{name}"
       end

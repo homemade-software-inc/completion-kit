@@ -63,7 +63,7 @@ end %>
   <input type="radio" name="ck-api-tab" id="ck-tab-responses" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-datasets" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-metrics" class="ck-api-tabs__radio">
-  <input type="radio" name="ck-api-tab" id="ck-tab-criteria" class="ck-api-tabs__radio">
+  <input type="radio" name="ck-api-tab" id="ck-tab-metric-groups" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-providers" class="ck-api-tabs__radio">
 
   <nav class="ck-api-tabs__nav">
@@ -73,7 +73,7 @@ end %>
     <label for="ck-tab-responses" class="ck-api-tabs__label">Responses <span class="ck-api-tabs__count">2</span></label>
     <label for="ck-tab-datasets" class="ck-api-tabs__label">Datasets <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-metrics" class="ck-api-tabs__label">Metrics <span class="ck-api-tabs__count">5</span></label>
-    <label for="ck-tab-criteria" class="ck-api-tabs__label">Criteria <span class="ck-api-tabs__count">5</span></label>
+    <label for="ck-tab-metric-groups" class="ck-api-tabs__label">Metric Groups <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-providers" class="ck-api-tabs__label">Providers <span class="ck-api-tabs__count">5</span></label>
   </nav>
 
@@ -242,20 +242,20 @@ end %>
     </div>
 
     <div class="ck-api-tabs__panel">
-      <h2 class="ck-section-title">Criteria</h2>
-      <p class="ck-copy">Named groups of metrics applied to runs as a set.</p>
+      <h2 class="ck-section-title">Metric Groups</h2>
+      <p class="ck-copy">Named groups of metrics you can apply to a run as a set.</p>
       <div class="ck-api-endpoint">
-        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/criteria</p>
-        <p class="ck-meta-copy">List all criteria with their metric IDs.</p>
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/metric_groups</p>
+        <p class="ck-meta-copy">List all metric groups with their metric IDs.</p>
       </div>
       <div class="ck-api-endpoint">
-        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/criteria</p>
-        <p class="ck-meta-copy">Create a criteria group.</p>
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metric_groups</p>
+        <p class="ck-meta-copy">Create a metric group.</p>
         <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>description</code>, <code>metric_ids</code> (array)</p>
       </div>
       <div class="ck-api-endpoint">
-        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/criteria/:id</p>
-        <p class="ck-meta-copy">Get, update, or delete a criteria group. PATCH with <code>metric_ids</code> replaces all metric associations.</p>
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metric_groups/:id</p>
+        <p class="ck-meta-copy">Get, update, or delete a metric group. PATCH with <code>metric_ids</code> replaces all metric associations.</p>
       </div>
     </div>
 
