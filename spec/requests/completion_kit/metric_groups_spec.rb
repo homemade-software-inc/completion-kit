@@ -13,7 +13,7 @@ RSpec.describe "CompletionKit metric groups", type: :request do
 
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Group metrics together")
+    expect(response.body).to include("Pick the metrics to include")
 
     get "#{base_path}/#{metric_group.id}"
     expect(response).to have_http_status(:ok)
