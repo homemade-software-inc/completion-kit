@@ -27,11 +27,11 @@
       <div class="ck-list ck-list--compact">
         <% @metrics.each do |metric| %>
           <label class="ck-item">
+            <%= check_box_tag "metric_group[metric_ids][]", metric.id, metric_group.metrics.exists?(metric.id), class: "ck-checkbox" %>
             <span>
               <strong><%= metric.name %></strong>
               <span class="ck-meta-copy"><%= metric.instruction.presence || "No instruction set." %></span>
             </span>
-            <%= check_box_tag "metric_group[metric_ids][]", metric.id, metric_group.metrics.exists?(metric.id), class: "ck-checkbox" %>
           </label>
         <% end %>
       </div>
