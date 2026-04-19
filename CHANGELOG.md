@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-04-18
+
 ### Changed
 
 - **Breaking:** `Criteria` renamed to `Metric Group` across the entire product.
@@ -16,6 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CompletionKit::MetricGroupMembership`. Web routes `/completion_kit/criteria` →
   `/completion_kit/metric_groups`. Database tables renamed in place; no
   data migration needed. No backwards-compatibility aliases.
+
+### Removed
+
+- **Breaking:** `evaluation_steps` column removed from the `Metric` model and
+  all associated UI, REST API, and MCP tool surfaces. Scoring now relies on
+  the metric's `instruction` and `rubric_bands` alone.
+
+### Known limitations
+
+- Standalone app uses the `:async` queue adapter (in-process only). Solid
+  Queue migration is planned for 0.2.0.
 
 ## [0.1.0.rc1] - 2026-04-15
 
@@ -74,5 +87,6 @@ evaluating GenAI prompts across multiple providers.
 - **100% test coverage** — line and branch coverage enforced in CI across
   440+ RSpec examples.
 
-[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0.rc1...HEAD
+[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0.rc1...v0.1.0
 [0.1.0.rc1]: https://github.com/homemade-software-inc/completion-kit/releases/tag/v0.1.0.rc1
