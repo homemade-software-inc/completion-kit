@@ -76,15 +76,8 @@ module CompletionKit
       end
     end
 
-    PROVIDER_LABELS = {
-      "openai" => "OpenAI",
-      "anthropic" => "Anthropic",
-      "ollama" => "Ollama / local endpoint",
-      "openrouter" => "OpenRouter"
-    }.freeze
-
     def ck_provider_label(provider)
-      PROVIDER_LABELS[provider.to_s] || provider.to_s.titleize
+      CompletionKit::ProviderCredential::PROVIDER_LABELS[provider.to_s] || provider.to_s.titleize
     end
 
     def ck_grouped_models(models, selected = nil)
