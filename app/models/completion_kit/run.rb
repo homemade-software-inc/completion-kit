@@ -113,15 +113,15 @@ module CompletionKit
             response.response_text,
             response.expected_output,
             prompt.template,
-            criteria: metric.respond_to?(:instruction) ? metric.instruction.to_s : "",
-            rubric_text: metric.respond_to?(:display_rubric_text) ? metric.display_rubric_text : nil,
+            criteria: metric.instruction.to_s,
+            rubric_text: metric.display_rubric_text,
             input_data: response.input_data
           )
 
           response.reviews.find_or_initialize_by(metric_id: metric.id).tap do |review|
             review.assign_attributes(
               metric_name: metric.name,
-              instruction: metric.respond_to?(:instruction) ? metric.instruction.to_s : "",
+              instruction: metric.instruction.to_s,
               status: "evaluated",
               ai_score: evaluation[:score],
               ai_feedback: evaluation[:feedback]

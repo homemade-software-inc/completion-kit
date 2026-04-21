@@ -217,26 +217,5 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(run.reload.status).to eq("failed")
     end
 
-    it "calls respond_to? false branches via a minimal duck-typed metric" do
-      minimal_metric = Struct.new(:id, :name).new(metric.id, "custom")
-      run = create(
-        :completion_kit_run,
-        prompt: prompt,
-        judge_model: "gpt-4.1",
-        status: "completed"
-      )
-      run.responses.create!(response_text: "Some output")
-
-      allow(run).to receive(:metrics).and_return([minimal_metric])
-
-      judge = instance_double(CompletionKit::JudgeService, evaluate: { score: 4.0, feedback: "ok" })
-      allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
-      allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({ api_key: "x" })
-
-      result = run.judge_responses!
-
-      expect(result).to be true
-      expect(run.reload.status).to eq("completed")
-    end
   end
 end
