@@ -14,13 +14,14 @@ RSpec.describe "CompletionKit provider clients", type: :service do
       end
     end
     request = request_class.new(headers: {})
-    builder = instance_double("Faraday::RackBuilder")
-    connection = instance_double("Faraday::Connection")
+    connection = double("Faraday::Connection")
 
-    allow(builder).to receive(:request)
-    allow(builder).to receive(:adapter)
+    allow(connection).to receive(:request)
+    allow(connection).to receive(:adapter)
+    allow(connection).to receive(:options).and_return(Struct.new(:timeout, :open_timeout).new)
     allow(connection).to receive(:post).and_yield(request).and_return(response)
-    allow(Faraday).to receive(:new).and_yield(builder).and_return(connection)
+    allow(connection).to receive(:get).and_yield(request).and_return(response)
+    allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
 
     request
   end
@@ -31,7 +32,15 @@ RSpec.describe "CompletionKit provider clients", type: :service do
 
   def stub_faraday_get(response)
     request = Struct.new(:headers).new({})
+    connection = double("Faraday::Connection")
+
+    allow(connection).to receive(:request)
+    allow(connection).to receive(:adapter)
+    allow(connection).to receive(:options).and_return(Struct.new(:timeout, :open_timeout).new)
+    allow(connection).to receive(:get).and_yield(request).and_return(response)
+    allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
     allow(Faraday).to receive(:get).and_yield(request).and_return(response)
+
     request
   end
 
@@ -104,7 +113,7 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     stub_faraday_get(faraday_get_response(success: false, body: "nope", status: 500))
     expect(client.available_models).to eq(CompletionKit::AnthropicClient::STATIC_MODELS)
 
-    allow(Faraday).to receive(:get).and_raise(StandardError, "boom")
+    allow(Faraday).to receive(:new).and_raise(StandardError, "boom")
     expect(client.available_models).to eq(CompletionKit::AnthropicClient::STATIC_MODELS)
   end
 
@@ -146,7 +155,7 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     stub_faraday_get(faraday_get_response(success: false, body: "nope", status: 500))
     expect(client.available_models).to eq([])
 
-    allow(Faraday).to receive(:get).and_raise(StandardError, "boom")
+    allow(Faraday).to receive(:new).and_raise(StandardError, "boom")
     expect(client.available_models).to eq([])
 
     no_key_client = CompletionKit::OllamaClient.new(api_endpoint: "https://ollama.example.test")

@@ -7,21 +7,12 @@ module CompletionKit
 
     def generate_completion(prompt, options = {})
       return "Error: API key not configured" unless configured?
-      
-      require "faraday"
-      require "faraday/retry"
-      require "json"
-      
+
       model = options[:model] || "claude-3-7-sonnet-latest"
       max_tokens = options[:max_tokens] || 1000
       temperature = options[:temperature] || 0.7
-      
-      conn = Faraday.new(url: "https://api.anthropic.com") do |f|
-        f.request :retry, max: 2, interval: 0.5
-        f.adapter Faraday.default_adapter
-      end
-      
-      response = conn.post do |req|
+
+      response = build_connection("https://api.anthropic.com").post do |req|
         req.url "/v1/messages"
         req.headers["Content-Type"] = "application/json"
         req.headers["x-api-key"] = api_key
@@ -49,11 +40,7 @@ module CompletionKit
     def available_models
       return STATIC_MODELS unless configured?
 
-      require "faraday"
-      require "faraday/retry"
-      require "json"
-
-      response = Faraday.get("https://api.anthropic.com/v1/models?limit=100") do |req|
+      response = build_connection("https://api.anthropic.com").get("/v1/models?limit=100") do |req|
         req.headers["x-api-key"] = api_key
         req.headers["anthropic-version"] = "2023-06-01"
       end

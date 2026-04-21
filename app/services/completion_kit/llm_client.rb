@@ -1,3 +1,7 @@
+require "faraday"
+require "faraday/retry"
+require "json"
+
 module CompletionKit
   class LlmClient
     def initialize(config = {})
@@ -40,6 +44,17 @@ module CompletionKit
       raise ArgumentError, "Unsupported model: #{model_name}" unless provider
 
       for_provider(provider, config)
+    end
+
+    protected
+
+    def build_connection(url, timeout: nil, open_timeout: nil)
+      Faraday.new(url: url) do |f|
+        f.options.timeout = timeout if timeout
+        f.options.open_timeout = open_timeout if open_timeout
+        f.request :retry, max: 2, interval: 0.5
+        f.adapter Faraday.default_adapter
+      end
     end
   end
 end

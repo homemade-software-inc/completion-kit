@@ -7,22 +7,11 @@ module CompletionKit
     def generate_completion(prompt, options = {})
       return "Error: API key not configured" unless configured?
 
-      require "faraday"
-      require "faraday/retry"
-      require "json"
-
       model = options[:model] || "openai/gpt-4o-mini"
       max_tokens = options[:max_tokens] || 1000
       temperature = options[:temperature] || 0.7
 
-      conn = Faraday.new(url: BASE_URL) do |f|
-        f.options.timeout = 30
-        f.options.open_timeout = 5
-        f.request :retry, max: 2, interval: 0.5
-        f.adapter Faraday.default_adapter
-      end
-
-      response = conn.post do |req|
+      response = build_connection(BASE_URL, timeout: 30, open_timeout: 5).post do |req|
         req.url "/chat/completions"
         req.headers["Content-Type"] = "application/json"
         req.headers["Authorization"] = "Bearer #{api_key}"
