@@ -68,7 +68,7 @@ module CompletionKit
       def self.create(args)
         run = Run.new(args.slice("name", "prompt_id", "dataset_id", "judge_model"))
         if run.save
-          replace_run_metrics(run, args["metric_ids"])
+          run.replace_metrics!(args["metric_ids"])
           text_result(run.reload.as_json)
         else
           error_result(run.errors.full_messages.join(", "))
@@ -78,7 +78,7 @@ module CompletionKit
       def self.update(args)
         run = Run.find(args["id"])
         if run.update(args.except("id", "metric_ids").slice("name", "dataset_id", "judge_model"))
-          replace_run_metrics(run, args["metric_ids"]) if args.key?("metric_ids")
+          run.replace_metrics!(args["metric_ids"]) if args.key?("metric_ids")
           text_result(run.reload.as_json)
         else
           error_result(run.errors.full_messages.join(", "))
@@ -100,14 +100,6 @@ module CompletionKit
         run = Run.find(args["id"])
         JudgeJob.perform_later(run.id)
         text_result(run.reload.as_json)
-      end
-
-      def self.replace_run_metrics(run, metric_ids)
-        return unless metric_ids
-        run.run_metrics.delete_all
-        Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
-          run.run_metrics.create!(metric_id: metric_id, position: index + 1)
-        end
       end
     end
   end

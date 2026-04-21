@@ -35,7 +35,7 @@ module CompletionKit
     def create
       @run = Run.new(run_params.except(:metric_ids))
       if @run.save
-        replace_run_metrics(@run, params[:run][:metric_ids])
+        @run.replace_metrics!(params[:run][:metric_ids])
         redirect_to run_path(@run), notice: "Run was successfully created."
       else
         load_form_collections
@@ -46,10 +46,10 @@ module CompletionKit
     def update
       if @run.responses.any?
         new_run = Run.create!(run_params.except(:metric_ids).to_h.merge(status: "pending"))
-        replace_run_metrics(new_run, params[:run][:metric_ids]) if params[:run].key?(:metric_ids)
+        new_run.replace_metrics!(params[:run][:metric_ids]) if params[:run].key?(:metric_ids)
         redirect_to run_path(new_run), notice: "Saved as a new run. The previous run and its results are preserved."
       elsif @run.update(run_params.except(:metric_ids))
-        replace_run_metrics(@run, params[:run][:metric_ids]) if params[:run].key?(:metric_ids)
+        @run.replace_metrics!(params[:run][:metric_ids]) if params[:run].key?(:metric_ids)
         redirect_to run_path(@run), notice: "Run saved."
       else
         load_form_collections
@@ -120,12 +120,5 @@ module CompletionKit
       params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, metric_ids: [])
     end
 
-    def replace_run_metrics(run, metric_ids)
-      return unless metric_ids
-      run.run_metrics.delete_all
-      Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
-        run.run_metrics.create!(metric_id: metric_id, position: index + 1)
-      end
-    end
   end
 end

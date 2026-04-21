@@ -21,6 +21,14 @@ module CompletionKit
       judge_model.present? && metrics.any? && ApiConfig.valid_for_model?(judge_model)
     end
 
+    def replace_metrics!(metric_ids)
+      return unless metric_ids
+      run_metrics.delete_all
+      Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
+        run_metrics.create!(metric_id: metric_id, position: index + 1)
+      end
+    end
+
     def avg_score
       all_reviews = responses.flat_map(&:reviews)
       scores = all_reviews.map(&:ai_score).compact.map(&:to_f)

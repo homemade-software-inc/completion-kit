@@ -15,7 +15,7 @@ module CompletionKit
         def create
           metric_group = MetricGroup.new(metric_group_params.except(:metric_ids))
           if metric_group.save
-            replace_metric_memberships(metric_group, params[:metric_ids]) if params.key?(:metric_ids)
+            metric_group.replace_metrics!(params[:metric_ids]) if params.key?(:metric_ids)
             render json: metric_group.reload, status: :created
           else
             render json: {errors: metric_group.errors}, status: :unprocessable_entity
@@ -24,7 +24,7 @@ module CompletionKit
 
         def update
           if @metric_group.update(metric_group_params.except(:metric_ids))
-            replace_metric_memberships(@metric_group, params[:metric_ids]) if params.key?(:metric_ids)
+            @metric_group.replace_metrics!(params[:metric_ids]) if params.key?(:metric_ids)
             render json: @metric_group.reload
           else
             render json: {errors: @metric_group.errors}, status: :unprocessable_entity
@@ -46,15 +46,6 @@ module CompletionKit
 
         def metric_group_params
           params.permit(:name, :description, metric_ids: [])
-        end
-
-        def replace_metric_memberships(metric_group, metric_ids)
-          return unless metric_ids
-
-          metric_group.metric_group_memberships.delete_all
-          Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
-            metric_group.metric_group_memberships.create!(metric_id: metric_id, position: index + 1)
-          end
         end
       end
     end

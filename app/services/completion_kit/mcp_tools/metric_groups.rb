@@ -56,7 +56,7 @@ module CompletionKit
       def self.create(args)
         metric_group = CompletionKit::MetricGroup.new(args.slice("name", "description"))
         if metric_group.save
-          replace_metric_memberships(metric_group, args["metric_ids"])
+          metric_group.replace_metrics!(args["metric_ids"])
           text_result(metric_group.reload.as_json)
         else
           error_result(metric_group.errors.full_messages.join(", "))
@@ -66,7 +66,7 @@ module CompletionKit
       def self.update(args)
         metric_group = CompletionKit::MetricGroup.find(args["id"])
         if metric_group.update(args.except("id", "metric_ids").slice("name", "description"))
-          replace_metric_memberships(metric_group, args["metric_ids"]) if args.key?("metric_ids")
+          metric_group.replace_metrics!(args["metric_ids"]) if args.key?("metric_ids")
           text_result(metric_group.reload.as_json)
         else
           error_result(metric_group.errors.full_messages.join(", "))
@@ -76,14 +76,6 @@ module CompletionKit
       def self.delete(args)
         CompletionKit::MetricGroup.find(args["id"]).destroy!
         text_result("Metric group #{args["id"]} deleted")
-      end
-
-      def self.replace_metric_memberships(metric_group, metric_ids)
-        return unless metric_ids
-        metric_group.metric_group_memberships.delete_all
-        Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
-          metric_group.metric_group_memberships.create!(metric_id: metric_id, position: index + 1)
-        end
       end
     end
   end

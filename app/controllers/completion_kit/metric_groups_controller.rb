@@ -23,7 +23,7 @@ module CompletionKit
       @metrics = Metric.order(:name)
 
       if @metric_group.save
-        replace_metric_memberships
+        @metric_group.replace_metrics!(metric_group_params[:metric_ids])
         redirect_to metric_group_path(@metric_group), notice: "Metric group was successfully created."
       else
         render :new, status: :unprocessable_entity
@@ -34,7 +34,7 @@ module CompletionKit
       @metrics = Metric.order(:name)
 
       if @metric_group.update(metric_group_params.except(:metric_ids))
-        replace_metric_memberships
+        @metric_group.replace_metrics!(metric_group_params[:metric_ids])
         redirect_to metric_group_path(@metric_group), notice: "Metric group was successfully updated."
       else
         render :edit, status: :unprocessable_entity
@@ -54,14 +54,6 @@ module CompletionKit
 
     def metric_group_params
       params.require(:metric_group).permit(:name, :description, metric_ids: [])
-    end
-
-    def replace_metric_memberships
-      metric_ids = Array(metric_group_params[:metric_ids]).reject(&:blank?)
-      @metric_group.metric_group_memberships.delete_all
-      metric_ids.each_with_index do |metric_id, index|
-        @metric_group.metric_group_memberships.create!(metric_id: metric_id, position: index + 1)
-      end
     end
   end
 end
