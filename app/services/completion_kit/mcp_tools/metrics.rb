@@ -1,6 +1,8 @@
 module CompletionKit
   module McpTools
     module Metrics
+      extend Base
+
       TOOLS = {
         "metrics_list" => {
           description: "List all metrics",
@@ -43,15 +45,6 @@ module CompletionKit
         }
       }.freeze
 
-      def self.definitions
-        TOOLS.map { |name, config| {name: name, description: config[:description], inputSchema: config[:inputSchema]} }
-      end
-
-      def self.call(name, arguments)
-        tool = TOOLS.fetch(name)
-        send(tool[:handler], arguments)
-      end
-
       def self.list(_args)
         text_result(Metric.order(created_at: :desc).map(&:as_json))
       end
@@ -81,15 +74,6 @@ module CompletionKit
       def self.delete(args)
         Metric.find(args["id"]).destroy!
         text_result("Metric #{args["id"]} deleted")
-      end
-
-      def self.text_result(data)
-        text = data.is_a?(String) ? data : data.to_json
-        {content: [{type: "text", text: text}]}
-      end
-
-      def self.error_result(message)
-        {content: [{type: "text", text: message}], isError: true}
       end
     end
   end

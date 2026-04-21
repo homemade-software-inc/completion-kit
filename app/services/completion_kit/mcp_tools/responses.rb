@@ -1,6 +1,8 @@
 module CompletionKit
   module McpTools
     module Responses
+      extend Base
+
       TOOLS = {
         "responses_list" => {
           description: "List responses for a run",
@@ -18,15 +20,6 @@ module CompletionKit
         }
       }.freeze
 
-      def self.definitions
-        TOOLS.map { |name, config| {name: name, description: config[:description], inputSchema: config[:inputSchema]} }
-      end
-
-      def self.call(name, arguments)
-        tool = TOOLS.fetch(name)
-        send(tool[:handler], arguments)
-      end
-
       def self.list(args)
         run = Run.find(args["run_id"])
         text_result(run.responses.includes(:reviews).map(&:as_json))
@@ -35,10 +28,6 @@ module CompletionKit
       def self.get(args)
         run = Run.find(args["run_id"])
         text_result(run.responses.find(args["id"]).as_json)
-      end
-
-      def self.text_result(data)
-        {content: [{type: "text", text: data.to_json}]}
       end
     end
   end

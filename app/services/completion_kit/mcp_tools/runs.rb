@@ -1,6 +1,8 @@
 module CompletionKit
   module McpTools
     module Runs
+      extend Base
+
       TOOLS = {
         "runs_list" => {
           description: "List all runs",
@@ -55,15 +57,6 @@ module CompletionKit
         }
       }.freeze
 
-      def self.definitions
-        TOOLS.map { |name, config| {name: name, description: config[:description], inputSchema: config[:inputSchema]} }
-      end
-
-      def self.call(name, arguments)
-        tool = TOOLS.fetch(name)
-        send(tool[:handler], arguments)
-      end
-
       def self.list(_args)
         text_result(Run.order(created_at: :desc).map(&:as_json))
       end
@@ -107,15 +100,6 @@ module CompletionKit
         run = Run.find(args["id"])
         JudgeJob.perform_later(run.id)
         text_result(run.reload.as_json)
-      end
-
-      def self.text_result(data)
-        text = data.is_a?(String) ? data : data.to_json
-        {content: [{type: "text", text: text}]}
-      end
-
-      def self.error_result(message)
-        {content: [{type: "text", text: message}], isError: true}
       end
 
       def self.replace_run_metrics(run, metric_ids)
