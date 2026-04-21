@@ -280,21 +280,6 @@ document.addEventListener('DOMContentLoaded', function() {
     entries.forEach(function(entry) { if (entry.isIntersecting) { entry.target.classList.add('visible'); obs.unobserve(entry.target); } });
   }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
   els.forEach(function(el) { obs.observe(el); });
-
-  document.querySelectorAll('.install-snippet__copy').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var text = btn.getAttribute('data-copy');
-      var label = btn.querySelector('.install-snippet__status');
-      navigator.clipboard.writeText(text).then(function() {
-        btn.classList.add('copied');
-        if (label) label.textContent = 'Copied';
-        setTimeout(function() {
-          btn.classList.remove('copied');
-          if (label) label.textContent = 'Copy';
-        }, 1500);
-      });
-    });
-  });
 });
 </script>
 
