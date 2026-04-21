@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#080b14" />
   <title>CompletionKit - Your prompts need tests too</title>
   <meta name="description" content="Your prompts need tests too. Run every prompt against real data, score outputs with an LLM judge, and see exactly what got better and what broke." />
+  <link rel="canonical" href="https://completionkit.com/" />
   <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
   <link rel="icon" href="/favicon.png?v=3" type="image/png" sizes="any" />
   <link rel="apple-touch-icon" href="/favicon.png?v=3" />
@@ -20,6 +22,70 @@
   <meta name="twitter:description" content="Run every prompt against real data, score outputs with an LLM judge, and see exactly what got better and what broke." />
   <meta name="twitter:image" content="https://completionkit.com/og.png" />
 <noscript><style>.reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "CompletionKit",
+    "description": "Run every prompt against real data, score outputs with an LLM judge, and see exactly what got better and what broke.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "url": "https://completionkit.com/",
+    "image": "https://completionkit.com/og.png",
+    "license": "https://opensource.org/licenses/MIT",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "Homemade Software",
+      "url": "https://www.homemade.software"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Which providers does it support?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "OpenAI, Anthropic, Ollama (or any OpenAI-compatible local endpoint), and 100+ models via OpenRouter."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does it work outside Rails?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "CompletionKit ships as a Rails engine, but it includes a bundled standalone Rails app you can deploy as a hosted service without writing any Rails code yourself."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is it free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. MIT-licensed, free forever, no usage limits, no telemetry."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Who made it?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Built by Homemade Software."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
 
