@@ -161,6 +161,8 @@ end
 FactoryBot.definition_file_paths = [File.expand_path("factories", __dir__)]
 FactoryBot.find_definitions
 
+Dir[File.expand_path("support/**/*.rb", __dir__)].each { |f| require f }
+
 RSpec.configure do |config|
   config.fixture_paths = ["#{::Rails.root}/spec/fixtures"]
   config.use_transactional_fixtures = true

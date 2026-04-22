@@ -22,7 +22,8 @@ module CompletionKit
       PROVIDER_LABELS[provider] || provider.titleize
     end
 
-    validates :provider, presence: true, inclusion: { in: PROVIDERS }, uniqueness: true
+    validates :provider, presence: true, inclusion: { in: PROVIDERS }
+    validates :provider, tenant_scoped_uniqueness: true
 
     after_save :enqueue_discovery
 

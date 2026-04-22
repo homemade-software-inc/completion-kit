@@ -178,6 +178,22 @@ bin/rails db:migrate
 git add db/migrate/ && git commit -m "install new engine migration"
 ```
 
+## Multi-tenant host apps (advanced)
+
+For hosts that mount CompletionKit in a multi-tenant app, two optional hooks scope engine records per tenant without forking the engine:
+
+```ruby
+CompletionKit.configure do |config|
+  config.tenant_scope = -> {
+    org = Current.organization&.id
+    org ? where(organization_id: org) : where("1=0")
+  }
+  config.tenant_scope_columns = [:organization_id]
+end
+```
+
+`tenant_scope` runs as each engine model's `default_scope` (use `unscoped` to bypass). `tenant_scope_columns` is appended to every engine uniqueness validation. Adding the tenant columns and composite unique indexes lives in your host migrations. Both defaults (`nil`, `[]`) are no-ops.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and pull request guidelines.

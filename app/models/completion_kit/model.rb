@@ -3,7 +3,7 @@ module CompletionKit
     STATUSES = %w[active retired failed].freeze
 
     validates :provider, presence: true
-    validates :model_id, presence: true, uniqueness: { scope: :provider }
+    validates :model_id, presence: true, tenant_scoped_uniqueness: { scope: :provider }
     validates :status, presence: true, inclusion: { in: STATUSES }
 
     scope :active, -> { where(status: "active") }

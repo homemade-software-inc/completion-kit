@@ -15,7 +15,7 @@ module CompletionKit
     serialize :rubric_bands, coder: JSON
 
     validates :name, presence: true
-    validates :key, uniqueness: true, allow_nil: true
+    validates :key, tenant_scoped_uniqueness: { allow_nil: true }
 
     before_validation :generate_key
     before_validation :normalize_rubric_bands

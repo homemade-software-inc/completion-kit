@@ -8,6 +8,7 @@ module CompletionKit
     attr_accessor :openai_api_key, :anthropic_api_key, :ollama_api_key, :ollama_api_endpoint
     attr_accessor :judge_model, :high_quality_threshold, :medium_quality_threshold
     attr_accessor :username, :password, :auth_strategy, :api_token
+    attr_accessor :tenant_scope, :tenant_scope_columns
 
     def initialize
       @openai_api_key = ENV['OPENAI_API_KEY']
@@ -18,6 +19,10 @@ module CompletionKit
       @judge_model = "gpt-4.1"
       @high_quality_threshold = 4
       @medium_quality_threshold = 3
+    end
+
+    def tenant_scope_columns
+      @tenant_scope_columns ||= []
     end
   end
 

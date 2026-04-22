@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-22
+
+### Added
+
+- Optional `tenant_scope` / `tenant_scope_columns` config hooks for multi-tenant host apps. No behavior change when unset.
+
 ## [0.1.0] - 2026-04-18
 
 ### Changed
@@ -87,6 +93,7 @@ evaluating GenAI prompts across multiple providers.
 - **100% test coverage** — line and branch coverage enforced in CI across
   440+ RSpec examples.
 
-[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0.rc1...v0.1.0
 [0.1.0.rc1]: https://github.com/homemade-software-inc/completion-kit/releases/tag/v0.1.0.rc1
