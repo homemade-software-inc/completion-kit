@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-23
+
+### Changed
+
+- **License:** CompletionKit 0.3.0 and later are licensed under the Business
+  Source License 1.1 with a 3-year Change Date to GPL v3. You may use
+  CompletionKit freely for any purpose — including production — except to
+  offer it to third parties as a hosted or managed service whose primary
+  value is CompletionKit itself. Versions 0.2.x and earlier remain
+  MIT-licensed and are unaffected; anyone relying on MIT can pin to 0.2.x.
+  See `LICENSE` for full terms and the Additional Use Grant.
+
 ## [0.2.0] - 2026-04-22
 
 ### Added
@@ -93,7 +105,8 @@ evaluating GenAI prompts across multiple providers.
 - **100% test coverage** — line and branch coverage enforced in CI across
   440+ RSpec examples.
 
-[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/homemade-software-inc/completion-kit/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0.rc1...v0.1.0
 [0.1.0.rc1]: https://github.com/homemade-software-inc/completion-kit/releases/tag/v0.1.0.rc1

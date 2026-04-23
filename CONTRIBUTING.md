@@ -92,5 +92,7 @@ After a run, a coverage report is written to `coverage/index.html`.
 
 ## License
 
-By contributing to CompletionKit, you agree that your contributions will
-be licensed under the [MIT License](MIT-LICENSE).
+By contributing to CompletionKit, you agree that your contributions from
+version 0.3.0 onward will be licensed under the [Business Source License
+1.1](LICENSE). Versions 0.2.x and earlier remain under the [MIT
+License](https://github.com/homemade-software-inc/completion-kit/blob/v0.2.0/MIT-LICENSE).

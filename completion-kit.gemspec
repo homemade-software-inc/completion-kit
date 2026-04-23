@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.homepage    = "https://github.com/homemade-software-inc/completion-kit"
   spec.summary     = "Your prompts need tests too. Run them against real data, score outputs with an LLM judge, iterate until they work."
   spec.description = "CompletionKit is a prompt testing platform that runs as a Rails engine or a standalone app. Run prompts against real datasets, score every output with an LLM judge against criteria you define, track prompt versions, and get AI-generated improvement suggestions grounded in your actual results. Includes a web UI, REST API, and a built-in MCP server with 36 tools."
-  spec.license     = "MIT"
+  spec.license     = "BUSL-1.1"
   spec.required_ruby_version = ">= 3.1.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.metadata["changelog_uri"] = "https://github.com/homemade-software-inc/completion-kit/blob/main/CHANGELOG.md"
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
-    Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
+    Dir["{app,config,db,lib}/**/*", "LICENSE", "Rakefile", "README.md"]
   end
 
   spec.add_dependency "rails", ">= 7.0.0", "< 9.0.0"

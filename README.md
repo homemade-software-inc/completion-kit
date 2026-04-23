@@ -200,4 +200,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and pull 
 
 ## License
 
-[MIT](https://opensource.org/licenses/MIT)
+CompletionKit 0.3.0 and later are licensed under the [Business Source License 1.1](LICENSE). You may use CompletionKit freely for any purpose, including production, except to offer it (or a derivative) to third parties as a hosted or managed service whose primary value is CompletionKit itself. Three years after each release, that version automatically re-licenses to GPL-3.
+
+CompletionKit 0.2.x and earlier remain available under the [MIT License](https://github.com/homemade-software-inc/completion-kit/blob/v0.2.0/MIT-LICENSE).
+
+For alternative licensing, contact hello@homemade.software.
