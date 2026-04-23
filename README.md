@@ -15,6 +15,8 @@ It's the difference between "this prompt seems to work" and "this prompt scores 
 
 **[completionkit.com](https://completionkit.com)** | **[RubyGems](https://rubygems.org/gems/completion-kit)**
 
+> **CompletionKit Cloud** is coming — hosted, managed CompletionKit with zero setup. Early access opening soon at [app.completionkit.com](https://app.completionkit.com).
+
 ![Prompts index](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/prompts.png)
 
 ![Prompt detail with metrics and rubrics](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/prompt-detail.png)
