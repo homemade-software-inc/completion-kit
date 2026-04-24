@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   MIT-licensed and are unaffected; anyone relying on MIT can pin to 0.2.x.
   See `LICENSE` for full terms and the Additional Use Grant.
 
+### Fixed
+
+- Includes the migration idempotency fix from 0.2.1.
+
 ## [0.2.0] - 2026-04-22
 
 ### Added
