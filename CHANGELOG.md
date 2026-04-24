@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-04-23
+
+### Fixed
+
+- Migration `20260403000003_add_applied_at_to_completion_kit_suggestions` was adding a column that `20260403000002_create_completion_kit_suggestions` already created, causing `PG::DuplicateColumn` on fresh installs. The add-column migration is now idempotent.
+
 ## [0.2.0] - 2026-04-22
 
 ### Added
@@ -93,7 +99,8 @@ evaluating GenAI prompts across multiple providers.
 - **100% test coverage** — line and branch coverage enforced in CI across
   440+ RSpec examples.
 
-[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/homemade-software-inc/completion-kit/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/homemade-software-inc/completion-kit/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/homemade-software-inc/completion-kit/compare/v0.1.0.rc1...v0.1.0
 [0.1.0.rc1]: https://github.com/homemade-software-inc/completion-kit/releases/tag/v0.1.0.rc1
