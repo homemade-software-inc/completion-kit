@@ -1,3 +1,16 @@
+CompletionKit::ProviderCredential.skip_callback(:save, :after, :enqueue_discovery)
+
+[
+  { provider: "openai", api_key: ENV["OPENAI_API_KEY"] || "sk-seed-placeholder" },
+  { provider: "anthropic", api_key: ENV["ANTHROPIC_API_KEY"] || "sk-ant-seed-placeholder" }
+].each do |attrs|
+  CompletionKit::ProviderCredential.find_or_create_by!(provider: attrs[:provider]) do |pc|
+    pc.api_key = attrs[:api_key]
+  end
+end
+
+CompletionKit::ProviderCredential.set_callback(:save, :after, :enqueue_discovery)
+
 models = [
   { provider: "openai", model_id: "gpt-5.4-mini", display_name: "GPT-5.4 Mini", status: "active", supports_generation: true, supports_judging: true, probed_at: Time.current, discovered_at: Time.current },
   { provider: "openai", model_id: "gpt-4.1-mini", display_name: "GPT-4.1 Mini", status: "active", supports_generation: true, supports_judging: true, probed_at: Time.current, discovered_at: Time.current },

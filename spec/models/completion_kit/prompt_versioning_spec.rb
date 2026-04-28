@@ -67,7 +67,7 @@ RSpec.describe "Prompt versioning and public API", type: :model do
       expect(payload[:family_key]).to eq("sum-1")
       expect(payload[:version_number]).to eq(1)
       expect(payload[:template]).to eq("Summarize {{content}}")
-      expect(payload[:generation_model]).to eq("gpt-4.1")
+      expect(payload[:generation_model]).to eq("gpt-4.1-mini")
     end
   end
 
