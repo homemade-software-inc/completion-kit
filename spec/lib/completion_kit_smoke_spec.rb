@@ -32,7 +32,7 @@ RSpec.describe "CompletionKit boot smoke" do
     expect { silently_load(File.expand_path("../../lib/completion_kit/engine.rb", __dir__)) }.not_to raise_error
     expect { silently_load(File.expand_path("../../lib/completion_kit.rb", __dir__)) }.not_to raise_error
 
-    expect(CompletionKit::VERSION).to eq("0.3.0")
+    expect(CompletionKit::VERSION).to eq("0.999.0-deliberate-break")
     expect(CompletionKit::Engine).to be < Rails::Engine
     expect(CompletionKit::ApplicationController).to be < ActionController::Base
     expect(CompletionKit::ApplicationRecord).to be < ActiveRecord::Base
