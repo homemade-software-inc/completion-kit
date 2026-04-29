@@ -10,8 +10,6 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     steps:
       - name: Checkout
@@ -33,10 +31,48 @@ jobs:
           name: coverage
           path: coverage/
 
+  notify_slack:
+    runs-on: ubuntu-latest
+    needs: [ test ]
+    if: failure() && github.event_name == 'push'
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
       - name: Notify Slack on failure
-        if: failure() && github.event_name == 'push' && env.SLACK_WEBHOOK_URL != ''
+        if: env.SLACK_WEBHOOK_URL != ''
         run: |
           payload=$(jq -n \
-            --arg text "CI failed on ${GITHUB_REPOSITORY} (${GITHUB_REF_NAME}) at ${GITHUB_SHA:0:7} by ${GITHUB_ACTOR}. Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            --arg text ":x: CI failed on ${GITHUB_REPOSITORY} (${GITHUB_REF_NAME}) at ${GITHUB_SHA:0:7} by ${GITHUB_ACTOR}. Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             '{text: $text}')
           curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
+
+  notify_slack_recovered:
+    runs-on: ubuntu-latest
+    needs: [ test ]
+    if: success() && github.event_name == 'push'
+    permissions:
+      actions: read
+      contents: read
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Notify Slack when CI recovers
+        if: env.SLACK_WEBHOOK_URL != ''
+        run: |
+          prev_conclusion=$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --branch "$GITHUB_REF_NAME" \
+            --workflow "${{ github.workflow }}" \
+            --event push \
+            --limit 2 \
+            --json conclusion,databaseId \
+            --jq "[.[] | select(.databaseId != ${GITHUB_RUN_ID})] | .[0].conclusion")
+          if [ "$prev_conclusion" = "failure" ]; then
+            payload=$(jq -n \
+              --arg text ":white_check_mark: CI fixed on ${GITHUB_REPOSITORY} (${GITHUB_REF_NAME}) at ${GITHUB_SHA:0:7} by ${GITHUB_ACTOR}. Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+              '{text: $text}')
+            curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
+          else
+            echo "Previous CI run on ${GITHUB_REF_NAME} was '${prev_conclusion}' — no recovery message."
+          fi
