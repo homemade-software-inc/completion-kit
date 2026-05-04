@@ -177,6 +177,23 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
+  describe "status enum" do
+    it "rejects the legacy generating status" do
+      run = build(:completion_kit_run, status: "generating")
+      expect(run).not_to be_valid
+    end
+
+    it "rejects the legacy judging status" do
+      run = build(:completion_kit_run, status: "judging")
+      expect(run).not_to be_valid
+    end
+
+    it "accepts running" do
+      run = build(:completion_kit_run, status: "running")
+      expect(run).to be_valid
+    end
+  end
+
   describe "#judge_responses!" do
     let(:metric) { create(:completion_kit_metric, name: "Quality") }
     let(:prompt) { create(:completion_kit_prompt) }

@@ -63,7 +63,7 @@ module CompletionKit
     end
 
     def generate
-      @run.update!(status: "generating", progress_current: 0, progress_total: 0, error_message: nil)
+      @run.update!(status: "running", progress_current: 0, progress_total: 0, error_message: nil)
       GenerateJob.perform_later(@run.id)
       redirect_to run_path(@run)
     end

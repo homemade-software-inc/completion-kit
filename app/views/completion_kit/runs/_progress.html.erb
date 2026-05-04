@@ -1,5 +1,5 @@
 <div id="run_progress">
-  <% if run.status == "generating" || run.status == "judging" %>
+  <% if run.status == "running" %>
     <div class="ck-discovery-bar">
       <div class="ck-discovery-bar__label">
         <%= ck_run_status_label(run) %>
