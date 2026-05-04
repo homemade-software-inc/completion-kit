@@ -8,13 +8,17 @@ module CompletionKit
 
     delegate :prompt, to: :run
 
-    validates :response_text, presence: true, if: :requires_response_text?
+    validates :response_text, presence: true, if: :succeeded?
     validates :status, inclusion: { in: STATUSES }
 
     before_validation :set_default_status, on: :create
 
     def terminal?
       TERMINAL_STATUSES.include?(status)
+    end
+
+    def succeeded?
+      status == "succeeded"
     end
 
     def as_json(options = {})
@@ -48,10 +52,6 @@ module CompletionKit
 
     def set_default_status
       self.status ||= "pending"
-    end
-
-    def requires_response_text?
-      status == "succeeded"
     end
   end
 end

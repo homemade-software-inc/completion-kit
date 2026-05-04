@@ -7,7 +7,6 @@ class AddStatusAndErrorToResponses < ActiveRecord::Migration[7.1]
     add_column :completion_kit_responses, :error_message, :text
     add_column :completion_kit_responses, :attempts, :integer, default: 0, null: false
     add_column :completion_kit_responses, :row_index, :integer
-    add_index  :completion_kit_responses, [:run_id, :status]
 
     reversible do |dir|
       dir.up do
