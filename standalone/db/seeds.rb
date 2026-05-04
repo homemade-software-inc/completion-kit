@@ -149,7 +149,7 @@ responses_data.each do |rd|
     response.reviews.find_or_create_by!(metric: metric) do |review|
       review.metric_name = metric_name
       review.instruction = metric.instruction
-      review.status = "evaluated"
+      review.status = "succeeded"
       review.ai_score = score
       review.ai_feedback = feedback
     end
@@ -258,7 +258,7 @@ summary_responses.each do |rd|
     response.reviews.find_or_create_by!(metric: metric) do |review|
       review.metric_name = metric_name
       review.instruction = metric.instruction
-      review.status = "evaluated"
+      review.status = "succeeded"
       review.ai_score = score
       review.ai_feedback = feedback
     end
@@ -313,7 +313,7 @@ neighbourhood_responses.each do |rd|
     response.reviews.find_or_create_by!(metric: metric) do |review|
       review.metric_name = metric_name
       review.instruction = metric.instruction
-      review.status = "evaluated"
+      review.status = "succeeded"
       review.ai_score = score
       review.ai_feedback = feedback
     end
