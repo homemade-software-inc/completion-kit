@@ -1,9 +1,8 @@
+require "completion_kit/errors"
 require "completion_kit/version"
 require "completion_kit/engine"
 
 module CompletionKit
-  class ConfigurationError < StandardError; end
-
   class Configuration
     attr_accessor :openai_api_key, :anthropic_api_key, :ollama_api_key, :ollama_api_endpoint
     attr_accessor :judge_model, :high_quality_threshold, :medium_quality_threshold
