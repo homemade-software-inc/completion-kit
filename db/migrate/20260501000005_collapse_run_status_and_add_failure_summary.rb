@@ -1,6 +1,6 @@
 class CollapseRunStatusAndAddFailureSummary < ActiveRecord::Migration[7.1]
   def change
-    add_column :completion_kit_runs, :failure_summary, :string
+    add_column :completion_kit_runs, :failure_summary, :text
 
     reversible do |dir|
       dir.up do
