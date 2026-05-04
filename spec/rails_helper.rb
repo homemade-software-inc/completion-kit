@@ -118,6 +118,14 @@ ActiveRecord::Schema.define do
     t.text :input_data
     t.text :response_text
     t.text :expected_output
+    t.string :status, default: "pending", null: false
+    t.string :error_provider
+    t.string :error_class
+    t.integer :error_status
+    t.text :error_message
+    t.integer :attempts, default: 0, null: false
+    t.integer :row_index
+    t.index [:run_id, :status]
     t.timestamps
   end
 
