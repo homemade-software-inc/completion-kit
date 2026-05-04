@@ -102,7 +102,8 @@ Append to `spec/models/completion_kit/response_spec.rb`:
 RSpec.describe CompletionKit::Response, type: :model do
   describe "status" do
     it "defaults to pending on a new record" do
-      response = build(:completion_kit_response, response_text: "anything")
+      response = build(:completion_kit_response, status: nil, response_text: "anything")
+      response.valid?
       expect(response.status).to eq("pending")
     end
 
