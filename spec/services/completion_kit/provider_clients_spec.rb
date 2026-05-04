@@ -3,8 +3,8 @@ require "faraday"
 require "json"
 
 RSpec.describe "CompletionKit provider clients", type: :service do
-  def faraday_response(success:, body:, status: 200)
-    instance_double("Faraday::Response", success?: success, body: body, status: status)
+  def faraday_response(success:, body:, status: 200, headers: {})
+    instance_double("Faraday::Response", success?: success, body: body, status: status, headers: headers)
   end
 
   def stub_faraday(response)
@@ -56,8 +56,12 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(client.configured?).to eq(true)
     expect(client.configuration_errors).to eq([])
 
-    stub_faraday(faraday_response(success: false, status: 429, body: "rate limited"))
-    expect(client.generate_completion("prompt")).to eq("Error: 429 - rate limited")
+    stub_faraday(faraday_response(success: false, status: 429, body: "rate limited", headers: { "Retry-After" => "30" }))
+    expect { client.generate_completion("prompt") }.to raise_error(CompletionKit::RateLimitError) do |error|
+      expect(error.provider).to eq("openai")
+      expect(error.status).to eq(429)
+      expect(error.retry_after).to eq(30)
+    end
 
     allow(Faraday).to receive(:new).and_raise(StandardError, "network down")
     expect(client.generate_completion("prompt")).to eq("Error: network down")
@@ -91,8 +95,15 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(client.configured?).to eq(true)
     expect(client.configuration_errors).to eq([])
 
-    stub_faraday(faraday_response(success: false, status: 400, body: "bad request"))
+    stub_faraday(faraday_response(success: false, status: 400, body: "bad request", headers: {}))
     expect(client.generate_completion("prompt")).to eq("Error: 400 - bad request")
+
+    stub_faraday(faraday_response(success: false, status: 429, body: "rate limited", headers: {}))
+    expect { client.generate_completion("prompt") }.to raise_error(CompletionKit::RateLimitError) do |error|
+      expect(error.provider).to eq("anthropic")
+      expect(error.status).to eq(429)
+      expect(error.retry_after).to be_nil
+    end
 
     allow(Faraday).to receive(:new).and_raise(StandardError, "anthropic down")
     expect(client.generate_completion("prompt")).to eq("Error: anthropic down")
@@ -126,8 +137,15 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(client.configured?).to eq(true)
     expect(client.configuration_errors).to eq([])
 
-    stub_faraday(faraday_response(success: false, status: 500, body: "broken"))
+    stub_faraday(faraday_response(success: false, status: 500, body: "broken", headers: {}))
     expect(client.generate_completion("prompt")).to eq("Error: 500 - broken")
+
+    stub_faraday(faraday_response(success: false, status: 429, body: "rate limited", headers: {}))
+    expect { client.generate_completion("prompt") }.to raise_error(CompletionKit::RateLimitError) do |error|
+      expect(error.provider).to eq("ollama")
+      expect(error.status).to eq(429)
+      expect(error.retry_after).to be_nil
+    end
 
     allow(Faraday).to receive(:new).and_raise(StandardError, "ollama down")
     expect(client.generate_completion("prompt")).to eq("Error: ollama down")

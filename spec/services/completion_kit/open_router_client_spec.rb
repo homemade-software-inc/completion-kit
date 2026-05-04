@@ -5,8 +5,8 @@ require "json"
 RSpec.describe CompletionKit::OpenRouterClient, type: :service do
   let(:config) { { provider: "openrouter", api_key: "or-test-key" } }
 
-  def faraday_response(success:, body:, status: 200)
-    instance_double("Faraday::Response", success?: success, body: body, status: status)
+  def faraday_response(success:, body:, status: 200, headers: {})
+    instance_double("Faraday::Response", success?: success, body: body, status: status, headers: headers)
   end
 
   def faraday_connection_stub
@@ -75,6 +75,15 @@ RSpec.describe CompletionKit::OpenRouterClient, type: :service do
       allow(ENV).to receive(:[]).with("OPENROUTER_API_KEY").and_return(nil)
       result = described_class.new({ provider: "openrouter" }).generate_completion("hi")
       expect(result).to eq("Error: API key not configured")
+    end
+
+    it "raises RateLimitError on 429 with Retry-After header" do
+      stub_faraday_post(faraday_response(success: false, status: 429, body: "rate limited", headers: { "Retry-After" => "60" }))
+      expect { described_class.new(config).generate_completion("hi") }.to raise_error(CompletionKit::RateLimitError) do |error|
+        expect(error.provider).to eq("openrouter")
+        expect(error.status).to eq(429)
+        expect(error.retry_after).to eq(60)
+      end
     end
 
     it "returns an error string when the response is not successful" do
