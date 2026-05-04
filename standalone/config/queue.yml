@@ -1,0 +1,18 @@
+default: &default
+  dispatchers:
+    - polling_interval: 1
+      batch_size: 500
+  workers:
+    - queues: [llm, default]
+      threads: <%= ENV.fetch("SOLID_QUEUE_THREADS", 10) %>
+      processes: <%= ENV.fetch("SOLID_QUEUE_PROCESSES", 1) %>
+      polling_interval: 0.5
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
