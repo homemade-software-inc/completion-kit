@@ -1,3 +1,4 @@
+# This migration comes from completion_kit (originally 20260501000002)
 class IndexResponsesOnRunIdAndStatus < ActiveRecord::Migration[7.1]
   disable_ddl_transaction!
 
