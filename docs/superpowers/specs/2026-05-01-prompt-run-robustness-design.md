@@ -328,10 +328,11 @@ standalone/Procfile.dev (or bin/dev) — add worker process line
 ## Dependencies
 
 ```
-gem "mission_control-jobs"  # optional, for /jobs dashboard
+gem "solid_queue"           # add to standalone/Gemfile
+gem "mission_control-jobs"  # optional, add to standalone/Gemfile, for /jobs dashboard
 ```
 
-(Solid Queue is already in the Gemfile and applied; no new gem needed for the queue itself.)
+The `solid_queue_*` tables already exist in `standalone/db/schema.rb` (migration `20260327200001_create_solid_queue_tables.rb`) but the gem itself is not in any Gemfile — someone committed the migration ahead of the gem. The plan adds the gem to `standalone/Gemfile` (the engine itself stays adapter-agnostic and does not depend on Solid Queue).
 
 ---
 
