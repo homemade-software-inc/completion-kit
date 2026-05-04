@@ -267,7 +267,6 @@ class AddStatusAndErrorToReviews < ActiveRecord::Migration[7.1]
     add_column :completion_kit_reviews, :error_status, :integer
     add_column :completion_kit_reviews, :error_message, :text
     add_column :completion_kit_reviews, :attempts, :integer, default: 0, null: false
-    add_index  :completion_kit_reviews, [:response_id, :status]
 
     reversible do |dir|
       dir.up do
@@ -283,6 +282,24 @@ end
 ```
 
 (The `status` column already exists on reviews — the existing `STATUSES` was `pending evaluated failed`. We are renaming `evaluated` → `succeeded` for consistency and adding `retrying`.)
+
+- [ ] **Step 2b: Create the concurrent index migration**
+
+Create a second migration `db/migrate/<timestamp+1>_index_reviews_on_response_id_and_status.rb`:
+
+```ruby
+class IndexReviewsOnResponseIdAndStatus < ActiveRecord::Migration[7.1]
+  disable_ddl_transaction!
+
+  def change
+    add_index :completion_kit_reviews, [:response_id, :status],
+              algorithm: :concurrently,
+              if_not_exists: true
+  end
+end
+```
+
+Same reasoning as Task 1: `add_index` on Postgres takes `ACCESS EXCLUSIVE` and blocks reads/writes; concurrent index needs its own non-transactional migration.
 
 - [ ] **Step 3: Backfill the existing `evaluated` rows in the migration too**
 
