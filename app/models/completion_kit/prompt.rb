@@ -42,6 +42,10 @@ module CompletionKit
       "#{name} — #{version_label}"
     end
 
+    def llm_model_provider
+      ApiConfig.provider_for_model(llm_model)
+    end
+
     def family_versions
       self.class.where(family_key: family_key).order(version_number: :desc, created_at: :desc)
     end

@@ -50,4 +50,21 @@ RSpec.describe CompletionKit::Prompt, type: :model do
 
     expect(prompt.current).to eq(true)
   end
+
+  describe "#llm_model_provider" do
+    it "returns openai for a gpt-4 model" do
+      prompt = build(:completion_kit_prompt, llm_model: "gpt-4o")
+      expect(prompt.llm_model_provider).to eq("openai")
+    end
+
+    it "returns anthropic for a claude-3 model" do
+      prompt = build(:completion_kit_prompt, llm_model: "claude-3-5-sonnet-20241022")
+      expect(prompt.llm_model_provider).to eq("anthropic")
+    end
+
+    it "returns nil for an unknown model" do
+      prompt = build(:completion_kit_prompt, llm_model: "totally-made-up-model")
+      expect(prompt.llm_model_provider).to be_nil
+    end
+  end
 end
