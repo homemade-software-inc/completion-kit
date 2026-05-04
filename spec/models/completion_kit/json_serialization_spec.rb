@@ -85,7 +85,7 @@ RSpec.describe "JSON serialization" do
 
     it "includes expected attributes" do
       json = review.as_json
-      expect(json.keys).to match_array(%i[id response_id metric_id metric_name ai_score ai_feedback status])
+      expect(json.keys).to match_array(%i[id response_id metric_id metric_name ai_score ai_feedback status attempts error])
     end
   end
 end

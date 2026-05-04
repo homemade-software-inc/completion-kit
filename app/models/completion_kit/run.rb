@@ -130,7 +130,7 @@ module CompletionKit
             review.assign_attributes(
               metric_name: metric.name,
               instruction: metric.instruction.to_s,
-              status: "evaluated",
+              status: "succeeded",
               ai_score: evaluation[:score],
               ai_feedback: evaluation[:feedback]
             )

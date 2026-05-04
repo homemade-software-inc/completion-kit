@@ -58,7 +58,7 @@ RSpec.describe "End-to-end judging pipeline", type: :model do
     expect(review.ai_feedback).to include("Relevant")
     expect(review.metric_id).to eq(metric.id)
     expect(review.metric_name).to eq("Relevance")
-    expect(review.status).to eq("evaluated")
+    expect(review.status).to eq("succeeded")
   end
 
   it "updates existing reviews on re-judge without duplicating" do

@@ -137,6 +137,12 @@ ActiveRecord::Schema.define do
     t.string :status
     t.decimal :ai_score, precision: 4, scale: 1
     t.text :ai_feedback
+    t.string :error_provider
+    t.string :error_class
+    t.integer :error_status
+    t.text :error_message
+    t.integer :attempts, default: 0, null: false
+    t.index [:response_id, :status]
     t.timestamps
   end
 
