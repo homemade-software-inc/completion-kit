@@ -4,6 +4,7 @@ ruby "3.3.5"
 
 gem "completion-kit", path: "../"
 gem "solid_queue"
+gem "solid_cable"
 gem "mission_control-jobs"
 gem "puma"
 gem "sqlite3"

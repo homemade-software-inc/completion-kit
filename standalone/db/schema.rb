@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_04_031358) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_05_220000) do
   create_table "completion_kit_datasets", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "csv_data", null: false
@@ -166,6 +166,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_031358) do
     t.datetime "updated_at", null: false
     t.index ["prompt_id"], name: "index_completion_kit_suggestions_on_prompt_id"
     t.index ["run_id"], name: "index_completion_kit_suggestions_on_run_id"
+  end
+
+  create_table "solid_cable_messages", force: :cascade do |t|
+    t.binary "channel", limit: 1024, null: false
+    t.integer "channel_hash", limit: 8, null: false
+    t.datetime "created_at", null: false
+    t.binary "payload", limit: 536870912, null: false
+    t.index ["channel"], name: "index_solid_cable_messages_on_channel"
+    t.index ["channel_hash"], name: "index_solid_cable_messages_on_channel_hash"
+    t.index ["created_at"], name: "index_solid_cable_messages_on_created_at"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|

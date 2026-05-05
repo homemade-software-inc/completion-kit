@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-05-05
+
+### Fixed
+
+- **Live UI updates were broken on the run show page in 0.4.0.** The standalone
+  shipped with `cable.yml` set to the `:async` ActionCable adapter, which only
+  delivers messages within the same process. Once 0.4.0 moved generate/judge
+  jobs into a separate `bin/jobs` worker process, the broadcasts those jobs
+  emit became invisible to browser subscribers connected to the web process —
+  the page would show pending rows forever even though the worker was
+  successfully processing them. Adds `solid_cable` to the standalone's
+  Gemfile, configures `cable.yml` to use it in development and production,
+  and ships a migration for the `solid_cable_messages` table. After
+  upgrading: `cd standalone && bundle install && bin/rails db:migrate`.
+
 ## [0.4.0] - 2026-05-05
 
 ### Added

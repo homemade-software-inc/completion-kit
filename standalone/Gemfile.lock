@@ -1,7 +1,7 @@
 PATH
   remote: ..
   specs:
-    completion-kit (0.4.0)
+    completion-kit (0.4.1)
       bootstrap (~> 5.2)
       csv (~> 3.2)
       faraday (~> 2.7)
@@ -278,6 +278,11 @@ GEM
       sprockets-rails
       tilt
     securerandom (0.4.1)
+    solid_cable (3.0.12)
+      actioncable (>= 7.2)
+      activejob (>= 7.2)
+      activerecord (>= 7.2)
+      railties (>= 7.2)
     solid_queue (1.4.0)
       activejob (>= 7.1)
       activerecord (>= 7.1)
@@ -340,6 +345,7 @@ DEPENDENCIES
   mission_control-jobs
   pg
   puma
+  solid_cable
   solid_queue
   sprockets-rails
   sqlite3
