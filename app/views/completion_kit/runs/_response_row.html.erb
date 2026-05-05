@@ -1,13 +1,29 @@
-<%= link_to run_response_path(run, response, sort: params[:sort]), class: "ck-response-row", id: "response_#{response.id}" do %>
+<%= link_to run_response_path(run, response, sort: params[:sort]), class: "ck-response-row ck-response-row--#{response.status}", id: "response_#{response.id}" do %>
   <span class="ck-response-row__index">#<%= index %></span>
-  <span class="ck-response-row__text"><%= truncate(response.response_text.to_s, length: 160) %></span>
+  <span class="ck-response-row__text">
+    <% if response.succeeded? %>
+      <%= truncate(response.response_text.to_s, length: 160) %>
+    <% elsif response.status == "failed" %>
+      <% err = response.error_payload %>
+      <span class="ck-response-row__error">
+        <%= err && err[:provider]&.titleize %><%= " #{err[:status]}" if err && err[:status] %> — <%= truncate(err && err[:message].to_s, length: 120) %>
+      </span>
+    <% end %>
+  </span>
   <span class="ck-response-row__score">
-    <% if response.reviewed? %>
-      <span class="ck-score"><span class="ck-score__star">★</span> <%= response.score %></span>
-    <% elsif run.status == "failed" %>
-      <span class="ck-chip">Failed</span>
-    <% elsif run.status == "running" %>
-      <span class="ck-chip">Running</span>
+    <% case response.status
+       when "succeeded" %>
+      <% if response.reviewed? %>
+        <span class="ck-score"><span class="ck-score__star">★</span> <%= response.score %></span>
+      <% elsif run.status == "running" %>
+        <span class="ck-chip">Judging</span>
+      <% end %>
+    <% when "pending" %>
+      <span class="ck-chip">Queued</span>
+    <% when "retrying" %>
+      <span class="ck-chip ck-chip--warning">Retrying <%= response.attempts %>/5</span>
+    <% when "failed" %>
+      <span class="ck-chip ck-chip--danger">Failed</span>
     <% end %>
   </span>
 <% end %>

@@ -385,6 +385,18 @@ tr:hover .ck-chip--publish {
   color: var(--ck-accent);
 }
 
+.ck-chip--warning {
+  background: var(--ck-warning-soft);
+  border-color: rgba(224, 164, 88, 0.3);
+  color: var(--ck-warning);
+}
+
+.ck-chip--danger {
+  background: var(--ck-danger-soft);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: var(--ck-danger);
+}
+
 .ck-badge--high {
   background: var(--ck-success-soft);
   border: 1px solid rgba(34, 197, 94, 0.25);
@@ -1834,6 +1846,21 @@ select.ck-input {
 
 .ck-response-row__score {
   flex-shrink: 0;
+}
+
+.ck-response-row--pending .ck-response-row__text,
+.ck-response-row--retrying .ck-response-row__text {
+  color: var(--ck-dim);
+}
+
+.ck-response-row--failed .ck-response-row__text {
+  color: var(--ck-danger);
+  opacity: 0.8;
+}
+
+.ck-response-row__error {
+  font-family: var(--ck-mono);
+  font-size: 0.82rem;
 }
 
 .ck-score {
