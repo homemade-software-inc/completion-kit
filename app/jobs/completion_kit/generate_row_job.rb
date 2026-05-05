@@ -1,0 +1,96 @@
+module CompletionKit
+  class GenerateRowJob < ApplicationJob
+    queue_as :llm
+
+    def self.rate_limit_wait(executions)
+      30 * executions
+    end
+
+    retry_on Faraday::TimeoutError,
+             Faraday::ConnectionFailed,
+             wait: :polynomially_longer, attempts: 5
+
+    retry_on CompletionKit::RateLimitError,
+             wait: method(:rate_limit_wait), attempts: 5
+
+    discard_on ActiveJob::DeserializationError
+    discard_on CompletionKit::ConfigurationError
+
+    rescue_from(StandardError) do |error|
+      record_terminal_failure!(error)
+      enqueue_completion_check
+    end
+
+    before_perform do |job|
+      response = Response.find_by(id: job.arguments.last)
+      next unless response
+      response.update_columns(status: "retrying", attempts: response.attempts + 1)
+      response.run.send(:broadcast_response_update, response) if response.run
+    end
+
+    def perform(run_id, response_id)
+      @run_id = run_id
+      @response_id = response_id
+
+      response = Response.find(response_id)
+      run = response.run
+      prompt = run.prompt
+
+      row = parsed_input(response)
+      rendered = CsvProcessor.apply_variables(prompt, row)
+      client = LlmClient.for_model(prompt.llm_model, ApiConfig.for_model(prompt.llm_model))
+
+      raise ConfigurationError, client.configuration_errors.join(", ") unless client.configured?
+
+      text = client.generate_completion(rendered, model: prompt.llm_model, temperature: run.temperature)
+
+      response.update!(
+        status: "succeeded",
+        response_text: text,
+        error_provider: nil, error_class: nil, error_status: nil, error_message: nil
+      )
+      run.send(:broadcast_response_update, response)
+
+      if run.judge_configured?
+        run.metrics.each do |metric|
+          JudgeReviewJob.perform_later(response.id, metric.id)
+        end
+      end
+
+      enqueue_completion_check
+    end
+
+    private
+
+    def parsed_input(response)
+      return {} if response.input_data.blank?
+      JSON.parse(response.input_data)
+    rescue JSON::ParserError
+      {}
+    end
+
+    def record_terminal_failure!(error)
+      response_id = @response_id || arguments.last
+      response = Response.find_by(id: response_id)
+      return unless response
+
+      response.update_columns(
+        status: "failed",
+        error_provider: provider_for(response),
+        error_class: error.class.name,
+        error_status: error.respond_to?(:status) ? error.status : nil,
+        error_message: error.message.to_s.truncate(2000)
+      )
+      response.run&.send(:broadcast_response_update, response)
+    end
+
+    def provider_for(response)
+      response.run&.prompt&.llm_model_provider
+    end
+
+    def enqueue_completion_check
+      run_id = @run_id || arguments.first
+      RunCompletionCheckJob.perform_later(run_id)
+    end
+  end
+end
