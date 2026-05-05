@@ -56,8 +56,7 @@ function ckRefreshModels() {
   ckRefreshing = true;
   var btn = document.querySelector('.ck-icon-btn[title="Refresh models"]');
   if (btn) btn.classList.add('ck-icon-btn--spinning');
-  var status = document.getElementById('refresh-status');
-  if (status) status.textContent = 'Refreshing models\u2026';
+  ckUpdateRefreshProgress();
   var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
   fetch("/completion_kit/refresh_models", {
     method: "POST",
@@ -65,8 +64,35 @@ function ckRefreshModels() {
   });
 }
 
+function ckUpdateRefreshProgress() {
+  var status = document.getElementById('refresh-status');
+  if (!status) return;
+  var carriers = document.querySelectorAll('[data-refresh-progress-carriers] [id^="discovery_status_"]');
+  var totalCurrent = 0, totalTotal = 0, anyDiscovering = false;
+  carriers.forEach(function(node) {
+    if (!node.querySelector('.ck-discovery-bar')) return;
+    if (node.querySelector('.ck-discovery-bar--failed') || node.querySelector('.ck-discovery-bar--completed')) return;
+    anyDiscovering = true;
+    var match = node.textContent.match(/(\d+)\s*\/\s*(\d+)/);
+    if (match) {
+      totalCurrent += parseInt(match[1], 10);
+      totalTotal += parseInt(match[2], 10);
+    }
+  });
+  if (anyDiscovering || ckRefreshing) {
+    if (totalTotal > 0) {
+      status.textContent = 'Refreshing models\u2026 ' + totalCurrent + '/' + totalTotal;
+    } else {
+      status.textContent = 'Refreshing models\u2026';
+    }
+  }
+}
+
 document.addEventListener("turbo:before-stream-render", function(event) {
   var target = event.target.getAttribute("target");
+  if (target && target.indexOf("discovery_status_") === 0) {
+    requestAnimationFrame(ckUpdateRefreshProgress);
+  }
   if (target === "prompt_llm_model" || target === "run_judge_model") {
     ckRefreshing = false;
     var btn = document.querySelector('.ck-icon-btn[title="Refresh models"]');

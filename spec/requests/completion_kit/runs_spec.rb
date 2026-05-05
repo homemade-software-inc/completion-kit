@@ -48,6 +48,42 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to have_http_status(:ok)
   end
 
+  it "renders the show page with pending, retrying, and failed response rows" do
+    run = create(:completion_kit_run, prompt: prompt, status: "running")
+    create(:completion_kit_response, :pending, run: run)
+    create(:completion_kit_response, :retrying, run: run)
+    create(:completion_kit_response, :failed, run: run)
+
+    get "#{base_path}/#{run.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Queued")
+    expect(response.body).to include("Retrying")
+    expect(response.body).to include("ck-chip--retry")
+  end
+
+  it "renders a failed response row with provider error details" do
+    run = create(:completion_kit_run, prompt: prompt)
+    create(:completion_kit_response, :failed, run: run, error_provider: "openai", error_status: 429, error_message: "Rate limit exceeded")
+
+    get "#{base_path}/#{run.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Openai")
+    expect(response.body).to include("429")
+    expect(response.body).to include("Rate limit exceeded")
+  end
+
+  it "renders succeeded response with judging chip when run is still running" do
+    run = create(:completion_kit_run, prompt: prompt, status: "running")
+    create(:completion_kit_response, run: run, status: "succeeded", response_text: "Output text")
+
+    get "#{base_path}/#{run.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Judging")
+  end
+
   it "creates a run with valid params" do
     dataset = create(:completion_kit_dataset)
 

@@ -1,6 +1,6 @@
 module CompletionKit
   class RunsController < ApplicationController
-    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :suggestion, :apply_suggestion]
+    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :suggestion, :apply_suggestion, :retry_failures]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
@@ -85,6 +85,32 @@ module CompletionKit
     def suggestion
       @suggestion = @run.suggestions.order(created_at: :desc).first
       return redirect_to run_path(@run), alert: "No suggestion available. Generate one first." unless @suggestion
+    end
+
+    def retry_failures
+      scope = @run.responses.where(status: "failed")
+      scope = scope.where(id: params[:only]) if params[:only].present?
+
+      ActiveRecord::Base.transaction do
+        failed_response_ids = scope.pluck(:id)
+        Review.where(response_id: failed_response_ids, status: "failed").update_all(
+          status: "pending",
+          attempts: 0,
+          error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
+          ai_score: nil, ai_feedback: nil
+        )
+        scope.update_all(
+          status: "pending",
+          attempts: 0,
+          error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
+          response_text: nil
+        )
+        @run.update!(status: "running")
+        failed_response_ids.each { |rid| GenerateRowJob.perform_later(@run.id, rid) }
+      end
+
+      @run.send(:broadcast_ui)
+      redirect_to run_path(@run)
     end
 
     def apply_suggestion

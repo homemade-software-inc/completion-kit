@@ -274,6 +274,39 @@ form.button_to {
   color: var(--ck-accent);
 }
 
+.ck-disclosure-toggle {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  font-family: var(--ck-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ck-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.ck-disclosure-toggle:hover,
+.ck-disclosure-toggle:focus-visible {
+  color: var(--ck-accent);
+  outline: none;
+}
+
+.ck-disclosure-toggle::after {
+  content: " ↓";
+  display: inline-block;
+  margin-left: 0.25rem;
+  transition: transform 0.15s;
+}
+
+.ck-disclosure-toggle[aria-expanded="true"]::after {
+  transform: rotate(180deg);
+}
+
 .ck-list {
   display: grid;
   gap: 0.5rem;
@@ -383,6 +416,18 @@ tr:hover .ck-chip--publish {
   background: var(--ck-accent-soft);
   border-color: rgba(6, 182, 212, 0.2);
   color: var(--ck-accent);
+}
+
+.ck-chip--warning {
+  background: var(--ck-warning-soft);
+  border-color: rgba(224, 164, 88, 0.3);
+  color: var(--ck-warning);
+}
+
+.ck-chip--danger {
+  background: var(--ck-danger-soft);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: var(--ck-danger);
 }
 
 .ck-badge--high {
@@ -679,6 +724,27 @@ tr:hover .ck-chip--publish {
   color: var(--ck-text);
 }
 
+.ck-progress-block {
+  padding: 0.5rem 1rem 0.75rem;
+  border-top: 1px solid var(--ck-line);
+  font-size: 0.72rem;
+  font-family: var(--ck-mono);
+  color: var(--ck-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ck-progress-line {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+}
+
+.ck-progress-failed {
+  color: var(--ck-danger);
+}
+
 .ck-model-list-details summary {
   list-style: none;
 }
@@ -799,6 +865,12 @@ tr:hover .ck-chip--publish {
   font-size: 0.8rem;
   line-height: 1.4;
   margin: 0;
+  color: var(--ck-muted);
+}
+
+.ck-field--info #refresh-status,
+.ck-field--warn #refresh-status,
+.ck-field--error #refresh-status {
   color: var(--ck-muted);
 }
 
@@ -1813,6 +1885,21 @@ select.ck-input {
 
 .ck-response-row__score {
   flex-shrink: 0;
+}
+
+.ck-response-row--pending .ck-response-row__text,
+.ck-response-row--retrying .ck-response-row__text {
+  color: var(--ck-dim);
+}
+
+.ck-response-row--failed .ck-response-row__text {
+  color: var(--ck-danger);
+  opacity: 0.8;
+}
+
+.ck-response-row__error {
+  font-family: var(--ck-mono);
+  font-size: 0.82rem;
 }
 
 .ck-score {

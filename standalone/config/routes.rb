@@ -3,6 +3,10 @@ Rails.application.routes.draw do
   post "login", to: "sessions#create"
   delete "logout", to: "sessions#destroy"
 
+  constraints JobsDashboardConstraint do
+    mount MissionControl::Jobs::Engine, at: "/jobs"
+  end
+
   root to: "home#index"
   mount CompletionKit::Engine => "/completion_kit"
 end

@@ -11,6 +11,12 @@ FactoryBot.define do
       response_text { nil }
     end
 
+    trait :retrying do
+      status { "retrying" }
+      response_text { nil }
+      attempts { 2 }
+    end
+
     trait :failed do
       status { "failed" }
       response_text { nil }

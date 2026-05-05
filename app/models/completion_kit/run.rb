@@ -137,13 +137,22 @@ module CompletionKit
     end
 
     def as_json(options = {})
+      snap = progress_snapshot
       {
         id: id, name: name, status: status, prompt_id: prompt_id,
         dataset_id: dataset_id, judge_model: judge_model, temperature: temperature,
         created_at: created_at, updated_at: updated_at,
         responses_count: responses.count, avg_score: avg_score,
-        progress_current: progress_current, progress_total: progress_total,
-        error_message: error_message, metric_ids: metric_ids
+        progress_current: snap[:generated_done],
+        progress_total: snap[:generated_total],
+        progress: {
+          generated: { done: snap[:generated_done], total: snap[:generated_total], failed: snap[:generated_failed] },
+          judged:    { done: snap[:judged_done],    total: snap[:judged_total],    failed: snap[:judged_failed] }
+        },
+        failed_response_ids: responses.where(status: "failed").pluck(:id),
+        failure_summary: failure_summary,
+        error_message: error_message,
+        metric_ids: metric_ids
       }
     end
 

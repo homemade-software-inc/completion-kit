@@ -95,6 +95,38 @@ RSpec.describe "API V1 Runs", type: :request do
     end
   end
 
+  describe "POST /api/v1/runs/:id/retry_failures" do
+    before { allow(CompletionKit::GenerateRowJob).to receive(:perform_later) }
+
+    it "resets failed responses and returns 202" do
+      run = create(:completion_kit_run, status: "completed")
+      failed = create(:completion_kit_response, :failed, run: run, row_index: 0)
+
+      post "/completion_kit/api/v1/runs/#{run.id}/retry_failures", headers: headers
+
+      expect(response).to have_http_status(:accepted)
+      expect(failed.reload.status).to eq("pending")
+      expect(run.reload.status).to eq("running")
+      expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).with(run.id, failed.id)
+    end
+
+    it "scopes to a single response when only param is supplied" do
+      run = create(:completion_kit_run, status: "completed")
+      failed_a = create(:completion_kit_response, :failed, run: run, row_index: 0)
+      failed_b = create(:completion_kit_response, :failed, run: run, row_index: 1)
+
+      post "/completion_kit/api/v1/runs/#{run.id}/retry_failures",
+        params: {only: failed_a.id}.to_json,
+        headers: headers
+
+      expect(response).to have_http_status(:accepted)
+      expect(failed_a.reload.status).to eq("pending")
+      expect(failed_b.reload.status).to eq("failed")
+      expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).with(run.id, failed_a.id)
+      expect(CompletionKit::GenerateRowJob).not_to have_received(:perform_later).with(run.id, failed_b.id)
+    end
+  end
+
   describe "POST /api/v1/runs/:id/generate" do
     it "calls start! and returns 202 on success" do
       run = create(:completion_kit_run)
