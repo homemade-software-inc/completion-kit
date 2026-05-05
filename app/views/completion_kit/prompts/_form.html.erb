@@ -38,9 +38,12 @@
       <% else %>
         <p class="ck-meta-copy">No models available. <%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %> or click refresh after configuring a provider.</p>
       <% end %>
-      <% CompletionKit::ProviderCredential.find_each do |pc| %>
-        <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
-      <% end %>
+      <div hidden data-refresh-progress-carriers>
+        <% CompletionKit::ProviderCredential.find_each do |pc| %>
+          <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
+          <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: pc, show_completed: false %>
+        <% end %>
+      </div>
       <p class="ck-field-hint" id="refresh-status" style="min-height: 1.2em; margin-top: -0.25rem; font-size: 0.75rem;">&nbsp;</p>
     </div>
 

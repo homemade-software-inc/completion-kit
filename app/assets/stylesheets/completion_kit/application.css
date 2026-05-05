@@ -868,6 +868,12 @@ tr:hover .ck-chip--publish {
   color: var(--ck-muted);
 }
 
+.ck-field--info #refresh-status,
+.ck-field--warn #refresh-status,
+.ck-field--error #refresh-status {
+  color: var(--ck-muted);
+}
+
 .ck-field--info .ck-input {
   border-color: var(--ck-accent);
 }
