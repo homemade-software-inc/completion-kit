@@ -1,12 +1,10 @@
 require "rails_helper"
-require "faraday"
 
 RSpec.describe "Run status transitions", type: :model do
   let(:prompt) { create(:completion_kit_prompt, llm_model: "gpt-4.1") }
-  let(:stubs) { Faraday::Adapter::Test::Stubs.new }
+  let(:client) { instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: []) }
 
   before do
-    CompletionKit::ProviderCredential.create!(provider: "openai", api_key: "test-key-123")
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update)
@@ -14,82 +12,41 @@ RSpec.describe "Run status transitions", type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_actions)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_sort_toolbar)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_clear_responses)
-
-    allow(Faraday).to receive(:new).and_wrap_original do |original, *args, **kwargs, &_block|
-      original.call(*args, **kwargs) do |builder|
-        builder.adapter :test, stubs
-      end
-    end
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+    allow(CompletionKit::GenerateRowJob).to receive(:perform_later)
   end
 
-  it "pending -> generating -> completed (no judge)" do
+  it "pending -> running after start!" do
     run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "No judge")
 
-    stubs.post("/v1/responses") do
-      [200, { "Content-Type" => "application/json" }, {
-        output: [{ type: "message", content: [{ type: "output_text", text: "output" }] }]
-      }.to_json]
-    end
-
-    run.generate_responses!
-    expect(run.reload.status).to eq("completed")
+    run.start!
+    expect(run.reload.status).to eq("running")
   end
 
-  it "pending -> generating -> judging -> completed (with judge)" do
-    metric = create(:completion_kit_metric)
+  it "sets status to failed when dataset has no rows" do
+    dataset = create(:completion_kit_dataset, csv_data: "header\n")
+    allow(CompletionKit::CsvProcessor).to receive(:process_self).and_return([])
+    run = CompletionKit::Run.create!(prompt: prompt, dataset: dataset, name: "Empty dataset")
 
-    run = CompletionKit::Run.create!(
-      prompt: prompt, dataset: nil, name: "With judge",
-      judge_model: "gpt-4.1"
-    )
-    CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
-
-    call_count = 0
-    stubs.post("/v1/responses") do
-      call_count += 1
-      content = if call_count == 1
-                  "Generated output"
-                else
-                  "Score: 4\nFeedback: Good"
-                end
-      [200, { "Content-Type" => "application/json" }, {
-        output: [{ type: "message", content: [{ type: "output_text", text: content }] }]
-      }.to_json]
-    end
-
-    run.generate_responses!
-    expect(run.reload.status).to eq("completed")
-    expect(run.responses.first.reviews.count).to eq(1)
-  end
-
-  it "sets status to failed on generation error" do
-    run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "Fail test")
-
-    stubs.post("/v1/responses") do
-      raise Faraday::ConnectionFailed, "Connection refused"
-    end
-
-    result = run.generate_responses!
+    result = run.start!
     expect(result).to be false
     expect(run.reload.status).to eq("failed")
   end
 
-  it "sets status to failed on judging error" do
-    metric = create(:completion_kit_metric)
+  it "sets status to failed when LLM client is not configured" do
+    bad_client = instance_double(CompletionKit::LlmClient, configured?: false, configuration_errors: ["missing key"])
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(bad_client)
+    run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "Bad config")
 
-    run = CompletionKit::Run.create!(
-      prompt: prompt, dataset: nil, name: "Judge fail",
-      judge_model: "gpt-4.1", status: "completed"
-    )
-    CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
-    run.responses.create!(input_data: nil, response_text: "Some output")
-
-    stubs.post("/v1/responses") do
-      raise Faraday::ConnectionFailed, "Connection refused"
-    end
-
-    result = run.judge_responses!
+    result = run.start!
     expect(result).to be false
     expect(run.reload.status).to eq("failed")
+  end
+
+  it "transitions to completed via mark_completed!" do
+    run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "Complete me", status: "running")
+
+    run.mark_completed!
+    expect(run.reload.status).to eq("completed")
   end
 end

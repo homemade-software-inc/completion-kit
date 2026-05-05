@@ -71,6 +71,9 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     stub_faraday(faraday_response(success: false, status: 500, body: "broken", headers: {}))
     expect(client.generate_completion("prompt")).to eq("Error: 500 - broken")
 
+    allow(Faraday).to receive(:new).and_raise(Faraday::ConnectionFailed, "connection refused")
+    expect { client.generate_completion("prompt") }.to raise_error(Faraday::ConnectionFailed)
+
     allow(Faraday).to receive(:new).and_raise(StandardError, "network down")
     expect(client.generate_completion("prompt")).to eq("Error: network down")
 

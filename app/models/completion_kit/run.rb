@@ -23,7 +23,22 @@ module CompletionKit
     end
 
     def outstanding_work_zero?
-      false
+      return false if responses.where.not(status: Response::TERMINAL_STATUSES).exists?
+
+      metric_ids = metrics.pluck(:id)
+      return true if metric_ids.empty?
+
+      succeeded_response_ids = responses.where(status: "succeeded").pluck(:id)
+      expected_reviews = succeeded_response_ids.size * metric_ids.size
+      return true if expected_reviews.zero?
+
+      terminal_review_count = Review.where(
+        response_id: succeeded_response_ids,
+        metric_id: metric_ids,
+        status: Review::TERMINAL_STATUSES
+      ).count
+
+      terminal_review_count >= expected_reviews
     end
 
     def judge_configured?
@@ -54,119 +69,71 @@ module CompletionKit
       end
     end
 
-    def generate_responses!
+    def start!
       rows = if dataset
                CsvProcessor.process_self(self)
              else
                [{}]
              end
 
-      if rows.empty?
-        errors.add(:base, "Dataset has no rows")
-        return false
-      end
+      return fail_with_summary!("Dataset has no rows") if rows.empty?
 
       client = LlmClient.for_model(prompt.llm_model, ApiConfig.for_model(prompt.llm_model))
-
       unless client.configured?
-        msg = "LLM API not configured: #{client.configuration_errors.join(', ')}"
-        errors.add(:base, msg)
-        update_columns(status: "failed", error_message: msg) if persisted?
-        return false
+        return fail_with_summary!("LLM API not configured: #{client.configuration_errors.join(', ')}")
       end
 
-      update!(status: "running", progress_current: 0, progress_total: rows.length, error_message: nil)
-      responses.destroy_all
+      transaction do
+        responses.destroy_all
+        update!(
+          status: "running",
+          progress_current: 0,
+          progress_total: rows.length,
+          failure_summary: nil,
+          error_message: nil
+        )
+        rows.each_with_index do |row, index|
+          input = row.empty? ? nil : row.to_json
+          response = responses.create!(
+            status: "pending",
+            row_index: index,
+            input_data: input,
+            expected_output: row["expected_output"]
+          )
+          GenerateRowJob.perform_later(id, response.id)
+        end
+      end
+
       broadcast_ui
       broadcast_clear_responses
-
-      rows.each_with_index do |row, index|
-        input = row.empty? ? nil : row.to_json
-        rendered = CsvProcessor.apply_variables(prompt, row)
-        response_text = client.generate_completion(rendered, model: prompt.llm_model, temperature: temperature)
-
-        resp = responses.create!(
-          input_data: input,
-          response_text: response_text,
-          expected_output: row["expected_output"]
-        )
-
-        update_columns(progress_current: index + 1)
-        broadcast_progress
-        broadcast_response(resp)
-      end
-
-      if judge_configured?
-        judge_responses!
-      else
-        update!(status: "completed")
-        broadcast_ui
-      end
-
       true
-    rescue Faraday::Error => e
-      update_columns(status: "failed", error_message: e.message)
-      errors.add(:base, e.message)
-      broadcast_ui
-      false
-    rescue StandardError => e
-      update_columns(status: "failed", error_message: e.message) if persisted?
-      errors.add(:base, e.message)
-      broadcast_ui if persisted?
-      false
     end
 
-    def judge_responses!
-      total_evaluations = responses.count * metrics.count
-      update!(status: "running", progress_current: 0, progress_total: total_evaluations, error_message: nil)
-      broadcast_ui
+    def generate_responses!
+      start!
+    end
 
-      judge = JudgeService.new(ApiConfig.for_model(judge_model).merge(judge_model: judge_model))
-      evaluation_count = 0
+    def progress_snapshot
+      generated_done = responses.where(status: "succeeded").count
+      generated_failed = responses.where(status: "failed").count
+      generated_total = progress_total
 
-      responses.find_each do |response|
-        metrics.each do |metric|
-          evaluation = judge.evaluate(
-            response.response_text,
-            response.expected_output,
-            prompt.template,
-            criteria: metric.instruction.to_s,
-            rubric_text: metric.display_rubric_text,
-            input_data: response.input_data
-          )
+      metric_count = metrics.count
+      succeeded_count = generated_done
+      judged_total = succeeded_count * metric_count
+      judged_done = Review.joins(:response)
+        .where(completion_kit_responses: { run_id: id }, status: "succeeded").count
+      judged_failed = Review.joins(:response)
+        .where(completion_kit_responses: { run_id: id }, status: "failed").count
 
-          response.reviews.find_or_initialize_by(metric_id: metric.id).tap do |review|
-            review.assign_attributes(
-              metric_name: metric.name,
-              instruction: metric.instruction.to_s,
-              status: "succeeded",
-              ai_score: evaluation[:score],
-              ai_feedback: evaluation[:feedback]
-            )
-            review.save!
-          end
-
-          evaluation_count += 1
-          update_columns(progress_current: evaluation_count)
-          broadcast_progress
-        end
-
-        broadcast_response_update(response)
-      end
-
-      update!(status: "completed")
-      broadcast_ui
-      true
-    rescue Faraday::Error => e
-      update_columns(status: "failed", error_message: e.message)
-      errors.add(:base, e.message)
-      broadcast_ui
-      false
-    rescue StandardError => e
-      update_columns(status: "failed", error_message: e.message) if persisted?
-      errors.add(:base, e.message)
-      broadcast_ui if persisted?
-      false
+      {
+        generated_done: generated_done,
+        generated_total: generated_total,
+        generated_failed: generated_failed,
+        judged_done: judged_done,
+        judged_total: judged_total,
+        judged_failed: judged_failed
+      }
     end
 
     def as_json(options = {})
@@ -181,6 +148,15 @@ module CompletionKit
     end
 
     private
+
+    def fail_with_summary!(message)
+      errors.add(:base, message)
+      if persisted?
+        update_columns(status: "failed", failure_summary: message, error_message: message)
+        broadcast_ui
+      end
+      false
+    end
 
     def broadcast_ui
       broadcast_progress

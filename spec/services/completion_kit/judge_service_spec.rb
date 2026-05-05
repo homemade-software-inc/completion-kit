@@ -78,6 +78,15 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     expect(service.evaluate("actual")).to eq(score: 1, feedback: "Error during evaluation: judge timeout")
   end
 
+  it "re-raises Faraday::Error from the judge client" do
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(client).to receive(:generate_completion).and_raise(Faraday::ConnectionFailed, "connection refused")
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+
+    service = described_class.new
+    expect { service.evaluate("actual") }.to raise_error(Faraday::ConnectionFailed)
+  end
+
   it "includes criteria, rubric text, and human examples in prompt" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).with(
