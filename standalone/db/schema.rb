@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_18_214544) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_04_031358) do
   create_table "completion_kit_datasets", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "csv_data", null: false
@@ -91,19 +91,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_18_214544) do
   end
 
   create_table "completion_kit_responses", force: :cascade do |t|
+    t.integer "attempts", default: 0, null: false
     t.datetime "created_at", null: false
+    t.string "error_class"
+    t.text "error_message"
+    t.string "error_provider"
+    t.integer "error_status"
     t.text "expected_output"
     t.text "input_data"
     t.text "response_text"
+    t.integer "row_index"
     t.integer "run_id", null: false
+    t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
+    t.index ["run_id", "status"], name: "index_completion_kit_responses_on_run_id_and_status"
     t.index ["run_id"], name: "index_completion_kit_responses_on_run_id"
   end
 
   create_table "completion_kit_reviews", force: :cascade do |t|
     t.text "ai_feedback"
     t.decimal "ai_score", precision: 4, scale: 1
+    t.integer "attempts", default: 0, null: false
     t.datetime "created_at", null: false
+    t.string "error_class"
+    t.text "error_message"
+    t.string "error_provider"
+    t.integer "error_status"
     t.text "instruction"
     t.integer "metric_id"
     t.string "metric_name"
@@ -111,6 +124,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_18_214544) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["metric_id"], name: "index_completion_kit_reviews_on_metric_id"
+    t.index ["response_id", "status"], name: "index_completion_kit_reviews_on_response_id_and_status"
     t.index ["response_id"], name: "index_completion_kit_reviews_on_response_id"
   end
 
@@ -128,6 +142,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_18_214544) do
     t.datetime "created_at", null: false
     t.integer "dataset_id"
     t.text "error_message"
+    t.text "failure_summary"
     t.string "judge_model"
     t.string "name"
     t.integer "progress_current", default: 0

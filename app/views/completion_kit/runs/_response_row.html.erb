@@ -6,8 +6,8 @@
       <span class="ck-score"><span class="ck-score__star">★</span> <%= response.score %></span>
     <% elsif run.status == "failed" %>
       <span class="ck-chip">Failed</span>
-    <% elsif run.status == "judging" %>
-      <span class="ck-chip">Judging</span>
+    <% elsif run.status == "running" %>
+      <span class="ck-chip">Running</span>
     <% end %>
   </span>
 <% end %>

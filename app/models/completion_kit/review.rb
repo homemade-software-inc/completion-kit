@@ -1,6 +1,7 @@
 module CompletionKit
   class Review < ApplicationRecord
-    STATUSES = %w[pending evaluated failed].freeze
+    STATUSES = %w[pending retrying succeeded failed].freeze
+    TERMINAL_STATUSES = %w[succeeded failed].freeze
 
     belongs_to :response
     belongs_to :metric, optional: true
@@ -11,11 +12,25 @@ module CompletionKit
 
     before_validation :set_default_status
 
+    def terminal?
+      TERMINAL_STATUSES.include?(status)
+    end
+
+    def succeeded?
+      status == "succeeded"
+    end
+
+    def error_payload
+      return nil if error_class.blank?
+      { provider: error_provider, class: error_class, status: error_status, message: error_message }
+    end
+
     def as_json(options = {})
       {
         id: id, response_id: response_id, metric_id: metric_id,
         metric_name: metric_name, ai_score: ai_score,
-        ai_feedback: ai_feedback, status: status
+        ai_feedback: ai_feedback, status: status, attempts: attempts,
+        error: error_payload
       }
     end
 

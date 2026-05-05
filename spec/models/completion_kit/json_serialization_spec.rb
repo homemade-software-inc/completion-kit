@@ -68,7 +68,7 @@ RSpec.describe "JSON serialization" do
     it "includes expected attributes and computed fields" do
       resp = create(:completion_kit_response)
       json = resp.as_json
-      expect(json.keys).to match_array(%i[id run_id input_data response_text expected_output created_at score reviewed reviews])
+      expect(json.keys).to match_array(%i[id run_id input_data response_text expected_output created_at score reviewed reviews status attempts row_index error])
     end
 
     it "includes nested reviews" do
@@ -85,7 +85,7 @@ RSpec.describe "JSON serialization" do
 
     it "includes expected attributes" do
       json = review.as_json
-      expect(json.keys).to match_array(%i[id response_id metric_id metric_name ai_score ai_feedback status])
+      expect(json.keys).to match_array(%i[id response_id metric_id metric_name ai_score ai_feedback status attempts error])
     end
   end
 end

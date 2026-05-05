@@ -2,7 +2,7 @@ module CompletionKit
   class Run < ApplicationRecord
     include Turbo::Broadcastable
 
-    STATUSES = %w[pending generating judging completed failed].freeze
+    STATUSES = %w[pending running completed failed].freeze
 
     belongs_to :prompt
     belongs_to :dataset, optional: true
@@ -66,7 +66,7 @@ module CompletionKit
         return false
       end
 
-      update!(status: "generating", progress_current: 0, progress_total: rows.length, error_message: nil)
+      update!(status: "running", progress_current: 0, progress_total: rows.length, error_message: nil)
       responses.destroy_all
       broadcast_ui
       broadcast_clear_responses
@@ -109,7 +109,7 @@ module CompletionKit
 
     def judge_responses!
       total_evaluations = responses.count * metrics.count
-      update!(status: "judging", progress_current: 0, progress_total: total_evaluations, error_message: nil)
+      update!(status: "running", progress_current: 0, progress_total: total_evaluations, error_message: nil)
       broadcast_ui
 
       judge = JudgeService.new(ApiConfig.for_model(judge_model).merge(judge_model: judge_model))
@@ -130,7 +130,7 @@ module CompletionKit
             review.assign_attributes(
               metric_name: metric.name,
               instruction: metric.instruction.to_s,
-              status: "evaluated",
+              status: "succeeded",
               ai_score: evaluation[:score],
               ai_feedback: evaluation[:feedback]
             )

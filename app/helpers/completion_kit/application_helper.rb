@@ -35,8 +35,6 @@ module CompletionKit
         "ck-badge ck-badge--pending"
       when "running"
         "ck-badge ck-badge--running"
-      when "generating", "judging"
-        "ck-badge ck-badge--running"
       when "completed"
         "ck-badge ck-badge--high"
       when "failed"
@@ -48,7 +46,7 @@ module CompletionKit
 
     def ck_run_dot(run)
       case run.status
-      when "generating", "judging" then "ck-dot ck-dot--running"
+      when "running" then "ck-dot ck-dot--running"
       when "failed" then "ck-dot ck-dot--failed"
       when "completed" then "ck-dot ck-dot--completed"
       else "ck-dot ck-dot--pending"
@@ -58,17 +56,11 @@ module CompletionKit
     def ck_run_status_label(run)
       case run.status
       when "pending" then "Ready to run"
-      when "generating"
+      when "running"
         if run.progress_total.to_i > 0
-          "Generating responses (#{run.progress_current}/#{run.progress_total})"
+          "Running (#{run.progress_current}/#{run.progress_total})"
         else
-          "Generating responses…"
-        end
-      when "judging"
-        if run.progress_total.to_i > 0
-          "Judging (#{run.progress_current}/#{run.progress_total} evaluations)"
-        else
-          "Judging…"
+          "Running…"
         end
       when "completed" then "Completed"
       when "failed" then "Failed"

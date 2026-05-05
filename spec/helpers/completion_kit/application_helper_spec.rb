@@ -20,8 +20,6 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_badge_classes(:low)).to include("ck-badge--low")
       expect(helper.ck_badge_classes(:pending)).to include("ck-badge--pending")
       expect(helper.ck_badge_classes(:running)).to include("ck-badge--running")
-      expect(helper.ck_badge_classes(:generating)).to include("ck-badge--running")
-      expect(helper.ck_badge_classes(:judging)).to include("ck-badge--running")
       expect(helper.ck_badge_classes(:completed)).to include("ck-badge--high")
       expect(helper.ck_badge_classes(:failed)).to include("ck-badge--low")
       expect(helper.ck_badge_classes(:mystery)).to include("ck-badge--pending")
@@ -37,12 +35,8 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_run_dot(stub_run("pending"))).to eq("ck-dot ck-dot--pending")
     end
 
-    it "returns running dot for generating status" do
-      expect(helper.ck_run_dot(stub_run("generating"))).to eq("ck-dot ck-dot--running")
-    end
-
-    it "returns running dot for judging status" do
-      expect(helper.ck_run_dot(stub_run("judging"))).to eq("ck-dot ck-dot--running")
+    it "returns running dot for running status" do
+      expect(helper.ck_run_dot(stub_run("running"))).to eq("ck-dot ck-dot--running")
     end
 
     it "returns failed dot for failed status" do
@@ -144,20 +138,12 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_run_status_label(stub_run("pending"))).to eq("Ready to run")
     end
 
-    it "returns generating with progress when progress_total > 0" do
-      expect(helper.ck_run_status_label(stub_run("generating", progress_current: 3, progress_total: 10))).to eq("Generating responses (3/10)")
+    it "returns running with progress when progress_total > 0" do
+      expect(helper.ck_run_status_label(stub_run("running", progress_current: 3, progress_total: 10))).to eq("Running (3/10)")
     end
 
-    it "returns generating without progress when progress_total is 0" do
-      expect(helper.ck_run_status_label(stub_run("generating", progress_total: 0))).to include("Generating")
-    end
-
-    it "returns judging with progress when progress_total > 0" do
-      expect(helper.ck_run_status_label(stub_run("judging", progress_current: 2, progress_total: 8))).to eq("Judging (2/8 evaluations)")
-    end
-
-    it "returns judging without progress when progress_total is 0" do
-      expect(helper.ck_run_status_label(stub_run("judging", progress_total: 0))).to include("Judging")
+    it "returns running without progress when progress_total is 0" do
+      expect(helper.ck_run_status_label(stub_run("running", progress_total: 0))).to include("Running")
     end
 
     it "returns Completed for completed" do
