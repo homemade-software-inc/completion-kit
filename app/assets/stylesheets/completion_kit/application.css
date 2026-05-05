@@ -274,6 +274,18 @@ form.button_to {
   color: var(--ck-accent);
 }
 
+button.ck-link {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
 .ck-list {
   display: grid;
   gap: 0.5rem;
