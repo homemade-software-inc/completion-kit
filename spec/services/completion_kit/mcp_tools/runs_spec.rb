@@ -76,6 +76,13 @@ RSpec.describe CompletionKit::McpTools::Runs do
       expect(content["id"]).to eq(run.id)
     end
 
+    it "reports failure when generate cannot start" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
+      allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("Dataset has no rows")
+      result = described_class.call("runs_generate", {"id" => run.id})
+      expect(result[:content].first[:text]).to include("Dataset has no rows")
+    end
+
     it "returns error on invalid create" do
       result = described_class.call("runs_create", {"name" => ""})
       expect(result[:isError]).to be true
