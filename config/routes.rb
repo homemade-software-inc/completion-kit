@@ -14,7 +14,6 @@ CompletionKit::Engine.routes.draw do
   resources :runs do
     member do
       post :generate
-      post :judge
       get :suggestion
       post :suggest
       post :apply_suggestion
@@ -39,7 +38,6 @@ CompletionKit::Engine.routes.draw do
       resources :runs do
         member do
           post :generate
-          post :judge
         end
         resources :responses, only: [:index, :show]
       end

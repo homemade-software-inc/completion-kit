@@ -49,11 +49,6 @@ module CompletionKit
           description: "Generate responses for a run using its prompt and dataset",
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :generate
-        },
-        "runs_judge" => {
-          description: "Judge responses for a run using configured metrics",
-          inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
-          handler: :judge
         }
       }.freeze
 
@@ -92,14 +87,11 @@ module CompletionKit
 
       def self.generate(args)
         run = Run.find(args["id"])
-        GenerateJob.perform_later(run.id)
-        text_result(run.reload.as_json)
-      end
-
-      def self.judge(args)
-        run = Run.find(args["id"])
-        JudgeJob.perform_later(run.id)
-        text_result(run.reload.as_json)
+        if run.start!
+          text_result(run.reload.as_json)
+        else
+          text_result(run.failure_summary || run.errors.full_messages.to_sentence)
+        end
       end
     end
   end

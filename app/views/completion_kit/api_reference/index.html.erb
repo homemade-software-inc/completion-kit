@@ -175,11 +175,6 @@ end %>
         <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/runs/1/generate \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
       </div>
       <div class="ck-api-endpoint">
-        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/judge</p>
-        <p class="ck-meta-copy">Start judging responses with the configured judge model and metrics. Returns 202 Accepted.</p>
-        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/runs/1/judge \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
-      </div>
-      <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/runs/:id</p>
         <p class="ck-meta-copy">Update a run. Accepts same params as create.</p>
       </div>
