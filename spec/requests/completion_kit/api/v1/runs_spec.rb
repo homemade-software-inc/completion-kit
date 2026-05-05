@@ -96,20 +96,21 @@ RSpec.describe "API V1 Runs", type: :request do
   end
 
   describe "POST /api/v1/runs/:id/generate" do
-    it "enqueues generation and returns 202" do
+    it "calls start! and returns 202 on success" do
       run = create(:completion_kit_run)
+      expect_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
       post "/completion_kit/api/v1/runs/#{run.id}/generate", headers: headers
       expect(response).to have_http_status(:accepted)
       expect(JSON.parse(response.body)["id"]).to eq(run.id)
     end
-  end
 
-  describe "POST /api/v1/runs/:id/judge" do
-    it "enqueues judging and returns 202" do
+    it "returns 422 when start! fails" do
       run = create(:completion_kit_run)
-      post "/completion_kit/api/v1/runs/#{run.id}/judge", headers: headers
-      expect(response).to have_http_status(:accepted)
-      expect(JSON.parse(response.body)["id"]).to eq(run.id)
+      allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
+      allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("Cannot start run")
+      post "/completion_kit/api/v1/runs/#{run.id}/generate", headers: headers
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["errors"]).to eq(["Cannot start run"])
     end
   end
 end

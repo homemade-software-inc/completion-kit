@@ -146,25 +146,20 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to redirect_to("/completion_kit/runs")
   end
 
-  it "enqueues GenerateJob and redirects" do
+  it "calls start! and redirects on success" do
     run = create(:completion_kit_run, prompt: prompt)
+    expect_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
     post "#{base_path}/#{run.id}/generate"
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
   end
 
-  it "enqueues JudgeJob and redirects" do
+  it "redirects with alert when start! fails" do
     run = create(:completion_kit_run, prompt: prompt)
-    post "#{base_path}/#{run.id}/judge"
+    allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
+    allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("Something went wrong")
+    post "#{base_path}/#{run.id}/generate"
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
-  end
-
-  it "updates run params before judging when run params are present" do
-    run = create(:completion_kit_run, prompt: prompt)
-
-    post "#{base_path}/#{run.id}/judge", params: { run: { judge_model: "gpt-4.1" } }
-
-    expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
-    expect(run.reload.judge_model).to eq("gpt-4.1")
+    expect(flash[:alert]).to eq("Something went wrong")
   end
 
   it "suggest action stores suggestion in session and redirects to suggestion page" do

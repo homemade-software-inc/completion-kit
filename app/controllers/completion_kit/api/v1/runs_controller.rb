@@ -2,7 +2,7 @@ module CompletionKit
   module Api
     module V1
       class RunsController < BaseController
-        before_action :set_run, only: [:show, :update, :destroy, :generate, :judge]
+        before_action :set_run, only: [:show, :update, :destroy, :generate]
 
         def index
           render json: Run.order(created_at: :desc)
@@ -37,13 +37,11 @@ module CompletionKit
         end
 
         def generate
-          GenerateJob.perform_later(@run.id)
-          render json: @run.reload, status: :accepted
-        end
-
-        def judge
-          JudgeJob.perform_later(@run.id)
-          render json: @run.reload, status: :accepted
+          if @run.start!
+            render json: @run.reload, status: :accepted
+          else
+            render json: { errors: [@run.failure_summary || @run.errors.full_messages.to_sentence] }, status: :unprocessable_entity
+          end
         end
 
         private
