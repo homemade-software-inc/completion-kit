@@ -86,6 +86,13 @@ RSpec.describe CompletionKit::OpenRouterClient, type: :service do
       end
     end
 
+    it "raises RateLimitError on 429 without Retry-After header" do
+      stub_faraday_post(faraday_response(success: false, status: 429, body: "rate limited", headers: {}))
+      expect { described_class.new(config).generate_completion("hi") }.to raise_error(CompletionKit::RateLimitError) do |error|
+        expect(error.retry_after).to be_nil
+      end
+    end
+
     it "returns an error string when the response is not successful" do
       stub_faraday_post(faraday_response(success: false, status: 500, body: "boom"))
       result = described_class.new(config).generate_completion("hi")

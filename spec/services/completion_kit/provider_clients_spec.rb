@@ -63,6 +63,14 @@ RSpec.describe "CompletionKit provider clients", type: :service do
       expect(error.retry_after).to eq(30)
     end
 
+    stub_faraday(faraday_response(success: false, status: 429, body: "rate limited", headers: {}))
+    expect { client.generate_completion("prompt") }.to raise_error(CompletionKit::RateLimitError) do |error|
+      expect(error.retry_after).to be_nil
+    end
+
+    stub_faraday(faraday_response(success: false, status: 500, body: "broken", headers: {}))
+    expect(client.generate_completion("prompt")).to eq("Error: 500 - broken")
+
     allow(Faraday).to receive(:new).and_raise(StandardError, "network down")
     expect(client.generate_completion("prompt")).to eq("Error: network down")
 
