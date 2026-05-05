@@ -1,6 +1,7 @@
 require "completion_kit/errors"
 require "completion_kit/version"
 require "completion_kit/engine"
+require "completion_kit/concurrency_check"
 
 module CompletionKit
   class Configuration
