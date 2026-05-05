@@ -2,7 +2,7 @@ module CompletionKit
   module Api
     module V1
       class RunsController < BaseController
-        before_action :set_run, only: [:show, :update, :destroy, :generate]
+        before_action :set_run, only: [:show, :update, :destroy, :generate, :retry_failures]
 
         def index
           render json: Run.order(created_at: :desc)
@@ -42,6 +42,29 @@ module CompletionKit
           else
             render json: { errors: [@run.failure_summary || @run.errors.full_messages.to_sentence] }, status: :unprocessable_entity
           end
+        end
+
+        def retry_failures
+          scope = @run.responses.where(status: "failed")
+          scope = scope.where(id: params[:only]) if params[:only].present?
+
+          ActiveRecord::Base.transaction do
+            failed_response_ids = scope.pluck(:id)
+            CompletionKit::Review.where(response_id: failed_response_ids, status: "failed").update_all(
+              status: "pending", attempts: 0,
+              error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
+              ai_score: nil, ai_feedback: nil
+            )
+            scope.update_all(
+              status: "pending", attempts: 0,
+              error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
+              response_text: nil
+            )
+            @run.update!(status: "running")
+            failed_response_ids.each { |rid| CompletionKit::GenerateRowJob.perform_later(@run.id, rid) }
+          end
+
+          render json: @run.reload, status: :accepted
         end
 
         private

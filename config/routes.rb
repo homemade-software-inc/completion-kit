@@ -17,6 +17,7 @@ CompletionKit::Engine.routes.draw do
       get :suggestion
       post :suggest
       post :apply_suggestion
+      post :retry_failures
     end
     resources :responses, only: [:show]
   end
@@ -38,6 +39,7 @@ CompletionKit::Engine.routes.draw do
       resources :runs do
         member do
           post :generate
+          post :retry_failures
         end
         resources :responses, only: [:index, :show]
       end

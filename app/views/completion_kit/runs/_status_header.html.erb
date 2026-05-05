@@ -31,6 +31,14 @@
           <% end %>
         </div>
       <% end %>
+      <% failed_count = snap[:generated_failed] + snap[:judged_failed] %>
+      <% if failed_count > 0 %>
+        <%= button_to "Retry #{failed_count} failed #{"row".pluralize(failed_count)}",
+              retry_failures_run_path(run),
+              method: :post,
+              class: ck_button_classes(:light, variant: :outline),
+              form_class: "inline-block" %>
+      <% end %>
     </div>
   <% end %>
 </div>

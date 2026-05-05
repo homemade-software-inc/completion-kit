@@ -59,7 +59,7 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Queued")
     expect(response.body).to include("Retrying")
-    expect(response.body).to include("Failed")
+    expect(response.body).to include("ck-chip--retry")
   end
 
   it "renders a failed response row with provider error details" do
