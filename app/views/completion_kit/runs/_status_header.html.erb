@@ -6,6 +6,12 @@
     </div>
   <% end %>
 
+  <% if run.status == "running" && !CompletionKit::WorkerHealth.healthy? %>
+    <div class="ck-flash ck-flash--alert">
+      No worker process is running. Generate and judge jobs are queued but nothing is processing them. Start <code>bin/jobs</code> (or your worker service) to resume.
+    </div>
+  <% end %>
+
   <section class="ck-page-header">
     <div>
       <p class="ck-kicker"><span class="<%= ck_run_dot(run) %>"></span> <%= ck_run_status_label(run) %></p>

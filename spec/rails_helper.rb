@@ -172,6 +172,17 @@ ActiveRecord::Schema.define do
     t.datetime :applied_at
     t.timestamps
   end
+
+  create_table :solid_queue_processes, force: true do |t|
+    t.string :kind, null: false
+    t.datetime :last_heartbeat_at, null: false
+    t.bigint :supervisor_id
+    t.integer :pid, null: false
+    t.string :hostname
+    t.text :metadata
+    t.datetime :created_at, null: false
+    t.string :name, null: false
+  end
 end
 
 FactoryBot.definition_file_paths = [File.expand_path("factories", __dir__)]
