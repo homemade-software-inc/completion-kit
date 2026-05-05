@@ -34,4 +34,10 @@ RSpec.describe CompletionKit::ModelDiscoveryJob, type: :job do
   it "does nothing if credential not found" do
     expect { described_class.perform_now(-1) }.not_to raise_error
   end
+
+  it "rate-limit wait is 30 seconds times the execution count" do
+    expect(described_class.rate_limit_wait(1)).to eq(30)
+    expect(described_class.rate_limit_wait(4)).to eq(120)
+  end
+
 end

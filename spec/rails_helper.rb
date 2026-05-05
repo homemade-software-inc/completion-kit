@@ -14,6 +14,7 @@ require "action_cable/engine"
 require "sprockets/railtie"
 require "rspec/rails"
 require "factory_bot_rails"
+require "solid_queue"
 require_relative "spec_helper"
 require "completion_kit"
 

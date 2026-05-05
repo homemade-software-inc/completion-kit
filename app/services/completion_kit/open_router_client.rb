@@ -25,12 +25,25 @@ module CompletionKit
         }.to_json
       end
 
+      if response.status == 429
+        raise CompletionKit::RateLimitError.new(
+          response.body.to_s.truncate(500),
+          provider: "openrouter",
+          status: 429,
+          retry_after: response.headers && response.headers["Retry-After"]&.to_i
+        )
+      end
+
       if response.success?
         data = JSON.parse(response.body)
         data.dig("choices", 0, "message", "content").to_s.strip
       else
         "Error: #{response.status} - #{response.body}"
       end
+    rescue CompletionKit::RateLimitError
+      raise
+    rescue Faraday::Error
+      raise
     rescue => e
       "Error: #{e.message}"
     end

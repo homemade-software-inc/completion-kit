@@ -2,12 +2,12 @@ require "rails_helper"
 
 RSpec.describe CompletionKit::McpTools::Runs do
   describe ".definitions" do
-    it "returns 7 tool definitions" do
+    it "returns 6 tool definitions" do
       defs = described_class.definitions
-      expect(defs.length).to eq(7)
+      expect(defs.length).to eq(6)
       expect(defs.map { |d| d[:name] }).to match_array(%w[
         runs_list runs_get runs_create runs_update
-        runs_delete runs_generate runs_judge
+        runs_delete runs_generate
       ])
     end
   end
@@ -15,6 +15,16 @@ RSpec.describe CompletionKit::McpTools::Runs do
   describe ".call" do
     let!(:prompt) { create(:completion_kit_prompt) }
     let!(:run) { create(:completion_kit_run, prompt: prompt, name: "Test Run") }
+
+    before do
+      allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_ui)
+      allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_clear_responses)
+      allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_replace_to)
+      allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_append_to)
+      allow(CompletionKit::GenerateRowJob).to receive(:perform_later)
+      allow(CompletionKit::JudgeReviewJob).to receive(:perform_later)
+      allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+    end
 
     it "lists runs" do
       result = described_class.call("runs_list", {})
@@ -61,9 +71,17 @@ RSpec.describe CompletionKit::McpTools::Runs do
     end
 
     it "enqueues generate" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
       result = described_class.call("runs_generate", {"id" => run.id})
       content = JSON.parse(result[:content].first[:text])
       expect(content["id"]).to eq(run.id)
+    end
+
+    it "reports failure when generate cannot start" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
+      allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("Dataset has no rows")
+      result = described_class.call("runs_generate", {"id" => run.id})
+      expect(result[:content].first[:text]).to include("Dataset has no rows")
     end
 
     it "returns error on invalid create" do
@@ -74,12 +92,6 @@ RSpec.describe CompletionKit::McpTools::Runs do
     it "returns error on invalid update" do
       result = described_class.call("runs_update", {"id" => run.id, "name" => ""})
       expect(result[:isError]).to be true
-    end
-
-    it "enqueues judge" do
-      result = described_class.call("runs_judge", {"id" => run.id})
-      content = JSON.parse(result[:content].first[:text])
-      expect(content["id"]).to eq(run.id)
     end
   end
 end

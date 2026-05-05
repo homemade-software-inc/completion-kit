@@ -1,5 +1,4 @@
 require "rails_helper"
-require "faraday"
 
 RSpec.describe "End-to-end generation pipeline", type: :model do
   let(:prompt) do
@@ -7,9 +6,9 @@ RSpec.describe "End-to-end generation pipeline", type: :model do
       name: "Summarizer", template: "Summarize {{content}} for {{audience}}",
       llm_model: "gpt-4.1")
   end
+  let(:client) { instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: []) }
 
   before do
-    CompletionKit::ProviderCredential.create!(provider: "openai", api_key: "test-key-123")
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update)
@@ -17,11 +16,11 @@ RSpec.describe "End-to-end generation pipeline", type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_actions)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_sort_toolbar)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_clear_responses)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+    allow(CompletionKit::GenerateRowJob).to receive(:perform_later)
   end
 
   context "with a dataset" do
-    let(:stubs) { Faraday::Adapter::Test::Stubs.new }
-
     let(:dataset) do
       create(:completion_kit_dataset, csv_data: <<~CSV)
         content,audience,expected_output
@@ -30,75 +29,31 @@ RSpec.describe "End-to-end generation pipeline", type: :model do
       CSV
     end
 
-    before do
-      stubs.post("/v1/responses") do |env|
-        body = JSON.parse(env.body)
-        input = body["input"]
-
-        reply = if input.include?("Release notes")
-                  "Here is a developer summary of the release notes."
-                else
-                  "Here is an executive briefing of the company update."
-                end
-
-        [200, { "Content-Type" => "application/json" }, {
-          output: [{ type: "message", content: [{ type: "output_text", text: reply }] }]
-        }.to_json]
-      end
-
-      allow(Faraday).to receive(:new).and_wrap_original do |original, *args, **kwargs, &_block|
-        original.call(*args, **kwargs) do |builder|
-          builder.adapter :test, stubs
-        end
-      end
-    end
-
-    it "generates responses with correct input_data, response_text, and status transitions" do
+    it "creates one pending response per row, transitions to running, enqueues jobs" do
       run = CompletionKit::Run.create!(prompt: prompt, dataset: dataset, name: "Pipeline test")
 
       expect(run.status).to eq("pending")
-      run.generate_responses!
+      result = run.start!
 
-      expect(run.reload.status).to eq("completed")
+      expect(result).to be true
+      expect(run.reload.status).to eq("running")
       expect(run.responses.count).to eq(2)
-
-      r1 = run.responses.order(:id).first
-      expect(JSON.parse(r1.input_data)["content"]).to eq("Release notes")
-      expect(r1.response_text).to include("developer summary")
-      expect(r1.expected_output).to eq("A developer-focused summary")
-
-      r2 = run.responses.order(:id).last
-      expect(JSON.parse(r2.input_data)["content"]).to eq("Company update")
-      expect(r2.response_text).to include("executive briefing")
+      expect(run.responses.pluck(:status).uniq).to eq(["pending"])
+      expect(run.responses.pluck(:row_index)).to contain_exactly(0, 1)
+      expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).twice
     end
   end
 
   context "without a dataset" do
-    let(:stubs) { Faraday::Adapter::Test::Stubs.new }
-
-    before do
-      stubs.post("/v1/responses") do
-        [200, { "Content-Type" => "application/json" }, {
-          output: [{ type: "message", content: [{ type: "output_text", text: "Raw prompt response" }] }]
-        }.to_json]
-      end
-
-      allow(Faraday).to receive(:new).and_wrap_original do |original, *args, **kwargs, &_block|
-        original.call(*args, **kwargs) do |builder|
-          builder.adapter :test, stubs
-        end
-      end
-    end
-
-    it "generates a single response with nil input_data" do
+    it "creates a single pending response with nil input_data" do
       run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "No dataset test")
 
-      run.generate_responses!
+      run.start!
 
-      expect(run.reload.status).to eq("completed")
+      expect(run.reload.status).to eq("running")
       expect(run.responses.count).to eq(1)
       expect(run.responses.first.input_data).to be_nil
-      expect(run.responses.first.response_text).to eq("Raw prompt response")
+      expect(run.responses.first.status).to eq("pending")
     end
   end
 end

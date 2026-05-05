@@ -1,6 +1,28 @@
+require "faraday"
+
 module CompletionKit
   class ModelDiscoveryJob < ApplicationJob
     queue_as :default
+
+    def self.rate_limit_wait(executions)
+      30 * executions
+    end
+
+    retry_on Faraday::TimeoutError,
+             Faraday::ConnectionFailed,
+             wait: :polynomially_longer, attempts: 5
+
+    retry_on CompletionKit::RateLimitError,
+             wait: method(:rate_limit_wait), attempts: 5
+
+    discard_on ActiveJob::DeserializationError
+
+    rescue_from(StandardError) do |_error|
+      credential = ProviderCredential.find(arguments.first)
+      credential.update_columns(discovery_status: "failed")
+      credential.reload
+      credential.broadcast_discovery_progress
+    end
 
     def perform(provider_credential_id)
       credential = ProviderCredential.find_by(id: provider_credential_id)
@@ -20,10 +42,6 @@ module CompletionKit
       credential.update_columns(discovery_status: "completed", updated_at: Time.current)
       credential.reload
       credential.broadcast_discovery_complete
-    rescue StandardError
-      credential.update_columns(discovery_status: "failed")
-      credential.reload
-      credential.broadcast_discovery_progress
     end
   end
 end

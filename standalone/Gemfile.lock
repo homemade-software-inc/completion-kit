@@ -108,6 +108,8 @@ GEM
     drb (2.2.3)
     erb (6.0.4)
     erubi (1.13.1)
+    et-orbi (1.4.0)
+      tzinfo
     faraday (2.14.1)
       faraday-net_http (>= 2.0, < 3.5)
       json
@@ -124,6 +126,9 @@ GEM
     ffi (1.17.4-x86_64-darwin)
     ffi (1.17.4-x86_64-linux-gnu)
     ffi (1.17.4-x86_64-linux-musl)
+    fugit (1.12.1)
+      et-orbi (~> 1.4)
+      raabro (~> 1.4)
     globalid (1.3.0)
       activesupport (>= 6.1)
     heroicons-rails (1.2.0)
@@ -131,6 +136,10 @@ GEM
       railties (>= 6.0.0)
     i18n (1.14.8)
       concurrent-ruby (~> 1.0)
+    importmap-rails (2.2.3)
+      actionpack (>= 6.0.0)
+      activesupport (>= 6.0.0)
+      railties (>= 6.0.0)
     io-console (0.8.2)
     irb (1.17.0)
       pp (>= 0.6.0)
@@ -157,6 +166,16 @@ GEM
     minitest (6.0.3)
       drb (~> 2.0)
       prism (~> 1.5)
+    mission_control-jobs (1.1.0)
+      actioncable (>= 7.1)
+      actionpack (>= 7.1)
+      activejob (>= 7.1)
+      activerecord (>= 7.1)
+      importmap-rails (>= 1.2.1)
+      irb (~> 1.13)
+      railties (>= 7.1)
+      stimulus-rails
+      turbo-rails
     msgpack (1.8.0)
     net-http (0.9.1)
       uri (>= 0.11.1)
@@ -203,6 +222,7 @@ GEM
       stringio
     puma (7.2.0)
       nio4r (~> 2.0)
+    raabro (1.4.0)
     racc (1.8.1)
     rack (3.2.6)
     rack-session (2.1.2)
@@ -258,6 +278,13 @@ GEM
       sprockets-rails
       tilt
     securerandom (0.4.1)
+    solid_queue (1.4.0)
+      activejob (>= 7.1)
+      activerecord (>= 7.1)
+      concurrent-ruby (>= 1.3.1)
+      fugit (~> 1.11)
+      railties (>= 7.1)
+      thor (>= 1.3.1)
     sprockets (4.2.2)
       concurrent-ruby (~> 1.0)
       logger
@@ -274,6 +301,8 @@ GEM
     sqlite3 (2.9.2-x86_64-darwin)
     sqlite3 (2.9.2-x86_64-linux-gnu)
     sqlite3 (2.9.2-x86_64-linux-musl)
+    stimulus-rails (1.3.4)
+      railties (>= 6.0.0)
     stringio (3.2.0)
     thor (1.5.0)
     tilt (2.7.0)
@@ -308,8 +337,10 @@ DEPENDENCIES
   bootsnap
   completion-kit!
   dotenv-rails
+  mission_control-jobs
   pg
   puma
+  solid_queue
   sprockets-rails
   sqlite3
 

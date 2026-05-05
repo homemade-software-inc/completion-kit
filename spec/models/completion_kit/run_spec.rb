@@ -103,77 +103,148 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
-  describe "#generate_responses!" do
+  describe "#start!" do
     let(:prompt) { create(:completion_kit_prompt) }
+    let(:client) { instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: []) }
 
-    it "adds error and returns false when dataset has rows but they come back empty" do
+    before do
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+      allow(CompletionKit::GenerateRowJob).to receive(:perform_later)
+    end
+
+    it "creates pending Responses and enqueues GenerateRowJob for each row" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: nil)
+
+      result = run.start!
+
+      expect(result).to be true
+      expect(run.responses.count).to eq(1)
+      expect(run.responses.first.status).to eq("pending")
+      expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).once
+    end
+
+    it "transitions status to running" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: nil)
+
+      run.start!
+
+      expect(run.reload.status).to eq("running")
+    end
+
+    it "returns false and sets failure_summary when dataset has no rows" do
       dataset = create(:completion_kit_dataset, csv_data: "header\n")
       run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
-
       allow(CompletionKit::CsvProcessor).to receive(:process_self).and_return([])
 
-      result = run.generate_responses!
+      result = run.start!
 
       expect(result).to be false
-      expect(run.errors[:base]).to include("Dataset has no rows")
+      expect(run.reload.status).to eq("failed")
+      expect(run.reload.failure_summary).to include("Dataset has no rows")
     end
 
-    it "adds error but does not update_column when run is not persisted and LLM is unconfigured" do
-      run = build(:completion_kit_run, prompt: prompt, dataset: nil)
-
-      allow(CompletionKit::CsvProcessor).to receive(:process_self).and_return([])
-
-      client = instance_double(CompletionKit::LlmClient, configured?: false, configuration_errors: ["API key missing"])
-      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
-
-      result = run.generate_responses!
-
-      expect(result).to be false
-      expect(run.errors[:base].first).to include("LLM API not configured")
-      expect(run).not_to be_persisted
-    end
-
-    it "adds error, marks failed, and returns false when LLM client is not configured" do
+    it "returns false and sets failure_summary when LLM client is not configured" do
+      bad_client = instance_double(CompletionKit::LlmClient, configured?: false, configuration_errors: ["API key missing"])
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(bad_client)
       run = create(:completion_kit_run, prompt: prompt, dataset: nil)
 
-      allow(CompletionKit::CsvProcessor).to receive(:process_self).and_return([])
-
-      client = instance_double(CompletionKit::LlmClient, configured?: false, configuration_errors: ["API key missing"])
-      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
-
-      result = run.generate_responses!
+      result = run.start!
 
       expect(result).to be false
-      expect(run.errors[:base].first).to include("LLM API not configured")
       expect(run.reload.status).to eq("failed")
+      expect(run.reload.failure_summary).to include("LLM API not configured")
     end
 
-    it "adds error and marks status failed when StandardError is raised during generation" do
-      run = create(:completion_kit_run, prompt: prompt, dataset: nil)
-
-      client = instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: [])
-      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
-      allow(client).to receive(:generate_completion).and_raise(StandardError, "boom")
-
-      result = run.generate_responses!
-
-      expect(result).to be false
-      expect(run.errors[:base].first).to include("boom")
-      expect(run.reload.status).to eq("failed")
-    end
-
-    it "adds error without update_columns on non-persisted run when StandardError is raised at update!" do
+    it "returns false without persisting when run is not persisted and LLM is unconfigured" do
+      bad_client = instance_double(CompletionKit::LlmClient, configured?: false, configuration_errors: ["API key missing"])
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(bad_client)
       run = build(:completion_kit_run, prompt: prompt, dataset: nil)
 
-      client = instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: [])
-      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
-      allow(run).to receive(:update!).and_raise(StandardError, "boom")
-
-      result = run.generate_responses!
+      result = run.start!
 
       expect(result).to be false
-      expect(run.errors[:base].first).to include("boom")
       expect(run).not_to be_persisted
+    end
+  end
+
+  describe "#generate_responses!" do
+    let(:prompt) { create(:completion_kit_prompt) }
+    let(:client) { instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: []) }
+
+    before do
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+      allow(CompletionKit::GenerateRowJob).to receive(:perform_later)
+    end
+
+    it "delegates to start! and returns true on success" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: nil)
+      result = run.generate_responses!
+      expect(result).to be true
+    end
+  end
+
+  describe "#outstanding_work_zero?" do
+    let(:prompt) { create(:completion_kit_prompt) }
+    let(:metric) { create(:completion_kit_metric) }
+
+    it "returns true when all responses are terminal and no metrics" do
+      run = create(:completion_kit_run, prompt: prompt)
+      run.responses.create!(status: "succeeded", response_text: "done")
+      expect(run.outstanding_work_zero?).to be true
+    end
+
+    it "returns false when a response is non-terminal" do
+      run = create(:completion_kit_run, prompt: prompt)
+      run.responses.create!(status: "pending")
+      expect(run.outstanding_work_zero?).to be false
+    end
+
+    it "returns false when a response is succeeded but review is non-terminal" do
+      run = create(:completion_kit_run, prompt: prompt)
+      CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
+      response = run.responses.create!(status: "succeeded", response_text: "done")
+      response.reviews.create!(metric: metric, status: "pending", metric_name: metric.name)
+      expect(run.outstanding_work_zero?).to be false
+    end
+
+    it "returns true when all responses and reviews are terminal" do
+      run = create(:completion_kit_run, prompt: prompt)
+      CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
+      response = run.responses.create!(status: "succeeded", response_text: "done")
+      response.reviews.create!(metric: metric, status: "succeeded", metric_name: metric.name)
+      expect(run.outstanding_work_zero?).to be true
+    end
+
+    it "returns true when metrics exist but all responses failed (no succeeded responses)" do
+      run = create(:completion_kit_run, prompt: prompt)
+      CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
+      run.responses.create!(status: "failed")
+      expect(run.outstanding_work_zero?).to be true
+    end
+  end
+
+  describe "#progress_snapshot" do
+    let(:prompt) { create(:completion_kit_prompt) }
+    let(:metric) { create(:completion_kit_metric) }
+
+    it "returns correct counts for both phases" do
+      run = create(:completion_kit_run, prompt: prompt, progress_total: 3)
+      CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
+
+      r1 = run.responses.create!(status: "succeeded", response_text: "done")
+      run.responses.create!(status: "failed")
+      run.responses.create!(status: "pending")
+
+      r1.reviews.create!(metric: metric, status: "succeeded", metric_name: metric.name)
+
+      snapshot = run.progress_snapshot
+
+      expect(snapshot[:generated_done]).to eq(1)
+      expect(snapshot[:generated_failed]).to eq(1)
+      expect(snapshot[:generated_total]).to eq(3)
+      expect(snapshot[:judged_done]).to eq(1)
+      expect(snapshot[:judged_failed]).to eq(0)
+      expect(snapshot[:judged_total]).to eq(1)
     end
   end
 
@@ -194,45 +265,4 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
-  describe "#judge_responses!" do
-    let(:metric) { create(:completion_kit_metric, name: "Quality") }
-    let(:prompt) { create(:completion_kit_prompt) }
-
-    it "marks status failed without update_column on non-persisted run error" do
-      run = build(
-        :completion_kit_run,
-        prompt: prompt,
-        judge_model: "gpt-4.1",
-        status: "completed"
-      )
-
-      allow(run).to receive(:update!).and_raise(StandardError, "judge error")
-
-      result = run.judge_responses!
-
-      expect(result).to be false
-      expect(run.errors[:base].first).to include("judge error")
-      expect(run).not_to be_persisted
-    end
-
-    it "marks status failed with update_columns on persisted run when StandardError is raised during judging" do
-      run = create(
-        :completion_kit_run,
-        prompt: prompt,
-        judge_model: "gpt-4.1",
-        status: "completed"
-      )
-      CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
-      run.responses.create!(response_text: "Some output")
-
-      allow(CompletionKit::JudgeService).to receive(:new).and_raise(StandardError, "judge boom")
-
-      result = run.judge_responses!
-
-      expect(result).to be false
-      expect(run.errors[:base].first).to include("judge boom")
-      expect(run.reload.status).to eq("failed")
-    end
-
-  end
 end

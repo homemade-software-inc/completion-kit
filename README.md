@@ -35,8 +35,19 @@ cd completion-kit/standalone
 bundle install
 bin/rails completion_kit:install:migrations
 bin/rails db:migrate
+```
+
+Then run **both** processes — a web server and a Solid Queue worker. In two terminals:
+
+```bash
 bin/rails server
 ```
+
+```bash
+bin/jobs
+```
+
+Or with [foreman](https://github.com/ddollar/foreman) in one terminal: `foreman start -f Procfile.dev`.
 
 Visit `http://localhost:3000`. Add a provider credential (Settings), create a prompt, upload a CSV dataset, and run it.
 
@@ -51,7 +62,7 @@ bin/rails generate completion_kit:install
 bin/rails db:migrate
 ```
 
-The engine mounts at `/completion_kit` in your app.
+The engine mounts at `/completion_kit` in your app. CompletionKit's generate and judge flows enqueue Active Job jobs (`CompletionKit::GenerateRowJob`, `CompletionKit::JudgeReviewJob`, `CompletionKit::RunCompletionCheckJob`), so your host app needs an Active Job adapter that actually processes them — Solid Queue, Sidekiq, GoodJob, etc. The `:async` adapter is **not** suitable for production: it runs jobs in the web Puma's thread pool with no durability and no retry, and a long LLM call will block request handling.
 
 ## Providers
 

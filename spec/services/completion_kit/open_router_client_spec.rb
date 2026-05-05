@@ -5,8 +5,8 @@ require "json"
 RSpec.describe CompletionKit::OpenRouterClient, type: :service do
   let(:config) { { provider: "openrouter", api_key: "or-test-key" } }
 
-  def faraday_response(success:, body:, status: 200)
-    instance_double("Faraday::Response", success?: success, body: body, status: status)
+  def faraday_response(success:, body:, status: 200, headers: {})
+    instance_double("Faraday::Response", success?: success, body: body, status: status, headers: headers)
   end
 
   def faraday_connection_stub
@@ -77,16 +77,31 @@ RSpec.describe CompletionKit::OpenRouterClient, type: :service do
       expect(result).to eq("Error: API key not configured")
     end
 
+    it "raises RateLimitError on 429 with Retry-After header" do
+      stub_faraday_post(faraday_response(success: false, status: 429, body: "rate limited", headers: { "Retry-After" => "60" }))
+      expect { described_class.new(config).generate_completion("hi") }.to raise_error(CompletionKit::RateLimitError) do |error|
+        expect(error.provider).to eq("openrouter")
+        expect(error.status).to eq(429)
+        expect(error.retry_after).to eq(60)
+      end
+    end
+
+    it "raises RateLimitError on 429 without Retry-After header" do
+      stub_faraday_post(faraday_response(success: false, status: 429, body: "rate limited", headers: {}))
+      expect { described_class.new(config).generate_completion("hi") }.to raise_error(CompletionKit::RateLimitError) do |error|
+        expect(error.retry_after).to be_nil
+      end
+    end
+
     it "returns an error string when the response is not successful" do
       stub_faraday_post(faraday_response(success: false, status: 500, body: "boom"))
       result = described_class.new(config).generate_completion("hi")
       expect(result).to include("Error: 500")
     end
 
-    it "rescues Faraday errors and returns an error string" do
+    it "re-raises Faraday errors" do
       allow(faraday_connection_stub).to receive(:post).and_raise(Faraday::ConnectionFailed.new("nope"))
-      result = described_class.new(config).generate_completion("hi")
-      expect(result).to eq("Error: nope")
+      expect { described_class.new(config).generate_completion("hi") }.to raise_error(Faraday::ConnectionFailed)
     end
 
     it "rescues other StandardErrors and returns an error string" do

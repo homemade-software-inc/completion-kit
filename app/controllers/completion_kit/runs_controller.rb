@@ -1,6 +1,6 @@
 module CompletionKit
   class RunsController < ApplicationController
-    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :judge, :suggest, :suggestion, :apply_suggestion]
+    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :suggestion, :apply_suggestion]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
@@ -63,17 +63,11 @@ module CompletionKit
     end
 
     def generate
-      @run.update!(status: "running", progress_current: 0, progress_total: 0, error_message: nil)
-      GenerateJob.perform_later(@run.id)
-      redirect_to run_path(@run)
-    end
-
-    def judge
-      if params[:run]
-        @run.update(judge_model: params[:run][:judge_model])
+      if @run.start!
+        redirect_to run_path(@run)
+      else
+        redirect_to run_path(@run), alert: @run.failure_summary || @run.errors.full_messages.to_sentence
       end
-      JudgeJob.perform_later(@run.id)
-      redirect_to run_path(@run)
     end
 
     def suggest
