@@ -1,9 +1,11 @@
+<% snap = run.progress_snapshot %>
 <div id="run_status_header">
   <% if run.status == "failed" %>
     <div class="ck-flash ck-flash--alert">
-      <%= run.error_message.presence || "Run failed." %>
+      <%= run.failure_summary.presence || run.error_message.presence || "Run failed." %>
     </div>
   <% end %>
+
   <section class="ck-page-header">
     <div>
       <p class="ck-kicker"><span class="<%= ck_run_dot(run) %>"></span> <%= ck_run_status_label(run) %></p>
@@ -12,4 +14,23 @@
     </div>
     <%= render "completion_kit/runs/actions", run: run %>
   </section>
+
+  <% if run.status.in?(%w[running completed]) && snap[:generated_total] > 0 %>
+    <div class="ck-progress-block">
+      <div class="ck-progress-line">
+        Generated <%= snap[:generated_done] %>/<%= snap[:generated_total] %>
+        <% if snap[:generated_failed] > 0 %>
+          <span class="ck-progress-failed">(<%= snap[:generated_failed] %> failed)</span>
+        <% end %>
+      </div>
+      <% if snap[:judged_total] > 0 %>
+        <div class="ck-progress-line">
+          Judged <%= snap[:judged_done] %>/<%= snap[:judged_total] %>
+          <% if snap[:judged_failed] > 0 %>
+            <span class="ck-progress-failed">(<%= snap[:judged_failed] %> failed)</span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 </div>

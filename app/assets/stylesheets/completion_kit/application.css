@@ -679,6 +679,27 @@ tr:hover .ck-chip--publish {
   color: var(--ck-text);
 }
 
+.ck-progress-block {
+  padding: 0.5rem 1rem 0.75rem;
+  border-top: 1px solid var(--ck-line);
+  font-size: 0.72rem;
+  font-family: var(--ck-mono);
+  color: var(--ck-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ck-progress-line {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+}
+
+.ck-progress-failed {
+  color: var(--ck-danger);
+}
+
 .ck-model-list-details summary {
   list-style: none;
 }
