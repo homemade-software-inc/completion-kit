@@ -89,3 +89,41 @@ RSpec.describe "JSON serialization" do
     end
   end
 end
+
+RSpec.describe "Run#as_json includes progress object and failed_response_ids" do
+  before do
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_ui)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_status_header)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_actions)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_sort_toolbar)
+  end
+
+  let(:run) { create(:completion_kit_run, progress_total: 2) }
+
+  it "includes a progress hash with generated and judged sub-objects" do
+    create(:completion_kit_response, run: run, status: "succeeded", response_text: "a")
+    create(:completion_kit_response, :failed, run: run)
+
+    payload = run.as_json
+    expect(payload[:progress][:generated]).to include(done: 1, total: 2, failed: 1)
+    expect(payload[:progress][:judged]).to include(done: 0, total: 0, failed: 0)
+    expect(payload[:failed_response_ids]).to be_an(Array)
+    expect(payload[:failed_response_ids].size).to eq(1)
+  end
+
+  it "preserves legacy progress_current and progress_total fields mapped to generated counters" do
+    create(:completion_kit_response, run: run, status: "succeeded", response_text: "a")
+    create(:completion_kit_response, run: run, status: "succeeded", response_text: "b")
+    payload = run.as_json
+    expect(payload).to have_key(:progress_current)
+    expect(payload).to have_key(:progress_total)
+    expect(payload[:progress_current]).to eq(2)
+    expect(payload[:progress_total]).to eq(2)
+  end
+
+  it "includes failure_summary key" do
+    payload = run.as_json
+    expect(payload).to have_key(:failure_summary)
+  end
+end
