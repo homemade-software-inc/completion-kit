@@ -116,6 +116,9 @@ RSpec.describe "CompletionKit provider clients", type: :service do
       expect(error.retry_after).to be_nil
     end
 
+    allow(Faraday).to receive(:new).and_raise(Faraday::ConnectionFailed, "connection refused")
+    expect { client.generate_completion("prompt") }.to raise_error(Faraday::ConnectionFailed)
+
     allow(Faraday).to receive(:new).and_raise(StandardError, "anthropic down")
     expect(client.generate_completion("prompt")).to eq("Error: anthropic down")
 
@@ -157,6 +160,9 @@ RSpec.describe "CompletionKit provider clients", type: :service do
       expect(error.status).to eq(429)
       expect(error.retry_after).to be_nil
     end
+
+    allow(Faraday).to receive(:new).and_raise(Faraday::ConnectionFailed, "connection refused")
+    expect { client.generate_completion("prompt") }.to raise_error(Faraday::ConnectionFailed)
 
     allow(Faraday).to receive(:new).and_raise(StandardError, "ollama down")
     expect(client.generate_completion("prompt")).to eq("Error: ollama down")

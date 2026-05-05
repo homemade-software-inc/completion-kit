@@ -36,6 +36,8 @@ module CompletionKit
       end
     rescue CompletionKit::RateLimitError
       raise
+    rescue Faraday::Error
+      raise
     rescue => e
       "Error: #{e.message}"
     end
