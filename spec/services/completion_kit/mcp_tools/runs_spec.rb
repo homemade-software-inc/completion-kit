@@ -71,6 +71,7 @@ RSpec.describe CompletionKit::McpTools::Runs do
     end
 
     it "enqueues generate" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
       result = described_class.call("runs_generate", {"id" => run.id})
       content = JSON.parse(result[:content].first[:text])
       expect(content["id"]).to eq(run.id)
