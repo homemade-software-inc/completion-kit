@@ -17,6 +17,15 @@ module CompletionKit
     before_validation :set_default_status, on: :create
     before_validation :set_auto_name, on: :create
 
+    def mark_completed!
+      update!(status: "completed")
+      broadcast_ui
+    end
+
+    def outstanding_work_zero?
+      false
+    end
+
     def judge_configured?
       judge_model.present? && metrics.any? && ApiConfig.valid_for_model?(judge_model)
     end
