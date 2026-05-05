@@ -274,16 +274,37 @@ form.button_to {
   color: var(--ck-accent);
 }
 
-button.ck-link {
+.ck-disclosure-toggle {
   appearance: none;
   background: transparent;
   border: 0;
   padding: 0;
-  margin: 0;
-  font: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  margin: 0.5rem 0 0;
+  font-family: var(--ck-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ck-muted);
   cursor: pointer;
+  transition: color 0.15s;
+}
+
+.ck-disclosure-toggle:hover,
+.ck-disclosure-toggle:focus-visible {
+  color: var(--ck-accent);
+  outline: none;
+}
+
+.ck-disclosure-toggle::after {
+  content: " ↓";
+  display: inline-block;
+  margin-left: 0.25rem;
+  transition: transform 0.15s;
+}
+
+.ck-disclosure-toggle[aria-expanded="true"]::after {
+  transform: rotate(180deg);
 }
 
 .ck-list {
