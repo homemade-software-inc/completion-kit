@@ -23,10 +23,9 @@
     <% when "retrying" %>
       <span class="ck-chip ck-chip--warning">Retrying <%= response.attempts %>/5</span>
     <% when "failed" %>
-      <%= button_to "Retry", retry_failures_run_path(run, only: response.id),
-            method: :post,
-            class: "ck-chip ck-chip--danger ck-chip--retry",
-            form_class: "inline-block" %>
+      <%= link_to "Retry", retry_failures_run_path(run, only: response.id),
+            data: { turbo_method: :post },
+            class: "ck-chip ck-chip--danger ck-chip--retry" %>
     <% end %>
   </span>
 <% end %>
