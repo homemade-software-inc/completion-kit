@@ -171,4 +171,9 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     job = described_class.new
     expect(job.send(:provider_for, response)).to be_nil
   end
+
+  it "concurrency key scopes to the run id" do
+    key_proc = described_class.concurrency_key
+    expect(key_proc.call(run.id, response.id)).to eq("run:#{run.id}")
+  end
 end

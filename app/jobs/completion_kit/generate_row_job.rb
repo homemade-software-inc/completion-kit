@@ -1,6 +1,12 @@
+require "faraday"
+
 module CompletionKit
   class GenerateRowJob < ApplicationJob
     queue_as :llm
+
+    limits_concurrency to: ENV.fetch("COMPLETION_KIT_PER_RUN_CONCURRENCY", 5).to_i,
+                       key: ->(run_id, _) { "run:#{run_id}" },
+                       duration: 10.minutes
 
     def self.rate_limit_wait(executions)
       30 * executions

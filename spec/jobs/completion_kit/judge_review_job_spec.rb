@@ -118,6 +118,18 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     expect(described_class.rate_limit_wait(1)).to eq(30)
   end
 
+  it "concurrency key scopes to the run id via response lookup" do
+    key_proc = described_class.concurrency_key
+    allow(CompletionKit::Response).to receive(:find_by).with(id: response.id).and_return(response)
+    expect(key_proc.call(response.id, metric.id)).to eq("run:#{run.id}")
+  end
+
+  it "concurrency key returns nil run_id when response not found" do
+    key_proc = described_class.concurrency_key
+    allow(CompletionKit::Response).to receive(:find_by).with(id: 0).and_return(nil)
+    expect(key_proc.call(0, metric.id)).to eq("run:")
+  end
+
   it "uses metric name from deleted metric in record_terminal_failure!" do
     allow_any_instance_of(described_class).to receive(:perform).and_raise(RuntimeError, "boom")
     allow(CompletionKit::Metric).to receive(:find_by).with(id: metric.id).and_return(nil)

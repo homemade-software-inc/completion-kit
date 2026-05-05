@@ -41,4 +41,9 @@ RSpec.describe CompletionKit::RunCompletionCheckJob, type: :job do
   it "is a no-op when the run does not exist" do
     expect { described_class.perform_now(999_999) }.not_to raise_error
   end
+
+  it "concurrency key serializes completion checks per run" do
+    key_proc = described_class.concurrency_key
+    expect(key_proc.call(run.id)).to eq("run:#{run.id}:completion")
+  end
 end

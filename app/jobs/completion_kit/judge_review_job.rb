@@ -1,6 +1,12 @@
+require "faraday"
+
 module CompletionKit
   class JudgeReviewJob < ApplicationJob
     queue_as :llm
+
+    limits_concurrency to: ENV.fetch("COMPLETION_KIT_PER_RUN_CONCURRENCY", 5).to_i,
+                       key: ->(response_id, _) { "run:#{Response.find_by(id: response_id)&.run_id}" },
+                       duration: 10.minutes
 
     def self.rate_limit_wait(executions)
       30 * executions
