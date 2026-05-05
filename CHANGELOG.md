@@ -7,6 +7,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-05
+
+### Added
+
+- Per-row prompt-run jobs (`GenerateRowJob`, `JudgeReviewJob`) with independent
+  retry on transient LLM failures (`Faraday::TimeoutError`,
+  `Faraday::ConnectionFailed`, polynomial backoff) and rate limits
+  (`CompletionKit::RateLimitError`, fixed 30s × N backoff). One bad row no
+  longer kills the whole run.
+- Generation and judging interleave automatically: each successful row
+  enqueues its `JudgeReviewJob`s immediately rather than waiting for the
+  whole batch.
+- `Run#progress_snapshot` returns six counters (`generated_done/total/failed`,
+  `judged_done/total/failed`); status header surfaces both.
+- `POST /runs/:id/retry_failures` (web + `/api/v1/runs/:id/retry_failures`)
+  re-enqueues only failed rows. Per-row Retry button on each failed response.
+- Per-row provider error context: failed rows show
+  `Failed: OpenAI 429 — Rate limit exceeded` so users can tell when a failure
+  is the provider's fault, not CompletionKit's.
+- New error classes: `CompletionKit::Error`, `CompletionKit::ConfigurationError`,
+  `CompletionKit::RateLimitError(provider:, status:, retry_after:)`.
+- All four LLM clients (`OpenAiClient`, `AnthropicClient`, `OllamaClient`,
+  `OpenRouterClient`) raise `RateLimitError` on 429 and re-raise
+  `Faraday::Error` so retries actually fire.
+- `ModelDiscoveryJob` hardened with the same retry policy.
+- `CompletionKit::WorkerHealth.healthy?` and a banner on running runs when
+  no Solid Queue worker has heartbeated in 30s.
+- `mission_control-jobs` dashboard mounts at `/jobs` in the standalone behind
+  session auth.
+- `Run#as_json` extended with `progress` object (`generated`/`judged`
+  sub-objects with `done/total/failed`), `failed_response_ids`, and
+  `failure_summary`. Legacy `progress_current` and `progress_total` keys
+  preserved.
+- `failure_summary` (text) on runs for infra-level failures (dataset empty,
+  judge model unconfigured).
+- `attempts`, `error_provider`, `error_class`, `error_status`, `error_message`,
+  `row_index` columns on responses; same error/`attempts` shape on reviews.
+- Compound indexes `[run_id, status]` on responses and `[response_id, status]`
+  on reviews (created with `algorithm: :concurrently` on Postgres).
+
+### Changed
+
+- **Standalone deployment now requires a worker process.** The standalone
+  switches from `:async` to `:solid_queue` for ActiveJob. Run
+  `cd standalone && bin/jobs` alongside `bin/rails server` (or
+  `foreman start -f Procfile.dev`). Without it, generate/judge runs sit at
+  "running" forever — the new worker-health banner detects this.
+- `Run::STATUSES` collapsed from `pending|generating|judging|completed|failed`
+  to `pending|running|completed|failed`. Generation and judging now
+  interleave so the separate phases stop making sense. Existing
+  `generating`/`judging` rows are migrated to `running`.
+- `Review::STATUSES`: `evaluated` renamed to `succeeded` for cross-model
+  consistency. Existing rows backfilled.
+- The standalone DB pool is sized dynamically to fit Solid Queue's thread
+  count (`pool: max(RAILS_MAX_THREADS, SOLID_QUEUE_THREADS + 2)`).
+- The MCP `runs_judge` tool is removed — judging is now per-row automatic.
+  Tool count: 35 → 34.
+
+### Removed
+
+- `Run#judge_responses!` and the standalone `judge` controller actions
+  (web + API). The new per-row job topology supersedes them.
+- The legacy monolithic `GenerateJob` and `JudgeJob`. Use `Run#start!` (which
+  enqueues `GenerateRowJob` per row) and let judging chain automatically.
+
+### New environment variables (standalone)
+
+- `SOLID_QUEUE_THREADS` (default 10) — worker thread pool size.
+- `SOLID_QUEUE_PROCESSES` (default 1) — worker process count.
+- `COMPLETION_KIT_LLM_CONCURRENCY` (default 10) — soft global cap on
+  simultaneous LLM calls; warns at boot if set higher than
+  `SOLID_QUEUE_THREADS`.
+- `COMPLETION_KIT_PER_RUN_CONCURRENCY` (default 5) — max simultaneous LLM
+  calls from a single run.
+
+### Migration notes
+
+- `bin/rails db:migrate` applies five new migrations (responses error
+  columns + concurrent index; reviews error columns + concurrent index;
+  runs `failure_summary`).
+- A one-time `completion_kit:mark_interrupted_runs_failed` rake task is
+  available if you have runs in flight at the adapter cutover. Most
+  installations won't need it.
+
 ## [0.3.0] - 2026-04-25
 
 ### Changed
