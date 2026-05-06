@@ -198,14 +198,26 @@ module CompletionKit
     end
 
     def openai_probe(model_id, input, max_tokens)
-      conn = Faraday.new(url: "https://api.openai.com") do |f|
+      conn = openai_probe_connection
+      response = openai_probe_post(conn, model_id, input, max_tokens, openai_reasoning_effort_for(model_id))
+      if response.status == 400 && response.body.to_s.include?("is not supported with the")
+        response = openai_probe_post(conn, model_id, input, max_tokens, nil)
+      end
+      response
+    end
+
+    def openai_probe_connection
+      Faraday.new(url: "https://api.openai.com") do |f|
         f.options.timeout = 60
         f.options.open_timeout = 5
         f.request :retry, max: 1, interval: 0.5
         f.adapter Faraday.default_adapter
       end
+    end
+
+    def openai_probe_post(conn, model_id, input, max_tokens, effort)
       body = { model: model_id, input: input, max_output_tokens: max_tokens, store: false }
-      body[:reasoning] = { effort: "minimal" } if openai_reasoning_model?(model_id)
+      body[:reasoning] = { effort: effort } if effort
       conn.post do |req|
         req.url "/v1/responses"
         req.headers["Content-Type"] = "application/json"
@@ -214,8 +226,9 @@ module CompletionKit
       end
     end
 
-    def openai_reasoning_model?(model_id)
-      model_id.to_s.match?(/\A(gpt-5|o1|o3)/)
+    def openai_reasoning_effort_for(model_id)
+      return nil unless model_id.to_s.match?(/\A(gpt-5|o1|o3)/)
+      "low"
     end
 
     def anthropic_probe(model_id, input, max_tokens)

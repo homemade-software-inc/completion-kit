@@ -240,6 +240,36 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.judging_error).to include("500")
     end
 
+    it "retries the openai probe without reasoning effort when the model rejects it" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-5-snobby", object: "model" }] }.to_json
+      ))
+
+      call_count = 0
+      allow(faraday_connection_stub).to receive(:post) do |&block|
+        req = Struct.new(:headers, :body, :path, keyword_init: true) do
+          def url(value); self.path = value; end
+        end.new(headers: {})
+        block.call(req) if block
+        call_count += 1
+        body = JSON.parse(req.body)
+        if body["reasoning"]
+          faraday_response(success: false, status: 400, body: %(Unsupported value: 'low' is not supported with the 'gpt-5-snobby' model.))
+        else
+          faraday_response(success: true, body: { output: [{ type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: ok" }] }] }.to_json)
+        end
+      end
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "gpt-5-snobby")
+      expect(model.supports_generation).to eq(true)
+      expect(model.supports_judging).to eq(true)
+      expect(call_count).to be >= 2
+    end
+
     it "marks judging failed when judge probe raises StandardError" do
       stub_faraday_get(faraday_response(
         success: true,
