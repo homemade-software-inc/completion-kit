@@ -110,15 +110,21 @@ module CompletionKit
     end
 
     def probe_new_models(&on_progress)
-      unprobed = Model.where(provider: @provider, status: "active")
-        .where("supports_generation IS NULL OR supports_judging IS NULL")
-      total = unprobed.count
+      candidates = Model.where(provider: @provider, status: %w[active failed])
+        .where("supports_generation IS NULL OR supports_judging IS NULL OR generation_error IS NOT NULL OR judging_error IS NOT NULL")
+      total = candidates.count
       current = 0
-      unprobed.find_each do |model|
-        probe_generation(model) if model.supports_generation.nil?
-        probe_judging(model) if model.supports_generation && model.supports_judging.nil?
+      candidates.find_each do |model|
+        if model.supports_generation.nil? || model.generation_error.present?
+          model.generation_error = nil
+          probe_generation(model)
+        end
+        if model.supports_generation && (model.supports_judging.nil? || model.judging_error.present?)
+          model.judging_error = nil
+          probe_judging(model)
+        end
         model.probed_at = Time.current
-        model.status = "failed" if model.supports_generation == false
+        model.status = (model.supports_generation == false ? "failed" : "active")
         model.save!
         current += 1
         on_progress&.call(current, total)
