@@ -119,12 +119,28 @@ module CompletionKit
       generated_total = progress_total
 
       metric_count = metrics.count
-      succeeded_count = generated_done
-      judged_total = succeeded_count * metric_count
-      judged_done = Review.joins(:response)
-        .where(completion_kit_responses: { run_id: id }, status: "succeeded").count
-      judged_failed = Review.joins(:response)
-        .where(completion_kit_responses: { run_id: id }, status: "failed").count
+      judged_total = metric_count > 0 ? generated_done : 0
+      judged_done = 0
+      judged_failed = 0
+
+      if metric_count > 0 && judged_total > 0
+        succeeded_response_ids = responses.where(status: "succeeded").pluck(:id)
+        metric_ids = metrics.pluck(:id)
+        review_counts = Review
+          .where(response_id: succeeded_response_ids, metric_id: metric_ids)
+          .group(:response_id, :status)
+          .count
+        succeeded_response_ids.each do |rid|
+          ok = review_counts[[rid, "succeeded"]] || 0
+          bad = review_counts[[rid, "failed"]] || 0
+          next unless ok + bad == metric_count
+          if bad > 0
+            judged_failed += 1
+          else
+            judged_done += 1
+          end
+        end
+      end
 
       {
         generated_done: generated_done,

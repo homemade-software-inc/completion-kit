@@ -246,6 +246,42 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(snapshot[:judged_failed]).to eq(0)
       expect(snapshot[:judged_total]).to eq(1)
     end
+
+    it "does not count a row as judged_done until all metric reviews are terminal" do
+      metric_a = create(:completion_kit_metric, name: "A")
+      metric_b = create(:completion_kit_metric, name: "B")
+      run = create(:completion_kit_run, prompt: prompt, progress_total: 1)
+      CompletionKit::RunMetric.create!(run: run, metric: metric_a, position: 1)
+      CompletionKit::RunMetric.create!(run: run, metric: metric_b, position: 2)
+
+      r1 = run.responses.create!(status: "succeeded", response_text: "done")
+      r1.reviews.create!(metric: metric_a, status: "succeeded", metric_name: metric_a.name)
+      r1.reviews.create!(metric: metric_b, status: "pending", metric_name: metric_b.name)
+
+      snapshot = run.progress_snapshot
+
+      expect(snapshot[:judged_total]).to eq(1)
+      expect(snapshot[:judged_done]).to eq(0)
+      expect(snapshot[:judged_failed]).to eq(0)
+    end
+
+    it "counts a row as judged_failed when any of its metric reviews failed" do
+      metric_a = create(:completion_kit_metric, name: "A")
+      metric_b = create(:completion_kit_metric, name: "B")
+      run = create(:completion_kit_run, prompt: prompt, progress_total: 1)
+      CompletionKit::RunMetric.create!(run: run, metric: metric_a, position: 1)
+      CompletionKit::RunMetric.create!(run: run, metric: metric_b, position: 2)
+
+      r1 = run.responses.create!(status: "succeeded", response_text: "done")
+      r1.reviews.create!(metric: metric_a, status: "succeeded", metric_name: metric_a.name)
+      r1.reviews.create!(metric: metric_b, status: "failed", metric_name: metric_b.name)
+
+      snapshot = run.progress_snapshot
+
+      expect(snapshot[:judged_total]).to eq(1)
+      expect(snapshot[:judged_done]).to eq(0)
+      expect(snapshot[:judged_failed]).to eq(1)
+    end
   end
 
   describe "status enum" do
