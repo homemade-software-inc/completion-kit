@@ -147,6 +147,17 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(run.reload.name).to eq("Original")
   end
 
+  it "auto-renames the new run when the user did not change the name" do
+    run = create(:completion_kit_run, prompt: prompt, name: "Property Summary — v1 #1")
+    run.responses.create!(response_text: "Some output")
+
+    patch "#{base_path}/#{run.id}", params: { run: { name: "Property Summary — v1 #1", prompt_id: prompt.id } }
+
+    new_run = CompletionKit::Run.order(:id).last
+    expect(new_run.name).not_to eq(run.name)
+    expect(new_run.name).to match(/#2\z/)
+  end
+
   it "carries metric_ids onto the new run when updating a run with responses" do
     run = create(:completion_kit_run, prompt: prompt, name: "Original")
     run.responses.create!(response_text: "Some output")
