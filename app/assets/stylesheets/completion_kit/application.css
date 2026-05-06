@@ -1077,10 +1077,15 @@ tr:hover .ck-chip--publish {
   display: grid;
   gap: 0;
   max-width: 32rem;
+  margin-bottom: 1.5rem;
   border: 1px solid var(--ck-line);
   border-radius: var(--ck-radius-lg);
   background: var(--ck-surface);
   overflow: hidden;
+}
+
+.ck-run-config + .ck-prompt-preview {
+  margin-top: 0.5rem;
 }
 
 .ck-run-config__row {
