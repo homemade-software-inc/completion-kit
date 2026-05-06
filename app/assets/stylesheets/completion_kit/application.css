@@ -933,39 +933,86 @@ tr:hover .ck-chip--publish {
   content: '▾ ';
 }
 
-.ck-model-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.6rem;
+.ck-model-table-wrap {
   margin-top: 0.85rem;
-  max-height: 280px;
+  max-height: 320px;
   overflow-y: auto;
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
+  background: var(--ck-surface);
 }
 
-.ck-model-list__item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  padding: 0.1rem 0;
+.ck-model-table {
+  width: 100%;
+  border-collapse: collapse;
   font-family: var(--ck-mono);
-  font-size: 0.78rem;
-  color: var(--ck-text);
+  font-size: 0.8rem;
 }
 
-.ck-model-list__item--restricted {
-  color: var(--ck-muted);
-}
-
-.ck-model-list__badge {
-  font-size: 0.6rem;
+.ck-model-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.5rem 0.85rem;
+  background: var(--ck-surface-soft);
+  border-bottom: 1px solid var(--ck-line);
+  font-size: 0.66rem;
   font-weight: 500;
-  color: var(--ck-warning);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.08rem 0.35rem;
-  border: 1px solid rgba(224, 164, 88, 0.3);
-  border-radius: 3px;
-  background: rgba(224, 164, 88, 0.08);
+  color: var(--ck-dim);
+  text-align: left;
+}
+
+.ck-model-table thead th.ck-model-table__cap {
+  text-align: center;
+  width: 4.5rem;
+}
+
+.ck-model-table tbody tr {
+  border-top: 1px solid var(--ck-line);
+}
+
+.ck-model-table tbody tr:first-child {
+  border-top: 0;
+}
+
+.ck-model-table tbody tr:hover {
+  background: var(--ck-surface-hover);
+}
+
+.ck-model-table td {
+  padding: 0.55rem 0.85rem;
+  vertical-align: middle;
+}
+
+.ck-model-table td.ck-model-table__name {
+  color: var(--ck-text);
+  letter-spacing: -0.01em;
+}
+
+.ck-model-table td.ck-model-table__cap {
+  text-align: center;
+  width: 4.5rem;
+}
+
+.ck-model-table__tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: rgba(45, 212, 168, 0.12);
+  color: var(--ck-success);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ck-model-table__dash {
+  color: var(--ck-dim);
+  font-size: 0.85rem;
 }
 
 .ck-model-list__summary {

@@ -62,17 +62,37 @@
               </button>
             </span>
           </summary>
-          <div class="ck-model-list">
-            <% models.each do |m| %>
-              <span class="ck-model-list__item<%= ' ck-model-list__item--restricted' if !(m.supports_generation && m.supports_judging) %>">
-                <%= m.display_name || m.model_id %>
-                <% if m.supports_generation && !m.supports_judging %>
-                  <span class="ck-model-list__badge">gen only</span>
-                <% elsif m.supports_judging && !m.supports_generation %>
-                  <span class="ck-model-list__badge">judge only</span>
+          <div class="ck-model-table-wrap">
+            <table class="ck-model-table">
+              <thead>
+                <tr>
+                  <th scope="col" class="ck-model-table__name">Model</th>
+                  <th scope="col" class="ck-model-table__cap">Gen</th>
+                  <th scope="col" class="ck-model-table__cap">Judge</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% models.each do |m| %>
+                  <tr>
+                    <td class="ck-model-table__name"><%= m.display_name || m.model_id %></td>
+                    <td class="ck-model-table__cap">
+                      <% if m.supports_generation %>
+                        <span class="ck-model-table__tick" aria-label="Supports generation">✓</span>
+                      <% else %>
+                        <span class="ck-model-table__dash" aria-label="No generation support">—</span>
+                      <% end %>
+                    </td>
+                    <td class="ck-model-table__cap">
+                      <% if m.supports_judging %>
+                        <span class="ck-model-table__tick" aria-label="Supports judging">✓</span>
+                      <% else %>
+                        <span class="ck-model-table__dash" aria-label="No judging support">—</span>
+                      <% end %>
+                    </td>
+                  </tr>
                 <% end %>
-              </span>
-            <% end %>
+              </tbody>
+            </table>
           </div>
         </details>
       <% end %>
