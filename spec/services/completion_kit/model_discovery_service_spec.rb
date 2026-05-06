@@ -195,6 +195,61 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.status).to eq("failed")
     end
 
+    it "marks generation failed when openai returns only reasoning chunks (no message item)" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-no-message", object: "model" }] }.to_json
+      ))
+      stub_faraday_post(faraday_response(
+        success: true,
+        body: { output: [{ type: "reasoning", summary: "thinking but never replied" }] }.to_json
+      ))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "gpt-no-message")
+      expect(model.supports_generation).to eq(false)
+      expect(model.generation_error).to eq("Empty response")
+    end
+
+    it "skips reasoning-only output items and reads the message item for capability detection" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-reasoning-judge", object: "model" }] }.to_json
+      ))
+      call_count = 0
+      allow(faraday_connection_stub).to receive(:post) do |&block|
+        req = Struct.new(:headers, :body, :path, keyword_init: true) do
+          def url(value); self.path = value; end
+        end.new(headers: {})
+        block.call(req) if block
+        call_count += 1
+        if call_count == 1
+          faraday_response(success: true, body: {
+            output: [
+              { type: "reasoning", summary: "thinking..." },
+              { type: "message", content: [{ type: "output_text", text: "Hello" }] }
+            ]
+          }.to_json)
+        else
+          faraday_response(success: true, body: {
+            output: [
+              { type: "reasoning", summary: "weighing the score" },
+              { type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: clear" }] }
+            ]
+          }.to_json)
+        end
+      end
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "gpt-reasoning-judge")
+      expect(model.supports_generation).to eq(true)
+      expect(model.supports_judging).to eq(true)
+    end
+
     it "marks generation failed when probe raises StandardError" do
       stub_faraday_get(faraday_response(
         success: true,

@@ -191,7 +191,9 @@ module CompletionKit
     def extract_text(response)
       data = JSON.parse(response.body)
       case @provider
-      when "openai" then data.dig("output", 0, "content", 0, "text")
+      when "openai"
+        message = Array(data["output"]).find { |o| o["type"] == "message" }
+        message&.dig("content", 0, "text")
       when "anthropic" then data.dig("content", 0, "text")
       else data.dig("choices", 0, "message", "content")
       end
