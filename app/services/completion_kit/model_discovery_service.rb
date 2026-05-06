@@ -132,7 +132,7 @@ module CompletionKit
     end
 
     def probe_generation(model)
-      response = send_probe(model.model_id, "Say hello", 16000)
+      response = send_probe(model.model_id, "Say hello", 65536)
       if response.success?
         text = extract_text(response)
         if text.present?
@@ -160,7 +160,7 @@ module CompletionKit
         AI output to evaluate: The sky is blue.
       PROMPT
 
-      response = send_probe(model.model_id, judge_input, 16000)
+      response = send_probe(model.model_id, judge_input, 65536)
       if response.success?
         text = extract_text(response).to_s
         if text.match?(/Score:\s*\d/i)
@@ -208,7 +208,7 @@ module CompletionKit
 
     def openai_probe_connection
       Faraday.new(url: "https://api.openai.com") do |f|
-        f.options.timeout = 60
+        f.options.timeout = 180
         f.options.open_timeout = 5
         f.request :retry, max: 1, interval: 0.5
         f.adapter Faraday.default_adapter
