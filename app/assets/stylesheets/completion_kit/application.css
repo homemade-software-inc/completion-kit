@@ -935,8 +935,6 @@ tr:hover .ck-chip--publish {
 
 .ck-model-table-wrap {
   margin-top: 0.85rem;
-  max-height: 320px;
-  overflow-y: auto;
   border: 1px solid var(--ck-line);
   border-radius: var(--ck-radius);
   background: var(--ck-surface);
