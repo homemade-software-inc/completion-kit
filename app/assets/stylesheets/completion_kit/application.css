@@ -980,8 +980,10 @@ tr:hover .ck-chip--publish {
   width: 14px;
   height: 14px;
   font-size: 0.55rem;
-  margin-left: 0.25rem;
-  vertical-align: 1px;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
 }
 
 .ck-model-table tbody tr {
