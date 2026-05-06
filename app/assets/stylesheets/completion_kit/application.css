@@ -972,7 +972,16 @@ tr:hover .ck-chip--publish {
 
 .ck-model-table thead th.ck-model-table__cap {
   text-align: center;
-  width: 4.5rem;
+  width: 6.5rem;
+  white-space: nowrap;
+}
+
+.ck-model-table thead th .ck-info-toggle {
+  width: 14px;
+  height: 14px;
+  font-size: 0.55rem;
+  margin-left: 0.25rem;
+  vertical-align: 1px;
 }
 
 .ck-model-table tbody tr {
@@ -999,7 +1008,7 @@ tr:hover .ck-chip--publish {
 
 .ck-model-table td.ck-model-table__cap {
   text-align: center;
-  width: 4.5rem;
+  width: 6.5rem;
 }
 
 .ck-model-table__tick {
