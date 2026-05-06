@@ -933,6 +933,14 @@ tr:hover .ck-chip--publish {
   content: '▾ ';
 }
 
+.ck-model-list__progress {
+  margin-top: 0.65rem;
+}
+
+.ck-model-list__progress .ck-discovery-bar {
+  padding: 0;
+}
+
 .ck-model-table-wrap {
   margin-top: 0.85rem;
   border: 1px solid var(--ck-line);

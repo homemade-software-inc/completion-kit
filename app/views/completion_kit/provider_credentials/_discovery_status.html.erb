@@ -3,9 +3,9 @@
     <div class="ck-discovery-bar">
       <div class="ck-discovery-bar__label">
         <% if provider_credential.discovery_total > 0 %>
-          Testing models&hellip; <%= provider_credential.discovery_current %>/<%= provider_credential.discovery_total %>
+          Checking models&hellip; <%= provider_credential.discovery_current %>/<%= provider_credential.discovery_total %>
         <% else %>
-          Fetching model list&hellip;
+          Looking up models&hellip;
         <% end %>
       </div>
       <% if provider_credential.discovery_total > 0 %>

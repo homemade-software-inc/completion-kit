@@ -2,7 +2,7 @@
   <% models = CompletionKit::Model.where(provider: provider_credential.provider).active.order(:model_id) %>
   <% if models.any? || provider_credential.discovery_status.present? %>
     <div class="ck-card ck-form-card__models">
-      <% if provider_credential.discovery_status.in?(%w[discovering failed]) %>
+      <% if models.none? && provider_credential.discovery_status.in?(%w[discovering failed]) %>
         <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: provider_credential, show_completed: false %>
       <% end %>
 
@@ -22,6 +22,11 @@
               </button>
             </span>
           </summary>
+          <% if provider_credential.discovery_status.in?(%w[discovering failed]) %>
+            <div class="ck-model-list__progress">
+              <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: provider_credential, show_completed: false %>
+            </div>
+          <% end %>
           <div class="ck-model-table-wrap">
             <table class="ck-model-table">
               <thead>
