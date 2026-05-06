@@ -13,7 +13,6 @@ module CompletionKit
     def refresh!(&on_progress)
       models_with_names = fetch_models
       reconcile(models_with_names)
-      return if %w[openrouter ollama].include?(@provider)
       probe_new_models(&on_progress)
     end
 
@@ -111,12 +110,13 @@ module CompletionKit
     end
 
     def probe_new_models(&on_progress)
-      unprobed = Model.where(provider: @provider, supports_generation: nil, status: "active")
+      unprobed = Model.where(provider: @provider, status: "active")
+        .where("supports_generation IS NULL OR supports_judging IS NULL")
       total = unprobed.count
       current = 0
       unprobed.find_each do |model|
-        probe_generation(model)
-        probe_judging(model) if model.supports_generation
+        probe_generation(model) if model.supports_generation.nil?
+        probe_judging(model) if model.supports_generation && model.supports_judging.nil?
         model.probed_at = Time.current
         model.status = "failed" if model.supports_generation == false
         model.save!
@@ -173,19 +173,21 @@ module CompletionKit
     end
 
     def send_probe(model_id, input, max_tokens)
-      if @provider == "openai"
-        openai_probe(model_id, input, max_tokens)
-      else
-        anthropic_probe(model_id, input, max_tokens)
+      case @provider
+      when "openai" then openai_probe(model_id, input, max_tokens)
+      when "anthropic" then anthropic_probe(model_id, input, max_tokens)
+      when "openrouter" then openrouter_probe(model_id, input, max_tokens)
+      when "ollama" then ollama_probe(model_id, input, max_tokens)
+      else raise ArgumentError, "Unsupported probe provider: #{@provider}"
       end
     end
 
     def extract_text(response)
       data = JSON.parse(response.body)
-      if @provider == "openai"
-        data.dig("output", 0, "content", 0, "text")
-      else
-        data.dig("content", 0, "text")
+      case @provider
+      when "openai" then data.dig("output", 0, "content", 0, "text")
+      when "anthropic" then data.dig("content", 0, "text")
+      else data.dig("choices", 0, "message", "content")
       end
     end
 
@@ -216,6 +218,39 @@ module CompletionKit
         req.headers["Content-Type"] = "application/json"
         req.headers["x-api-key"] = @api_key
         req.headers["anthropic-version"] = "2023-06-01"
+        req.body = { model: model_id, messages: [{ role: "user", content: input }], max_tokens: max_tokens }.to_json
+      end
+    end
+
+    def openrouter_probe(model_id, input, max_tokens)
+      conn = Faraday.new(url: "https://openrouter.ai") do |f|
+        f.options.timeout = 30
+        f.options.open_timeout = 5
+        f.request :retry, max: 1, interval: 0.5
+        f.adapter Faraday.default_adapter
+      end
+      conn.post do |req|
+        req.url "/api/v1/chat/completions"
+        req.headers["Content-Type"] = "application/json"
+        req.headers["Authorization"] = "Bearer #{@api_key}"
+        req.headers["HTTP-Referer"] = "https://completionkit.com"
+        req.headers["X-Title"] = "CompletionKit"
+        req.body = { model: model_id, messages: [{ role: "user", content: input }], max_tokens: max_tokens }.to_json
+      end
+    end
+
+    def ollama_probe(model_id, input, max_tokens)
+      base_url = @api_endpoint.to_s.delete_suffix("/")
+      conn = Faraday.new(url: base_url) do |f|
+        f.options.timeout = 60
+        f.options.open_timeout = 5
+        f.request :retry, max: 1, interval: 0.5
+        f.adapter Faraday.default_adapter
+      end
+      conn.post do |req|
+        req.url "/chat/completions"
+        req.headers["Content-Type"] = "application/json"
+        req.headers["Authorization"] = "Bearer #{@api_key}" if @api_key.present?
         req.body = { model: model_id, messages: [{ role: "user", content: input }], max_tokens: max_tokens }.to_json
       end
     end

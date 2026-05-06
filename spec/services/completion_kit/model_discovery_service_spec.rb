@@ -365,8 +365,13 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       }.to_json
     end
 
-    it "discovers openrouter models, filters by context length and deprecation, marks supports_generation true without probing" do
+    let(:openrouter_judge_response) do
+      faraday_response(success: true, body: { choices: [{ message: { content: "Score: 4\nFeedback: ok" } }] }.to_json)
+    end
+
+    it "discovers openrouter models, filters by context length and deprecation, marks supports_generation true and probes judging" do
       stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
+      stub_faraday_post(openrouter_judge_response)
 
       service = described_class.new(config: config)
       service.refresh!
@@ -377,20 +382,35 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
         "anthropic/claude-3.5-sonnet"
       )
       expect(models.where(supports_generation: true).count).to eq(2)
-      expect(models.where("probed_at IS NOT NULL").count).to eq(0)
+      expect(models.where(supports_judging: true).count).to eq(2)
+      expect(models.where("probed_at IS NOT NULL").count).to eq(2)
     end
 
-    it "does not call any probe methods for openrouter" do
+    it "skips generation probing for openrouter (assumed supported) but probes judging" do
       stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
+      stub_faraday_post(openrouter_judge_response)
 
       service = described_class.new(config: config)
       expect(service).not_to receive(:probe_generation)
-      expect(service).not_to receive(:probe_judging)
+      expect(service).to receive(:probe_judging).at_least(:once).and_call_original
       service.refresh!
+    end
+
+    it "sends openrouter judge probes to the chat/completions endpoint with referer headers" do
+      stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
+      probe_request = stub_faraday_post(openrouter_judge_response)
+
+      described_class.new(config: config).refresh!
+
+      expect(probe_request.path).to eq("/api/v1/chat/completions")
+      expect(probe_request.headers["Authorization"]).to eq("Bearer or-test")
+      expect(probe_request.headers["HTTP-Referer"]).to eq("https://completionkit.com")
+      expect(probe_request.headers["X-Title"]).to eq("CompletionKit")
     end
 
     it "stores display_name from the openrouter API name field" do
       stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
+      stub_faraday_post(openrouter_judge_response)
       described_class.new(config: config).refresh!
       expect(CompletionKit::Model.find_by(model_id: "openai/gpt-4o-mini").display_name).to eq("GPT-4o Mini")
     end
@@ -418,8 +438,13 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       }.to_json
     end
 
-    it "discovers ollama models and marks supports_generation true without probing" do
+    let(:ollama_judge_response) do
+      faraday_response(success: true, body: { choices: [{ message: { content: "Score: 3\nFeedback: ok" } }] }.to_json)
+    end
+
+    it "discovers ollama models, marks supports_generation true and probes judging" do
       stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+      stub_faraday_post(ollama_judge_response)
 
       service = described_class.new(config: config)
       service.refresh!
@@ -431,7 +456,8 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
         "mistral:latest"
       )
       expect(models.where(supports_generation: true).count).to eq(3)
-      expect(models.where("probed_at IS NOT NULL").count).to eq(0)
+      expect(models.where(supports_judging: true).count).to eq(3)
+      expect(models.where("probed_at IS NOT NULL").count).to eq(3)
       expect(models.find_by(model_id: "llama3.3:70b").display_name).to eq("llama3.3:70b")
     end
 
@@ -444,13 +470,33 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(CompletionKit::Model.where(provider: "ollama").count).to eq(0)
     end
 
-    it "does not call any probe methods for ollama" do
+    it "skips generation probing for ollama (assumed supported) but probes judging" do
       stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+      stub_faraday_post(ollama_judge_response)
 
       service = described_class.new(config: config)
       expect(service).not_to receive(:probe_generation)
-      expect(service).not_to receive(:probe_judging)
+      expect(service).to receive(:probe_judging).at_least(:once).and_call_original
       service.refresh!
+    end
+
+    it "sends ollama judge probes to the configured endpoint at /chat/completions" do
+      stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+      probe_request = stub_faraday_post(ollama_judge_response)
+
+      described_class.new(config: { provider: "ollama", api_key: "secret", api_endpoint: "http://localhost:11434/v1" }).refresh!
+
+      expect(probe_request.path).to eq("/chat/completions")
+      expect(probe_request.headers["Authorization"]).to eq("Bearer secret")
+    end
+
+    it "omits Authorization header on ollama probe when api_key is missing" do
+      stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+      probe_request = stub_faraday_post(ollama_judge_response)
+
+      described_class.new(config: { provider: "ollama", api_key: nil, api_endpoint: "http://localhost:11434/v1" }).refresh!
+
+      expect(probe_request.headers).not_to have_key("Authorization")
     end
 
     it "returns empty when api_endpoint is nil" do
@@ -471,6 +517,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
 
     it "sends Authorization header when api_key is present" do
       request = stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+      stub_faraday_post(ollama_judge_response)
 
       service = described_class.new(config: { provider: "ollama", api_key: "secret", api_endpoint: "http://localhost:11434/v1" })
       service.refresh!
@@ -481,6 +528,11 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
 
   describe "#refresh! for unknown provider" do
     let(:config) { { provider: "unknown", api_key: "key" } }
+
+    it "raises ArgumentError when send_probe is invoked for an unsupported provider" do
+      service = described_class.new(config: config)
+      expect { service.send(:send_probe, "any-model", "hi", 10) }.to raise_error(ArgumentError, /Unsupported probe provider/)
+    end
 
     it "returns empty models and retires any existing" do
       CompletionKit::Model.create!(provider: "unknown", model_id: "some-model", status: "active", discovered_at: 1.day.ago)
