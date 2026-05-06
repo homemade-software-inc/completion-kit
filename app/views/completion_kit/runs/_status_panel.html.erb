@@ -1,0 +1,46 @@
+<% snap = run.progress_snapshot %>
+<div id="run_status_panel">
+  <% if run.status.in?(%w[running completed]) && snap[:generated_total] > 0 %>
+    <% failed_count = snap[:generated_failed] + snap[:judged_failed] %>
+    <section class="ck-run-status ck-run-status--<%= run.status %>">
+      <div class="ck-run-status__metrics">
+        <div class="ck-run-status__metric">
+          <p class="ck-run-status__metric-label">Generated</p>
+          <p class="ck-run-status__metric-value">
+            <span class="ck-run-status__metric-num"><%= snap[:generated_done] %></span><span class="ck-run-status__metric-total">/<%= snap[:generated_total] %></span>
+            <% if snap[:generated_failed] > 0 %>
+              <span class="ck-run-status__metric-fail"><%= snap[:generated_failed] %> failed</span>
+            <% end %>
+          </p>
+        </div>
+
+        <% if snap[:judged_total] > 0 || run.judge_configured? %>
+          <div class="ck-run-status__metric">
+            <p class="ck-run-status__metric-label">Judged</p>
+            <p class="ck-run-status__metric-value">
+              <span class="ck-run-status__metric-num"><%= snap[:judged_done] %></span><span class="ck-run-status__metric-total">/<%= snap[:judged_total] %></span>
+              <% if snap[:judged_failed] > 0 %>
+                <span class="ck-run-status__metric-fail"><%= snap[:judged_failed] %> failed</span>
+              <% end %>
+            </p>
+          </div>
+        <% end %>
+
+        <% if run.status == "completed" && run.avg_score %>
+          <div class="ck-run-status__metric">
+            <p class="ck-run-status__metric-label">Avg score</p>
+            <p class="ck-run-status__metric-value">
+              <span class="ck-run-status__metric-num"><%= run.avg_score %></span><span class="ck-run-status__metric-total">/5</span>
+            </p>
+          </div>
+        <% end %>
+      </div>
+
+      <% if failed_count > 0 %>
+        <%= button_to retry_failures_run_path(run), method: :post, class: "ck-run-status__retry", form_class: "ck-run-status__action" do %>
+          Retry <%= failed_count %> failed <%= "row".pluralize(failed_count) %>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
+</div>

@@ -1,4 +1,3 @@
-<% snap = run.progress_snapshot %>
 <div id="run_status_header">
   <% if run.status == "failed" %>
     <div class="ck-flash ck-flash--alert">
@@ -14,37 +13,13 @@
 
   <section class="ck-page-header">
     <div>
-      <p class="ck-kicker"><span class="<%= ck_run_dot(run) %>"></span> <%= ck_run_status_label(run) %></p>
+      <span class="ck-status-badge ck-status-badge--<%= run.status %>">
+        <span class="ck-status-badge__dot" aria-hidden="true"></span>
+        <span class="ck-status-badge__label"><%= run.status.upcase %></span>
+      </span>
       <h1 class="ck-title"><%= run.name %></h1>
       <p class="ck-meta-copy"><%= link_to run.prompt.display_name, prompt_path(run.prompt), class: "ck-link" %>&ensp;<span class="ck-chip" style="text-transform: none;"><%= run.prompt.llm_model %></span></p>
     </div>
     <%= render "completion_kit/runs/actions", run: run %>
   </section>
-
-  <% if run.status.in?(%w[running completed]) && snap[:generated_total] > 0 %>
-    <div class="ck-progress-block">
-      <div class="ck-progress-line">
-        Generated <%= snap[:generated_done] %>/<%= snap[:generated_total] %>
-        <% if snap[:generated_failed] > 0 %>
-          <span class="ck-progress-failed">(<%= snap[:generated_failed] %> failed)</span>
-        <% end %>
-      </div>
-      <% if snap[:judged_total] > 0 %>
-        <div class="ck-progress-line">
-          Judged <%= snap[:judged_done] %>/<%= snap[:judged_total] %>
-          <% if snap[:judged_failed] > 0 %>
-            <span class="ck-progress-failed">(<%= snap[:judged_failed] %> failed)</span>
-          <% end %>
-        </div>
-      <% end %>
-      <% failed_count = snap[:generated_failed] + snap[:judged_failed] %>
-      <% if failed_count > 0 %>
-        <%= button_to "Retry #{failed_count} failed #{"row".pluralize(failed_count)}",
-              retry_failures_run_path(run),
-              method: :post,
-              class: ck_button_classes(:light, variant: :outline),
-              form_class: "inline-block" %>
-      <% end %>
-    </div>
-  <% end %>
 </div>

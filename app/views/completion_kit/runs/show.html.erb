@@ -63,7 +63,7 @@
   </details>
 <% end %>
 
-<%= render "progress", run: @run %>
+<%= render "status_panel", run: @run %>
 
 <% valid_responses = @responses.reject { |r| r.response_text&.start_with?("Error:") } %>
 

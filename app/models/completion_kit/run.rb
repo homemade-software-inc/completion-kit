@@ -186,8 +186,8 @@ module CompletionKit
       reload
       broadcast_replace_to(
         "completion_kit_run_#{id}",
-        target: "run_progress",
-        html: render_engine_partial("completion_kit/runs/progress", run: self)
+        target: "run_status_panel",
+        html: render_engine_partial("completion_kit/runs/status_panel", run: self)
       )
       broadcast_status_header
     end

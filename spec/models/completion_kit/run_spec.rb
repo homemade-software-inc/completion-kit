@@ -42,11 +42,11 @@ RSpec.describe CompletionKit::Run, type: :model do
       allow(run).to receive(:broadcast_append_to)
     end
 
-    it "broadcast_progress calls broadcast_replace_to with run_progress target" do
+    it "broadcast_progress calls broadcast_replace_to with run_status_panel target" do
       run.send(:broadcast_progress)
       expect(run).to have_received(:broadcast_replace_to).with(
         "completion_kit_run_#{run.id}",
-        hash_including(target: "run_progress")
+        hash_including(target: "run_status_panel")
       )
     end
 

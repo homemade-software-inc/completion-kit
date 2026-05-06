@@ -1,31 +1,38 @@
-<%= link_to run_response_path(run, response, sort: params[:sort]), class: "ck-response-row ck-response-row--#{response.status}", id: "response_#{response.id}" do %>
-  <span class="ck-response-row__index">#<%= index %></span>
-  <span class="ck-response-row__text">
-    <% if response.succeeded? %>
-      <%= truncate(response.response_text.to_s, length: 160) %>
-    <% elsif response.status == "failed" %>
-      <% err = response.error_payload %>
-      <span class="ck-response-row__error">
-        <%= err && err[:provider]&.titleize %><%= " #{err[:status]}" if err && err[:status] %> — <%= truncate(err && err[:message].to_s, length: 120) %>
-      </span>
-    <% end %>
-  </span>
-  <span class="ck-response-row__score">
-    <% case response.status
-       when "succeeded" %>
+<% if response.succeeded? %>
+  <%= link_to run_response_path(run, response, sort: params[:sort]), class: "ck-response-row ck-response-row--succeeded", id: "response_#{response.id}" do %>
+    <span class="ck-response-row__index">#<%= index %></span>
+    <span class="ck-response-row__text"><%= truncate(response.response_text.to_s, length: 160) %></span>
+    <span class="ck-response-row__score">
       <% if response.reviewed? %>
         <span class="ck-score"><span class="ck-score__star">★</span> <%= response.score %></span>
       <% elsif run.status == "running" %>
         <span class="ck-chip">Judging</span>
       <% end %>
-    <% when "pending" %>
-      <span class="ck-chip">Queued</span>
-    <% when "retrying" %>
-      <span class="ck-chip ck-chip--warning">Retrying <%= response.attempts %>/5</span>
-    <% when "failed" %>
-      <%= link_to "Retry", retry_failures_run_path(run, only: response.id),
-            data: { turbo_method: :post },
-            class: "ck-chip ck-chip--danger ck-chip--retry" %>
-    <% end %>
-  </span>
+    </span>
+  <% end %>
+<% else %>
+  <div class="ck-response-row ck-response-row--<%= response.status %>" id="response_<%= response.id %>">
+    <span class="ck-response-row__index">#<%= index %></span>
+    <span class="ck-response-row__text">
+      <% if response.status == "failed" %>
+        <% err = response.error_payload %>
+        <span class="ck-response-row__error">
+          <%= err && err[:provider]&.titleize %><%= " #{err[:status]}" if err && err[:status] %> — <%= truncate(err && err[:message].to_s, length: 120) %>
+        </span>
+      <% end %>
+    </span>
+    <span class="ck-response-row__score">
+      <% case response.status
+         when "pending" %>
+        <span class="ck-chip">Queued</span>
+      <% when "retrying" %>
+        <span class="ck-chip ck-chip--warning">Retrying <%= response.attempts %>/5</span>
+      <% when "failed" %>
+        <%= button_to "Retry", retry_failures_run_path(run, only: response.id),
+              method: :post,
+              class: "ck-chip ck-chip--retry",
+              form_class: "inline-block" %>
+      <% end %>
+    </span>
+  </div>
 <% end %>
