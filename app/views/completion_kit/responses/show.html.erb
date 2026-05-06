@@ -14,12 +14,6 @@
         <span class="<%= ck_badge_classes(ck_score_kind(score)) %>"><%= score %></span>
       <% end %>
     </div>
-    <p class="ck-meta-copy">
-      <span class="ck-run-config__key">Prompt</span> <%= link_to @run.prompt.display_name, prompt_path(@run.prompt), class: "ck-link" %>
-      <% if @run.dataset %>
-        &ensp;&middot;&ensp;<span class="ck-run-config__key">Dataset</span> <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
-      <% end %>
-    </p>
   </div>
   <div class="ck-actions">
     <% if @prev_response %>
@@ -30,6 +24,33 @@
     <% end %>
   </div>
 </section>
+
+<div class="ck-run-config">
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Run</span>
+    <%= link_to @run.name, run_path(@run), class: "ck-link" %>
+  </div>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Prompt</span>
+    <%= link_to @run.prompt.display_name, prompt_path(@run.prompt), class: "ck-link" %>
+  </div>
+  <% if @run.dataset %>
+    <div class="ck-run-config__row">
+      <span class="ck-run-config__key">Dataset</span>
+      <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
+    </div>
+  <% end %>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Model</span>
+    <span style="text-transform: none;"><%= @run.prompt.llm_model %></span>
+  </div>
+  <% if @run.judge_model.present? %>
+    <div class="ck-run-config__row">
+      <span class="ck-run-config__key">Judge</span>
+      <span style="text-transform: none;"><%= @run.judge_model %></span>
+    </div>
+  <% end %>
+</div>
 
 <section>
   <p class="ck-kicker">Input</p>
