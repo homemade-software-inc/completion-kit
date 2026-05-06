@@ -127,17 +127,16 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
   end
 
   describe "#broadcast_discovery_progress" do
-    it "broadcasts replace with discovery status partial and provider models card" do
+    it "broadcasts the discovery status partial and morphs the provider models card" do
       credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
       expect(credential).to receive(:broadcast_replace_to).with(
         "completion_kit_provider_#{credential.id}",
         target: "discovery_status_#{credential.id}",
         html: kind_of(String)
       )
-      expect(credential).to receive(:broadcast_replace_to).with(
+      expect(Turbo::StreamsChannel).to receive(:broadcast_action_to).with(
         "completion_kit_provider_#{credential.id}",
-        target: "provider_models_#{credential.id}",
-        html: kind_of(String)
+        hash_including(action: "replace", target: "provider_models_#{credential.id}", method: "morph")
       )
       credential.broadcast_discovery_progress
     end

@@ -84,9 +84,11 @@ module CompletionKit
     end
 
     def broadcast_provider_models
-      broadcast_replace_to(
+      Turbo::StreamsChannel.broadcast_action_to(
         "completion_kit_provider_#{id}",
+        action: "replace",
         target: "provider_models_#{id}",
+        method: "morph",
         html: render_partial("completion_kit/provider_credentials/models_card", provider_credential: self)
       )
     end
