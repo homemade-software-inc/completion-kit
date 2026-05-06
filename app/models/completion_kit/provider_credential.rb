@@ -75,11 +75,20 @@ module CompletionKit
         target: "discovery_status_#{id}",
         html: render_partial("completion_kit/provider_credentials/discovery_status", provider_credential: self)
       )
+      broadcast_provider_models
     end
 
     def broadcast_discovery_complete
       broadcast_discovery_progress
       broadcast_model_dropdowns
+    end
+
+    def broadcast_provider_models
+      broadcast_replace_to(
+        "completion_kit_provider_#{id}",
+        target: "provider_models_#{id}",
+        html: render_partial("completion_kit/provider_credentials/models_card", provider_credential: self)
+      )
     end
 
     private
