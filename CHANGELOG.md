@@ -7,6 +7,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-05-06
+
+### Added
+
+- **Provider page: structured available-models table.** Each model is a row
+  with the name, a green ✓ for generation support, and a green ✓ for judging
+  support. Replaces the previous chip-cluster which made it hard to scan
+  capabilities. Collapsed by default; auto-expands during a refresh and for
+  about a minute after one completes. Header has hover-tooltips on the Gen
+  and Judge columns explaining what they mean.
+- **Live-updating models table during discovery.** As each model finishes
+  probing, the table re-renders in place via Turbo Streams + morph (so the
+  spinning refresh button keeps animating across renders). Refresh button
+  spins and disables itself while a refresh is running.
+- **Worker code auto-reload in development.** `bin/jobs` now wraps each job
+  execution in `Rails.application.reloader` instead of the bare executor, so
+  changes to job/service code are picked up without restarting the worker.
+  Production keeps the lighter `Rails.application.executor`.
+- **Smarter model re-probing.** Models that previously failed with a 4xx
+  error other than 429 (e.g., a `tts-1` returning "You can't sample from
+  this model") are no longer re-probed on every refresh. Models that failed
+  with transient errors (5xx, timeouts, "Empty response", 429) ARE re-probed.
+  Newly-discovered models are always probed once.
+- **Per-row Retry on failed responses.** Failed rows in a run now have a
+  `Retry` button on the right, scoped to just that row, alongside the
+  bulk "Retry N failed rows" button in the run status panel.
+
+### Changed
+
+- **Run page status redesign.** Status indicator promoted to a proper
+  colored pill in the page header (`● COMPLETED`, `● RUNNING`, etc.) with
+  glow + animation matching the state. Generation/judging counters and the
+  bulk retry button moved to a dedicated status panel above the responses
+  list, styled as an instrument-panel strip.
+- **Judged counters now track fully-reviewed rows**, not individual metric
+  reviews. So `Judged 3/100` reads as "3 rows fully scored" instead of "3
+  metric reviews complete (which might be 1 row of 3 metrics)". A row counts
+  as `judged_failed` if any of its metric reviews failed.
+- **Response detail page metadata uses the same config-table layout as the
+  run page.** Run, Prompt, Dataset, Model, Judge as labeled rows instead of
+  the inline `PROMPT … · DATASET …` line.
+- **OpenAI probes now find the message item in the Responses output array.**
+  Reasoning models (gpt-5*, o1*, o3*) return multi-item output where the
+  first item is a `reasoning` chunk and the message comes later. The probe
+  used to read `output[0].content[0].text` blindly and got nil for all
+  reasoning models. Now it does `output.find { |o| o["type"] == "message" }`.
+  This was the root cause of GPT-5.5 / GPT-5.5 Pro never being eligible as
+  judges.
+- **OpenAI probes use minimal/low reasoning effort when supported**, with a
+  fallback to the model's default when the chosen effort isn't accepted
+  (e.g., `gpt-5.5-pro` only allows `medium`/`high`). Probe budget bumped to
+  65536 tokens and timeout to 180s for reasoning-class models.
+- **OpenRouter and Ollama models now get judging-probed** via their
+  OpenAI-compatible `/chat/completions` endpoints. Previously the probe
+  router fell through to Anthropic's `/v1/messages` endpoint, so all
+  OpenRouter and Ollama models were silently invisible as judges.
+- **Auto-rename when saving as a new run.** If you edit a run with responses
+  and don't change the name, the new run gets the next-incremented name
+  (`#2`, `#3`, …) instead of inheriting the source run's name verbatim.
+- **Engine routes are eagerly materialized before broadcast renders.** The
+  worker process never serves an HTTP request, so Rails 8's lazy route set
+  hadn't materialized engine URL helpers, causing `run_response_path`
+  lookups to fail when a job called `broadcast_replace_to`. Touching
+  `CompletionKit::Engine.routes.url_helpers` before render fixes it.
+- **`Run#start!` writes a fresh `failure_summary`** on configuration errors
+  ("LLM API not configured: …") and dataset-empty errors instead of only
+  `error_message`, so the run page surfaces the right copy.
+- **"Testing models" renamed to "Checking models"** in the discovery bar.
+  "Fetching model list" renamed to "Looking up models". Friendlier wording.
+- **Models card refresh button consolidated to one.** The previous version
+  had duplicate refresh buttons (one in the form-card header, one in the
+  disclosure summary). Now there's a single button next to the timestamp.
+- **Provider edit page: discovery progress bar moved inside the Available
+  models panel** instead of sitting above it, so the panel reads as a
+  single coherent unit.
+
+### Fixed
+
+- **Worker process Turbo broadcasts could fail with `undefined method
+  'run_response_path'`** when rendering response_row partials from a job
+  context. Fixed by materializing engine URL helpers before each render.
+- **Refresh button animation was lost on every Turbo Stream re-render** of
+  the models card. Fixed by switching the broadcast from `replace` to
+  `morph`, which preserves DOM identity and lets the CSS animation continue.
+- **Per-row Retry button on failed responses was rendering on its own line
+  beneath the row** because `<button_to>` was nested inside `<link_to>`
+  (form-inside-anchor — invalid HTML, browsers hoist it out). Failed rows no
+  longer wrap in `link_to`; they're plain `<div>` containers with the Retry
+  button in the right column.
+- **Available models help-text tooltip inherited the surrounding uppercase
+  letter-spaced styling.** `.ck-info-popup` now explicitly resets
+  `text-transform`, `letter-spacing`, `font-family`, `font-weight`, and
+  `text-align` so help text always reads as normal sentence case.
+- **Refresh on the provider page closed the available-models panel** because
+  the re-rendered partial defaulted to collapsed. Panel now stays open while
+  `discovery_status == "discovering"` and for 1 minute after `completed`.
+
 ## [0.4.1] - 2026-05-05
 
 ### Fixed
