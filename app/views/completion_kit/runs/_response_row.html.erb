@@ -26,7 +26,11 @@
          when "pending" %>
         <span class="ck-chip">Queued</span>
       <% when "retrying" %>
-        <span class="ck-chip ck-chip--warning">Retrying <%= response.attempts %>/5</span>
+        <% if response.attempts.to_i <= 1 %>
+          <span class="ck-chip">Generating</span>
+        <% else %>
+          <span class="ck-chip ck-chip--warning">Retrying <%= response.attempts %>/5</span>
+        <% end %>
       <% when "failed" %>
         <%= button_to "Retry", retry_failures_run_path(run, only: response.id),
               method: :post,

@@ -1791,11 +1791,24 @@ select.ck-input {
 .ck-run-name {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  position: relative;
+}
+
+.ck-run-name .ck-dot {
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .ck-title .ck-run-name {
   gap: 1rem;
+  position: static;
+}
+
+.ck-title .ck-run-name .ck-dot {
+  position: static;
+  transform: none;
 }
 
 .ck-title .ck-dot {
