@@ -1,6 +1,6 @@
 module CompletionKit
   class RunsController < ApplicationController
-    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :refresh_status]
+    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :rerun, :refresh_status]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
@@ -69,6 +69,22 @@ module CompletionKit
         redirect_to run_path(@run)
       else
         redirect_to run_path(@run), alert: @run.failure_summary || @run.errors.full_messages.to_sentence
+      end
+    end
+
+    def rerun
+      new_run = Run.create!(
+        prompt_id: @run.prompt_id,
+        dataset_id: @run.dataset_id,
+        judge_model: @run.judge_model,
+        temperature: @run.temperature,
+        status: "pending"
+      )
+      new_run.replace_metrics!(@run.metric_ids)
+      if new_run.start!
+        redirect_to run_path(new_run), notice: "Re-running with the same configuration."
+      else
+        redirect_to run_path(new_run), alert: new_run.failure_summary || "Could not start the new run."
       end
     end
 

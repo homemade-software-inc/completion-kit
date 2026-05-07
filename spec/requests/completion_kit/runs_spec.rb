@@ -74,14 +74,26 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("Rate limit exceeded")
   end
 
-  it "renders succeeded response with judging chip when run is still running" do
+  it "renders succeeded response with judging chip when run is still running and a judge is configured" do
+    metric = create(:completion_kit_metric)
     run = create(:completion_kit_run, prompt: prompt, status: "running")
+    run.replace_metrics!([metric.id])
     create(:completion_kit_response, run: run, status: "succeeded", response_text: "Output text")
 
     get "#{base_path}/#{run.id}"
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Judging")
+  end
+
+  it "renders Done chip on succeeded responses when the run has no judge configured" do
+    run = create(:completion_kit_run, prompt: prompt, status: "completed")
+    create(:completion_kit_response, run: run, status: "succeeded", response_text: "Output text")
+
+    get "#{base_path}/#{run.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Done")
   end
 
   it "creates a run with valid params" do
@@ -207,6 +219,37 @@ RSpec.describe "CompletionKit runs", type: :request do
     post "#{base_path}/#{run.id}/generate"
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
     expect(flash[:alert]).to eq("Something went wrong")
+  end
+
+  it "rerun creates a new run with the same configuration and starts it" do
+    metric = create(:completion_kit_metric)
+    dataset = create(:completion_kit_dataset)
+    source_run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1", temperature: 0.3, status: "completed")
+    source_run.replace_metrics!([metric.id])
+    allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
+
+    expect { post "#{base_path}/#{source_run.id}/rerun" }
+      .to change(CompletionKit::Run, :count).by(1)
+
+    new_run = CompletionKit::Run.order(:id).last
+    expect(new_run.id).not_to eq(source_run.id)
+    expect(new_run.prompt_id).to eq(source_run.prompt_id)
+    expect(new_run.dataset_id).to eq(source_run.dataset_id)
+    expect(new_run.judge_model).to eq("gpt-4.1")
+    expect(new_run.temperature).to eq(0.3)
+    expect(new_run.metric_ids).to eq([metric.id])
+    expect(response).to redirect_to("/completion_kit/runs/#{new_run.id}")
+  end
+
+  it "rerun redirects with an alert when start! fails on the new run" do
+    source_run = create(:completion_kit_run, prompt: prompt, status: "completed")
+    allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
+    allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("config gone")
+
+    post "#{base_path}/#{source_run.id}/rerun"
+    new_run = CompletionKit::Run.order(:id).last
+    expect(response).to redirect_to("/completion_kit/runs/#{new_run.id}")
+    expect(flash[:alert]).to eq("config gone")
   end
 
   it "refresh_status returns a turbo stream replacing the run status header" do

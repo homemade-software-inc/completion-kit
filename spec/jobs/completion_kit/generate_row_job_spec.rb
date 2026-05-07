@@ -33,6 +33,18 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     expect(response.error_class).to be_nil
   end
 
+  it "treats an Error: text response from the LLM client as a terminal failure" do
+    fake_client = double("client", generate_completion: "Error: unexpected character: '<!DOCTYPE' at line 1 column 1", configured?: true)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
+
+    described_class.perform_now(run.id, response.id)
+
+    response.reload
+    expect(response.status).to eq("failed")
+    expect(response.error_message).to include("unexpected character")
+    expect(response.response_text).to be_nil
+  end
+
   it "records terminal failure context after exhaustion of retries" do
     allow_any_instance_of(described_class).to receive(:perform).and_raise(
       CompletionKit::RateLimitError.new("over budget", provider: "openai", status: 429)

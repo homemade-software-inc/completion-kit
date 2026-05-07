@@ -88,18 +88,26 @@
 
 <%= render "status_panel", run: @run %>
 
-<% valid_responses = @responses.reject { |r| r.response_text&.start_with?("Error:") } %>
-
 <%= render "sort_toolbar", run: @run %>
 
-<% if valid_responses.any? %>
-  <p class="ck-kicker" style="margin-top: 1.5rem;">Responses</p>
-<% end %>
-<div id="run_responses">
-  <% valid_responses.each_with_index do |response, idx| %>
-    <%= render "response_row", run: @run, response: response, index: idx + 1 %>
-  <% end %>
-</div>
+<p class="ck-kicker" style="margin-top: 1.5rem;<%= ' display:none;' unless @responses.any? %>" id="responses_kicker">Responses</p>
+<table class="ck-results-table"<%= ' hidden'.html_safe unless @responses.any? %> id="responses_table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Response</th>
+      <th>Metrics</th>
+      <th>Score</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="run_responses">
+    <% @responses.each_with_index do |response, idx| %>
+      <%= render "response_row", run: @run, response: response, index: idx + 1 %>
+    <% end %>
+  </tbody>
+</table>
 
 <% if @run.status.in?(%w[pending running]) %>
   <script>

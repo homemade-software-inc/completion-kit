@@ -1,6 +1,6 @@
 module CompletionKit
   class OpenRouterClient < LlmClient
-    BASE_URL = "https://openrouter.ai/api/v1".freeze
+    BASE_URL = "https://openrouter.ai".freeze
     REFERER = "https://completionkit.com".freeze
     APP_TITLE = "CompletionKit".freeze
 
@@ -69,7 +69,7 @@ module CompletionKit
       body[:temperature] = temperature unless temperature.nil?
 
       build_connection(BASE_URL, timeout: 30, open_timeout: 5).post do |req|
-        req.url "/chat/completions"
+        req.url "/api/v1/chat/completions"
         req.headers["Content-Type"] = "application/json"
         req.headers["Authorization"] = "Bearer #{api_key}"
         req.headers["HTTP-Referer"] = REFERER

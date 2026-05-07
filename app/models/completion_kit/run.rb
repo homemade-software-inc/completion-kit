@@ -246,7 +246,7 @@ module CompletionKit
       broadcast_replace_to(
         "completion_kit_run_#{id}",
         target: "run_responses",
-        html: '<div id="run_responses"></div>'
+        html: '<tbody id="run_responses"></tbody>'
       )
     end
 

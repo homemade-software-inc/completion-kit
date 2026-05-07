@@ -49,6 +49,7 @@ module CompletionKit
       raise ConfigurationError, client.configuration_errors.join(", ") unless client.configured?
 
       text = client.generate_completion(rendered, model: prompt.llm_model, temperature: run.temperature)
+      raise StandardError, text.to_s.sub(/\AError:\s*/, "") if text.to_s.start_with?("Error:")
 
       response.update!(
         status: "succeeded",

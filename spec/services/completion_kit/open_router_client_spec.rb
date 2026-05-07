@@ -52,7 +52,7 @@ RSpec.describe CompletionKit::OpenRouterClient, type: :service do
       result = described_class.new(config).generate_completion("hi", model: "openai/gpt-4o-mini")
 
       expect(result).to eq("hello world")
-      expect(request.path).to eq("/chat/completions")
+      expect(request.path).to eq("/api/v1/chat/completions")
       expect(request.headers["Authorization"]).to eq("Bearer or-test-key")
       expect(request.headers["HTTP-Referer"]).to eq("https://completionkit.com")
       expect(request.headers["X-Title"]).to eq("CompletionKit")

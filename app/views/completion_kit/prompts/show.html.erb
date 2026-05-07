@@ -79,10 +79,9 @@
       <thead>
         <tr>
           <th>Run</th>
-          <th>Version</th>
           <th>Responses</th>
-          <th>Avg score</th>
           <th>Metrics</th>
+          <th>Avg score</th>
           <th>When</th>
           <th></th>
         </tr>
@@ -91,18 +90,9 @@
         <% @runs.each do |run| %>
           <tr onclick="window.location='<%= run_path(run) %>'" style="cursor: pointer;">
             <td><span class="ck-run-name"><span class="<%= ck_run_dot(run) %>"></span><strong><%= run.name %></strong></span></td>
-            <td><span class="ck-chip ck-chip--soft">v<%= run.prompt.version_number %></span></td>
             <td><%= run.responses.size %></td>
             <td>
-              <% avg = run.avg_score %>
-              <% if avg %>
-                <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
-              <% else %>
-                &mdash;
-              <% end %>
-            </td>
-            <td>
-              <% metrics = run.metric_averages %>
+              <% metrics = run.metric_averages.sort_by { |m| m[:name].to_s.downcase } %>
               <% if metrics.any? %>
                 <div class="ck-metric-bar ck-metric-bar--compact">
                   <% metrics.each do |m| %>
@@ -112,6 +102,14 @@
                     </span>
                   <% end %>
                 </div>
+              <% else %>
+                &mdash;
+              <% end %>
+            </td>
+            <td>
+              <% avg = run.avg_score %>
+              <% if avg %>
+                <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
               <% else %>
                 &mdash;
               <% end %>

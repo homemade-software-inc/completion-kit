@@ -16,7 +16,12 @@
     <p class="ck-meta-copy">
       Prompt: <%= link_to @run.prompt.name, prompt_path(@run.prompt), class: "ck-link" %>
       &middot; Run: <%= link_to @run.name, run_path(@run), class: "ck-link" %>
-      &middot; <%= @run.responses.count %> responses scored <%= @run.avg_score %>/5
+      &middot; <%= @run.responses.count %> responses scored
+      <% if @run.avg_score %>
+        <span class="<%= ck_badge_classes(ck_score_kind(@run.avg_score)) %>"><%= @run.avg_score %></span>
+      <% else %>
+        &mdash;
+      <% end %>
     </p>
   </div>
   <div class="ck-actions">

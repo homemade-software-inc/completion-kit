@@ -7,6 +7,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-05-07
+
+### Added
+
+- **Re-run a run as a sibling.** New `POST /runs/:id/rerun` member action
+  clones the source run's prompt, dataset, judge model, temperature, and
+  metric_ids into a fresh run and immediately calls `start!`. Surfaces as
+  a "Re-run" button on completed runs and "Re-run as new" on failed runs
+  (alongside the existing in-place "Retry"). The original run is
+  preserved as history.
+- **Per-response metric pip bars** in the responses list, matching the
+  pattern used in the prompts/show runs table. Each succeeded + reviewed
+  row shows one colored pip per metric review (sorted alphabetically by
+  metric name) with the metric name and score in the hover label.
+- **Status column on the responses table** with a vocabulary that
+  matches the row's actual state: Queued / Generating / Retrying N/5 /
+  Judging / Awaiting judge / Done (green) / Retry button. The chip is
+  always present so the column never reads as empty.
+- **Updated temperature hint copy** on the run form to mention that
+  newer reasoning-class models (Claude Opus 4.7, GPT-5 family) ignore
+  temperature and CompletionKit re-sends without it.
+
+### Changed
+
+- **Responses list redesigned as a `ck-results-table`** to match the
+  runs/prompts/suggestions tables. Columns: # | Response | Metrics |
+  Score | Status | →. Score column uses the same `ck-badge` pill (green
+  / amber / red) as the runs table — the previous star+number widget is
+  gone. Failed rows surface their provider error inline in red. Status
+  column is the rightmost data cell so the hierarchy reads
+  content-first, state-last.
+- **Star icons now render gold** (`var(--ck-warning)`) everywhere. The
+  SVG stars on metric rubric forms, metric show pages, and response
+  detail pages were previously cyan, while the legacy text-glyph star
+  was gold — inconsistent. Unified on the warmer color so stars read as
+  rating semantics, not as accent navigation.
+- **Suggestion show page meta line uses the colored score badge**
+  (`ck-badge`) instead of plaintext "4.13/5", matching how scores read
+  everywhere else.
+- **Runs table on the prompt show page** drops the redundant Version
+  column (the run name already carries the version, e.g. "Property
+  Summary — v5 #2"). Metrics column moved to the left of Avg score so
+  the "what was measured" reads before "how well it did".
+
+### Fixed
+
+- **OpenRouter requests were 404ing silently.** `OpenRouterClient`'s
+  base URL was `https://openrouter.ai/api/v1` and the request URL was
+  `/chat/completions`. Faraday treats a leading `/` as an absolute path
+  relative to host and **strips the base path**, so every POST went to
+  `https://openrouter.ai/chat/completions` — which returns the
+  marketing site's `<!DOCTYPE` HTML. Every OpenRouter run since the
+  client shipped failed JSON parsing and stored the error text as the
+  response. Fixed by moving the `/api/v1` prefix into the request URL,
+  matching the (correct) probe code in `model_discovery_service.rb`.
+- **`GenerateRowJob` now treats `Error: …` text from the LLM client as
+  a real failure** instead of stuffing the error string into
+  `response_text` and marking `succeeded`. Raising forces the
+  rescue_from path so the response is correctly flagged `failed` with
+  the parse error in `error_message`. Per-row Retry and bulk "Retry N
+  failed rows" both now work on these.
+- **Stale "Error: …" responses are no longer hidden by the show view.**
+  Removed the `valid_responses` filter that swallowed any row whose
+  text started with `Error:`, leaving the user with a "5/5 succeeded"
+  status panel and zero visible rows.
+- **Dataset hint info color is cyan, not orange.** Reserved orange for
+  actual warnings; informational guidance ("Select a dataset to provide
+  values") now uses `ck-field--info`.
+- **Run page no longer shifts vertically** when judge / dataset hints
+  toggle — `.ck-field-hint` reserves a `min-height` slot, and the
+  dataset hint+mismatch elements collapsed into one shared slot.
+
 ## [0.4.3] - 2026-05-07
 
 ### Added
