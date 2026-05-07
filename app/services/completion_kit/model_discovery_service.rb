@@ -4,6 +4,8 @@ require "json"
 
 module CompletionKit
   class ModelDiscoveryService
+    class DiscoveryError < StandardError; end
+
     def initialize(config:)
       @provider = config[:provider]
       @api_key = config[:api_key]
@@ -36,11 +38,31 @@ module CompletionKit
       end
     end
 
+    def raise_fetch_error!(response)
+      label = case response.status
+              when 401, 403 then "Invalid API key for #{@provider}"
+              when 429 then "Rate limited by #{@provider}"
+              when 500..599 then "#{@provider} returned #{response.status}"
+              else "#{@provider} model list request failed (#{response.status})"
+              end
+      detail = extract_provider_error_message(response.body)
+      raise DiscoveryError, detail.present? ? "#{label}: #{detail}" : label
+    end
+
+    def extract_provider_error_message(body)
+      return nil if body.blank?
+      data = JSON.parse(body)
+      err = data["error"]
+      (err.is_a?(Hash) && err["message"]) || data["message"] || (err.is_a?(String) && err) || nil
+    rescue JSON::ParserError
+      body.to_s.truncate(200)
+    end
+
     def fetch_openai_models
       response = fetch_connection("https://api.openai.com").get("/v1/models") do |req|
         req.headers["Authorization"] = "Bearer #{@api_key}"
       end
-      return [] unless response.success?
+      raise_fetch_error!(response) unless response.success?
       JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: nil } }
     end
 
@@ -49,7 +71,7 @@ module CompletionKit
         req.headers["x-api-key"] = @api_key
         req.headers["anthropic-version"] = "2023-06-01"
       end
-      return [] unless response.success?
+      raise_fetch_error!(response) unless response.success?
       JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["display_name"] } }
     end
 
@@ -59,7 +81,7 @@ module CompletionKit
         req.headers["HTTP-Referer"] = "https://completionkit.com"
         req.headers["X-Title"] = "CompletionKit"
       end
-      return [] unless response.success?
+      raise_fetch_error!(response) unless response.success?
       JSON.parse(response.body).fetch("data", []).filter_map do |entry|
         next nil if entry["deprecated"] == true
         context_length = entry["context_length"].to_i
@@ -69,12 +91,12 @@ module CompletionKit
     end
 
     def fetch_ollama_models
-      return [] if @api_endpoint.nil?
+      raise DiscoveryError, "Ollama endpoint URL is required" if @api_endpoint.blank?
       base_url = @api_endpoint.to_s.delete_suffix("/")
       response = fetch_connection(base_url).get("/models") do |req|
         req.headers["Authorization"] = "Bearer #{@api_key}" if @api_key.present?
       end
-      return [] unless response.success?
+      raise_fetch_error!(response) unless response.success?
       JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
     end
 

@@ -14,12 +14,17 @@ CompletionKit::Engine.routes.draw do
   resources :runs do
     member do
       post :generate
-      get :suggestion
       post :suggest
-      post :apply_suggestion
       post :retry_failures
+      get :refresh_status
     end
     resources :responses, only: [:show]
+  end
+
+  resources :suggestions, only: [:show] do
+    member do
+      post :apply
+    end
   end
 
   resources :provider_credentials, only: [:index, :new, :create, :edit, :update] do

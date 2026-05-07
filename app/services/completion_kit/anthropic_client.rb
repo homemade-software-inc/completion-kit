@@ -12,21 +12,12 @@ module CompletionKit
       max_tokens = options[:max_tokens] || 1000
       temperature = options[:temperature] || 0.7
 
-      response = build_connection("https://api.anthropic.com").post do |req|
-        req.url "/v1/messages"
-        req.headers["Content-Type"] = "application/json"
-        req.headers["x-api-key"] = api_key
-        req.headers["anthropic-version"] = "2023-06-01"
-        req.body = {
-          model: model,
-          messages: [
-            { role: "user", content: prompt }
-          ],
-          max_tokens: max_tokens,
-          temperature: temperature
-        }.to_json
+      response = post_messages(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
+
+      if response.status == 400 && temperature_unsupported?(response.body)
+        response = post_messages(model: model, prompt: prompt, max_tokens: max_tokens, temperature: nil)
       end
-      
+
       if response.status == 429
         raise CompletionKit::RateLimitError.new(
           response.body.to_s.truncate(500),
@@ -81,6 +72,28 @@ module CompletionKit
 
     def api_key
       @config[:api_key] || ENV["ANTHROPIC_API_KEY"]
+    end
+
+    def post_messages(model:, prompt:, max_tokens:, temperature:)
+      body = {
+        model: model,
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: max_tokens
+      }
+      body[:temperature] = temperature unless temperature.nil?
+
+      build_connection("https://api.anthropic.com").post do |req|
+        req.url "/v1/messages"
+        req.headers["Content-Type"] = "application/json"
+        req.headers["x-api-key"] = api_key
+        req.headers["anthropic-version"] = "2023-06-01"
+        req.body = body.to_json
+      end
+    end
+
+    def temperature_unsupported?(body)
+      s = body.to_s
+      s.include?("temperature") && (s.include?("deprecated") || s.include?("not supported"))
     end
   end
 end

@@ -225,24 +225,52 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.status).to eq("active")
     end
 
-    it "returns empty list when openai fetch returns non-success response" do
+    it "raises DiscoveryError when openai fetch returns non-success response" do
       stub_faraday_get(faraday_response(success: false, status: 401, body: "Unauthorized"))
 
       service = described_class.new(config: config)
-      service.refresh!
-
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /Invalid API key for openai/)
       expect(CompletionKit::Model.where(provider: "openai").count).to eq(0)
     end
 
-    it "returns empty list when fetch raises an error" do
-      allow(Faraday).to receive(:get).and_raise(StandardError, "network down")
+    it "raises DiscoveryError when openai responds with 401, preserving existing models" do
+      stub_faraday_get(faraday_response(
+        success: false,
+        status: 401,
+        body: { error: { message: "Invalid API key" } }.to_json
+      ))
 
       CompletionKit::Model.create!(provider: "openai", model_id: "gpt-existing", status: "active", discovered_at: 1.day.ago)
 
       service = described_class.new(config: config)
-      service.refresh!
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /Invalid API key for openai.*Invalid API key/)
+      expect(CompletionKit::Model.find_by(model_id: "gpt-existing").status).to eq("active")
+    end
 
-      expect(CompletionKit::Model.find_by(model_id: "gpt-existing").status).to eq("retired")
+    it "raises DiscoveryError with rate-limit label when openai responds with 429" do
+      stub_faraday_get(faraday_response(success: false, status: 429, body: "Slow down"))
+      service = described_class.new(config: config)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /Rate limited by openai/)
+    end
+
+    it "raises DiscoveryError with generic label when openai responds with an unmapped status" do
+      stub_faraday_get(faraday_response(success: false, status: 418, body: "I'm a teapot"))
+      service = described_class.new(config: config)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /openai model list request failed \(418\)/)
+    end
+
+    it "raises DiscoveryError without detail when error body is blank" do
+      stub_faraday_get(faraday_response(success: false, status: 401, body: ""))
+      service = described_class.new(config: config)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError) do |e|
+        expect(e.message).to eq("Invalid API key for openai")
+      end
+    end
+
+    it "raises DiscoveryError using the bare error string when JSON has only error: <string>" do
+      stub_faraday_get(faraday_response(success: false, status: 401, body: { error: "key revoked" }.to_json))
+      service = described_class.new(config: config)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /Invalid API key for openai: key revoked/)
     end
 
     it "marks generation failed with empty response body" do
@@ -451,7 +479,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.probed_at).to be_present
     end
 
-    it "returns empty list when anthropic fetch fails" do
+    it "raises DiscoveryError when anthropic fetch returns 5xx" do
       stub_faraday_get(faraday_response(
         success: false,
         status: 500,
@@ -459,8 +487,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       ))
 
       service = described_class.new(config: config)
-      service.refresh!
-
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /anthropic returned 500/)
       expect(CompletionKit::Model.where(provider: "anthropic").count).to eq(0)
     end
 
@@ -569,12 +596,11 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(CompletionKit::Model.find_by(model_id: "openai/gpt-4o-mini").display_name).to eq("GPT-4o Mini")
     end
 
-    it "returns empty list when openrouter fetch fails" do
+    it "raises DiscoveryError when openrouter fetch returns 401" do
       stub_faraday_get(faraday_response(success: false, status: 401, body: "Unauthorized"))
 
       service = described_class.new(config: config)
-      service.refresh!
-
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /Invalid API key for openrouter/)
       expect(CompletionKit::Model.where(provider: "openrouter").count).to eq(0)
     end
   end
@@ -653,19 +679,17 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(probe_request.headers).not_to have_key("Authorization")
     end
 
-    it "returns empty when api_endpoint is nil" do
+    it "raises DiscoveryError when api_endpoint is nil" do
       service = described_class.new(config: { provider: "ollama", api_key: nil, api_endpoint: nil })
-      service.refresh!
-
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /Ollama endpoint URL is required/)
       expect(CompletionKit::Model.where(provider: "ollama").count).to eq(0)
     end
 
-    it "returns empty list when ollama fetch fails" do
+    it "raises DiscoveryError when ollama fetch returns 5xx" do
       stub_faraday_get(faraday_response(success: false, status: 500, body: "Internal Server Error"))
 
       service = described_class.new(config: config)
-      service.refresh!
-
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /ollama returned 500/)
       expect(CompletionKit::Model.where(provider: "ollama").count).to eq(0)
     end
 

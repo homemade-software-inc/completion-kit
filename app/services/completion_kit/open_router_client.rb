@@ -11,18 +11,10 @@ module CompletionKit
       max_tokens = options[:max_tokens] || 1000
       temperature = options[:temperature] || 0.7
 
-      response = build_connection(BASE_URL, timeout: 30, open_timeout: 5).post do |req|
-        req.url "/chat/completions"
-        req.headers["Content-Type"] = "application/json"
-        req.headers["Authorization"] = "Bearer #{api_key}"
-        req.headers["HTTP-Referer"] = REFERER
-        req.headers["X-Title"] = APP_TITLE
-        req.body = {
-          model: model,
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: max_tokens,
-          temperature: temperature
-        }.to_json
+      response = post_chat(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
+
+      if response.status == 400 && temperature_unsupported?(response.body)
+        response = post_chat(model: model, prompt: prompt, max_tokens: max_tokens, temperature: nil)
       end
 
       if response.status == 429
@@ -66,6 +58,29 @@ module CompletionKit
 
     def api_key
       @config[:api_key] || ENV["OPENROUTER_API_KEY"]
+    end
+
+    def post_chat(model:, prompt:, max_tokens:, temperature:)
+      body = {
+        model: model,
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: max_tokens
+      }
+      body[:temperature] = temperature unless temperature.nil?
+
+      build_connection(BASE_URL, timeout: 30, open_timeout: 5).post do |req|
+        req.url "/chat/completions"
+        req.headers["Content-Type"] = "application/json"
+        req.headers["Authorization"] = "Bearer #{api_key}"
+        req.headers["HTTP-Referer"] = REFERER
+        req.headers["X-Title"] = APP_TITLE
+        req.body = body.to_json
+      end
+    end
+
+    def temperature_unsupported?(body)
+      s = body.to_s
+      s.include?("temperature") && (s.include?("deprecated") || s.include?("not supported") || s.include?("Unsupported parameter"))
     end
   end
 end

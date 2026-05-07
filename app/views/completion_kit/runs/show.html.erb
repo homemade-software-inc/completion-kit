@@ -7,6 +7,11 @@
 
 <%= render "status_header", run: @run %>
 
+<% if @run.dataset %>
+  <% dataset_lines = @run.dataset.csv_data.to_s.lines %>
+  <% dataset_preview_lines = dataset_lines.first(50) %>
+<% end %>
+
 <div class="ck-run-config">
   <div class="ck-run-config__row">
     <span class="ck-run-config__key">Created</span>
@@ -15,7 +20,11 @@
   <div class="ck-run-config__row">
     <span class="ck-run-config__key">Dataset</span>
     <% if @run.dataset %>
-      <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
+      <span class="ck-run-config__dataset">
+        <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
+        <span class="ck-run-config__dataset-meta"><%= dataset_lines.count %> rows</span>
+        <button type="button" class="ck-run-config__dataset-preview" onclick="document.getElementById('dataset-preview-<%= @run.id %>').showModal()">Preview</button>
+      </span>
     <% else %>
       <span class="ck-run-config__none">None</span>
     <% end %>
@@ -44,8 +53,9 @@
 <div class="ck-prompt-preview">
   <div class="ck-prompt-preview__header">
     <p class="ck-kicker">Prompt</p>
-    <% if @run.suggestions.any? %>
-      <%= link_to "View suggestion", suggestion_run_path(@run), class: ck_button_classes(:light, variant: :outline) + " ck-button--sm" %>
+    <% latest_suggestion = @run.suggestions.order(created_at: :desc).first %>
+    <% if latest_suggestion %>
+      <%= link_to "View suggestion", suggestion_path(latest_suggestion, from: "run"), class: ck_button_classes(:light, variant: :outline) + " ck-button--sm" %>
     <% elsif @run.status == "completed" && @run.responses.joins(:reviews).exists? %>
       <%= button_to "Suggest improvements", suggest_run_path(@run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" %>
     <% end %>
@@ -57,25 +67,17 @@
 </div>
 
 <% if @run.dataset %>
-  <% all_lines = @run.dataset.csv_data.to_s.lines %>
-  <% preview_lines = all_lines.first(50) %>
-  <button type="button" class="ck-dataset-trigger" onclick="document.getElementById('dataset-preview-<%= @run.id %>').showModal()">
-    <span class="ck-dataset-trigger__label">Dataset preview</span>
-    <span class="ck-dataset-trigger__meta"><%= all_lines.count %> rows · <%= @run.dataset.name %></span>
-    <span class="ck-dataset-trigger__hint">Open</span>
-  </button>
-
   <dialog id="dataset-preview-<%= @run.id %>" class="ck-modal" onclick="if(event.target===this)this.close()">
     <article class="ck-modal__panel" onclick="event.stopPropagation()">
       <header class="ck-modal__header">
         <div>
           <p class="ck-kicker">Dataset preview</p>
           <h2 class="ck-modal__title"><%= @run.dataset.name %></h2>
-          <p class="ck-modal__meta"><%= all_lines.count %> rows<% if all_lines.count > preview_lines.count %> · showing first <%= preview_lines.count %><% end %></p>
+          <p class="ck-modal__meta"><%= dataset_lines.count %> rows<% if dataset_lines.count > dataset_preview_lines.count %> · showing first <%= dataset_preview_lines.count %><% end %></p>
         </div>
         <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">×</button>
       </header>
-      <pre class="ck-code ck-code--dark ck-modal__body"><%= preview_lines.join %><% if all_lines.count > preview_lines.count %><%= "\n…\n#{all_lines.count - preview_lines.count} more rows" %><% end %></pre>
+      <pre class="ck-code ck-code--dark ck-modal__body"><%= dataset_preview_lines.join %><% if dataset_lines.count > dataset_preview_lines.count %><%= "\n…\n#{dataset_lines.count - dataset_preview_lines.count} more rows" %><% end %></pre>
       <footer class="ck-modal__footer">
         <%= link_to "Open dataset", dataset_path(@run.dataset), class: ck_button_classes(:light, variant: :outline) %>
         <button type="button" class="ck-modal__close-btn" onclick="this.closest('dialog').close()">Close</button>
@@ -98,3 +100,18 @@
     <%= render "response_row", run: @run, response: response, index: idx + 1 %>
   <% end %>
 </div>
+
+<% if @run.status.in?(%w[pending running]) %>
+  <script>
+    (function() {
+      if (window.ckRunStatusPoll) clearInterval(window.ckRunStatusPoll);
+      var url = '<%= refresh_status_run_path(@run) %>';
+      window.ckRunStatusPoll = setInterval(function() {
+        fetch(url, { headers: { Accept: 'text/vnd.turbo-stream.html' }, credentials: 'same-origin' })
+          .then(function(r) { return r.ok ? r.text() : null; })
+          .then(function(html) { if (html) Turbo.renderStreamMessage(html); })
+          .catch(function() {});
+      }, 15000);
+    })();
+  </script>
+<% end %>

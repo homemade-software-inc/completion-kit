@@ -1,21 +1,34 @@
 <ol class="ck-breadcrumb">
-  <li><%= link_to "Runs", runs_path %></li>
-  <li><%= link_to @run.name, run_path(@run) %></li>
+  <% if @from == "run" %>
+    <li><%= link_to "Runs", runs_path %></li>
+    <li><%= link_to @run.name, run_path(@run) %></li>
+  <% else %>
+    <li><%= link_to "Prompts", prompts_path %></li>
+    <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
+  <% end %>
   <li>Suggestion</li>
 </ol>
 
 <section class="ck-page-header">
   <div>
-    <p class="ck-kicker"><span class="ck-dot ck-dot--running" style="animation: none; background: var(--ck-accent);"></span> Prompt improvement</p>
+    <p class="ck-kicker">Prompt improvement</p>
     <h1 class="ck-title"><%= @run.prompt.name %></h1>
-    <p class="ck-meta-copy">Based on <%= @run.responses.count %> responses scored <%= @run.avg_score %>/5</p>
+    <p class="ck-meta-copy">
+      Prompt: <%= link_to @run.prompt.name, prompt_path(@run.prompt), class: "ck-link" %>
+      &middot; Run: <%= link_to @run.name, run_path(@run), class: "ck-link" %>
+      &middot; <%= @run.responses.count %> responses scored <%= @run.avg_score %>/5
+    </p>
   </div>
   <div class="ck-actions">
-    <%= link_to "Back to run", run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
-    <% unless @suggestion.applied_at? %>
-      <%= button_to "Apply suggestion", apply_suggestion_run_path(@run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+    <% if @from == "run" %>
+      <%= link_to "Back to run", run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
     <% else %>
+      <%= link_to "Back to prompt", prompt_path(@run.prompt), class: ck_button_classes(:light, variant: :outline) %>
+    <% end %>
+    <% if @suggestion.applied_at? %>
       <span class="ck-chip" style="background: var(--ck-success-soft); color: var(--ck-success);">Applied</span>
+    <% else %>
+      <%= button_to "Apply suggestion", apply_suggestion_path(@suggestion), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
     <% end %>
   </div>
 </section>
@@ -28,8 +41,8 @@
 <div class="ck-suggest-diff">
   <div class="ck-suggest-diff__pane">
     <div class="ck-suggest-diff__header">
-      <span class="ck-suggest-diff__label ck-suggest-diff__label--before">Current prompt</span>
-      <span class="ck-suggest-diff__version"><%= @run.prompt.version_label %></span>
+      <span class="ck-suggest-diff__label ck-suggest-diff__label--before">Original prompt</span>
+      <span class="ck-suggest-diff__version"><%= @suggestion.prompt.version_label %></span>
     </div>
     <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(@suggestion.original_template, @suggestion.suggested_template) %></pre>
   </div>

@@ -7,6 +7,137 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-05-07
+
+### Added
+
+- **Suggestions are now a real resource.** `GET /suggestions/:id` and
+  `POST /suggestions/:id/apply` replace the run-scoped `runs#suggestion` /
+  `runs#apply_suggestion` actions. Clicking a row in the suggestions table
+  on a prompt page now opens the specific suggestion you clicked, not "the
+  latest suggestion for that run". Breadcrumbs adapt via `?from=run` /
+  `?from=prompt`: arrive from a run page and you get `Runs > [run] >
+  Suggestion` with a "Back to run" button; arrive from the prompt page and
+  you get `Prompts > [prompt] > Suggestion` with "Back to prompt".
+- **Run form now hard-blocks variable mismatches.** A `Run` validation
+  rejects saves where the prompt's `{{vars}}` aren't all present in the
+  selected dataset's CSV headers (or no dataset is selected when the prompt
+  needs one). Client-side, the dataset field paints red and lists the
+  missing columns live as you change the prompt or dataset; submit is
+  disabled until the mismatch is resolved.
+- **Worker-down banner now self-refreshes.** A new
+  `GET runs/:id/refresh_status.turbo_stream` endpoint plus a 15-second JS
+  poll on the run show page re-renders `#run_status_header` while the run
+  is `pending` or `running`. Previously, if a worker died after a run
+  started but the heartbeat was still inside the 30s window, the banner
+  would never appear without a manual reload.
+- **Provider key failures now surface as discovery errors.**
+  `ModelDiscoveryService` raises a typed `DiscoveryError` on any non-success
+  response from the model-list endpoint (with friendly labels — "Invalid
+  API key for openai", "Rate limited by anthropic", etc. — plus the
+  provider's own error message). The `ModelDiscoveryJob` persists the
+  message into a new `discovery_error` text column, and the discovery
+  status bar shows it inline. Previously, a bad key silently retired every
+  existing model and stamped the status as `completed`.
+- **Auto-updating relative timestamps.** Every "X ago" cell on the prompts
+  index, prompt show (versions / runs / suggestions tables), provider
+  credentials index, and discovery status bar is now wrapped in
+  `<time data-relative-time>`. The layout's 30-second JS ticker rewrites
+  the text in place so "1 hour ago" becomes "2 hours ago" without a page
+  reload. The relative-time helper output is normalised so the surrounding
+  " ago" text doesn't double up after a tick.
+- **Version column on the prompts index.** Pulled the version chip out of
+  the Name cell into its own column. Shows "of N" only when the displayed
+  version isn't the latest in the family.
+- **Variable validation: `Run#missing_dataset_variables`** returns the list
+  of unmet variables as a public method, plus `Dataset#headers` parses the
+  first CSV line into a column list.
+
+### Changed
+
+- **Run form: prompt selector enriched.** Option labels now read
+  `Property Summary — v5 · gpt-5 · 2 vars` (model + variable count), and
+  selecting a prompt reveals a small summary card below with the prompt's
+  description and a 220-char template preview. The dataset row in the
+  run-config metadata table on the run page now carries the row count and
+  a "Preview" pill that opens the dataset modal — replacing the standalone
+  trigger card that floated below the table.
+- **Metrics field redesign.** Replaced the inline "Quick add: CHIP CHIP"
+  shortcut row with a labeled `Groups` row of pill toggles (sentence-case,
+  with checkmark + member count). Click a group to add all its metrics;
+  click again to clear. The pill highlights cyan when all its members are
+  checked, so you can tell at a glance which group your selection
+  matches. Custom dark-themed checkboxes replace the default white-square
+  inputs. Metrics now lay out in an auto-grid (3+ columns on wide screens,
+  1 on narrow) and each entry shows its `instruction` text (truncated to
+  90 chars) underneath the name so terse names like "Accuracy" get
+  context.
+- **Judge model field gains a help icon.** Reuses the same copy as the
+  models card: "Judge models score generated responses against your
+  metrics. Pick one when configuring a run."
+- **Unified `?` info-icon styling.** The base `.ck-info-toggle` now bakes
+  in font-family sans, no letter-spacing, no text-transform, line-height
+  1, and 16x16 size — so the question-mark renders identically inside an
+  uppercase letter-spaced label, a table header, or anywhere else. The
+  model-table-specific override is reduced to a single `top: -1px`
+  baseline nudge.
+- **Dataset hint behaves like the other "do this to proceed" hints** —
+  cyan `ck-field--info` instead of warning-orange when guidance is just
+  informational. Reserved for actual problems: dataset/header mismatch
+  uses `ck-field--error` (red).
+- **Field hint slots reserve their space** (`min-height` on
+  `.ck-field-hint`), so toggling judge/dataset/metrics hint text in and
+  out no longer shifts the rest of the page vertically. The two
+  mutually-exclusive dataset hints (`#dataset-hint`,
+  `#dataset-mismatch`) collapsed into one slot.
+- **Run-name dot now sits inline with the text** (`gap: 0.6rem`) instead
+  of being absolutely positioned at `left: -1rem`, which threw it outside
+  the table cell entirely.
+- **Suggestions table cells no longer wrap mid-content.** Run-name
+  column and any time-cell get `white-space: nowrap` plus `width: 1%` so
+  the Reasoning column absorbs the slack and the em-dash / "X days ago"
+  no longer break across multiple lines.
+- **Suggestion show page kicker dropped its decorative dot.** The
+  `ck-dot` class is reserved for actual status indicators (run state,
+  score buckets); using it as kicker decoration implied a status that
+  didn't exist.
+
+### Fixed
+
+- **`runs#refresh_status` route added** under `before_action :set_run` so
+  the polling endpoint correctly loads the run.
+- **Bad provider keys no longer wipe the model list.** `reconcile([])`
+  used to fire after a silent fetch failure, retiring every existing
+  model. The new typed exception bypasses reconcile entirely, so the
+  prior model list is preserved while the error surfaces in the UI.
+- **`Dataset#headers` is malformed-CSV safe.** Returns `[]` rather than
+  raising on truncated/quoted-malformed first lines.
+- **Suggestion link from prompts/show used to redirect to "the latest
+  suggestion for that run"**, regardless of which row you clicked.
+  Resolved by routing to `/suggestions/:id` directly.
+
+### Schema
+
+- **`completion_kit_provider_credentials.discovery_error: text`** —
+  stores the human-readable error message from the most recent failed
+  discovery run. Migration `20260507000001`.
+
+### Provider client robustness
+
+- **All four LLM clients (Anthropic, OpenAI, OpenRouter, Ollama) now
+  retry once without `temperature`** if the model rejects it with a 400
+  containing "deprecated", "not supported", or "Unsupported parameter".
+  This was breaking runs against newer reasoning-class models — Claude
+  Opus 4.7 returns `temperature is deprecated for this model.`, OpenAI
+  reasoning models return `Unsupported parameter`. Detection is
+  body-string based so it covers OpenRouter passing the upstream error
+  through verbatim.
+- **OpenAI client now finds the `message` item in the Responses output
+  array** instead of reading `output[0]` blindly. Same fix as the model
+  discovery probe — reasoning models put a `reasoning` chunk first, so
+  the message lived at `output[1]` (or later) and the live client was
+  returning nil/empty.
+
 ## [0.4.2] - 2026-05-06
 
 ### Added

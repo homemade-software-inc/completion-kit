@@ -37,7 +37,7 @@ RSpec.describe "API V1 Runs", type: :request do
 
   describe "POST /api/v1/runs" do
     it "creates a run" do
-      prompt = create(:completion_kit_prompt)
+      prompt = create(:completion_kit_prompt, template: "Static prompt")
       post "/completion_kit/api/v1/runs", params: {prompt_id: prompt.id}.to_json, headers: headers
       expect(response).to have_http_status(:created)
       expect(JSON.parse(response.body)["status"]).to eq("pending")
@@ -49,7 +49,7 @@ RSpec.describe "API V1 Runs", type: :request do
     end
 
     it "creates a run with metric_ids" do
-      prompt = create(:completion_kit_prompt)
+      prompt = create(:completion_kit_prompt, template: "Static prompt")
       metric = create(:completion_kit_metric)
       post "/completion_kit/api/v1/runs",
         params: {prompt_id: prompt.id, metric_ids: [metric.id]}.to_json,

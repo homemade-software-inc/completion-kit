@@ -977,16 +977,6 @@ tr:hover .ck-chip--publish {
 }
 
 .ck-model-table thead th .ck-info-toggle {
-  width: 16px;
-  height: 16px;
-  font-size: 0.7rem;
-  font-family: var(--ck-sans);
-  font-weight: 600;
-  letter-spacing: 0;
-  text-indent: 0;
-  line-height: 1;
-  margin-left: 0.4rem;
-  vertical-align: middle;
   position: relative;
   top: -1px;
 }
@@ -1163,6 +1153,7 @@ tr:hover .ck-chip--publish {
   font-family: var(--ck-sans);
   font-size: 0.8rem;
   line-height: 1.4;
+  min-height: 1.12rem;
   margin: 0;
   color: var(--ck-muted);
 }
@@ -1195,6 +1186,32 @@ tr:hover .ck-chip--publish {
 
 .ck-field--error .ck-field-hint {
   color: var(--ck-danger);
+}
+
+.ck-prompt-summary {
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ck-prompt-summary__description {
+  margin: 0;
+  font-family: var(--ck-sans);
+  font-size: 0.82rem;
+  color: var(--ck-muted);
+}
+
+.ck-prompt-summary__template {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  font-family: var(--ck-mono);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ck-muted);
+  background: var(--ck-bg);
+  border-left: 2px solid var(--ck-line);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .ck-run-config {
@@ -1602,6 +1619,17 @@ select.ck-input {
   text-align: right;
   color: var(--ck-dim);
   font-size: 1.1rem;
+  white-space: nowrap;
+  width: 1%;
+}
+
+.ck-results-table td:first-child,
+.ck-results-table td:has(time[data-relative-time]) {
+  white-space: nowrap;
+}
+
+.ck-results-table td:has(time[data-relative-time]) {
+  width: 1%;
 }
 
 .ck-details {
@@ -1652,60 +1680,38 @@ select.ck-input {
   border-top: 1px solid var(--ck-line);
 }
 
-.ck-dataset-trigger {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+.ck-run-config__dataset {
+  display: inline-flex;
   align-items: center;
-  gap: 1rem;
-  width: 100%;
-  margin-top: 1.5rem;
-  padding: 0.85rem 1.15rem;
-  background: var(--ck-surface);
-  border: 1px solid var(--ck-line);
-  border-radius: var(--ck-radius-lg);
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.ck-run-config__dataset-meta {
   font-family: var(--ck-mono);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.ck-dataset-trigger:hover {
-  border-color: rgba(6, 182, 212, 0.4);
-  background: var(--ck-surface-hover);
-}
-
-.ck-dataset-trigger__label {
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ck-text);
-}
-
-.ck-dataset-trigger__meta {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
   color: var(--ck-muted);
-  letter-spacing: 0.02em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.ck-dataset-trigger__hint {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ck-accent);
-  padding: 0.3rem 0.65rem;
+.ck-run-config__dataset-preview {
+  appearance: none;
+  background: transparent;
   border: 1px solid rgba(6, 182, 212, 0.4);
   border-radius: 999px;
-  background: rgba(6, 182, 212, 0.08);
+  color: var(--ck-accent);
+  cursor: pointer;
+  font-family: var(--ck-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
   transition: background 0.15s;
 }
 
-.ck-dataset-trigger:hover .ck-dataset-trigger__hint {
-  background: rgba(6, 182, 212, 0.16);
+.ck-run-config__dataset-preview:hover {
+  background: rgba(6, 182, 212, 0.12);
 }
 
 .ck-modal {
@@ -1968,24 +1974,16 @@ select.ck-input {
 .ck-run-name {
   display: inline-flex;
   align-items: center;
-  position: relative;
+  gap: 0.6rem;
 }
 
 .ck-run-name .ck-dot {
-  position: absolute;
-  left: -1rem;
-  top: 50%;
-  transform: translateY(-50%);
+  margin: 0;
+  vertical-align: baseline;
 }
 
 .ck-title .ck-run-name {
   gap: 1rem;
-  position: static;
-}
-
-.ck-title .ck-run-name .ck-dot {
-  position: static;
-  transform: none;
 }
 
 .ck-title .ck-dot {
@@ -2321,24 +2319,192 @@ select.ck-input {
   }
 }
 
+.ck-metric-groups {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.ck-metric-groups__label {
+  font-family: var(--ck-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
+}
+
+.ck-metric-groups__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ck-metric-group-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.32rem 0.7rem;
+  background: transparent;
+  border: 1px solid var(--ck-line);
+  border-radius: 999px;
+  color: var(--ck-muted);
+  font-family: var(--ck-sans);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.ck-metric-group-pill:hover {
+  border-color: rgba(6, 182, 212, 0.5);
+  color: var(--ck-text);
+}
+
+.ck-metric-group-pill__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border: 1px solid var(--ck-line-strong);
+  border-radius: 3px;
+  font-size: 0.62rem;
+  color: transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ck-metric-group-pill__count {
+  font-family: var(--ck-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--ck-dim);
+  padding: 0 0.35rem;
+  border-left: 1px solid var(--ck-line);
+  margin-left: 0.1rem;
+}
+
+.ck-metric-group-pill--active {
+  border-color: var(--ck-accent);
+  color: var(--ck-text);
+  background: rgba(6, 182, 212, 0.08);
+}
+
+.ck-metric-group-pill--active .ck-metric-group-pill__check {
+  background: var(--ck-accent);
+  border-color: var(--ck-accent);
+  color: var(--ck-bg);
+}
+
+.ck-metric-group-pill--active .ck-metric-group-pill__count {
+  color: var(--ck-accent);
+  border-left-color: rgba(6, 182, 212, 0.4);
+}
+
+.ck-metric-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.15rem 0 0.35rem;
+  color: var(--ck-dim);
+  font-family: var(--ck-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ck-metric-divider::before,
+.ck-metric-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px dashed var(--ck-line);
+}
+
 .ck-metric-checkboxes {
   display: grid;
-  gap: 0.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.5rem 0.85rem;
 }
 
 .ck-checkbox-label {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 0.6rem;
   font-family: var(--ck-sans);
-  font-size: 0.9rem;
-  color: var(--ck-text);
+  font-size: 0.88rem;
+  color: var(--ck-muted);
   cursor: pointer;
   padding: 0.35rem 0;
 }
 
-.ck-checkbox-label:hover {
-  color: var(--ck-accent);
+.ck-checkbox-label__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.ck-checkbox-label__hint {
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--ck-dim);
+}
+
+.ck-checkbox-label__box {
+  margin-top: 1px;
+}
+
+.ck-checkbox-label input.ck-checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.ck-checkbox-label__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--ck-line-strong);
+  border-radius: 4px;
+  background: var(--ck-surface);
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.ck-checkbox-label__box::after {
+  content: "";
+  width: 8px;
+  height: 4px;
+  border-left: 1.5px solid var(--ck-bg);
+  border-bottom: 1.5px solid var(--ck-bg);
+  transform: rotate(-45deg) translate(1px, -1px) scale(0);
+  transition: transform 0.12s ease-out;
+}
+
+.ck-checkbox-label input.ck-checkbox:checked + .ck-checkbox-label__box {
+  background: var(--ck-accent);
+  border-color: var(--ck-accent);
+}
+
+.ck-checkbox-label input.ck-checkbox:checked + .ck-checkbox-label__box::after {
+  transform: rotate(-45deg) translate(1px, -1px) scale(1);
+}
+
+.ck-checkbox-label input.ck-checkbox:focus-visible + .ck-checkbox-label__box {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 2px;
+}
+
+.ck-checkbox-label:hover .ck-checkbox-label__box {
+  border-color: var(--ck-accent);
+}
+
+.ck-checkbox-label:hover .ck-checkbox-label__text,
+.ck-checkbox-label input.ck-checkbox:checked ~ .ck-checkbox-label__text {
+  color: var(--ck-text);
 }
 
 .ck-response-row {
@@ -2508,16 +2674,21 @@ select.ck-input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   border: 1px solid var(--ck-line-strong);
   color: var(--ck-muted);
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-family: var(--ck-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  text-indent: 0;
+  text-transform: none;
   cursor: help;
   vertical-align: middle;
-  margin-left: 0.35rem;
+  margin-left: 0.4rem;
   position: relative;
 }
 

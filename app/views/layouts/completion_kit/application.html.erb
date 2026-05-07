@@ -54,17 +54,17 @@ document.addEventListener("turbo:load", function() {
 function ckRelativeTime(then) {
   var seconds = Math.round((Date.now() - then.getTime()) / 1000);
   if (seconds < 5) return "just now";
-  if (seconds < 60) return seconds + " seconds ago";
+  if (seconds < 60) return "less than a minute";
   var minutes = Math.round(seconds / 60);
-  if (minutes < 60) return minutes === 1 ? "1 minute ago" : minutes + " minutes ago";
+  if (minutes < 60) return minutes === 1 ? "1 minute" : minutes + " minutes";
   var hours = Math.round(minutes / 60);
-  if (hours < 24) return hours === 1 ? "1 hour ago" : hours + " hours ago";
+  if (hours < 24) return hours === 1 ? "about 1 hour" : "about " + hours + " hours";
   var days = Math.round(hours / 24);
-  if (days < 30) return days === 1 ? "1 day ago" : days + " days ago";
+  if (days < 30) return days === 1 ? "1 day" : days + " days";
   var months = Math.round(days / 30);
-  if (months < 12) return months === 1 ? "1 month ago" : months + " months ago";
+  if (months < 12) return months === 1 ? "about 1 month" : "about " + months + " months";
   var years = Math.round(days / 365);
-  return years === 1 ? "1 year ago" : years + " years ago";
+  return years === 1 ? "about 1 year" : "about " + years + " years";
 }
 
 function ckTickRelativeTimes() {

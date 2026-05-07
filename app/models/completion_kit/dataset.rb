@@ -20,5 +20,14 @@ module CompletionKit
     rescue ::CSV::MalformedCSVError
       0
     end
+
+    def headers
+      return [] if csv_data.blank?
+
+      require "csv"
+      ::CSV.parse(csv_data.lines.first.to_s).first.to_a.map(&:to_s).map(&:strip)
+    rescue ::CSV::MalformedCSVError
+      []
+    end
   end
 end

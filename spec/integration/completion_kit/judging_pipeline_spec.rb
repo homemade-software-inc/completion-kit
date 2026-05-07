@@ -5,7 +5,7 @@ RSpec.describe "End-to-end judging pipeline", type: :model do
     create(:completion_kit_metric, name: "Relevance", instruction: "Is the output relevant?")
   end
   let(:prompt) do
-    create(:completion_kit_prompt, template: "Summarize {{content}}", llm_model: "gpt-4.1")
+    create(:completion_kit_prompt, template: "Summarize the latest update", llm_model: "gpt-4.1")
   end
 
   before do

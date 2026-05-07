@@ -13,18 +13,10 @@ module CompletionKit
       max_tokens = options[:max_tokens] || 1000
       temperature = options[:temperature] || 0.7
 
-      response = build_connection("https://api.openai.com").post do |req|
-        req.url "/v1/responses"
-        req.headers["Content-Type"] = "application/json"
-        req.headers["Authorization"] = "Bearer #{api_key}"
-        req.body = {
-          model: model,
-          input: prompt,
-          instructions: "You are a helpful assistant.",
-          max_output_tokens: max_tokens,
-          temperature: temperature,
-          store: false
-        }.to_json
+      response = post_responses(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
+
+      if response.status == 400 && temperature_unsupported?(response.body)
+        response = post_responses(model: model, prompt: prompt, max_tokens: max_tokens, temperature: nil)
       end
 
       if response.status == 429
@@ -38,7 +30,8 @@ module CompletionKit
 
       if response.success?
         data = JSON.parse(response.body)
-        data["output"][0]["content"][0]["text"].strip
+        message = Array(data["output"]).find { |o| o["type"] == "message" }
+        message&.dig("content", 0, "text").to_s.strip
       else
         "Error: #{response.status} - #{response.body}"
       end
@@ -68,6 +61,29 @@ module CompletionKit
 
     def api_key
       @config[:api_key] || ENV["OPENAI_API_KEY"]
+    end
+
+    def post_responses(model:, prompt:, max_tokens:, temperature:)
+      body = {
+        model: model,
+        input: prompt,
+        instructions: "You are a helpful assistant.",
+        max_output_tokens: max_tokens,
+        store: false
+      }
+      body[:temperature] = temperature unless temperature.nil?
+
+      build_connection("https://api.openai.com").post do |req|
+        req.url "/v1/responses"
+        req.headers["Content-Type"] = "application/json"
+        req.headers["Authorization"] = "Bearer #{api_key}"
+        req.body = body.to_json
+      end
+    end
+
+    def temperature_unsupported?(body)
+      s = body.to_s
+      s.include?("temperature") && (s.include?("deprecated") || s.include?("not supported") || s.include?("Unsupported parameter"))
     end
   end
 end

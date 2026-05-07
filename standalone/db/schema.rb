@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_05_220000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_07_120000) do
   create_table "completion_kit_datasets", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "csv_data", null: false
@@ -83,6 +83,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_05_220000) do
     t.text "api_key"
     t.datetime "created_at", null: false
     t.integer "discovery_current", default: 0
+    t.text "discovery_error"
     t.string "discovery_status"
     t.integer "discovery_total", default: 0
     t.string "provider", null: false

@@ -45,6 +45,8 @@ RSpec.describe "End-to-end generation pipeline", type: :model do
   end
 
   context "without a dataset" do
+    let(:prompt) { create(:completion_kit_prompt, name: "Static", template: "Run with no inputs", llm_model: "gpt-4.1") }
+
     it "creates a single pending response with nil input_data" do
       run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "No dataset test")
 

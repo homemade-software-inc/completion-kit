@@ -17,9 +17,9 @@ module CompletionKit
 
     discard_on ActiveJob::DeserializationError
 
-    rescue_from(StandardError) do |_error|
+    rescue_from(StandardError) do |error|
       credential = ProviderCredential.find(arguments.first)
-      credential.update_columns(discovery_status: "failed")
+      credential.update_columns(discovery_status: "failed", discovery_error: error.message.to_s.truncate(500))
       credential.reload
       credential.broadcast_discovery_progress
     end
@@ -28,7 +28,12 @@ module CompletionKit
       credential = ProviderCredential.find_by(id: provider_credential_id)
       return unless credential
 
-      credential.update_columns(discovery_status: "discovering", discovery_current: 0, discovery_total: 0)
+      credential.update_columns(
+        discovery_status: "discovering",
+        discovery_current: 0,
+        discovery_total: 0,
+        discovery_error: nil
+      )
       credential.reload
       credential.broadcast_discovery_progress
 
@@ -39,7 +44,7 @@ module CompletionKit
         credential.broadcast_discovery_progress
       end
 
-      credential.update_columns(discovery_status: "completed", updated_at: Time.current)
+      credential.update_columns(discovery_status: "completed", discovery_error: nil, updated_at: Time.current)
       credential.reload
       credential.broadcast_discovery_complete
     end

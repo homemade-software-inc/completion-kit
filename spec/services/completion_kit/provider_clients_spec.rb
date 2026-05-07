@@ -129,6 +129,84 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(unconfigured.available_models).to eq(CompletionKit::AnthropicClient::STATIC_MODELS)
   end
 
+  def stub_temperature_fallback(deprecated_body:, success_body:)
+    request_class = Struct.new(:headers, :body, :path, keyword_init: true) do
+      def url(value); self.path = value; end
+    end
+    posted = []
+    connection = double("Faraday::Connection")
+    allow(connection).to receive(:request)
+    allow(connection).to receive(:adapter)
+    allow(connection).to receive(:options).and_return(Struct.new(:timeout, :open_timeout).new)
+    allow(connection).to receive(:post) do |&block|
+      req = request_class.new(headers: {})
+      block&.call(req)
+      posted << req
+      if posted.length == 1
+        faraday_response(success: false, status: 400, body: deprecated_body, headers: {})
+      else
+        faraday_response(success: true, body: success_body, status: 200, headers: {})
+      end
+    end
+    allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
+    posted
+  end
+
+  it "retries Anthropic request without temperature when the model rejects it" do
+    client = CompletionKit::AnthropicClient.new(api_key: "anthropic-key")
+    posted = stub_temperature_fallback(
+      deprecated_body: { type: "error", error: { type: "invalid_request_error", message: "`temperature` is deprecated for this model." } }.to_json,
+      success_body: { content: [{ text: "no-temp result" }] }.to_json
+    )
+
+    expect(client.generate_completion("prompt", model: "claude-opus-4-7", temperature: 0.7)).to eq("no-temp result")
+    expect(posted[0].body).to include("\"temperature\":0.7")
+    expect(posted[1].body).not_to include("temperature")
+  end
+
+  it "returns empty string when OpenAI response output has no message item" do
+    client = CompletionKit::OpenAiClient.new(api_key: "openai-key")
+    stub_faraday(faraday_response(success: true, body: { output: [{ type: "reasoning" }] }.to_json))
+
+    expect(client.generate_completion("prompt", model: "o1-preview")).to eq("")
+  end
+
+  it "retries OpenAI request without temperature when the model rejects it" do
+    client = CompletionKit::OpenAiClient.new(api_key: "openai-key")
+    posted = stub_temperature_fallback(
+      deprecated_body: { error: { message: "Unsupported parameter: 'temperature' is not supported with this model." } }.to_json,
+      success_body: { output: [{ type: "message", content: [{ type: "output_text", text: "ok" }] }] }.to_json
+    )
+
+    expect(client.generate_completion("prompt", model: "gpt-5.5", temperature: 0.5)).to eq("ok")
+    expect(posted[0].body).to include("\"temperature\":0.5")
+    expect(posted[1].body).not_to include("temperature")
+  end
+
+  it "retries OpenRouter request without temperature when upstream rejects it" do
+    client = CompletionKit::OpenRouterClient.new(api_key: "or-key")
+    posted = stub_temperature_fallback(
+      deprecated_body: { error: { message: "`temperature` is deprecated for this model." } }.to_json,
+      success_body: { choices: [{ message: { content: "ok" } }] }.to_json
+    )
+
+    expect(client.generate_completion("prompt", model: "anthropic/claude-opus-4-7", temperature: 0.7)).to eq("ok")
+    expect(posted[0].body).to include("\"temperature\":0.7")
+    expect(posted[1].body).not_to include("temperature")
+  end
+
+  it "retries Ollama request without temperature when the model rejects it" do
+    client = CompletionKit::OllamaClient.new(api_key: "ol-key", api_endpoint: "https://ollama.example.test")
+    posted = stub_temperature_fallback(
+      deprecated_body: { error: { message: "temperature is not supported by this model" } }.to_json,
+      success_body: { choices: [{ text: "ok" }] }.to_json
+    )
+
+    expect(client.generate_completion("prompt", model: "some-model", temperature: 0.5)).to eq("ok")
+    expect(posted[0].body).to include("\"temperature\":0.5")
+    expect(posted[1].body).not_to include("temperature")
+  end
+
   it "covers Anthropic dynamic model listing branches" do
     client = CompletionKit::AnthropicClient.new(api_key: "anthropic-key")
 

@@ -1,6 +1,6 @@
 module CompletionKit
   class RunsController < ApplicationController
-    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :suggestion, :apply_suggestion, :retry_failures]
+    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :refresh_status]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
@@ -72,21 +72,28 @@ module CompletionKit
       end
     end
 
+    def refresh_status
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(
+            "run_status_header",
+            partial: "completion_kit/runs/status_header",
+            locals: { run: @run }
+          )
+        end
+      end
+    end
+
     def suggest
       service = PromptImprovementService.new(@run)
       result = service.suggest
-      @run.suggestions.create!(
+      suggestion = @run.suggestions.create!(
         prompt: @run.prompt,
         reasoning: result["reasoning"],
         suggested_template: result["suggested_template"],
         original_template: result["original_template"]
       )
-      redirect_to suggestion_run_path(@run)
-    end
-
-    def suggestion
-      @suggestion = @run.suggestions.order(created_at: :desc).first
-      return redirect_to run_path(@run), alert: "No suggestion available. Generate one first." unless @suggestion
+      redirect_to suggestion_path(suggestion, from: "run")
     end
 
     def retry_failures
@@ -113,16 +120,6 @@ module CompletionKit
 
       @run.send(:broadcast_ui)
       redirect_to run_path(@run)
-    end
-
-    def apply_suggestion
-      suggestion = @run.suggestions.order(created_at: :desc).first
-      return redirect_to run_path(@run), alert: "No suggestion to apply." unless suggestion
-
-      new_prompt = @run.prompt.clone_as_new_version(template: suggestion.suggested_template)
-      new_prompt.publish!
-      suggestion.update!(applied_at: Time.current)
-      redirect_to prompt_path(new_prompt), notice: "Suggestion applied."
     end
 
     private

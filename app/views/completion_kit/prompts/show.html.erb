@@ -56,7 +56,7 @@
           <tr>
             <td><strong>v<%= v.version_number %></strong></td>
             <td><span class="ck-chip ck-chip--soft"><%= v.llm_model %></span></td>
-            <td class="ck-meta-copy"><%= time_ago_in_words(v.created_at) %> ago</td>
+            <td class="ck-meta-copy"><time data-relative-time datetime="<%= v.created_at.utc.iso8601 %>"><%= time_ago_in_words(v.created_at) %></time> ago</td>
             <td>
               <% if v.current? %>
                 <span class="ck-chip">Current</span>
@@ -116,7 +116,7 @@
                 &mdash;
               <% end %>
             </td>
-            <td class="ck-meta-copy"><%= time_ago_in_words(run.created_at) %> ago</td>
+            <td class="ck-meta-copy"><time data-relative-time datetime="<%= run.created_at.utc.iso8601 %>"><%= time_ago_in_words(run.created_at) %></time> ago</td>
             <td class="ck-results-table__arrow">&rarr;</td>
           </tr>
         <% end %>
@@ -141,11 +141,11 @@
       </thead>
       <tbody>
         <% suggestions.each do |s| %>
-          <tr onclick="window.location='<%= suggestion_run_path(s.run) %>'" style="cursor: pointer;">
+          <tr onclick="window.location='<%= suggestion_path(s, from: "prompt") %>'" style="cursor: pointer;">
             <td><strong><%= s.run.name %></strong></td>
             <td class="ck-meta-copy"><%= truncate(s.reasoning.to_s, length: 100) %></td>
             <td><%= s.applied_at? ? content_tag(:span, "Applied", class: "ck-chip", style: "background: var(--ck-success-soft); color: var(--ck-success);") : "&mdash;".html_safe %></td>
-            <td class="ck-meta-copy"><%= time_ago_in_words(s.created_at) %> ago</td>
+            <td class="ck-meta-copy"><time data-relative-time datetime="<%= s.created_at.utc.iso8601 %>"><%= time_ago_in_words(s.created_at) %></time> ago</td>
             <td class="ck-results-table__arrow">&rarr;</td>
           </tr>
         <% end %>

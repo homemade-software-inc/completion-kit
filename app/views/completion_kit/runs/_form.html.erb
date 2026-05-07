@@ -18,7 +18,29 @@
 
     <div class="ck-field">
       <%= form.label :prompt_id, "Prompt", class: "ck-label" %>
-      <%= form.select :prompt_id, @prompts.map { |p| [p.display_name, p.id, { "data-has-variables" => p.variables.any? ? "1" : "0" }] }, { include_blank: "Select a prompt" }, { class: "ck-input", id: "run_prompt_id" } %>
+      <%= form.select :prompt_id,
+            @prompts.map { |p|
+              vars = p.variables
+              label_parts = [p.display_name, p.llm_model]
+              label_parts << (vars.any? ? "#{vars.size} #{'var'.pluralize(vars.size)}" : "no vars")
+              [
+                label_parts.join(" · "),
+                p.id,
+                {
+                  "data-has-variables" => vars.any? ? "1" : "0",
+                  "data-model" => p.llm_model.to_s,
+                  "data-variables" => vars.join(", "),
+                  "data-description" => p.description.to_s,
+                  "data-template-preview" => p.template.to_s.truncate(220, separator: " ")
+                }
+              ]
+            },
+            { include_blank: "Select a prompt" },
+            { class: "ck-input", id: "run_prompt_id" } %>
+      <div class="ck-prompt-summary" id="prompt-summary" hidden>
+        <p class="ck-prompt-summary__description" id="prompt-summary-description" hidden></p>
+        <p class="ck-prompt-summary__template" id="prompt-summary-template"></p>
+      </div>
     </div>
 
     <div class="ck-field" id="dataset-field">
@@ -26,18 +48,17 @@
       <% if @datasets.empty? %>
         <p class="ck-meta-copy">No datasets yet. <%= link_to "Create a dataset", new_dataset_path, class: "ck-link" %> first.</p>
       <% else %>
-        <%= form.select :dataset_id, @datasets.map { |d| [d.name, d.id] }, { include_blank: "Select a dataset" }, { class: "ck-input", id: "run_dataset_id" } %>
+        <%= form.select :dataset_id,
+              @datasets.map { |d| [d.name, d.id, { "data-headers" => d.headers.join(",") }] },
+              { include_blank: "Select a dataset" },
+              { class: "ck-input", id: "run_dataset_id" } %>
       <% end %>
-      <p class="ck-field-hint" id="dataset-hint" style="display: none; color: var(--ck-warning);">This prompt uses variables. Select a dataset to provide values.</p>
+      <p class="ck-field-hint" id="dataset-hint"></p>
     </div>
 
     <div class="ck-field">
       <label class="ck-label" for="run_temperature" style="position: relative;">
-        Temperature
-        <span class="ck-info-toggle">?</span>
-        <div class="ck-info-popup">
-          Controls how random the model's output is. Lower values make the model more focused and deterministic — it'll pick the most likely words. Higher values introduce more variety and creativity, but also more risk of odd phrasing. Most LLMs default to 1.0. For evaluation, try different values to see how your prompt performs under varying conditions.
-        </div>
+        Temperature<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup">Controls how random the model's output is. Lower values make the model more focused and deterministic — it'll pick the most likely words. Higher values introduce more variety and creativity, but also more risk of odd phrasing. Most LLMs default to 1.0. For evaluation, try different values to see how your prompt performs under varying conditions.</span>
       </label>
       <div class="ck-slider-row">
         <%= form.range_field :temperature, min: 0, max: 1, step: 0.1, class: "ck-slider", id: "run_temperature", oninput: "document.getElementById('temp-value').textContent = this.value" %>
@@ -46,7 +67,9 @@
     </div>
 
     <div class="ck-field" id="judge-field">
-      <%= form.label :judge_model, "Judge model", class: "ck-label" %>
+      <label class="ck-label" for="run_judge_model" style="position: relative;">
+        Judge model<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup">Judge models score generated responses against your metrics. Pick one when configuring a run.</span>
+      </label>
       <% available = CompletionKit::ApiConfig.available_models(scope: :judging) %>
       <% if available.any? %>
         <div class="ck-select-with-action">
@@ -74,18 +97,35 @@
         <p class="ck-field-hint" style="color: var(--ck-warning);">No metrics yet.&ensp;<%= link_to "Create a metric", new_metric_path, class: "ck-link" %></p>
       <% else %>
         <% if @metric_groups.any? %>
-          <p class="ck-meta-copy" style="margin-bottom: 0.5rem;">
-            Quick add:&ensp;
-            <% @metric_groups.each do |g| %>
-              <span class="ck-chip" style="cursor: pointer;" onclick="ckQuickAddMetricGroup(<%= g.metric_ids.to_json %>)"><%= g.name %></span>&ensp;
-            <% end %>
-          </p>
+          <div class="ck-metric-groups">
+            <span class="ck-metric-groups__label">Groups</span>
+            <div class="ck-metric-groups__row">
+              <% @metric_groups.each do |g| %>
+                <button type="button"
+                        class="ck-metric-group-pill"
+                        data-metric-group
+                        data-metric-ids="<%= g.metric_ids.join(",") %>"
+                        onclick="ckToggleMetricGroup(this)">
+                  <span class="ck-metric-group-pill__check" aria-hidden="true">✓</span>
+                  <span class="ck-metric-group-pill__label"><%= g.name %></span>
+                  <span class="ck-metric-group-pill__count"><%= g.metric_ids.size %></span>
+                </button>
+              <% end %>
+            </div>
+          </div>
+          <div class="ck-metric-divider"><span>or pick individually</span></div>
         <% end %>
         <div class="ck-metric-checkboxes">
           <% @all_metrics.each do |metric| %>
             <label class="ck-checkbox-label">
               <%= check_box_tag "run[metric_ids][]", metric.id, run.metric_ids.include?(metric.id), class: "ck-checkbox", id: "run_metric_#{metric.id}" %>
-              <span><%= metric.name %></span>
+              <span class="ck-checkbox-label__box" aria-hidden="true"></span>
+              <span class="ck-checkbox-label__body">
+                <span class="ck-checkbox-label__text"><%= metric.name %></span>
+                <% if metric.instruction.present? %>
+                  <span class="ck-checkbox-label__hint"><%= truncate(metric.instruction.to_s, length: 90) %></span>
+                <% end %>
+              </span>
             </label>
           <% end %>
         </div>
@@ -123,23 +163,77 @@ function updateRunForm() {
 
   var datasetEl = document.getElementById('run_dataset_id');
   var datasetHint = document.getElementById('dataset-hint');
+  var datasetField = document.getElementById('dataset-field');
   var dataset = datasetEl ? datasetEl.value : '';
   var selectedOption = promptEl ? promptEl.options[promptEl.selectedIndex] : null;
   var hasVars = selectedOption && selectedOption.dataset.hasVariables === '1';
-  if (datasetHint) datasetHint.style.display = (hasVars && !dataset) ? '' : 'none';
+  var promptVars = (selectedOption && selectedOption.dataset.variables ? selectedOption.dataset.variables.split(/,\s*/) : []).filter(Boolean);
+
+  var missingVars = [];
+  if (hasVars && dataset && datasetEl) {
+    var datasetOption = datasetEl.options[datasetEl.selectedIndex];
+    var headers = (datasetOption && datasetOption.dataset.headers ? datasetOption.dataset.headers.split(/,\s*/) : []).filter(Boolean);
+    missingVars = promptVars.filter(function(v) { return headers.indexOf(v) === -1; });
+  }
+
+  if (datasetField) datasetField.className = 'ck-field';
+  if (datasetHint) datasetHint.textContent = '';
+  if (missingVars.length > 0) {
+    if (datasetField) datasetField.className = 'ck-field ck-field--error';
+    if (datasetHint) datasetHint.textContent = 'Dataset is missing ' + (missingVars.length === 1 ? 'column' : 'columns') + ' the prompt needs: ' + missingVars.join(', ');
+  } else if (hasVars && !dataset) {
+    if (datasetField) datasetField.className = 'ck-field ck-field--info';
+    if (datasetHint) datasetHint.textContent = 'This prompt uses variables. Select a dataset to provide values.';
+  }
+
+  var summary = document.getElementById('prompt-summary');
+  if (summary) {
+    if (selectedOption && selectedOption.value) {
+      var desc = selectedOption.dataset.description || '';
+      var tmpl = selectedOption.dataset.templatePreview || '';
+      var descEl = document.getElementById('prompt-summary-description');
+      descEl.textContent = desc;
+      descEl.hidden = !desc;
+      document.getElementById('prompt-summary-template').textContent = tmpl;
+      summary.hidden = false;
+    } else {
+      summary.hidden = true;
+    }
+  }
 
   var valid = prompt !== '';
   if (judge && metrics.length === 0) valid = false;
   if (!judge && metrics.length > 0) valid = false;
+  if (hasVars && !dataset) valid = false;
+  if (missingVars.length > 0) valid = false;
   if (submitBtn) submitBtn.disabled = !valid;
+
+  ckUpdateMetricGroupsState();
 }
 
-function ckQuickAddMetricGroup(metricIds) {
-  metricIds.forEach(function(id) {
+function ckToggleMetricGroup(button) {
+  var ids = (button.getAttribute('data-metric-ids') || '').split(',').filter(Boolean);
+  var allChecked = ids.every(function(id) {
     var cb = document.getElementById('run_metric_' + id);
-    if (cb) cb.checked = true;
+    return cb && cb.checked;
+  });
+  ids.forEach(function(id) {
+    var cb = document.getElementById('run_metric_' + id);
+    if (cb) cb.checked = !allChecked;
   });
   updateRunForm();
+}
+
+function ckUpdateMetricGroupsState() {
+  document.querySelectorAll('[data-metric-group]').forEach(function(btn) {
+    var ids = (btn.getAttribute('data-metric-ids') || '').split(',').filter(Boolean);
+    if (ids.length === 0) return;
+    var allChecked = ids.every(function(id) {
+      var cb = document.getElementById('run_metric_' + id);
+      return cb && cb.checked;
+    });
+    btn.classList.toggle('ck-metric-group-pill--active', allChecked);
+  });
 }
 
 var judgeEl = document.getElementById('run_judge_model');

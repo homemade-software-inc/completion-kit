@@ -20,11 +20,13 @@
     </div>
   <% elsif provider_credential.discovery_status == "failed" %>
     <div class="ck-discovery-bar ck-discovery-bar--failed">
-      <div class="ck-discovery-bar__label">Model discovery failed</div>
+      <div class="ck-discovery-bar__label">
+        Model discovery failed<% if provider_credential.discovery_error.present? %>: <%= provider_credential.discovery_error %><% end %>
+      </div>
     </div>
   <% elsif provider_credential.discovery_status == "completed" && local_assigns.fetch(:show_completed, true) %>
     <div class="ck-discovery-bar ck-discovery-bar--completed">
-      <div class="ck-discovery-bar__label">Available models list updated <%= time_ago_in_words(provider_credential.updated_at) %> ago</div>
+      <div class="ck-discovery-bar__label">Available models list updated <time data-relative-time datetime="<%= provider_credential.updated_at.utc.iso8601 %>"><%= time_ago_in_words(provider_credential.updated_at) %></time> ago</div>
     </div>
   <% end %>
 </div>

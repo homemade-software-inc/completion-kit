@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "CompletionKit runs", type: :request do
-  let!(:prompt) { create(:completion_kit_prompt, name: "Prompt A") }
+  let!(:prompt) { create(:completion_kit_prompt, name: "Prompt A", template: "Static prompt without variables") }
   let(:base_path) { "/completion_kit/runs" }
 
   it "renders index, show, new, and edit pages" do
@@ -209,7 +209,15 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(flash[:alert]).to eq("Something went wrong")
   end
 
-  it "suggest action stores suggestion in session and redirects to suggestion page" do
+  it "refresh_status returns a turbo stream replacing the run status header" do
+    run = create(:completion_kit_run, prompt: prompt, status: "running")
+    get "#{base_path}/#{run.id}/refresh_status", headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("turbo-stream")
+    expect(response.body).to include("run_status_header")
+  end
+
+  it "suggest action creates a suggestion and redirects to its show page" do
     run = create(:completion_kit_run, prompt: prompt)
     service = instance_double(CompletionKit::PromptImprovementService)
     allow(CompletionKit::PromptImprovementService).to receive(:new).with(run).and_return(service)
@@ -220,50 +228,7 @@ RSpec.describe "CompletionKit runs", type: :request do
     })
 
     expect { post "#{base_path}/#{run.id}/suggest" }.to change(CompletionKit::Suggestion, :count).by(1)
-    expect(response).to redirect_to("#{base_path}/#{run.id}/suggestion")
-  end
-
-  it "suggestion action renders suggestion when present" do
-    run = create(:completion_kit_run, prompt: prompt)
-    CompletionKit::Suggestion.create!(run: run, prompt: prompt, reasoning: "Improve clarity", suggested_template: "Better prompt", original_template: prompt.template)
-
-    get "#{base_path}/#{run.id}/suggestion"
-    expect(response).to have_http_status(:ok)
-  end
-
-  it "suggestion action redirects when no suggestion exists" do
-    run = create(:completion_kit_run, prompt: prompt)
-
-    get "#{base_path}/#{run.id}/suggestion"
-    expect(response).to redirect_to("#{base_path}/#{run.id}")
-  end
-
-  it "apply_suggestion clones the prompt as a new published version and marks the suggestion applied" do
-    prompt.publish!
-    run = create(:completion_kit_run, prompt: prompt)
-    suggestion = CompletionKit::Suggestion.create!(
-      run: run, prompt: prompt,
-      reasoning: "Clearer framing",
-      suggested_template: "Improved prompt body",
-      original_template: prompt.template
-    )
-
-    expect { post "#{base_path}/#{run.id}/apply_suggestion" }
-      .to change(CompletionKit::Prompt, :count).by(1)
-
-    new_prompt = CompletionKit::Prompt.order(:id).last
-    expect(new_prompt.template).to eq("Improved prompt body")
-    expect(new_prompt.published_at).to be_present
-    expect(response).to redirect_to("/completion_kit/prompts/#{new_prompt.id}")
-    expect(suggestion.reload.applied_at).to be_present
-  end
-
-  it "apply_suggestion redirects with an alert when the run has no suggestion" do
-    run = create(:completion_kit_run, prompt: prompt)
-
-    post "#{base_path}/#{run.id}/apply_suggestion"
-
-    expect(response).to redirect_to("#{base_path}/#{run.id}")
-    expect(flash[:alert]).to eq("No suggestion to apply.")
+    suggestion = CompletionKit::Suggestion.order(:id).last
+    expect(response).to redirect_to("/completion_kit/suggestions/#{suggestion.id}?from=run")
   end
 end

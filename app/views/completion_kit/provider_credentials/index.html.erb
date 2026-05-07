@@ -27,7 +27,7 @@
           <span><%= provider_credential.api_endpoint.presence || default_endpoints[provider_credential.provider] %></span>
           <span><%= provider_credential.prompt_count %> prompts</span>
           <span><%= provider_credential.judge_count %> judges</span>
-          <span><%= provider_credential.last_used_at ? "Used #{time_ago_in_words(provider_credential.last_used_at)} ago" : "Never used" %></span>
+          <span><% if provider_credential.last_used_at %>Used <time data-relative-time datetime="<%= provider_credential.last_used_at.utc.iso8601 %>"><%= time_ago_in_words(provider_credential.last_used_at) %></time> ago<% else %>Never used<% end %></span>
         </div>
 
         <%= render "discovery_status", provider_credential: provider_credential %>

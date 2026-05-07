@@ -13,7 +13,7 @@ RSpec.describe CompletionKit::McpTools::Runs do
   end
 
   describe ".call" do
-    let!(:prompt) { create(:completion_kit_prompt) }
+    let!(:prompt) { create(:completion_kit_prompt, template: "Static prompt") }
     let!(:run) { create(:completion_kit_run, prompt: prompt, name: "Test Run") }
 
     before do

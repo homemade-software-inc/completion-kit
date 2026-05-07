@@ -13,9 +13,19 @@ module CompletionKit
 
     validates :name, presence: true
     validates :status, inclusion: { in: STATUSES }
+    validate :dataset_supplies_prompt_variables
 
     before_validation :set_default_status, on: :create
     before_validation :set_auto_name, on: :create
+
+    def missing_dataset_variables
+      return [] unless prompt
+      vars = prompt.variables
+      return [] if vars.empty?
+      return vars if dataset.nil?
+
+      vars - dataset.headers
+    end
 
     def mark_completed!
       update!(status: "completed")
@@ -266,6 +276,17 @@ module CompletionKit
 
       count = Run.where(prompt_id: prompt_id).count + 1
       self.name = "#{prompt.name} — v#{prompt.version_number} ##{count}"
+    end
+
+    def dataset_supplies_prompt_variables
+      missing = missing_dataset_variables
+      return if missing.empty?
+
+      if dataset.nil?
+        errors.add(:dataset_id, "is required: prompt uses #{missing.join(', ')}")
+      else
+        errors.add(:dataset_id, "is missing columns required by the prompt: #{missing.join(', ')}")
+      end
     end
   end
 end

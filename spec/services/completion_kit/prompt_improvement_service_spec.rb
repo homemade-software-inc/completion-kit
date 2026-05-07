@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::PromptImprovementService do
-  let(:prompt) { create(:completion_kit_prompt, template: "Summarize {{text}}", llm_model: "gpt-4.1") }
+  let(:prompt) { create(:completion_kit_prompt, template: "Summarize the latest update", llm_model: "gpt-4.1") }
   let(:run) { create(:completion_kit_run, prompt: prompt) }
   let(:client) { instance_double(CompletionKit::LlmClient) }
 
@@ -29,7 +29,7 @@ RSpec.describe CompletionKit::PromptImprovementService do
 
       expect(result["reasoning"]).to include("prompt lacks specificity")
       expect(result["suggested_template"]).to include("{{text}}")
-      expect(result["original_template"]).to eq("Summarize {{text}}")
+      expect(result["original_template"]).to eq("Summarize the latest update")
     end
 
     it "handles LLM response missing REASONING/IMPROVED_PROMPT sections" do

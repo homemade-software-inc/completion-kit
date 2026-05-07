@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Run status transitions", type: :model do
-  let(:prompt) { create(:completion_kit_prompt, llm_model: "gpt-4.1") }
+  let(:prompt) { create(:completion_kit_prompt, llm_model: "gpt-4.1", template: "Static prompt") }
   let(:client) { instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: []) }
 
   before do

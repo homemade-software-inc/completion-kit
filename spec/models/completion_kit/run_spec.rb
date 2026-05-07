@@ -104,7 +104,7 @@ RSpec.describe CompletionKit::Run, type: :model do
   end
 
   describe "#start!" do
-    let(:prompt) { create(:completion_kit_prompt) }
+    let(:prompt) { create(:completion_kit_prompt, template: "Static prompt with no variables") }
     let(:client) { instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: []) }
 
     before do
@@ -168,7 +168,7 @@ RSpec.describe CompletionKit::Run, type: :model do
   end
 
   describe "#generate_responses!" do
-    let(:prompt) { create(:completion_kit_prompt) }
+    let(:prompt) { create(:completion_kit_prompt, template: "Static prompt with no variables") }
     let(:client) { instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: []) }
 
     before do
@@ -180,6 +180,35 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = create(:completion_kit_run, prompt: prompt, dataset: nil)
       result = run.generate_responses!
       expect(result).to be true
+    end
+  end
+
+  describe "dataset_supplies_prompt_variables validation" do
+    let(:prompt_with_vars) { create(:completion_kit_prompt, template: "Hello {{name}}, regarding {{topic}}") }
+    let(:prompt_without_vars) { create(:completion_kit_prompt, template: "Static prompt") }
+
+    it "rejects a run when prompt has variables and no dataset is supplied" do
+      run = build(:completion_kit_run, prompt: prompt_with_vars, dataset: nil)
+      expect(run).not_to be_valid
+      expect(run.errors[:dataset_id].join).to include("name").and include("topic")
+    end
+
+    it "rejects a run when dataset is missing required columns" do
+      dataset = create(:completion_kit_dataset, csv_data: "name,other\nfoo,bar\n")
+      run = build(:completion_kit_run, prompt: prompt_with_vars, dataset: dataset)
+      expect(run).not_to be_valid
+      expect(run.errors[:dataset_id].join).to include("topic")
+    end
+
+    it "accepts a run when all variables are present in dataset headers" do
+      dataset = create(:completion_kit_dataset, csv_data: "name,topic\nfoo,bar\n")
+      run = build(:completion_kit_run, prompt: prompt_with_vars, dataset: dataset)
+      expect(run).to be_valid
+    end
+
+    it "accepts a run with no dataset when prompt has no variables" do
+      run = build(:completion_kit_run, prompt: prompt_without_vars, dataset: nil)
+      expect(run).to be_valid
     end
   end
 

@@ -73,6 +73,7 @@ ActiveRecord::Schema.define do
     t.string :discovery_status
     t.integer :discovery_current, default: 0
     t.integer :discovery_total, default: 0
+    t.text :discovery_error
     t.timestamps
   end
 
