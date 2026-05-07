@@ -47,7 +47,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       ))
       stub_faraday_post(faraday_response(
         success: true,
-        body: { output: [{ type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: Good" }] }] }.to_json
+        body: { output: [{ type: "message", content: [{ type: "output_text", text: "PING-OK\nScore: 4\nFeedback: Good" }] }] }.to_json
       ))
 
       service = described_class.new(config: config)
@@ -96,7 +96,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       ))
       stub_faraday_post(faraday_response(
         success: true,
-        body: { output: [{ type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: ok" }] }] }.to_json
+        body: { output: [{ type: "message", content: [{ type: "output_text", text: "PING-OK\nScore: 4\nFeedback: ok" }] }] }.to_json
       ))
 
       service = described_class.new(config: config)
@@ -120,7 +120,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       ))
       stub_faraday_post(faraday_response(
         success: true,
-        body: { output: [{ type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: ok" }] }] }.to_json
+        body: { output: [{ type: "message", content: [{ type: "output_text", text: "PING-OK\nScore: 4\nFeedback: ok" }] }] }.to_json
       ))
 
       service = described_class.new(config: config)
@@ -205,6 +205,24 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.status).to eq("failed")
     end
 
+    it "marks generation failed when the model replies but does not follow the text completion instruction" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "image-gen-only", object: "model" }] }.to_json
+      ))
+      stub_faraday_post(faraday_response(
+        success: true,
+        body: { output: [{ type: "message", content: [{ type: "output_text", text: "I am an image generation model and cannot produce text completions." }] }] }.to_json
+      ))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "image-gen-only")
+      expect(model.supports_generation).to eq(false)
+      expect(model.generation_error).to include("Did not follow text completion instruction")
+    end
+
     it "marks judging as failed when probe response is not parseable" do
       stub_faraday_get(faraday_response(
         success: true,
@@ -212,7 +230,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       ))
       stub_faraday_post(faraday_response(
         success: true,
-        body: { output: [{ type: "message", content: [{ type: "output_text", text: "I refuse to score things" }] }] }.to_json
+        body: { output: [{ type: "message", content: [{ type: "output_text", text: "PING-OK\nI refuse to score things" }] }] }.to_json
       ))
 
       service = described_class.new(config: config)
@@ -326,14 +344,14 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
           faraday_response(success: true, body: {
             output: [
               { type: "reasoning", summary: "thinking..." },
-              { type: "message", content: [{ type: "output_text", text: "Hello" }] }
+              { type: "message", content: [{ type: "output_text", text: "PING-OK" }] }
             ]
           }.to_json)
         else
           faraday_response(success: true, body: {
             output: [
               { type: "reasoning", summary: "weighing the score" },
-              { type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: clear" }] }
+              { type: "message", content: [{ type: "output_text", text: "PING-OK\nScore: 4\nFeedback: clear" }] }
             ]
           }.to_json)
         end
@@ -377,7 +395,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
         block.call(req) if block
         call_count += 1
         if call_count == 1
-          faraday_response(success: true, body: { output: [{ type: "message", content: [{ type: "output_text", text: "Hello!" }] }] }.to_json)
+          faraday_response(success: true, body: { output: [{ type: "message", content: [{ type: "output_text", text: "PING-OK" }] }] }.to_json)
         else
           faraday_response(success: false, status: 500, body: "Internal Server Error")
         end
@@ -409,7 +427,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
         if body["reasoning"]
           faraday_response(success: false, status: 400, body: %(Unsupported value: 'low' is not supported with the 'gpt-5-snobby' model.))
         else
-          faraday_response(success: true, body: { output: [{ type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: ok" }] }] }.to_json)
+          faraday_response(success: true, body: { output: [{ type: "message", content: [{ type: "output_text", text: "PING-OK\nScore: 4\nFeedback: ok" }] }] }.to_json)
         end
       end
 
@@ -436,7 +454,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
         block.call(req) if block
         call_count += 1
         if call_count == 1
-          faraday_response(success: true, body: { output: [{ type: "message", content: [{ type: "output_text", text: "Hello!" }] }] }.to_json)
+          faraday_response(success: true, body: { output: [{ type: "message", content: [{ type: "output_text", text: "PING-OK" }] }] }.to_json)
         else
           raise StandardError, "judge exploded"
         end
@@ -464,7 +482,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       ))
       stub_faraday_post(faraday_response(
         success: true,
-        body: { content: [{ type: "text", text: "Score: 5\nFeedback: Great" }] }.to_json
+        body: { content: [{ type: "text", text: "PING-OK\nScore: 5\nFeedback: Great" }] }.to_json
       ))
 
       service = described_class.new(config: config)

@@ -6,8 +6,9 @@
   <% end %>
 
   <% if run.status == "running" && !CompletionKit::WorkerHealth.healthy? %>
-    <div class="ck-flash ck-flash--alert">
-      No worker process is running. Generate and judge jobs are queued but nothing is processing them. Start <code>bin/jobs</code> (or your worker service) to resume.
+    <div class="ck-banner ck-banner--warn">
+      <strong class="ck-banner__title">No worker is processing jobs</strong>
+      <p class="ck-banner__body">Jobs are queued but nothing is consuming them. Start <code class="ck-banner__code">bin/jobs</code> (or your worker service) to resume.</p>
     </div>
   <% end %>
 

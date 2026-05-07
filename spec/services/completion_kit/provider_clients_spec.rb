@@ -162,6 +162,20 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(client.generate_completion("prompt", model: "claude-opus-4-7", temperature: 0.7)).to eq("no-temp result")
     expect(posted[0].body).to include("\"temperature\":0.7")
     expect(posted[1].body).not_to include("temperature")
+    expect(client.temperature_dropped?).to be(true)
+  end
+
+  it "exposes temperature_dropped? as false on each provider client when the request succeeds with temperature" do
+    [
+      [CompletionKit::AnthropicClient.new(api_key: "k"), { content: [{ text: "hi" }] }.to_json],
+      [CompletionKit::OpenAiClient.new(api_key: "k"), { output: [{ type: "message", content: [{ type: "output_text", text: "hi" }] }] }.to_json],
+      [CompletionKit::OpenRouterClient.new(api_key: "k"), { choices: [{ message: { content: "hi" } }] }.to_json],
+      [CompletionKit::OllamaClient.new(api_key: "k", api_endpoint: "https://ollama.example.test"), { choices: [{ text: "hi" }] }.to_json]
+    ].each do |client, body|
+      stub_faraday(faraday_response(success: true, body: body))
+      client.generate_completion("prompt", temperature: 0.5)
+      expect(client.temperature_dropped?).to be(false), "expected #{client.class} temperature_dropped? to be false"
+    end
   end
 
   it "returns empty string when OpenAI response output has no message item" do

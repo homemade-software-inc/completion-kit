@@ -56,7 +56,7 @@ module CompletionKit
     def judge_count
       model_ids = Model.where(provider: provider).pluck(:model_id)
       return 0 if model_ids.empty?
-      Run.where(judge_model: model_ids).count
+      Run.where(judge_model: model_ids).distinct.count(:judge_model)
     end
 
     def last_used_at

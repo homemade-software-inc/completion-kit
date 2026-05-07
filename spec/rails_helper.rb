@@ -106,6 +106,7 @@ ActiveRecord::Schema.define do
     t.text :error_message
     t.text :failure_summary
     t.float :temperature, default: 1.0
+    t.boolean :temperature_ignored, default: false, null: false
     t.timestamps
   end
 

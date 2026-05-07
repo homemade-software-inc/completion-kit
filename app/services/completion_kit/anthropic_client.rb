@@ -5,7 +5,12 @@ module CompletionKit
       { id: "claude-3-5-haiku-latest", name: "Claude 3.5 Haiku" }
     ].freeze
 
+    def temperature_dropped?
+      @temperature_dropped == true
+    end
+
     def generate_completion(prompt, options = {})
+      @temperature_dropped = false
       return "Error: API key not configured" unless configured?
 
       model = options[:model] || "claude-3-7-sonnet-latest"
@@ -15,6 +20,7 @@ module CompletionKit
       response = post_messages(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
 
       if response.status == 400 && temperature_unsupported?(response.body)
+        @temperature_dropped = true
         response = post_messages(model: model, prompt: prompt, max_tokens: max_tokens, temperature: nil)
       end
 

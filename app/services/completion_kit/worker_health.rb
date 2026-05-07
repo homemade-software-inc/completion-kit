@@ -4,7 +4,10 @@ module CompletionKit
 
     def self.healthy?
       return true unless defined?(::SolidQueue::Process)
-      ::SolidQueue::Process.where("last_heartbeat_at > ?", HEARTBEAT_THRESHOLD.ago).exists?
+      ::SolidQueue::Process
+        .where("kind LIKE 'Worker%'")
+        .where("last_heartbeat_at > ?", HEARTBEAT_THRESHOLD.ago)
+        .exists?
     end
   end
 end

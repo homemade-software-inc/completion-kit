@@ -67,11 +67,27 @@ function ckRelativeTime(then) {
   return years === 1 ? "about 1 year" : "about " + years + " years";
 }
 
+function ckRelativeTimeCompact(then) {
+  var seconds = Math.round((Date.now() - then.getTime()) / 1000);
+  if (seconds < 60) return "now";
+  var minutes = Math.round(seconds / 60);
+  if (minutes < 60) return minutes + "m";
+  var hours = Math.round(minutes / 60);
+  if (hours < 24) return hours + "h";
+  var days = Math.round(hours / 24);
+  if (days < 30) return days + "d";
+  var months = Math.round(days / 30);
+  if (months < 12) return months + "mo";
+  var years = Math.round(days / 365);
+  return years + "y";
+}
+
 function ckTickRelativeTimes() {
   document.querySelectorAll("[data-relative-time]").forEach(function(el) {
     var then = new Date(el.getAttribute("datetime"));
     if (isNaN(then.getTime())) return;
-    el.textContent = ckRelativeTime(then);
+    var verbose = el.getAttribute("data-relative-time") === "verbose";
+    el.textContent = verbose ? ckRelativeTime(then) : ckRelativeTimeCompact(then);
     el.setAttribute("title", then.toLocaleString());
   });
 }

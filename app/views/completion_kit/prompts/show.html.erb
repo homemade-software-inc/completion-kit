@@ -56,7 +56,7 @@
           <tr>
             <td><strong>v<%= v.version_number %></strong></td>
             <td><span class="ck-chip ck-chip--soft"><%= v.llm_model %></span></td>
-            <td class="ck-meta-copy"><time data-relative-time datetime="<%= v.created_at.utc.iso8601 %>"><%= time_ago_in_words(v.created_at) %></time> ago</td>
+            <td class="ck-meta-copy"><time datetime="<%= v.created_at.iso8601 %>" data-local-time><%= v.created_at.utc.strftime("%b %-d, %Y at %-I:%M %p UTC") %></time></td>
             <td>
               <% if v.current? %>
                 <span class="ck-chip">Current</span>
@@ -75,7 +75,7 @@
   <section class="ck-card--spaced">
     <p class="ck-kicker">Runs</p>
 
-    <table class="ck-results-table" style="margin-top: 0.5rem;">
+    <table class="ck-results-table ck-runs-table" style="margin-top: 0.5rem;">
       <thead>
         <tr>
           <th>Run</th>
@@ -88,35 +88,7 @@
       </thead>
       <tbody>
         <% @runs.each do |run| %>
-          <tr onclick="window.location='<%= run_path(run) %>'" style="cursor: pointer;">
-            <td><span class="ck-run-name"><span class="<%= ck_run_dot(run) %>"></span><strong><%= run.name %></strong></span></td>
-            <td><%= run.responses.size %></td>
-            <td>
-              <% metrics = run.metric_averages.sort_by { |m| m[:name].to_s.downcase } %>
-              <% if metrics.any? %>
-                <div class="ck-metric-bar ck-metric-bar--compact">
-                  <% metrics.each do |m| %>
-                    <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(m[:avg]) %>">
-                      <span class="ck-metric-pip__bar"></span>
-                      <span class="ck-metric-pip__label"><%= m[:name] %> <strong><%= m[:avg] %></strong></span>
-                    </span>
-                  <% end %>
-                </div>
-              <% else %>
-                &mdash;
-              <% end %>
-            </td>
-            <td>
-              <% avg = run.avg_score %>
-              <% if avg %>
-                <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
-              <% else %>
-                &mdash;
-              <% end %>
-            </td>
-            <td class="ck-meta-copy"><time data-relative-time datetime="<%= run.created_at.utc.iso8601 %>"><%= time_ago_in_words(run.created_at) %></time> ago</td>
-            <td class="ck-results-table__arrow">&rarr;</td>
-          </tr>
+          <%= render "completion_kit/runs/row", run: run %>
         <% end %>
       </tbody>
     </table>

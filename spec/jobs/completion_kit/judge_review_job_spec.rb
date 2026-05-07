@@ -15,6 +15,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   before do
     CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress)
     allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
   end
 

@@ -169,14 +169,18 @@ module CompletionKit
     end
 
     def probe_generation(model)
-      response = send_probe(model.model_id, "Say hello", 65536)
+      probe_input = "Reply with exactly this token and nothing else: PING-OK"
+      response = send_probe(model.model_id, probe_input, 65536)
       if response.success?
-        text = extract_text(response)
-        if text.present?
+        text = extract_text(response).to_s
+        if text.blank?
+          model.supports_generation = false
+          model.generation_error = "Empty response"
+        elsif text.include?("PING-OK")
           model.supports_generation = true
         else
           model.supports_generation = false
-          model.generation_error = "Empty response"
+          model.generation_error = "Did not follow text completion instruction (likely non-text-output model): #{text.truncate(200)}"
         end
       else
         model.supports_generation = false

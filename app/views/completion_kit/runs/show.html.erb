@@ -47,6 +47,9 @@
   <div class="ck-run-config__row">
     <span class="ck-run-config__key">Temperature</span>
     <span><%= @run.temperature %></span>
+    <% if @run.temperature_ignored? %>
+      <span class="ck-run-config__warn" style="color: var(--ck-dim);" title="The model rejected the temperature parameter, so CompletionKit re-sent the request without it.">ignored by model</span>
+    <% end %>
   </div>
 </div>
 
@@ -77,7 +80,52 @@
         </div>
         <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">×</button>
       </header>
-      <pre class="ck-code ck-code--dark ck-modal__body"><%= dataset_preview_lines.join %><% if dataset_lines.count > dataset_preview_lines.count %><%= "\n…\n#{dataset_lines.count - dataset_preview_lines.count} more rows" %><% end %></pre>
+      <div class="ck-modal__body">
+        <%
+          require "csv"
+          parsed_rows = []
+          parse_error = nil
+          begin
+            parsed_rows = ::CSV.parse(@run.dataset.csv_data.to_s)
+          rescue ::CSV::MalformedCSVError => e
+            parse_error = e.message
+          end
+          headers = parsed_rows.first || []
+          body_rows = parsed_rows.drop(1).first(50)
+          remaining = parsed_rows.drop(1).count - body_rows.count
+        %>
+        <% if parse_error %>
+          <p class="ck-field-hint" style="color: var(--ck-warning); padding: 1rem;">Could not parse CSV: <%= parse_error %></p>
+        <% elsif headers.empty? %>
+          <p class="ck-field-hint" style="padding: 1rem;">Dataset is empty.</p>
+        <% else %>
+          <div class="ck-csv-table-wrap">
+            <table class="ck-csv-table">
+              <thead>
+                <tr>
+                  <th class="ck-csv-table__rownum">#</th>
+                  <% headers.each do |h| %>
+                    <th><%= h %></th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody>
+                <% body_rows.each_with_index do |row, idx| %>
+                  <tr>
+                    <td class="ck-csv-table__rownum"><%= idx + 1 %></td>
+                    <% headers.each_with_index do |_, i| %>
+                      <td title="<%= row[i] %>"><%= row[i] %></td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+          <% if remaining > 0 %>
+            <p class="ck-modal__meta" style="margin: 0.65rem 0 0; padding: 0 0.25rem;"><%= remaining %> more rows in the full dataset.</p>
+          <% end %>
+        <% end %>
+      </div>
       <footer class="ck-modal__footer">
         <%= link_to "Open dataset", dataset_path(@run.dataset), class: ck_button_classes(:light, variant: :outline) %>
         <button type="button" class="ck-modal__close-btn" onclick="this.closest('dialog').close()">Close</button>
@@ -91,13 +139,13 @@
 <%= render "sort_toolbar", run: @run %>
 
 <p class="ck-kicker" style="margin-top: 1.5rem;<%= ' display:none;' unless @responses.any? %>" id="responses_kicker">Responses</p>
-<table class="ck-results-table"<%= ' hidden'.html_safe unless @responses.any? %> id="responses_table">
+<table class="ck-results-table ck-responses-table"<%= ' hidden'.html_safe unless @responses.any? %> id="responses_table">
   <thead>
     <tr>
       <th>#</th>
       <th>Response</th>
       <th>Metrics</th>
-      <th>Score</th>
+      <th>Avg score</th>
       <th>Status</th>
       <th></th>
     </tr>
@@ -114,12 +162,14 @@
     (function() {
       if (window.ckRunStatusPoll) clearInterval(window.ckRunStatusPoll);
       var url = '<%= refresh_status_run_path(@run) %>';
-      window.ckRunStatusPoll = setInterval(function() {
+      var refresh = function() {
         fetch(url, { headers: { Accept: 'text/vnd.turbo-stream.html' }, credentials: 'same-origin' })
           .then(function(r) { return r.ok ? r.text() : null; })
           .then(function(html) { if (html) Turbo.renderStreamMessage(html); })
           .catch(function() {});
-      }, 15000);
+      };
+      setTimeout(refresh, 1000);
+      window.ckRunStatusPoll = setInterval(refresh, 15000);
     })();
   </script>
 <% end %>

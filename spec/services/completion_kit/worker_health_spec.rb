@@ -25,10 +25,10 @@ RSpec.describe CompletionKit::WorkerHealth do
           class << self
             attr_accessor :exists_result
             def where(*)
+              klass = self
               relation = Object.new
-              relation.define_singleton_method(:exists?) { Class.singleton_class.send(:attr_accessor, :exists_result) || self }
-              result = exists_result
-              relation.define_singleton_method(:exists?) { result }
+              relation.define_singleton_method(:where) { |*| self }
+              relation.define_singleton_method(:exists?) { klass.exists_result }
               relation
             end
           end

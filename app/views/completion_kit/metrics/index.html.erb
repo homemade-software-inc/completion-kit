@@ -9,7 +9,7 @@
 </section>
 
 <% if @metrics.any? %>
-  <table class="ck-results-table">
+  <table class="ck-results-table ck-metrics-table">
     <thead>
       <tr>
         <th>Name</th>
@@ -23,7 +23,20 @@
         <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
           <td><strong><%= metric.name %></strong></td>
           <td class="ck-meta-copy"><%= truncate(metric.instruction.to_s, length: 90).presence || "—" %></td>
-          <td class="ck-meta-copy"><%= metric.metric_groups.any? ? metric.metric_groups.map(&:name).join(", ") : "—" %></td>
+          <td>
+            <% groups = metric.metric_groups %>
+            <% if groups.any? %>
+              <div class="ck-metrics-table__groups">
+                <% groups.each do |g| %>
+                  <%= link_to metric_group_path(g), class: "ck-metric-group-pill ck-metric-group-pill--active", onclick: "event.stopPropagation();" do %>
+                    <span class="ck-metric-group-pill__label"><%= g.name %></span>
+                  <% end %>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="ck-metrics-table__dim">—</span>
+            <% end %>
+          </td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
       <% end %>

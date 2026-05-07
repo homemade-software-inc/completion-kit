@@ -6,7 +6,12 @@ module CompletionKit
       { id: "gpt-4o-mini", name: "GPT-4o Mini" }
     ].freeze
 
+    def temperature_dropped?
+      @temperature_dropped == true
+    end
+
     def generate_completion(prompt, options = {})
+      @temperature_dropped = false
       return "Error: API key not configured" unless configured?
 
       model = options[:model] || "gpt-4.1-mini"
@@ -16,6 +21,7 @@ module CompletionKit
       response = post_responses(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
 
       if response.status == 400 && temperature_unsupported?(response.body)
+        @temperature_dropped = true
         response = post_responses(model: model, prompt: prompt, max_tokens: max_tokens, temperature: nil)
       end
 

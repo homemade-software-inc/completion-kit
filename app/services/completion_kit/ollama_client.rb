@@ -1,6 +1,11 @@
 module CompletionKit
   class OllamaClient < LlmClient
+    def temperature_dropped?
+      @temperature_dropped == true
+    end
+
     def generate_completion(prompt, options = {})
+      @temperature_dropped = false
       return "Error: API endpoint not configured" unless configured?
 
       model = options[:model]
@@ -10,6 +15,7 @@ module CompletionKit
       response = post_completion(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
 
       if response.status == 400 && temperature_unsupported?(response.body)
+        @temperature_dropped = true
         response = post_completion(model: model, prompt: prompt, max_tokens: max_tokens, temperature: nil)
       end
 

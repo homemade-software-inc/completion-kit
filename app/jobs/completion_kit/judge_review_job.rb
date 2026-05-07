@@ -71,6 +71,7 @@ module CompletionKit
       review.save!
 
       run.send(:broadcast_response_update, response)
+      run.send(:broadcast_progress)
       enqueue_completion_check
     end
 
@@ -93,6 +94,7 @@ module CompletionKit
       )
       review.save!(validate: false)
       response.run&.send(:broadcast_response_update, response)
+      response.run&.send(:broadcast_progress)
     end
 
     def provider_for(response)

@@ -43,6 +43,13 @@ module CompletionKit
       reviews.any? { |r| r.ai_score.present? }
     end
 
+    def fully_reviewed?
+      metric_ids = run.metric_ids
+      return true if metric_ids.empty?
+      reviewed_metric_ids = reviews.where(status: Review::TERMINAL_STATUSES).pluck(:metric_id).uniq
+      (metric_ids - reviewed_metric_ids).empty?
+    end
+
     def error_payload
       return nil if error_class.blank?
       { provider: error_provider, class: error_class, status: error_status, message: error_message }

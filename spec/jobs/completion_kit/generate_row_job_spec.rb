@@ -33,6 +33,15 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     expect(response.error_class).to be_nil
   end
 
+  it "marks the run as temperature_ignored when the client reports the parameter was dropped" do
+    fake_client = double("client", generate_completion: "ok", configured?: true, temperature_dropped?: true)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
+
+    described_class.perform_now(run.id, response.id)
+
+    expect(run.reload.temperature_ignored?).to be(true)
+  end
+
   it "treats an Error: text response from the LLM client as a terminal failure" do
     fake_client = double("client", generate_completion: "Error: unexpected character: '<!DOCTYPE' at line 1 column 1", configured?: true)
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)

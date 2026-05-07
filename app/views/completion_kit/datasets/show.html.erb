@@ -14,30 +14,68 @@
 
 <section>
   <p class="ck-kicker">CSV preview</p>
-  <pre class="ck-code ck-code--dark"><%= @dataset.csv_data %></pre>
+  <%
+    require "csv"
+    parsed_rows = []
+    parse_error = nil
+    begin
+      csv = ::CSV.parse(@dataset.csv_data.to_s)
+      parsed_rows = csv
+    rescue ::CSV::MalformedCSVError => e
+      parse_error = e.message
+    end
+    headers = parsed_rows.first || []
+    body_rows = parsed_rows.drop(1)
+  %>
+  <% if parse_error %>
+    <p class="ck-field-hint" style="color: var(--ck-warning);">Could not parse CSV: <%= parse_error %></p>
+    <pre class="ck-code ck-code--dark"><%= @dataset.csv_data %></pre>
+  <% elsif headers.empty? %>
+    <p class="ck-field-hint">Dataset is empty.</p>
+  <% else %>
+    <div class="ck-csv-table-wrap">
+      <table class="ck-csv-table">
+        <thead>
+          <tr>
+            <th class="ck-csv-table__rownum">#</th>
+            <% headers.each do |h| %>
+              <th><%= h %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% body_rows.each_with_index do |row, idx| %>
+            <tr>
+              <td class="ck-csv-table__rownum"><%= idx + 1 %></td>
+              <% headers.each_with_index do |_, i| %>
+                <td title="<%= row[i] %>"><%= row[i] %></td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
 </section>
 
 <% if @runs.any? %>
   <section class="ck-card--spaced">
     <p class="ck-kicker">Runs</p>
 
-    <table class="ck-results-table" style="margin-top: 0.5rem;">
+    <table class="ck-results-table ck-runs-table" style="margin-top: 0.5rem;">
       <thead>
         <tr>
           <th>Run</th>
-          <th>Prompt</th>
           <th>Responses</th>
+          <th>Metrics</th>
+          <th>Avg score</th>
+          <th>When</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         <% @runs.each do |run| %>
-          <tr onclick="window.location='<%= run_path(run) %>'" style="cursor: pointer;">
-            <td><strong><%= run.name %></strong></td>
-            <td><%= link_to run.prompt.name, prompt_path(run.prompt), class: "ck-link" %></td>
-            <td><%= run.responses.size %></td>
-            <td class="ck-results-table__arrow">&rarr;</td>
-          </tr>
+          <%= render "completion_kit/runs/row", run: run %>
         <% end %>
       </tbody>
     </table>

@@ -1,0 +1,50 @@
+<tr onclick="window.location='<%= run_path(run) %>'" style="cursor: pointer;">
+  <td>
+    <div class="ck-runs-table__identity">
+      <span class="ck-run-name">
+        <span class="<%= ck_run_dot(run) %>"></span>
+        <strong><%= run.name %></strong>
+      </span>
+      <div class="ck-runs-table__config">
+        <%= link_to run.prompt.name, prompt_path(run.prompt), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>
+        <span class="ck-runs-table__version">v<%= run.prompt.version_number %></span>
+        <% if run.dataset %>
+          <span class="ck-runs-table__sep">·</span>
+          <%= link_to run.dataset.name, dataset_path(run.dataset), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>
+        <% end %>
+      </div>
+    </div>
+  </td>
+  <td>
+    <span class="ck-runs-table__count">
+      <%= run.responses.size %><% if run.dataset %><span class="ck-runs-table__count-of">/<%= run.dataset.row_count %></span><% end %>
+    </span>
+  </td>
+  <td>
+    <% metrics = run.metric_averages.sort_by { |m| m[:name].to_s.downcase } %>
+    <% if metrics.any? %>
+      <div class="ck-metric-bar ck-metric-bar--compact">
+        <% metrics.each do |m| %>
+          <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(m[:avg]) %>">
+            <span class="ck-metric-pip__bar"></span>
+            <span class="ck-metric-pip__label"><%= m[:name] %> <strong><%= m[:avg] %></strong></span>
+          </span>
+        <% end %>
+      </div>
+    <% else %>
+      <span class="ck-runs-table__dim">—</span>
+    <% end %>
+  </td>
+  <td>
+    <% avg = run.avg_score %>
+    <% if avg %>
+      <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
+    <% else %>
+      <span class="ck-runs-table__dim">—</span>
+    <% end %>
+  </td>
+  <td class="ck-runs-table__when">
+    <time data-relative-time datetime="<%= run.created_at.utc.iso8601 %>"><%= time_ago_in_words(run.created_at) %></time> ago
+  </td>
+  <td class="ck-results-table__arrow">&rarr;</td>
+</tr>

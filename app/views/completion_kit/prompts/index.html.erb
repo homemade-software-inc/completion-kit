@@ -9,14 +9,14 @@
 </section>
 
 <% if @prompts.any? %>
-  <table class="ck-results-table">
+  <table class="ck-results-table ck-prompts-table">
     <thead>
       <tr>
         <th>Name</th>
         <th>Version</th>
         <th>Model</th>
+        <th>Best score</th>
         <th>Runs</th>
-        <th>Last run</th>
         <th></th>
       </tr>
     </thead>
@@ -33,14 +33,25 @@
           </td>
           <td><span class="ck-chip"><%= prompt.llm_model %></span></td>
           <% family_runs = CompletionKit::Run.where(prompt_id: prompt.family_versions.select(:id)) %>
-          <td><%= family_runs.count %></td>
+          <% current_version_runs = prompt.runs.includes(responses: :reviews) %>
+          <% best_score = current_version_runs.map(&:avg_score).compact.max %>
           <td>
-            <% last_run = family_runs.order(created_at: :desc).first %>
-            <% if last_run %>
-              <time data-relative-time datetime="<%= last_run.created_at.utc.iso8601 %>"><%= time_ago_in_words(last_run.created_at) %></time> ago
+            <% if best_score %>
+              <span class="<%= ck_badge_classes(ck_score_kind(best_score)) %>"><%= best_score %></span>
             <% else %>
-              Never
+              <span class="ck-prompts-table__dim">—</span>
             <% end %>
+          </td>
+          <td>
+            <div class="ck-prompts-table__runs">
+              <span class="ck-prompts-table__runs-count"><%= family_runs.count %></span>
+              <% last_run = family_runs.order(created_at: :desc).first %>
+              <% if last_run %>
+                <span class="ck-prompts-table__runs-when">last <time data-relative-time datetime="<%= last_run.created_at.utc.iso8601 %>"><%= time_ago_in_words(last_run.created_at) %></time> ago</span>
+              <% else %>
+                <span class="ck-prompts-table__runs-when">never run</span>
+              <% end %>
+            </div>
           </td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>

@@ -51,12 +51,17 @@ module CompletionKit
       text = client.generate_completion(rendered, model: prompt.llm_model, temperature: run.temperature)
       raise StandardError, text.to_s.sub(/\AError:\s*/, "") if text.to_s.start_with?("Error:")
 
+      if client.respond_to?(:temperature_dropped?) && client.temperature_dropped? && !run.temperature_ignored?
+        run.update_columns(temperature_ignored: true)
+      end
+
       response.update!(
         status: "succeeded",
         response_text: text,
         error_provider: nil, error_class: nil, error_status: nil, error_message: nil
       )
       run.send(:broadcast_response_update, response)
+      run.send(:broadcast_progress)
 
       if run.judge_configured?
         run.metrics.each do |metric|
@@ -89,6 +94,7 @@ module CompletionKit
         error_message: error.message.to_s.truncate(2000)
       )
       response.run&.send(:broadcast_response_update, response)
+      response.run&.send(:broadcast_progress)
     end
 
     def provider_for(response)

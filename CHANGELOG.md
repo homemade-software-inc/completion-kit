@@ -7,6 +7,134 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-05-07
+
+### Added
+
+- **Live status panel during runs.** The completed-run summary layout
+  (Outcome / Metrics / Avg score) now also drives the running view, with
+  per-row updates broadcast on every Generate and Judge job completion.
+  Metric pip bar shows one pip per configured metric — colored as soon
+  as any reviews score, dim "pending" otherwise. Avg score badge
+  appears as a running average the moment any reviews come in. Outcome
+  reads `3 of 5 responses · 1 of 5 judged` while in flight.
+- **Status pill inside the panel.** Small color-coded `● RUNNING` /
+  `● COMPLETED` indicator beside the Outcome label so the run state is
+  visible without scrolling back to the page header.
+- **Re-run-temperature awareness.** New `temperature_ignored:boolean`
+  column on runs. Each LLM client (Anthropic, OpenAI, OpenRouter,
+  Ollama) now exposes `temperature_dropped?` after a call and the
+  GenerateRowJob persists the flag to the run when the fallback fires.
+  Run show page renders a small "ignored by model" caption next to the
+  temperature value when set. Migration `20260507150000`.
+- **Stricter generation probe.** Sends `Reply with exactly this token
+  and nothing else: PING-OK` and only marks `supports_generation = true`
+  when the response actually contains `PING-OK`. Image-only models that
+  reply with refusal text (e.g. *"I am an image generation model..."*)
+  now correctly fail the probe with a clear error rather than being
+  classified as text generators.
+- **Re-run feature**: `POST /runs/:id/rerun` clones a run's config
+  (prompt, dataset, judge model, temperature, metrics) and starts it.
+  Surfaces as a "Re-run" button on completed runs and
+  "Re-run as new" on failed runs.
+- **Per-response status column** with explicit Done / Judging / Awaiting
+  judge / Queued / Generating / Retrying chips. New
+  `Response#fully_reviewed?` checks every configured metric has a
+  terminal review for that response — eliminates the previous bug where
+  "Done" lit up after the first metric scored.
+- **Per-response metric pip bar** in the responses table, sorted
+  alphabetically.
+- **Compact relative-time** as the default for `<time
+  data-relative-time>` — renders `5m`, `2h`, `21d`, etc. Verbose
+  available via `data-relative-time="verbose"`.
+- **Dataset CSV preview** rendered as a sortable HTML table with sticky
+  header, row-number gutter, ellipsis-truncated cells, and hover-to-
+  expand. Fallback to raw `<pre>` if CSV parsing fails.
+- **Best score column on prompts index**, scoped to the row's current
+  version. Empty `—` when no completed runs.
+- **Worker health check tightened** to require a `Worker`-kind process
+  with a fresh heartbeat (was: any SolidQueue process). Run page
+  re-fetches the status header ~1s after load to clear false-positive
+  banners caused by transient worker restarts. Banner restyled as a
+  warning with a structured title + body.
+
+### Changed
+
+- **Runs table consolidated to one shared `_row` partial** used across
+  runs/index, prompts/show, and datasets/show. Columns harmonized to
+  Run | Prompt | Responses | Metrics | Avg score | When (with the
+  Prompt cell stacking dataset name + count on a sub-line).
+- **Responses table redesigned as a `ck-results-table`** with columns
+  # | Response | Metrics | Avg score | Status. Score uses the colored
+  `ck-badge` pill matching every other table.
+- **Prompts index columns**: Name | Version | Model | Best score |
+  Runs (with last-run timestamp as a sub-line). Drops the standalone
+  Last run column whose visual prominence outweighed its information
+  value.
+- **Run-name dot is now bigger and more legible** — 10×10 with a soft
+  colored glow, so status reads at a glance across long lists.
+- **Stars unified to gold** (`var(--ck-warning)`) everywhere; SVG
+  stars on metric forms / show / response detail were previously cyan.
+- **Metric form fonts**: metric names and group pill labels switched
+  to mono so they read as identifiers, with sans body for instruction
+  copy. Custom dark-themed checkboxes already in place.
+- **Metrics index "In groups" column** renders each membership as a
+  cyan pill (link to the group), matching the run-form group toggles
+  but without the tick (membership, not selection).
+- **Status panel sort toolbar reserves its slot** so the buttons
+  appearing after a run completes no longer kicks the response table
+  down by ~3rem.
+- **Field hint slot reserves space** (`min-height` on
+  `.ck-field-hint`) — toggling judge / dataset / metrics hints in and
+  out no longer shifts the run form.
+- **Page no longer jumps right when a scrollbar appears** — added
+  `scrollbar-gutter: stable` on `<html>`.
+- **Datasets index Created column** uses a readable absolute date
+  (`Apr 16, 2026`) instead of a relative one.
+- **Prompt versions Created column** includes the time
+  (`Apr 16, 2026 at 3:31 PM`) for debugging.
+- **Worker-down banner copy** restructured as a structured warning
+  (title + body) using amber rather than red — jobs aren't lost, just
+  queued.
+
+### Fixed
+
+- **Provider page judges count was misleading.** It counted every Run
+  using this provider as judge (including duplicates) but the label
+  read "X judges" — implying distinct judges. Switched to count
+  distinct `judge_model` values: now matches the natural reading.
+- **Dataset preview modal on the run page** uses the same
+  `ck-csv-table` styling as the dataset show page (sticky header,
+  row-number gutter, ellipsis cells) instead of a raw `<pre>` text
+  dump. CSV table inside the modal is borderless to avoid a box-in-a-
+  box look.
+- **CSV table cells no longer expand on hover** — that was causing the
+  rest of the page to shift up/down as you moved between rows. Cells
+  stay fixed-height with ellipsis truncation and use a native `title`
+  tooltip to show the full content on hover.
+- **OpenRouter requests were silently 404ing.** `OpenRouterClient`'s
+  Faraday base URL was `https://openrouter.ai/api/v1` and request URL
+  was `/chat/completions` — Faraday strips the base path when the
+  request URL has a leading `/`, so every POST went to
+  `https://openrouter.ai/chat/completions` (the marketing site,
+  returning HTML). Fixed by moving the prefix into the request URL.
+- **`GenerateRowJob` now marks `Error: …` LLM responses as failed**
+  instead of stuffing the rescue string into `response_text` and
+  marking succeeded.
+- **Run show page no longer hides "Error:"-text rows** — removed the
+  `valid_responses` filter that swallowed stale historical rows.
+- **OpenAI `extract_text` finds the message item** in the reasoning-
+  model output array instead of reading `output[0]` blindly.
+- **Job tests stub `broadcast_progress`** to allow the new live
+  per-row panel updates without rendering partials in the test
+  environment.
+
+### Schema
+
+- **`completion_kit_runs.temperature_ignored: boolean default false`**
+  — set by the job when the LLM client falls back to retrying without
+  the temperature parameter.
+
 ## [0.4.4] - 2026-05-07
 
 ### Added

@@ -2,36 +2,70 @@
 <div id="run_status_panel">
   <% if run.status.in?(%w[running completed]) && snap[:generated_total] > 0 %>
     <% failed_count = snap[:generated_failed] + snap[:judged_failed] %>
+    <% has_judge = snap[:judged_total] > 0 || run.judge_configured? %>
+    <% metric_avgs = run.metric_averages.sort_by { |m| m[:name].to_s.downcase } %>
+    <% metric_lookup = metric_avgs.index_by { |m| m[:name].to_s.downcase } %>
     <section class="ck-run-status ck-run-status--<%= run.status %>">
-      <div class="ck-run-status__metrics">
-        <div class="ck-run-status__metric">
-          <p class="ck-run-status__metric-label">Generated</p>
-          <p class="ck-run-status__metric-value">
-            <span class="ck-run-status__metric-num"><%= snap[:generated_done] %></span><span class="ck-run-status__metric-total">/<%= snap[:generated_total] %></span>
-            <% if snap[:generated_failed] > 0 %>
-              <span class="ck-run-status__metric-fail"><%= snap[:generated_failed] %> failed</span>
+      <div class="ck-run-status__cells">
+        <div class="ck-run-status__cell ck-run-status__cell--grow">
+          <p class="ck-run-status__metric-label ck-run-status__label-row">
+            <span>Outcome</span>
+            <span class="ck-status-badge ck-status-badge--<%= run.status %> ck-run-status__pill">
+              <span class="ck-status-badge__dot" aria-hidden="true"></span>
+              <span class="ck-status-badge__label"><%= run.status.upcase %></span>
+            </span>
+          </p>
+          <p class="ck-run-status__cell-value ck-run-status__summary-line">
+            <span class="ck-run-status__summary-num"><%= snap[:generated_done] %></span>
+            <span class="ck-run-status__summary-text">of <%= snap[:generated_total] %> responses</span>
+            <% if has_judge %>
+              <span class="ck-run-status__summary-sep">·</span>
+              <span class="ck-run-status__summary-num"><%= snap[:judged_done] %></span>
+              <span class="ck-run-status__summary-text">of <%= snap[:judged_total] %> judged</span>
+            <% end %>
+            <% if failed_count > 0 %>
+              <span class="ck-run-status__summary-sep">·</span>
+              <span class="ck-run-status__metric-fail"><%= failed_count %> failed</span>
             <% end %>
           </p>
         </div>
 
-        <% if snap[:judged_total] > 0 || run.judge_configured? %>
-          <div class="ck-run-status__metric">
-            <p class="ck-run-status__metric-label">Judged</p>
-            <p class="ck-run-status__metric-value">
-              <span class="ck-run-status__metric-num"><%= snap[:judged_done] %></span><span class="ck-run-status__metric-total">/<%= snap[:judged_total] %></span>
-              <% if snap[:judged_failed] > 0 %>
-                <span class="ck-run-status__metric-fail"><%= snap[:judged_failed] %> failed</span>
+        <% if has_judge %>
+          <div class="ck-run-status__cell">
+            <p class="ck-run-status__metric-label">Metrics</p>
+            <div class="ck-run-status__cell-value">
+              <% if run.metrics.any? %>
+                <div class="ck-metric-bar ck-metric-bar--compact">
+                  <% run.metrics.order(:name).each do |metric| %>
+                    <% avg_for_metric = metric_lookup[metric.name.to_s.downcase] %>
+                    <% if avg_for_metric %>
+                      <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(avg_for_metric[:avg]) %>">
+                        <span class="ck-metric-pip__bar"></span>
+                        <span class="ck-metric-pip__label"><%= metric.name %> <strong><%= avg_for_metric[:avg] %></strong></span>
+                      </span>
+                    <% else %>
+                      <span class="ck-metric-pip ck-metric-pip--pending">
+                        <span class="ck-metric-pip__bar"></span>
+                        <span class="ck-metric-pip__label"><%= metric.name %> <em>pending</em></span>
+                      </span>
+                    <% end %>
+                  <% end %>
+                </div>
+              <% else %>
+                <span class="ck-run-status__cell-empty">—</span>
               <% end %>
-            </p>
+            </div>
           </div>
-        <% end %>
 
-        <% if run.status == "completed" && run.avg_score %>
-          <div class="ck-run-status__metric">
+          <div class="ck-run-status__cell">
             <p class="ck-run-status__metric-label">Avg score</p>
-            <p class="ck-run-status__metric-value">
-              <span class="ck-run-status__metric-num"><%= run.avg_score %></span><span class="ck-run-status__metric-total">/5</span>
-            </p>
+            <div class="ck-run-status__cell-value">
+              <% if run.avg_score %>
+                <span class="<%= ck_badge_classes(ck_score_kind(run.avg_score)) %> ck-badge--lg"><%= run.avg_score %></span>
+              <% else %>
+                <span class="ck-run-status__cell-empty">—</span>
+              <% end %>
+            </div>
           </div>
         <% end %>
       </div>
