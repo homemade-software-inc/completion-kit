@@ -36,19 +36,12 @@ module CompletionKit
       end
     end
 
-    OPENAI_NON_CHAT_PATTERNS = /audio|realtime|image|tts|whisper|embedding|dall-e|moderation|sora|computer-use|davinci|babbage|transcribe|search/i.freeze
-
     def fetch_openai_models
       response = fetch_connection("https://api.openai.com").get("/v1/models") do |req|
         req.headers["Authorization"] = "Bearer #{@api_key}"
       end
       return [] unless response.success?
-      JSON.parse(response.body).fetch("data", []).filter_map do |entry|
-        id = entry["id"]
-        next nil if id.match?(OPENAI_NON_CHAT_PATTERNS)
-        next nil unless id.match?(/\A(gpt-|chatgpt-|chat-|o[134])/i)
-        { id: id, display_name: nil }
-      end
+      JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: nil } }
     end
 
     def fetch_anthropic_models
@@ -118,24 +111,39 @@ module CompletionKit
 
     def probe_new_models(&on_progress)
       candidates = Model.where(provider: @provider, status: %w[active failed])
-        .where("supports_generation IS NULL OR supports_judging IS NULL OR generation_error IS NOT NULL OR judging_error IS NOT NULL")
+        .where("supports_generation IS NULL OR supports_judging IS NULL OR (generation_error IS NOT NULL AND #{retryable_error_sql('generation_error')}) OR (judging_error IS NOT NULL AND #{retryable_error_sql('judging_error')})")
       total = candidates.count
       current = 0
       candidates.find_each do |model|
-        if model.supports_generation.nil? || model.generation_error.present?
+        probed = false
+        if model.supports_generation.nil? || retryable_error?(model.generation_error)
           model.generation_error = nil
           probe_generation(model)
+          probed = true
         end
-        if model.supports_generation && (model.supports_judging.nil? || model.judging_error.present?)
+        if model.supports_generation && (model.supports_judging.nil? || retryable_error?(model.judging_error))
           model.judging_error = nil
           probe_judging(model)
+          probed = true
         end
-        model.probed_at = Time.current
-        model.status = (model.supports_generation == false ? "failed" : "active")
-        model.save!
+        if probed
+          model.probed_at = Time.current
+          model.status = (model.supports_generation == false ? "failed" : "active")
+          model.save!
+        end
         current += 1
         on_progress&.call(current, total)
       end
+    end
+
+    def retryable_error?(error_string)
+      return false if error_string.blank?
+      return true if error_string.start_with?("429 ")
+      !error_string.match?(/\A4\d\d\s/)
+    end
+
+    def retryable_error_sql(column)
+      "(#{column} LIKE '429 -%' OR #{column} NOT LIKE '4__ -%')"
     end
 
     def probe_generation(model)

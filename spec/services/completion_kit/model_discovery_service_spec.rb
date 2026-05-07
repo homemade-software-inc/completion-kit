@@ -62,36 +62,73 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.probed_at).to be_present
     end
 
-    it "filters out non-chat openai models (audio, embedding, image, etc.) and unrecognized prefixes" do
+    it "does not re-probe models that previously failed with a permanent 4xx error (other than 429)" do
+      m = CompletionKit::Model.create!(
+        provider: "openai", model_id: "tts-1", status: "failed",
+        supports_generation: false,
+        generation_error: "400 - {\"error\": {\"message\": \"You can't sample from this model.\"}}",
+        probed_at: 1.hour.ago, discovered_at: 1.day.ago
+      )
       stub_faraday_get(faraday_response(
         success: true,
-        body: { data: [
-          { id: "gpt-4o-mini", object: "model" },
-          { id: "gpt-4o-audio-preview", object: "model" },
-          { id: "gpt-image-1", object: "model" },
-          { id: "text-embedding-3-small", object: "model" },
-          { id: "tts-1", object: "model" },
-          { id: "whisper-1", object: "model" },
-          { id: "dall-e-3", object: "model" },
-          { id: "sora-2", object: "model" },
-          { id: "babbage-002", object: "model" },
-          { id: "omni-moderation-latest", object: "model" },
-          { id: "o1-mini", object: "model" },
-          { id: "o3-mini", object: "model" },
-          { id: "computer-use-preview", object: "model" },
-          { id: "weird-thing-not-gpt", object: "model" }
-        ] }.to_json
+        body: { data: [{ id: "tts-1", object: "model" }] }.to_json
+      ))
+
+      service = described_class.new(config: config)
+      expect(service).not_to receive(:probe_generation)
+      expect(service).not_to receive(:probe_judging)
+      service.refresh!
+
+      expect(m.reload.generation_error).to start_with("400 -")
+      expect(m.reload.probed_at).to be_within(2.seconds).of(1.hour.ago)
+    end
+
+    it "does re-probe models that previously failed with a transient 429 rate limit" do
+      CompletionKit::Model.create!(
+        provider: "openai", model_id: "gpt-rate-limited", status: "failed",
+        supports_generation: false,
+        generation_error: "429 - rate limited",
+        probed_at: 1.hour.ago, discovered_at: 1.day.ago
+      )
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-rate-limited", object: "model" }] }.to_json
       ))
       stub_faraday_post(faraday_response(
         success: true,
-        body: { output: [{ type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: Good" }] }] }.to_json
+        body: { output: [{ type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: ok" }] }] }.to_json
       ))
 
       service = described_class.new(config: config)
       service.refresh!
 
-      ids = CompletionKit::Model.pluck(:model_id)
-      expect(ids).to contain_exactly("gpt-4o-mini", "o1-mini", "o3-mini")
+      m = CompletionKit::Model.find_by(model_id: "gpt-rate-limited")
+      expect(m.supports_generation).to eq(true)
+      expect(m.status).to eq("active")
+    end
+
+    it "does re-probe models that failed with non-HTTP errors like Empty response" do
+      CompletionKit::Model.create!(
+        provider: "openai", model_id: "gpt-empty-before", status: "failed",
+        supports_generation: false,
+        generation_error: "Empty response",
+        probed_at: 1.hour.ago, discovered_at: 1.day.ago
+      )
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-empty-before", object: "model" }] }.to_json
+      ))
+      stub_faraday_post(faraday_response(
+        success: true,
+        body: { output: [{ type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: ok" }] }] }.to_json
+      ))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      m = CompletionKit::Model.find_by(model_id: "gpt-empty-before")
+      expect(m.supports_generation).to eq(true)
+      expect(m.status).to eq("active")
     end
 
     it "retires models that disappear from the API" do
