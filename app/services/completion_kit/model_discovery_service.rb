@@ -36,12 +36,19 @@ module CompletionKit
       end
     end
 
+    OPENAI_NON_CHAT_PATTERNS = /audio|realtime|image|tts|whisper|embedding|dall-e|moderation|sora|computer-use|davinci|babbage|transcribe|search/i.freeze
+
     def fetch_openai_models
       response = fetch_connection("https://api.openai.com").get("/v1/models") do |req|
         req.headers["Authorization"] = "Bearer #{@api_key}"
       end
       return [] unless response.success?
-      JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: nil } }
+      JSON.parse(response.body).fetch("data", []).filter_map do |entry|
+        id = entry["id"]
+        next nil if id.match?(OPENAI_NON_CHAT_PATTERNS)
+        next nil unless id.match?(/\A(gpt-|chatgpt-|chat-|o[134])/i)
+        { id: id, display_name: nil }
+      end
     end
 
     def fetch_anthropic_models

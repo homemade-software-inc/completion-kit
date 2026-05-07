@@ -62,6 +62,38 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.probed_at).to be_present
     end
 
+    it "filters out non-chat openai models (audio, embedding, image, etc.) and unrecognized prefixes" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [
+          { id: "gpt-4o-mini", object: "model" },
+          { id: "gpt-4o-audio-preview", object: "model" },
+          { id: "gpt-image-1", object: "model" },
+          { id: "text-embedding-3-small", object: "model" },
+          { id: "tts-1", object: "model" },
+          { id: "whisper-1", object: "model" },
+          { id: "dall-e-3", object: "model" },
+          { id: "sora-2", object: "model" },
+          { id: "babbage-002", object: "model" },
+          { id: "omni-moderation-latest", object: "model" },
+          { id: "o1-mini", object: "model" },
+          { id: "o3-mini", object: "model" },
+          { id: "computer-use-preview", object: "model" },
+          { id: "weird-thing-not-gpt", object: "model" }
+        ] }.to_json
+      ))
+      stub_faraday_post(faraday_response(
+        success: true,
+        body: { output: [{ type: "message", content: [{ type: "output_text", text: "Score: 4\nFeedback: Good" }] }] }.to_json
+      ))
+
+      service = described_class.new(config: config)
+      service.refresh!
+
+      ids = CompletionKit::Model.pluck(:model_id)
+      expect(ids).to contain_exactly("gpt-4o-mini", "o1-mini", "o3-mini")
+    end
+
     it "retires models that disappear from the API" do
       CompletionKit::Model.create!(provider: "openai", model_id: "gpt-old", status: "active", discovered_at: 1.day.ago)
 
