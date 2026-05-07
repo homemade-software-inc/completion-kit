@@ -48,6 +48,39 @@ document.addEventListener("turbo:load", function() {
     var d = new Date(el.getAttribute("datetime"));
     el.textContent = d.toLocaleString(undefined, {year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
   });
+  ckTickRelativeTimes();
+});
+
+function ckRelativeTime(then) {
+  var seconds = Math.round((Date.now() - then.getTime()) / 1000);
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return seconds + " seconds ago";
+  var minutes = Math.round(seconds / 60);
+  if (minutes < 60) return minutes === 1 ? "1 minute ago" : minutes + " minutes ago";
+  var hours = Math.round(minutes / 60);
+  if (hours < 24) return hours === 1 ? "1 hour ago" : hours + " hours ago";
+  var days = Math.round(hours / 24);
+  if (days < 30) return days === 1 ? "1 day ago" : days + " days ago";
+  var months = Math.round(days / 30);
+  if (months < 12) return months === 1 ? "1 month ago" : months + " months ago";
+  var years = Math.round(days / 365);
+  return years === 1 ? "1 year ago" : years + " years ago";
+}
+
+function ckTickRelativeTimes() {
+  document.querySelectorAll("[data-relative-time]").forEach(function(el) {
+    var then = new Date(el.getAttribute("datetime"));
+    if (isNaN(then.getTime())) return;
+    el.textContent = ckRelativeTime(then);
+    el.setAttribute("title", then.toLocaleString());
+  });
+}
+
+if (!window.ckRelativeTimeInterval) {
+  window.ckRelativeTimeInterval = setInterval(ckTickRelativeTimes, 30000);
+}
+document.addEventListener("turbo:before-stream-render", function() {
+  requestAnimationFrame(ckTickRelativeTimes);
 });
 
 var ckRefreshing = false;

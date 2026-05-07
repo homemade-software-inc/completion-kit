@@ -15,7 +15,7 @@
             <span class="ck-model-list__summary-label">Available models <span class="ck-model-list__summary-count"><%= models.count %></span></span>
             <span class="ck-model-list__summary-meta">
               <% if provider_credential.discovery_status == "completed" %>
-                <span class="ck-model-list__summary-stamp">updated <%= time_ago_in_words(provider_credential.updated_at) %> ago</span>
+                <span class="ck-model-list__summary-stamp">updated <time data-relative-time datetime="<%= provider_credential.updated_at.utc.iso8601 %>"><%= time_ago_in_words(provider_credential.updated_at) %></time> ago</span>
               <% end %>
               <button type="button" class="ck-icon-btn ck-model-list__refresh<%= ' ck-icon-btn--spinning' if discovering %>" title="Refresh models" aria-label="Refresh available models" <%= 'disabled' if discovering %> onclick="event.preventDefault();event.stopPropagation();fetch('<%= refresh_provider_credential_path(provider_credential) %>', {method:'POST',headers:{'X-CSRF-Token':document.querySelector('meta[name=csrf-token]').content}})">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="13" height="13" aria-hidden="true"><path fill-rule="evenodd" d="M13.836 2.477a.75.75 0 0 1 .75.75v3.182a.75.75 0 0 1-.75.75h-3.182a.75.75 0 0 1 0-1.5h1.37l-.84-.841a4.5 4.5 0 0 0-7.08.681.75.75 0 0 1-1.264-.808 6 6 0 0 1 9.44-.908l.84.84V3.227a.75.75 0 0 1 .75-.75Zm-.911 7.5A.75.75 0 0 1 13.199 11a6 6 0 0 1-9.44.908l-.84-.84v1.68a.75.75 0 0 1-1.5 0V9.567a.75.75 0 0 1 .75-.75h3.182a.75.75 0 0 1 0 1.5h-1.37l.84.841a4.5 4.5 0 0 0 7.08-.681.75.75 0 0 1 1.024-.274Z" clip-rule="evenodd"/></svg>
