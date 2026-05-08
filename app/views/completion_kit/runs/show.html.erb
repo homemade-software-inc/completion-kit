@@ -73,10 +73,9 @@
   <dialog id="dataset-preview-<%= @run.id %>" class="ck-modal" onclick="if(event.target===this)this.close()">
     <article class="ck-modal__panel" onclick="event.stopPropagation()">
       <header class="ck-modal__header">
-        <div>
-          <p class="ck-kicker">Dataset preview</p>
+        <div class="ck-modal__heading">
           <h2 class="ck-modal__title"><%= @run.dataset.name %></h2>
-          <p class="ck-modal__meta"><%= dataset_lines.count %> rows<% if dataset_lines.count > dataset_preview_lines.count %> · showing first <%= dataset_preview_lines.count %><% end %></p>
+          <span class="ck-modal__meta"><%= dataset_lines.count %> rows</span>
         </div>
         <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">×</button>
       </header>
@@ -114,7 +113,7 @@
                   <tr>
                     <td class="ck-csv-table__rownum"><%= idx + 1 %></td>
                     <% headers.each_with_index do |_, i| %>
-                      <td title="<%= row[i] %>"><%= row[i] %></td>
+                      <td><span class="ck-csv-cell"><%= row[i] %></span></td>
                     <% end %>
                   </tr>
                 <% end %>
@@ -128,7 +127,6 @@
       </div>
       <footer class="ck-modal__footer">
         <%= link_to "Open dataset", dataset_path(@run.dataset), class: ck_button_classes(:light, variant: :outline) %>
-        <button type="button" class="ck-modal__close-btn" onclick="this.closest('dialog').close()">Close</button>
       </footer>
     </article>
   </dialog>

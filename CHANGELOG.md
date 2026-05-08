@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-05-07
+
+### Changed
+
+- **Dataset preview modal flattened** — single background tone (no
+  cyan-gradient header, no separate footer surface), header padding
+  tightened so the table sits closer to the title, redundant footer
+  Close button removed (× at top is enough), title + row count inline
+  on one row.
+- **Modal close button rebuilt** — borderless circle that lights up on
+  hover, × symbol forced into proper centering with `inline-flex` +
+  `padding: 0` + sans-family override (the symbol rendered offset in
+  the mono font), default focus outline replaced with a controlled
+  `:focus-visible` ring that wraps the symmetric circle.
+- **CSV row expand-on-hover smoothed** — uses a 350ms hover delay so
+  quick scrolling no longer triggers expansion, then animates the
+  expansion with a 300ms eased `max-height` transition. Cell content
+  wrapped in `<span class="ck-csv-cell">` with `-webkit-line-clamp: 1`
+  for the collapsed state.
+- **Native cell tooltips removed** from the CSV preview — the inline
+  expand reveals the full content; the browser's `title` tooltip on top
+  was redundant noise.
+- **Modal scroll handling** — the dataset preview's CSV wrap no longer
+  caps its own height; the modal body's existing `overflow: auto`
+  handles internal scrolling once content exceeds the panel's
+  `max-height: 82vh`.
+
+### Fixed
+
+- **Provider page judges count was misleading** — it counted every Run
+  using this provider as judge (including duplicates). Now counts
+  distinct `judge_model` values, which matches the natural reading of
+  "X judges" (parallel to "X prompts").
+
 ## [0.4.5] - 2026-05-07
 
 ### Added

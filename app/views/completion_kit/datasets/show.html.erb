@@ -48,7 +48,7 @@
             <tr>
               <td class="ck-csv-table__rownum"><%= idx + 1 %></td>
               <% headers.each_with_index do |_, i| %>
-                <td title="<%= row[i] %>"><%= row[i] %></td>
+                <td><span class="ck-csv-cell"><%= row[i] %></span></td>
               <% end %>
             </tr>
           <% end %>

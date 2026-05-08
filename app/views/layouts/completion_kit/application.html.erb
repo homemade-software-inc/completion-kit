@@ -99,6 +99,28 @@ document.addEventListener("turbo:before-stream-render", function() {
   requestAnimationFrame(ckTickRelativeTimes);
 });
 
+var ckCsvHoverTimer = null;
+var ckCsvHoverRow = null;
+document.addEventListener("mouseover", function(e) {
+  var row = e.target.closest && e.target.closest(".ck-csv-table tbody tr");
+  if (!row || row === ckCsvHoverRow) return;
+  if (ckCsvHoverRow) ckCsvHoverRow.classList.remove("ck-csv-row--expanded");
+  ckCsvHoverRow = row;
+  clearTimeout(ckCsvHoverTimer);
+  ckCsvHoverTimer = setTimeout(function() {
+    if (ckCsvHoverRow === row) row.classList.add("ck-csv-row--expanded");
+  }, 350);
+});
+document.addEventListener("mouseout", function(e) {
+  var row = e.target.closest && e.target.closest(".ck-csv-table tbody tr");
+  if (!row) return;
+  var related = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".ck-csv-table tbody tr");
+  if (related === row) return;
+  clearTimeout(ckCsvHoverTimer);
+  row.classList.remove("ck-csv-row--expanded");
+  if (ckCsvHoverRow === row) ckCsvHoverRow = null;
+});
+
 var ckRefreshing = false;
 function ckRefreshModels() {
   if (ckRefreshing) return;
