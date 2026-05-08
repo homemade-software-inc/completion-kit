@@ -1,6 +1,7 @@
 /.bundle/
 /doc/
 /log/*.log
+/log/*.log.*
 /pkg/
 /tmp/
 /vendor/bundle/
@@ -12,6 +13,7 @@ spec/dummy/tmp/
 **/master.key
 standalone/tmp/
 standalone/log/*.log
+standalone/log/*.log.*
 standalone/db/*.sqlite3
 standalone/db/*.sqlite3-*
 .env
