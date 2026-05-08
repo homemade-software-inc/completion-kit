@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.8] - 2026-05-07
+
+### Changed
+
+- **Ruby upgraded to 3.4.5** — `.ruby-version` at the repo root and
+  in `standalone/`, plus the `ruby` directive in `standalone/Gemfile`
+  bumped to match. Required for the security-bumped nokogiri 1.19.3
+  and net-imap 0.6.4, both of which need Ruby ≥ 3.2.
+
 ## [0.4.7] - 2026-05-07
 
 ### Security
