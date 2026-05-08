@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.7] - 2026-05-07
+
+### Security
+
+- **nokogiri 1.19.2 → 1.19.3** — fixes high-severity CSS selector
+  tokenizer regex backtracking ([CVE](https://github.com/sparklemotion/nokogiri/security/advisories))
+  and medium-severity XSLT memory leaks. Picked up by the engine
+  Gemfile.lock and the standalone Gemfile.lock.
+- **net-imap 0.6.3 → 0.6.4** — fixes high-severity STARTTLS stripping
+  via invalid response timing, plus medium-severity command injection
+  paths via raw arguments / unvalidated Symbol inputs / DoS via SCRAM
+  iteration counts, and low-severity quadratic-complexity literal
+  reads.
+
 ## [0.4.6] - 2026-05-07
 
 ### Changed

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    completion-kit (0.4.6)
+    completion-kit (0.4.7)
       bootstrap (~> 5.2)
       csv (~> 3.2)
       faraday (~> 2.7)
@@ -159,7 +159,7 @@ GEM
       prism (~> 1.5)
     net-http (0.9.1)
       uri (>= 0.11.1)
-    net-imap (0.6.3)
+    net-imap (0.6.4)
       date
       net-protocol
     net-pop (0.1.2)
@@ -169,9 +169,9 @@ GEM
     net-smtp (0.5.1)
       net-protocol
     nio4r (2.7.5)
-    nokogiri (1.19.2-arm64-darwin)
+    nokogiri (1.19.3-arm64-darwin)
       racc (~> 1.4)
-    nokogiri (1.19.2-x86_64-linux-gnu)
+    nokogiri (1.19.3-x86_64-linux-gnu)
       racc (~> 1.4)
     popper_js (2.11.8)
     pp (0.6.3)
