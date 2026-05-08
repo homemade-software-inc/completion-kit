@@ -17,7 +17,9 @@ standalone/log/*.log.*
 standalone/db/*.sqlite3
 standalone/db/*.sqlite3-*
 .env
+.envrc
 standalone/.env
+standalone/.envrc
 .mcp.json
 settings.local.json
 .playwright-mcp/
