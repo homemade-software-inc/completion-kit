@@ -5,15 +5,7 @@ module CompletionKit
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
-      @available_tags = Tag.order(:name)
-      @selected_tags = filter_tags_from_params
-      scope = Run.includes(:prompt, :dataset, :tags, responses: :reviews).order(created_at: :desc)
-      if @selected_tags.any?
-        scope = scope.joins(:tags)
-                     .where(tags: { id: @selected_tags.map(&:id) })
-                     .distinct
-      end
-      @runs = scope
+      @runs = apply_tag_filter(Run.includes(:prompt, :dataset, :tags, responses: :reviews).order(created_at: :desc))
     end
 
     def show

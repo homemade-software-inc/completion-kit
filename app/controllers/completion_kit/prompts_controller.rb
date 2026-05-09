@@ -4,15 +4,7 @@ module CompletionKit
     before_action :set_prompt, only: [:show, :edit, :update, :destroy, :publish]
 
     def index
-      @available_tags = Tag.order(:name)
-      @selected_tags = filter_tags_from_params
-      scope = Prompt.current_versions.includes(:runs, :tags).order(created_at: :desc)
-      if @selected_tags.any?
-        scope = scope.joins(:tags)
-                     .where(tags: { id: @selected_tags.map(&:id) })
-                     .distinct
-      end
-      @prompts = scope
+      @prompts = apply_tag_filter(Prompt.current_versions.includes(:runs, :tags).order(created_at: :desc))
     end
     
     def show

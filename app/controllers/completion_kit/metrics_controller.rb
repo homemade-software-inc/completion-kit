@@ -4,15 +4,7 @@ module CompletionKit
     before_action :set_metric, only: [:show, :edit, :update, :destroy]
 
     def index
-      @available_tags = Tag.order(:name)
-      @selected_tags = filter_tags_from_params
-      scope = Metric.includes(:metric_groups, :tags).order(:name)
-      if @selected_tags.any?
-        scope = scope.joins(:tags)
-                     .where(tags: { id: @selected_tags.map(&:id) })
-                     .distinct
-      end
-      @metrics = scope
+      @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
     end
 
     def show
