@@ -22,8 +22,23 @@
         <%= link_to "Metrics", metrics_path, class: request.path.start_with?(metrics_path) || request.path.start_with?(metric_groups_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
         <%= link_to "Datasets", datasets_path, class: active.(datasets_path) %>
         <%= link_to "Runs", runs_path, class: active.(runs_path) %>
-        <%= link_to "Tags", tags_path, class: active.(tags_path) %>
-        <%= link_to "Providers", provider_credentials_path, class: active.(provider_credentials_path) %>
+        <% settings_active = request.path.start_with?(provider_credentials_path) || request.path.start_with?(tags_path) %>
+        <div class="ck-nav-menu">
+          <button type="button"
+                  class="<%= settings_active ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %> ck-nav-menu__trigger"
+                  aria-haspopup="true">
+            Settings
+            <span class="ck-nav-menu__caret" aria-hidden="true">▾</span>
+          </button>
+          <div class="ck-nav-menu__items" role="menu">
+            <%= link_to "Providers", provider_credentials_path,
+                  class: "ck-nav-menu__item #{"ck-nav-menu__item--active" if request.path.start_with?(provider_credentials_path)}",
+                  role: "menuitem" %>
+            <%= link_to "Tags", tags_path,
+                  class: "ck-nav-menu__item #{"ck-nav-menu__item--active" if request.path.start_with?(tags_path)}",
+                  role: "menuitem" %>
+          </div>
+        </div>
         <%= link_to "API", api_reference_path, class: active.(api_reference_path) %>
         <% if main_app.respond_to?(:logout_path) %>
           <%= button_to "Log out", main_app.logout_path, method: :delete, class: ck_button_classes(:light, variant: :outline) %>

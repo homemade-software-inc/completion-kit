@@ -2,9 +2,11 @@
   <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
 <% end %>
 
+<%= render "completion_kit/shared/settings_nav", section_label: "Providers" %>
+
 <section class="ck-page-header">
   <div>
-    <h1 class="ck-title">Settings</h1>
+    <h1 class="ck-title">Providers</h1>
     <p class="ck-lead">API keys for LLM providers. These are used for both generating prompt completions and running judge evaluations.</p>
   </div>
   <div class="ck-actions">

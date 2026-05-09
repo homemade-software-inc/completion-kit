@@ -3538,6 +3538,81 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 .ck-tag-picker label.tag.tag-amethyst:has(input:not(:checked))      { color: var(--tag-amethyst); }
 .ck-tag-picker label.tag.tag-rose:has(input:not(:checked))          { color: var(--tag-rose); }
 
+/* Top-nav dropdown menu (used by Settings) */
+.ck-nav-menu {
+  position: relative;
+  display: inline-block;
+}
+.ck-nav-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.ck-nav-menu__caret {
+  font-size: 0.7em;
+  opacity: 0.7;
+  transition: transform 120ms ease;
+}
+.ck-nav-menu:hover .ck-nav-menu__caret,
+.ck-nav-menu:focus-within .ck-nav-menu__caret {
+  transform: translateY(1px);
+}
+.ck-nav-menu__items {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  padding: 0.35rem;
+  background: var(--ck-surface);
+  border: 1px solid var(--ck-line);
+  border-radius: 6px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms;
+  z-index: 100;
+}
+.ck-nav-menu:hover .ck-nav-menu__items,
+.ck-nav-menu:focus-within .ck-nav-menu__items {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.ck-nav-menu__item {
+  display: block;
+  padding: 0.55rem 0.8rem;
+  font-family: var(--ck-mono);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--ck-muted);
+  text-decoration: none;
+  border-radius: 4px;
+  transition: color 120ms ease, background 120ms ease;
+}
+.ck-nav-menu__item:hover {
+  color: var(--ck-text);
+  background: var(--ck-surface-hover);
+}
+.ck-nav-menu__item--active {
+  color: var(--ck-text);
+  background: var(--ck-surface-hover);
+}
+
+/* Settings page kicker — small label above the page title on settings pages */
+.ck-settings-kicker {
+  font-family: var(--ck-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
+  margin: 0 0 0.65rem;
+}
+.ck-settings-kicker__sep {
+  margin: 0 0.45rem;
+  opacity: 0.55;
+}
+
 /* Inline editor — show-page tag form */
 .ck-tags-inline {
   display: flex;
