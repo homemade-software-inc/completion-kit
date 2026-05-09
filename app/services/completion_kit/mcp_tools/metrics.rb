@@ -20,7 +20,8 @@ module CompletionKit
             type: "object",
             properties: {
               name: {type: "string"}, instruction: {type: "string"},
-              rubric_bands: {type: "array", items: {type: "object", properties: {stars: {type: "integer"}, description: {type: "string"}}}}
+              rubric_bands: {type: "array", items: {type: "object", properties: {stars: {type: "integer"}, description: {type: "string"}}}},
+              tag_names: {type: "array", items: {type: "string"}}
             },
             required: ["name"]
           },
@@ -32,7 +33,8 @@ module CompletionKit
             type: "object",
             properties: {
               id: {type: "integer"}, name: {type: "string"}, instruction: {type: "string"},
-              rubric_bands: {type: "array", items: {type: "object", properties: {stars: {type: "integer"}, description: {type: "string"}}}}
+              rubric_bands: {type: "array", items: {type: "object", properties: {stars: {type: "integer"}, description: {type: "string"}}}},
+              tag_names: {type: "array", items: {type: "string"}}
             },
             required: ["id"]
           },
@@ -55,8 +57,9 @@ module CompletionKit
 
       def self.create(args)
         metric = Metric.new(args.slice("name", "instruction", "rubric_bands"))
+        metric.tag_names = args["tag_names"] if args.key?("tag_names")
         if metric.save
-          text_result(metric.as_json)
+          text_result(metric.reload.as_json)
         else
           error_result(metric.errors.full_messages.join(", "))
         end
@@ -65,7 +68,8 @@ module CompletionKit
       def self.update(args)
         metric = Metric.find(args["id"])
         if metric.update(args.except("id").slice("name", "instruction", "rubric_bands"))
-          text_result(metric.as_json)
+          metric.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
+          text_result(metric.reload.as_json)
         else
           error_result(metric.errors.full_messages.join(", "))
         end

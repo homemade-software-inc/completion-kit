@@ -21,7 +21,8 @@ module CompletionKit
             properties: {
               name: {type: "string"}, prompt_id: {type: "integer"},
               dataset_id: {type: "integer"}, judge_model: {type: "string"},
-              metric_ids: {type: "array", items: {type: "integer"}}
+              metric_ids: {type: "array", items: {type: "integer"}},
+              tag_names: {type: "array", items: {type: "string"}}
             },
             required: ["name", "prompt_id"]
           },
@@ -34,7 +35,8 @@ module CompletionKit
             properties: {
               id: {type: "integer"}, name: {type: "string"},
               dataset_id: {type: "integer"}, judge_model: {type: "string"},
-              metric_ids: {type: "array", items: {type: "integer"}}
+              metric_ids: {type: "array", items: {type: "integer"}},
+              tag_names: {type: "array", items: {type: "string"}}
             },
             required: ["id"]
           },
@@ -64,6 +66,7 @@ module CompletionKit
         run = Run.new(args.slice("name", "prompt_id", "dataset_id", "judge_model"))
         if run.save
           run.replace_metrics!(args["metric_ids"])
+          run.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(run.reload.as_json)
         else
           error_result(run.errors.full_messages.join(", "))
@@ -72,8 +75,9 @@ module CompletionKit
 
       def self.update(args)
         run = Run.find(args["id"])
-        if run.update(args.except("id", "metric_ids").slice("name", "dataset_id", "judge_model"))
+        if run.update(args.except("id", "metric_ids", "tag_names").slice("name", "dataset_id", "judge_model"))
           run.replace_metrics!(args["metric_ids"]) if args.key?("metric_ids")
+          run.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(run.reload.as_json)
         else
           error_result(run.errors.full_messages.join(", "))

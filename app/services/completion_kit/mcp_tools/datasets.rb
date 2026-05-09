@@ -18,7 +18,7 @@ module CompletionKit
           description: "Create a dataset with CSV data",
           inputSchema: {
             type: "object",
-            properties: {name: {type: "string"}, csv_data: {type: "string"}},
+            properties: {name: {type: "string"}, csv_data: {type: "string"}, tag_names: {type: "array", items: {type: "string"}}},
             required: ["name", "csv_data"]
           },
           handler: :create
@@ -27,7 +27,7 @@ module CompletionKit
           description: "Update a dataset",
           inputSchema: {
             type: "object",
-            properties: {id: {type: "integer"}, name: {type: "string"}, csv_data: {type: "string"}},
+            properties: {id: {type: "integer"}, name: {type: "string"}, csv_data: {type: "string"}, tag_names: {type: "array", items: {type: "string"}}},
             required: ["id"]
           },
           handler: :update
@@ -49,8 +49,9 @@ module CompletionKit
 
       def self.create(args)
         dataset = Dataset.new(args.slice("name", "csv_data"))
+        dataset.tag_names = args["tag_names"] if args.key?("tag_names")
         if dataset.save
-          text_result(dataset.as_json)
+          text_result(dataset.reload.as_json)
         else
           error_result(dataset.errors.full_messages.join(", "))
         end
@@ -59,7 +60,8 @@ module CompletionKit
       def self.update(args)
         dataset = Dataset.find(args["id"])
         if dataset.update(args.except("id").slice("name", "csv_data"))
-          text_result(dataset.as_json)
+          dataset.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
+          text_result(dataset.reload.as_json)
         else
           error_result(dataset.errors.full_messages.join(", "))
         end

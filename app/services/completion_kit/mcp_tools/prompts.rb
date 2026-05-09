@@ -20,7 +20,8 @@ module CompletionKit
             type: "object",
             properties: {
               name: {type: "string"}, description: {type: "string"},
-              template: {type: "string"}, llm_model: {type: "string"}
+              template: {type: "string"}, llm_model: {type: "string"},
+              tag_names: {type: "array", items: {type: "string"}}
             },
             required: ["name", "template", "llm_model"]
           },
@@ -32,7 +33,8 @@ module CompletionKit
             type: "object",
             properties: {
               id: {type: "integer"}, name: {type: "string"}, description: {type: "string"},
-              template: {type: "string"}, llm_model: {type: "string"}
+              template: {type: "string"}, llm_model: {type: "string"},
+              tag_names: {type: "array", items: {type: "string"}}
             },
             required: ["id"]
           },
@@ -60,8 +62,9 @@ module CompletionKit
 
       def self.create(args)
         prompt = Prompt.new(args.slice("name", "description", "template", "llm_model"))
+        prompt.tag_names = args["tag_names"] if args.key?("tag_names")
         if prompt.save
-          text_result(prompt.as_json)
+          text_result(prompt.reload.as_json)
         else
           error_result(prompt.errors.full_messages.join(", "))
         end
@@ -73,9 +76,11 @@ module CompletionKit
         if prompt.runs.exists?
           new_prompt = prompt.clone_as_new_version(attrs)
           new_prompt.publish!
-          text_result(new_prompt.as_json)
+          new_prompt.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
+          text_result(new_prompt.reload.as_json)
         elsif prompt.update(attrs)
-          text_result(prompt.as_json)
+          prompt.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
+          text_result(prompt.reload.as_json)
         else
           error_result(prompt.errors.full_messages.join(", "))
         end

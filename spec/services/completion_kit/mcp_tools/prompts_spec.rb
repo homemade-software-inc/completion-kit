@@ -84,5 +84,29 @@ RSpec.describe CompletionKit::McpTools::Prompts do
     it "returns error for unknown tool" do
       expect { described_class.call("prompts_bogus", {}) }.to raise_error(KeyError)
     end
+
+    it "round-trips tag_names on prompts_create with auto-create" do
+      expect do
+        described_class.call("prompts_create",
+          {"name" => "Tagged", "template" => "Hi {{name}}", "llm_model" => "gpt-4.1", "tag_names" => ["fresh"]})
+      end.to change(CompletionKit::Tag, :count).by(1)
+      found = CompletionKit::Prompt.find_by!(name: "Tagged")
+      expect(found.tag_names).to eq(["fresh"])
+    end
+
+    it "replaces tag_names on prompts_update" do
+      prompt.update!(tag_names: ["a", "b"])
+      described_class.call("prompts_update", {"id" => prompt.id, "tag_names" => ["c"]})
+      expect(prompt.reload.tag_names).to eq(["c"])
+    end
+
+    it "applies tag_names when update clones as new version" do
+      create(:completion_kit_run, prompt: prompt)
+      described_class.call("prompts_update",
+        {"id" => prompt.id, "template" => "New {{content}}", "tag_names" => ["versioned"]})
+      new_prompt = CompletionKit::Prompt.order(created_at: :desc).first
+      expect(new_prompt.version_number).to eq(2)
+      expect(new_prompt.tag_names).to eq(["versioned"])
+    end
   end
 end

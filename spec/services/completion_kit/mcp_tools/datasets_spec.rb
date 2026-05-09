@@ -52,5 +52,20 @@ RSpec.describe CompletionKit::McpTools::Datasets do
       result = described_class.call("datasets_delete", {"id" => dataset.id})
       expect(result[:content].first[:text]).to include("deleted")
     end
+
+    it "round-trips tag_names on datasets_create with auto-create" do
+      expect do
+        described_class.call("datasets_create",
+          {"name" => "Tagged DS", "csv_data" => "col\nval", "tag_names" => ["new-tag"]})
+      end.to change(CompletionKit::Tag, :count).by(1)
+      found = CompletionKit::Dataset.find_by!(name: "Tagged DS")
+      expect(found.tag_names).to eq(["new-tag"])
+    end
+
+    it "replaces tag_names on datasets_update" do
+      dataset.update!(tag_names: ["a", "b"])
+      described_class.call("datasets_update", {"id" => dataset.id, "tag_names" => ["c"]})
+      expect(dataset.reload.tag_names).to eq(["c"])
+    end
   end
 end
