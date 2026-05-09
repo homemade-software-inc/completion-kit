@@ -185,6 +185,25 @@ ActiveRecord::Schema.define do
     t.datetime :created_at, null: false
     t.string :name, null: false
   end
+
+  create_table :completion_kit_tags, force: true do |t|
+    t.string :name, null: false
+    t.string :color, null: false
+    t.timestamps
+  end
+  add_index :completion_kit_tags, :name, unique: true
+
+  create_table :completion_kit_taggings, force: true do |t|
+    t.references :tag, null: false
+    t.string :taggable_type, null: false
+    t.bigint :taggable_id, null: false
+    t.timestamps
+  end
+  add_index :completion_kit_taggings, [:taggable_type, :taggable_id]
+  add_index :completion_kit_taggings,
+            [:tag_id, :taggable_type, :taggable_id],
+            unique: true,
+            name: "idx_taggings_unique"
 end
 
 FactoryBot.definition_file_paths = [File.expand_path("factories", __dir__)]
