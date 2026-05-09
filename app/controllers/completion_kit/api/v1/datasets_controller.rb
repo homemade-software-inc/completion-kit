@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_dataset, only: [:show, :update, :destroy]
 
         def index
-          render json: Dataset.order(created_at: :desc)
+          render json: Dataset.includes(:tags).order(created_at: :desc)
         end
 
         def show

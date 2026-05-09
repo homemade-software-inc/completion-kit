@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_metric, only: [:show, :update, :destroy]
 
         def index
-          render json: Metric.order(created_at: :desc)
+          render json: Metric.includes(:tags).order(created_at: :desc)
         end
 
         def show

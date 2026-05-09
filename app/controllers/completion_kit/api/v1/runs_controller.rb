@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_run, only: [:show, :update, :destroy, :generate, :retry_failures]
 
         def index
-          render json: Run.order(created_at: :desc)
+          render json: Run.includes(:tags).order(created_at: :desc)
         end
 
         def show

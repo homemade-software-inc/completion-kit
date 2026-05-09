@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_prompt, only: [:show, :update, :destroy, :publish]
 
         def index
-          render json: Prompt.order(created_at: :desc)
+          render json: Prompt.includes(:tags).order(created_at: :desc)
         end
 
         def show
