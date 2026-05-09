@@ -1,0 +1,13 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Tags", tags_path %></li>
+  <li>New tag</li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">New tag</h1>
+    <p class="ck-lead">Tags help you filter metrics, prompts, runs, and datasets by domain.</p>
+  </div>
+</section>
+
+<%= render "form", tag: @tag %>

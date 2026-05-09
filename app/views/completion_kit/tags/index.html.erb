@@ -1,0 +1,40 @@
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Tags</h1>
+    <p class="ck-lead">Domain labels for organizing metrics, prompts, runs, and datasets.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "New tag", new_tag_path, class: ck_button_classes(:dark) %>
+  </div>
+</section>
+
+<% if @tags.any? %>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Tagged items</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @tags.each do |tag| %>
+        <tr>
+          <td><span class="<%= tag_pill_class(tag) %>"><%= tag.name %></span></td>
+          <td class="ck-meta-copy"><%= tag.taggings.count %></td>
+          <td class="ck-results-table__arrow">
+            <%= link_to "Edit", edit_tag_path(tag), class: "ck-link" %>
+            &nbsp;
+            <%= button_to "Delete", tag_path(tag), method: :delete,
+                  form: { data: { turbo_confirm: "Delete \"#{tag.name}\"? This removes the tag from every linked metric, prompt, run, and dataset." } },
+                  class: "ck-link" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="ck-empty">
+    <p>No tags yet. <%= link_to "Create your first tag", new_tag_path, class: "ck-link" %> to start organizing.</p>
+  </div>
+<% end %>

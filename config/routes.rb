@@ -10,6 +10,7 @@ CompletionKit::Engine.routes.draw do
   resources :datasets
   resources :metrics
   resources :metric_groups
+  resources :tags
 
   resources :runs do
     member do

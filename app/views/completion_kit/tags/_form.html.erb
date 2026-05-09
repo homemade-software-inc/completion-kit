@@ -1,0 +1,24 @@
+<%= form_with(model: tag, local: true) do |form| %>
+  <% if tag.errors.any? %>
+    <div class="ck-flash ck-flash--alert">
+      <p class="ck-flash__title"><%= pluralize(tag.errors.count, "problem") %> prevented this tag from being saved.</p>
+      <ul class="ck-error-list">
+        <% tag.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="ck-card ck-form-card">
+    <div class="ck-field">
+      <%= form.label :name, "Tag name", class: "ck-label" %>
+      <%= form.text_field :name, class: "ck-input", placeholder: "marine biology" %>
+    </div>
+
+    <div class="ck-actions">
+      <%= link_to "Cancel", tags_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= form.submit(tag.persisted? ? "Save tag" : "Create tag", class: ck_button_classes(:dark)) %>
+    </div>
+  </div>
+<% end %>
