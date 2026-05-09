@@ -12,6 +12,11 @@
   </div>
 </section>
 
+<%= render "completion_kit/tags/inline_editor",
+      record: @metric,
+      param_namespace: :metric,
+      submit_path: update_tags_metric_path(@metric) %>
+
 <% if @metric.instruction.present? %>
 <section class="ck-card">
   <p class="ck-kicker">Instruction</p>

@@ -1,7 +1,7 @@
 module CompletionKit
   class DatasetsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_dataset, only: [:show, :edit, :update, :destroy]
+    before_action :set_dataset, only: [:show, :edit, :update, :destroy, :update_tags]
 
     def index
       @datasets = apply_tag_filter(Dataset.includes(:runs, :tags).order(created_at: :desc))
@@ -39,6 +39,11 @@ module CompletionKit
     def destroy
       @dataset.destroy
       redirect_to datasets_path, notice: "Dataset was successfully destroyed."
+    end
+
+    def update_tags
+      @dataset.update!(tag_names: Array(params.dig(:dataset, :tag_names)))
+      redirect_to dataset_path(@dataset), notice: "Tags updated."
     end
 
     private

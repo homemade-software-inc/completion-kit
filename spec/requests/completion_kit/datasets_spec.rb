@@ -124,4 +124,18 @@ RSpec.describe "CompletionKit datasets", type: :request do
     get "/completion_kit/datasets"
     expect(response.body).to include("Filter by tag")
   end
+
+  it "updates tags via the dedicated update_tags endpoint" do
+    dataset = create(:completion_kit_dataset, name: "Tagged ds")
+    dataset.update!(tag_names: ["alpha"])
+
+    patch "/completion_kit/datasets/#{dataset.id}/update_tags", params: {
+      dataset: { tag_names: ["beta"] }
+    }
+    expect(response).to redirect_to("/completion_kit/datasets/#{dataset.id}")
+    expect(dataset.reload.tag_names).to eq(["beta"])
+
+    patch "/completion_kit/datasets/#{dataset.id}/update_tags", params: { dataset: {} }
+    expect(dataset.reload.tag_names).to eq([])
+  end
 end

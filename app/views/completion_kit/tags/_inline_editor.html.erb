@@ -1,0 +1,9 @@
+<section class="ck-card ck-card--spaced">
+  <%= form_with url: submit_path, method: :patch, local: true, class: "ck-tags-inline" do %>
+    <%= render "completion_kit/tags/picker", record: record, param_namespace: param_namespace %>
+    <div class="ck-tags-inline__actions">
+      <%= submit_tag "Save tags", class: ck_button_classes(:dark) %>
+      <span class="ck-tags-inline__hint">Click filled tags to remove · click outline tags to add</span>
+    </div>
+  <% end %>
+</section>

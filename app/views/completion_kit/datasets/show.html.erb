@@ -12,6 +12,11 @@
   </div>
 </section>
 
+<%= render "completion_kit/tags/inline_editor",
+      record: @dataset,
+      param_namespace: :dataset,
+      submit_path: update_tags_dataset_path(@dataset) %>
+
 <section>
   <p class="ck-kicker">CSV preview</p>
   <%

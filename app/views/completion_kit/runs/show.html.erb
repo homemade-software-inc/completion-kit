@@ -7,6 +7,11 @@
 
 <%= render "status_header", run: @run %>
 
+<%= render "completion_kit/tags/inline_editor",
+      record: @run,
+      param_namespace: :run,
+      submit_path: update_tags_run_path(@run) %>
+
 <% if @run.dataset %>
   <% dataset_lines = @run.dataset.csv_data.to_s.lines %>
   <% dataset_preview_lines = dataset_lines.first(50) %>

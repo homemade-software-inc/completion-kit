@@ -4,11 +4,16 @@ CompletionKit::Engine.routes.draw do
   resources :prompts do
     member do
       post :publish
+      patch :update_tags
     end
   end
 
-  resources :datasets
-  resources :metrics
+  resources :datasets do
+    member { patch :update_tags }
+  end
+  resources :metrics do
+    member { patch :update_tags }
+  end
   resources :metric_groups
   resources :tags
 
@@ -19,6 +24,7 @@ CompletionKit::Engine.routes.draw do
       post :retry_failures
       post :rerun
       get :refresh_status
+      patch :update_tags
     end
     resources :responses, only: [:show]
   end

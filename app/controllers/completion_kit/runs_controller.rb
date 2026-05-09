@@ -1,7 +1,7 @@
 module CompletionKit
   class RunsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :rerun, :refresh_status]
+    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :rerun, :refresh_status, :update_tags]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
@@ -137,6 +137,11 @@ module CompletionKit
 
       @run.send(:broadcast_ui)
       redirect_to run_path(@run)
+    end
+
+    def update_tags
+      @run.update!(tag_names: Array(params.dig(:run, :tag_names)))
+      redirect_to run_path(@run), notice: "Tags updated."
     end
 
     private

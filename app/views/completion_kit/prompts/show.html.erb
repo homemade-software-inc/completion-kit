@@ -25,6 +25,11 @@
   </div>
 </section>
 
+<%= render "completion_kit/tags/inline_editor",
+      record: @prompt,
+      param_namespace: :prompt,
+      submit_path: update_tags_prompt_path(@prompt) %>
+
 <section>
   <div class="ck-prompt-preview__header">
     <p class="ck-kicker">Prompt</p>

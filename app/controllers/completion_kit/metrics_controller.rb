@@ -1,7 +1,7 @@
 module CompletionKit
   class MetricsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_metric, only: [:show, :edit, :update, :destroy]
+    before_action :set_metric, only: [:show, :edit, :update, :destroy, :update_tags]
 
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
@@ -38,6 +38,11 @@ module CompletionKit
     def destroy
       @metric.destroy
       redirect_to metrics_path, notice: "Metric was successfully destroyed."
+    end
+
+    def update_tags
+      @metric.update!(tag_names: Array(params.dig(:metric, :tag_names)))
+      redirect_to metric_path(@metric), notice: "Tags updated."
     end
 
     private
