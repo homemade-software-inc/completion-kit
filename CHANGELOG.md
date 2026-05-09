@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Tags** — Polymorphic domain tags for metrics, prompts, runs, and datasets with a 10-color auto-assigned palette. Filter each index page by tag (`?tag[]=...` URL params, OR semantics across multiple selected tags). Tag CRUD via web UI (`/tags`), REST API (`/api/v1/tags`), and MCP tools (`tags_list`, `tags_get`, `tags_create`, `tags_update`, `tags_delete`). The four taggable resources accept a `tag_names: [...]` field on their existing create/update endpoints with auto-create semantics — passing an unknown name silently creates the tag. Replace semantics on PATCH (passing `tag_names: ["foo"]` removes any tag not in the list).
+
 ## [0.4.8] - 2026-05-07
 
 ### Changed
