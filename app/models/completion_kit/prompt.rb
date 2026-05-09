@@ -1,5 +1,7 @@
 module CompletionKit
   class Prompt < ApplicationRecord
+    include CompletionKit::Taggable
+
     has_many :runs, dependent: :destroy
     has_many :responses, through: :runs
 

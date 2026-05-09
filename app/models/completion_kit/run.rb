@@ -1,6 +1,7 @@
 module CompletionKit
   class Run < ApplicationRecord
     include Turbo::Broadcastable
+    include CompletionKit::Taggable
 
     STATUSES = %w[pending running completed failed].freeze
 

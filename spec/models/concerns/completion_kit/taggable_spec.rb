@@ -57,4 +57,31 @@ RSpec.describe CompletionKit::Taggable, type: :model do
       expect { metric.destroy! }.to change(CompletionKit::Tagging, :count).by(-1)
     end
   end
+
+  describe "host models" do
+    it "is mixed into Metric, Prompt, Run, Dataset" do
+      [CompletionKit::Metric, CompletionKit::Prompt,
+       CompletionKit::Run, CompletionKit::Dataset].each do |klass|
+        expect(klass.included_modules).to include(CompletionKit::Taggable)
+      end
+    end
+
+    it "tag_names round-trips on Prompt" do
+      prompt = create(:completion_kit_prompt)
+      prompt.update!(tag_names: ["alpha"])
+      expect(prompt.reload.tag_names).to eq(["alpha"])
+    end
+
+    it "tag_names round-trips on Run" do
+      run = create(:completion_kit_run)
+      run.update!(tag_names: ["beta"])
+      expect(run.reload.tag_names).to eq(["beta"])
+    end
+
+    it "tag_names round-trips on Dataset" do
+      dataset = create(:completion_kit_dataset)
+      dataset.update!(tag_names: ["gamma"])
+      expect(dataset.reload.tag_names).to eq(["gamma"])
+    end
+  end
 end
