@@ -66,8 +66,10 @@ RSpec.describe CompletionKit::Tag, type: :model do
 
   describe "associations" do
     it "destroys taggings when the tag is destroyed" do
-      pending "Tagging model created in Task 3"
-      raise "unimplemented"
+      tag = described_class.create!(name: "x")
+      metric = create(:completion_kit_metric)
+      CompletionKit::Tagging.create!(tag: tag, taggable: metric)
+      expect { tag.destroy! }.to change(CompletionKit::Tagging, :count).by(-1)
     end
   end
 
