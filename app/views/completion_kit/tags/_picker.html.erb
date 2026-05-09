@@ -1,6 +1,6 @@
 <div class="ck-field">
   <p class="ck-section-title">Tags</p>
-  <p class="ck-hint">Click a chip to toggle. Type to add a new one.</p>
+  <p class="ck-hint">Click a chip to toggle. Type to add a new one. <%= link_to "Manage tags →", tags_path, class: "ck-link" %></p>
 
   <% all_tags = CompletionKit::Tag.order(:name) %>
   <% selected_ids = record.persisted? ? record.tags.pluck(:id) : [] %>
