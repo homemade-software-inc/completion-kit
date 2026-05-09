@@ -43,6 +43,8 @@
       </div>
     </div>
 
+    <%= render "completion_kit/tags/picker", record: metric, param_namespace: :metric %>
+
     <div class="ck-actions">
       <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
       <%= form.submit(metric.persisted? ? "Save metric" : "Create metric", class: ck_button_classes(:dark)) %>

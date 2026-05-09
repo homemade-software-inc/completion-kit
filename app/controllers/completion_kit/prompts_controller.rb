@@ -62,7 +62,8 @@ module CompletionKit
         :name,
         :description,
         :template,
-        :llm_model
+        :llm_model,
+        tag_names: []
       )
     end
   end

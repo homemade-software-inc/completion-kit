@@ -248,6 +248,8 @@ document.querySelectorAll('input[name="run[metric_ids][]"]').forEach(function(cb
 updateRunForm();
     </script>
 
+    <%= render "completion_kit/tags/picker", record: run, param_namespace: :run %>
+
     <div class="ck-actions">
       <%= link_to "Cancel", run.persisted? ? run_path(run) : runs_path, class: ck_button_classes(:light, variant: :outline) %>
       <%= form.submit(run.persisted? ? "Save run" : "Create run", class: ck_button_classes(:dark), id: "run-submit") %>

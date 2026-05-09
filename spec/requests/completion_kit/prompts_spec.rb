@@ -120,4 +120,18 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).to include("Current")
     expect(response.body).to include("Publish")
   end
+
+  it "round-trips tag_names on create and update" do
+    post "/completion_kit/prompts", params: {
+      prompt: { name: "P", template: "hi", llm_model: "gpt-4o-mini",
+                tag_names: ["alpha"] }
+    }
+    prompt = CompletionKit::Prompt.find_by!(name: "P")
+    expect(prompt.tag_names).to eq(["alpha"])
+
+    patch "/completion_kit/prompts/#{prompt.id}", params: {
+      prompt: { tag_names: [] }
+    }
+    expect(prompt.reload.tag_names).to eq([])
+  end
 end

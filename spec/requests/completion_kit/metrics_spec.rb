@@ -41,4 +41,22 @@ RSpec.describe "CompletionKit metrics", type: :request do
 
     expect(response).to redirect_to("/completion_kit/metrics")
   end
+
+  it "round-trips tag_names on create and update" do
+    post "/completion_kit/metrics", params: {
+      metric: { name: "Tagged metric", instruction: "x", tag_names: ["marine biology", "factual"] }
+    }
+    metric = CompletionKit::Metric.find_by!(name: "Tagged metric")
+    expect(metric.tag_names).to match_array(["marine biology", "factual"])
+
+    patch "/completion_kit/metrics/#{metric.id}", params: {
+      metric: { tag_names: ["marine biology"] }
+    }
+    expect(metric.reload.tag_names).to eq(["marine biology"])
+
+    patch "/completion_kit/metrics/#{metric.id}", params: {
+      metric: { tag_names: [""] }
+    }
+    expect(metric.reload.tag_names).to eq([])
+  end
 end

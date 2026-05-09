@@ -21,6 +21,8 @@
       <%= form.text_area :csv_data, rows: 12, class: "ck-input ck-input--area ck-input--code", placeholder: "content,audience\nFirst ticket text,internal\nSecond ticket text,customer" %>
     </div>
 
+    <%= render "completion_kit/tags/picker", record: dataset, param_namespace: :dataset %>
+
     <div class="ck-actions">
       <%= link_to "Cancel", datasets_path, class: ck_button_classes(:light, variant: :outline) %>
       <%= form.submit(dataset.persisted? ? "Save dataset" : "Create dataset", class: ck_button_classes(:dark)) %>

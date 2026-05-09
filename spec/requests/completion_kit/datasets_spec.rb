@@ -79,4 +79,17 @@ RSpec.describe "CompletionKit datasets", type: :request do
 
     expect(response).to redirect_to("/completion_kit/datasets")
   end
+
+  it "round-trips tag_names on create and update" do
+    post "/completion_kit/datasets", params: {
+      dataset: { name: "D", csv_data: "input\nhello", tag_names: ["gamma"] }
+    }
+    dataset = CompletionKit::Dataset.find_by!(name: "D")
+    expect(dataset.tag_names).to eq(["gamma"])
+
+    patch "/completion_kit/datasets/#{dataset.id}", params: {
+      dataset: { tag_names: [] }
+    }
+    expect(dataset.reload.tag_names).to eq([])
+  end
 end

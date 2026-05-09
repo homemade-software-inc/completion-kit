@@ -47,7 +47,7 @@ module CompletionKit
     end
 
     def dataset_params
-      params.require(:dataset).permit(:name, :csv_data)
+      params.require(:dataset).permit(:name, :csv_data, tag_names: [])
     end
   end
 end
