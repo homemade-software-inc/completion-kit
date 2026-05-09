@@ -89,6 +89,19 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(new_prompt.current).to eq(true)
   end
 
+  it "applies tag_names to the cloned version when prompt has existing runs" do
+    prompt = create(:completion_kit_prompt, name: "Tagged Versioned", family_key: "family-tagged", version_number: 1)
+    create(:completion_kit_run, prompt: prompt)
+
+    patch "#{base_path}/#{prompt.id}", params: {
+      prompt: { name: "Tagged Versioned", template: "Updated {{content}}",
+                llm_model: "gpt-4o", tag_names: ["alpha"] }
+    }
+
+    new_prompt = CompletionKit::Prompt.order(:id).last
+    expect(new_prompt.tag_names).to eq(["alpha"])
+  end
+
   it "publishes a version as current" do
     current_prompt = create(:completion_kit_prompt, name: "Family Prompt", family_key: "family-2", version_number: 1, current: true)
     draft_prompt = create(:completion_kit_prompt, name: "Family Prompt", family_key: "family-2", version_number: 2, current: false, published_at: nil)

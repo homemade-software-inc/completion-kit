@@ -32,8 +32,9 @@ module CompletionKit
     
     def update
       if @prompt.runs.exists?
-        new_prompt = @prompt.clone_as_new_version(prompt_params.to_h)
+        new_prompt = @prompt.clone_as_new_version(prompt_params.except(:tag_names).to_h)
         new_prompt.publish!
+        new_prompt.update!(tag_names: prompt_params[:tag_names]) if prompt_params.key?(:tag_names)
         redirect_to prompt_path(new_prompt), notice: "Saved as #{new_prompt.version_label}."
       elsif @prompt.update(prompt_params)
         redirect_to prompt_path(@prompt), notice: "Prompt saved."
