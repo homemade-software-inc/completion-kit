@@ -8,6 +8,11 @@
   </div>
 </section>
 
+<%= render "completion_kit/tags/filter_bar",
+      available: @available_tags,
+      selected: @selected_tags,
+      base_path: prompts_path %>
+
 <% if @prompts.any? %>
   <table class="ck-results-table ck-prompts-table">
     <thead>
@@ -15,6 +20,7 @@
         <th>Name</th>
         <th>Version</th>
         <th>Model</th>
+        <th>Tags</th>
         <th>Best score</th>
         <th>Runs</th>
         <th></th>
@@ -32,6 +38,15 @@
             <% end %>
           </td>
           <td><span class="ck-chip"><%= prompt.llm_model %></span></td>
+          <td>
+            <% if prompt.tags.any? %>
+              <% prompt.tags.each do |tag| %>
+                <span class="<%= tag_pill_class(tag) %>" onclick="event.stopPropagation();"><%= tag.name %></span>
+              <% end %>
+            <% else %>
+              <span class="ck-metrics-table__dim">—</span>
+            <% end %>
+          </td>
           <% family_runs = CompletionKit::Run.where(prompt_id: prompt.family_versions.select(:id)) %>
           <% current_version_runs = prompt.runs.includes(responses: :reviews) %>
           <% best_score = current_version_runs.map(&:avg_score).compact.max %>
@@ -58,6 +73,10 @@
       <% end %>
     </tbody>
   </table>
+<% elsif @selected_tags.any? %>
+  <div class="ck-empty">
+    <p>No prompts match these tags. <%= link_to "Clear filters", prompts_path, class: "ck-link" %>.</p>
+  </div>
 <% else %>
   <div class="ck-empty">
     No prompts yet. Create one to get started.

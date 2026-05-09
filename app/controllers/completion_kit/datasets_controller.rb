@@ -1,9 +1,18 @@
 module CompletionKit
   class DatasetsController < ApplicationController
+    include CompletionKit::TagFiltering
     before_action :set_dataset, only: [:show, :edit, :update, :destroy]
 
     def index
-      @datasets = Dataset.includes(:runs).order(created_at: :desc)
+      @available_tags = Tag.order(:name)
+      @selected_tags = filter_tags_from_params
+      scope = Dataset.includes(:runs, :tags).order(created_at: :desc)
+      if @selected_tags.any?
+        scope = scope.joins(:tags)
+                     .where(tags: { id: @selected_tags.map(&:id) })
+                     .distinct
+      end
+      @datasets = scope
     end
 
     def show

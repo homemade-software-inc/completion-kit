@@ -92,4 +92,36 @@ RSpec.describe "CompletionKit datasets", type: :request do
     }
     expect(dataset.reload.tag_names).to eq([])
   end
+
+  it "filters datasets by tag" do
+    marine_dataset = create(:completion_kit_dataset, name: "Shark sightings")
+    real_estate_dataset = create(:completion_kit_dataset, name: "Property listings")
+    marine_dataset.update!(tag_names: ["marine biology"])
+    real_estate_dataset.update!(tag_names: ["real estate"])
+
+    get "/completion_kit/datasets?tag[]=marine biology"
+    expect(response.body).to include("Shark sightings")
+    expect(response.body).not_to include("Property listings")
+
+    get "/completion_kit/datasets?tag[]=marine biology&tag[]=real estate"
+    expect(response.body).to include("Shark sightings")
+    expect(response.body).to include("Property listings")
+
+    get "/completion_kit/datasets"
+    expect(response.body).to include("Shark sightings")
+    expect(response.body).to include("Property listings")
+  end
+
+  it "renders no filter bar when no tags exist" do
+    create(:completion_kit_dataset, name: "Support Tickets")
+    get "/completion_kit/datasets"
+    expect(response.body).not_to include("Filter by tag")
+  end
+
+  it "shows the filter bar when tags exist" do
+    CompletionKit::Tag.create!(name: "z")
+    create(:completion_kit_dataset, name: "Support Tickets")
+    get "/completion_kit/datasets"
+    expect(response.body).to include("Filter by tag")
+  end
 end

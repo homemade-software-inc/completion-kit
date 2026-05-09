@@ -1,10 +1,19 @@
 module CompletionKit
   class RunsController < ApplicationController
+    include CompletionKit::TagFiltering
     before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :rerun, :refresh_status]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
-      @runs = Run.includes(:prompt, :dataset, responses: :reviews).order(created_at: :desc)
+      @available_tags = Tag.order(:name)
+      @selected_tags = filter_tags_from_params
+      scope = Run.includes(:prompt, :dataset, :tags, responses: :reviews).order(created_at: :desc)
+      if @selected_tags.any?
+        scope = scope.joins(:tags)
+                     .where(tags: { id: @selected_tags.map(&:id) })
+                     .distinct
+      end
+      @runs = scope
     end
 
     def show

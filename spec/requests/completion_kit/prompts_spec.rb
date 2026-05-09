@@ -134,4 +134,36 @@ RSpec.describe "CompletionKit prompts", type: :request do
     }
     expect(prompt.reload.tag_names).to eq([])
   end
+
+  it "filters prompts by tag" do
+    marine_prompt = create(:completion_kit_prompt, name: "Shark classifier")
+    real_estate_prompt = create(:completion_kit_prompt, name: "Property listing writer")
+    marine_prompt.update!(tag_names: ["marine biology"])
+    real_estate_prompt.update!(tag_names: ["real estate"])
+
+    get "/completion_kit/prompts?tag[]=marine biology"
+    expect(response.body).to include("Shark classifier")
+    expect(response.body).not_to include("Property listing writer")
+
+    get "/completion_kit/prompts?tag[]=marine biology&tag[]=real estate"
+    expect(response.body).to include("Shark classifier")
+    expect(response.body).to include("Property listing writer")
+
+    get "/completion_kit/prompts"
+    expect(response.body).to include("Shark classifier")
+    expect(response.body).to include("Property listing writer")
+  end
+
+  it "renders no filter bar when no tags exist" do
+    create(:completion_kit_prompt, name: "Helpfulness")
+    get "/completion_kit/prompts"
+    expect(response.body).not_to include("Filter by tag")
+  end
+
+  it "shows the filter bar when tags exist" do
+    CompletionKit::Tag.create!(name: "z")
+    create(:completion_kit_prompt, name: "Helpfulness")
+    get "/completion_kit/prompts"
+    expect(response.body).to include("Filter by tag")
+  end
 end

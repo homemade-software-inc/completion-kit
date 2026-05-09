@@ -16,6 +16,15 @@
     </div>
   </td>
   <td>
+    <% if run.tags.any? %>
+      <% run.tags.each do |tag| %>
+        <span class="<%= tag_pill_class(tag) %>" onclick="event.stopPropagation();"><%= tag.name %></span>
+      <% end %>
+    <% else %>
+      <span class="ck-metrics-table__dim">—</span>
+    <% end %>
+  </td>
+  <td>
     <span class="ck-runs-table__count">
       <%= run.responses.size %><% if run.dataset %><span class="ck-runs-table__count-of">/<%= run.dataset.row_count %></span><% end %>
     </span>

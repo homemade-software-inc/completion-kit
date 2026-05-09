@@ -59,4 +59,36 @@ RSpec.describe "CompletionKit metrics", type: :request do
     }
     expect(metric.reload.tag_names).to eq([])
   end
+
+  it "filters metrics by tag" do
+    marine_metric = create(:completion_kit_metric, name: "Shark accuracy")
+    real_estate_metric = create(:completion_kit_metric, name: "Property listing tone")
+    marine_metric.update!(tag_names: ["marine biology"])
+    real_estate_metric.update!(tag_names: ["real estate"])
+
+    get "/completion_kit/metrics?tag[]=marine biology"
+    expect(response.body).to include("Shark accuracy")
+    expect(response.body).not_to include("Property listing tone")
+
+    get "/completion_kit/metrics?tag[]=marine biology&tag[]=real estate"
+    expect(response.body).to include("Shark accuracy")
+    expect(response.body).to include("Property listing tone")
+
+    get "/completion_kit/metrics"
+    expect(response.body).to include("Shark accuracy")
+    expect(response.body).to include("Property listing tone")
+  end
+
+  it "renders no filter bar when no tags exist" do
+    create(:completion_kit_metric, name: "Helpfulness")
+    get "/completion_kit/metrics"
+    expect(response.body).not_to include("Filter by tag")
+  end
+
+  it "shows the filter bar when tags exist" do
+    CompletionKit::Tag.create!(name: "z")
+    create(:completion_kit_metric, name: "Helpfulness")
+    get "/completion_kit/metrics"
+    expect(response.body).to include("Filter by tag")
+  end
 end

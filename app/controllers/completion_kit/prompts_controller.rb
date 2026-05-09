@@ -1,9 +1,18 @@
 module CompletionKit
   class PromptsController < ApplicationController
+    include CompletionKit::TagFiltering
     before_action :set_prompt, only: [:show, :edit, :update, :destroy, :publish]
-    
+
     def index
-      @prompts = Prompt.current_versions.includes(:runs).order(created_at: :desc)
+      @available_tags = Tag.order(:name)
+      @selected_tags = filter_tags_from_params
+      scope = Prompt.current_versions.includes(:runs, :tags).order(created_at: :desc)
+      if @selected_tags.any?
+        scope = scope.joins(:tags)
+                     .where(tags: { id: @selected_tags.map(&:id) })
+                     .distinct
+      end
+      @prompts = scope
     end
     
     def show

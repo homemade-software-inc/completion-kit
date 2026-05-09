@@ -1,9 +1,18 @@
 module CompletionKit
   class MetricsController < ApplicationController
+    include CompletionKit::TagFiltering
     before_action :set_metric, only: [:show, :edit, :update, :destroy]
 
     def index
-      @metrics = Metric.includes(:metric_groups).order(:name)
+      @available_tags = Tag.order(:name)
+      @selected_tags = filter_tags_from_params
+      scope = Metric.includes(:metric_groups, :tags).order(:name)
+      if @selected_tags.any?
+        scope = scope.joins(:tags)
+                     .where(tags: { id: @selected_tags.map(&:id) })
+                     .distinct
+      end
+      @metrics = scope
     end
 
     def show
