@@ -20,7 +20,6 @@
         <th>Name</th>
         <th>Version</th>
         <th>Model</th>
-        <th>Tags</th>
         <th>Best score</th>
         <th>Runs</th>
         <th></th>
@@ -29,7 +28,14 @@
     <tbody>
       <% @prompts.each do |prompt| %>
         <tr onclick="window.location='<%= prompt_path(prompt) %>'" style="cursor: pointer;">
-          <td><strong><%= prompt.name %></strong></td>
+          <td>
+            <strong><%= prompt.name %></strong>
+            <% if prompt.tags.any? %>
+              <div class="tag-marks-row">
+                <%= render "completion_kit/tags/marks", tags: prompt.tags %>
+              </div>
+            <% end %>
+          </td>
           <% latest_version = prompt.family_versions.maximum(:version_number) %>
           <td>
             <span class="ck-chip ck-chip--soft"><%= prompt.version_label %></span>
@@ -38,15 +44,6 @@
             <% end %>
           </td>
           <td><span class="ck-chip"><%= prompt.llm_model %></span></td>
-          <td>
-            <% if prompt.tags.any? %>
-              <% prompt.tags.each do |tag| %>
-                <span class="<%= tag_pill_class(tag) %>" onclick="event.stopPropagation();"><%= tag.name %></span>
-              <% end %>
-            <% else %>
-              <span class="ck-metrics-table__dim">—</span>
-            <% end %>
-          </td>
           <% family_runs = CompletionKit::Run.where(prompt_id: prompt.family_versions.select(:id)) %>
           <% current_version_runs = prompt.runs.includes(responses: :reviews) %>
           <% best_score = current_version_runs.map(&:avg_score).compact.max %>

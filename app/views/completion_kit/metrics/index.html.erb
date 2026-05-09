@@ -19,23 +19,26 @@
       <tr>
         <th>Name</th>
         <th>Instruction</th>
-        <th>Tags &amp; groups</th>
+        <th>In groups</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
       <% @metrics.each do |metric| %>
         <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
-          <td><strong><%= metric.name %></strong></td>
+          <td>
+            <strong><%= metric.name %></strong>
+            <% if metric.tags.any? %>
+              <div class="tag-marks-row">
+                <%= render "completion_kit/tags/marks", tags: metric.tags %>
+              </div>
+            <% end %>
+          </td>
           <td class="ck-meta-copy"><%= truncate(metric.instruction.to_s, length: 90).presence || "—" %></td>
           <td>
             <% groups = metric.metric_groups %>
-            <% tags = metric.tags %>
-            <% if groups.any? || tags.any? %>
+            <% if groups.any? %>
               <div class="ck-metrics-table__groups">
-                <% tags.each do |tag| %>
-                  <span class="<%= tag_pill_class(tag) %>" onclick="event.stopPropagation();"><%= tag.name %></span>
-                <% end %>
                 <% groups.each do |g| %>
                   <%= link_to metric_group_path(g), class: "ck-metric-group-pill ck-metric-group-pill--active", onclick: "event.stopPropagation();" do %>
                     <span class="ck-metric-group-pill__label"><%= g.name %></span>

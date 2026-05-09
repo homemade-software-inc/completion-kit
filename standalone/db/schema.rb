@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_07_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_09_205304) do
   create_table "completion_kit_datasets", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "csv_data", null: false
@@ -170,6 +170,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_07_150000) do
     t.index ["run_id"], name: "index_completion_kit_suggestions_on_run_id"
   end
 
+  create_table "completion_kit_taggings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "tag_id", null: false
+    t.bigint "taggable_id", null: false
+    t.string "taggable_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tag_id", "taggable_type", "taggable_id"], name: "idx_taggings_unique", unique: true
+    t.index ["tag_id"], name: "index_completion_kit_taggings_on_tag_id"
+    t.index ["taggable_type", "taggable_id"], name: "index_completion_kit_taggings_on_taggable_type_and_taggable_id"
+  end
+
+  create_table "completion_kit_tags", force: :cascade do |t|
+    t.string "color", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_completion_kit_tags_on_name", unique: true
+  end
+
   create_table "solid_cable_messages", force: :cascade do |t|
     t.binary "channel", limit: 1024, null: false
     t.integer "channel_hash", limit: 8, null: false
@@ -310,6 +329,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_07_150000) do
   add_foreign_key "completion_kit_run_metrics", "completion_kit_runs", column: "run_id"
   add_foreign_key "completion_kit_runs", "completion_kit_datasets", column: "dataset_id"
   add_foreign_key "completion_kit_runs", "completion_kit_prompts", column: "prompt_id"
+  add_foreign_key "completion_kit_taggings", "completion_kit_tags", column: "tag_id"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

@@ -9,30 +9,24 @@
 </section>
 
 <% if @tags.any? %>
-  <table class="ck-results-table">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Tagged items</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @tags.each do |tag| %>
-        <tr>
-          <td><span class="<%= tag_pill_class(tag) %>"><%= tag.name %></span></td>
-          <td class="ck-meta-copy"><%= @tagging_counts.fetch(tag.id, 0) %></td>
-          <td class="ck-results-table__arrow">
-            <%= link_to "Edit", edit_tag_path(tag), class: "ck-link" %>
-            &nbsp;
-            <%= button_to "Delete", tag_path(tag), method: :delete,
-                  form: { data: { turbo_confirm: "Delete \"#{tag.name}\"? This removes the tag from every linked metric, prompt, run, and dataset." } },
-                  class: "ck-link" %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  <div class="ck-tags-list">
+    <% @tags.each do |tag| %>
+      <% count = @tagging_counts.fetch(tag.id, 0) %>
+      <div class="ck-tags-list__row" style="--row-color: var(--tag-<%= tag.color %>);">
+        <div class="ck-tags-list__edge"></div>
+        <div class="ck-tags-list__name"><%= tag.name %></div>
+        <div class="ck-tags-list__count <%= "ck-tags-list__count--zero" if count.zero? %>">
+          <%= count %> <%= "item".pluralize(count) %>
+        </div>
+        <div class="ck-tags-list__actions">
+          <%= link_to "Edit", edit_tag_path(tag), class: "ck-link" %>
+          <%= button_to "Delete", tag_path(tag), method: :delete,
+                form: { data: { turbo_confirm: "Delete \"#{tag.name}\"? This removes the tag from every linked metric, prompt, run, and dataset." } },
+                class: "ck-link" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
 <% else %>
   <div class="ck-empty">
     <p>No tags yet. <%= link_to "Create your first tag", new_tag_path, class: "ck-link" %> to start organizing.</p>

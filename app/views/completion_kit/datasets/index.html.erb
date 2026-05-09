@@ -18,7 +18,6 @@
     <thead>
       <tr>
         <th>Name</th>
-        <th>Tags</th>
         <th>Rows</th>
         <th>Used in</th>
         <th>Created</th>
@@ -28,14 +27,12 @@
     <tbody>
       <% @datasets.each do |dataset| %>
         <tr onclick="window.location='<%= dataset_path(dataset) %>'" style="cursor: pointer;">
-          <td><strong><%= dataset.name %></strong></td>
           <td>
+            <strong><%= dataset.name %></strong>
             <% if dataset.tags.any? %>
-              <% dataset.tags.each do |tag| %>
-                <span class="<%= tag_pill_class(tag) %>" onclick="event.stopPropagation();"><%= tag.name %></span>
-              <% end %>
-            <% else %>
-              <span class="ck-metrics-table__dim">—</span>
+              <div class="tag-marks-row">
+                <%= render "completion_kit/tags/marks", tags: dataset.tags %>
+              </div>
             <% end %>
           </td>
           <td><%= dataset.row_count %></td>

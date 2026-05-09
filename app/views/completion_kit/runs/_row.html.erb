@@ -13,16 +13,12 @@
           <%= link_to run.dataset.name, dataset_path(run.dataset), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>
         <% end %>
       </div>
-    </div>
-  </td>
-  <td>
-    <% if run.tags.any? %>
-      <% run.tags.each do |tag| %>
-        <span class="<%= tag_pill_class(tag) %>" onclick="event.stopPropagation();"><%= tag.name %></span>
+      <% if run.tags.any? %>
+        <div class="tag-marks-row">
+          <%= render "completion_kit/tags/marks", tags: run.tags %>
+        </div>
       <% end %>
-    <% else %>
-      <span class="ck-metrics-table__dim">—</span>
-    <% end %>
+    </div>
   </td>
   <td>
     <span class="ck-runs-table__count">
