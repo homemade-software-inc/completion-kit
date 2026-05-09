@@ -4,6 +4,7 @@ module CompletionKit
 
     def index
       @tags = Tag.order(:name)
+      @tagging_counts = Tagging.group(:tag_id).count
     end
 
     def new

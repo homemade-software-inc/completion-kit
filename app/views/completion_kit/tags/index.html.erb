@@ -21,7 +21,7 @@
       <% @tags.each do |tag| %>
         <tr>
           <td><span class="<%= tag_pill_class(tag) %>"><%= tag.name %></span></td>
-          <td class="ck-meta-copy"><%= tag.taggings.count %></td>
+          <td class="ck-meta-copy"><%= @tagging_counts.fetch(tag.id, 0) %></td>
           <td class="ck-results-table__arrow">
             <%= link_to "Edit", edit_tag_path(tag), class: "ck-link" %>
             &nbsp;
