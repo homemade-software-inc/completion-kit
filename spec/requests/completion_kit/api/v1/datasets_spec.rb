@@ -64,4 +64,44 @@ RSpec.describe "API V1 Datasets", type: :request do
       expect(response).to have_http_status(:no_content)
     end
   end
+
+  describe "tag_names round-trip" do
+    it "auto-creates new tags on POST and includes them in the response" do
+      expect do
+        post "/completion_kit/api/v1/datasets",
+          params: { name: "D", csv_data: "col1\na", tag_names: ["new"] }.to_json,
+          headers: headers
+      end.to change(CompletionKit::Tag, :count).by(1)
+      dataset = CompletionKit::Dataset.find_by!(name: "D")
+      expect(dataset.tag_names).to eq(["new"])
+      body = JSON.parse(response.body)
+      expect(body["tags"].map { |t| t["name"] }).to eq(["new"])
+    end
+
+    it "replaces tags on PATCH" do
+      dataset = create(:completion_kit_dataset)
+      dataset.update!(tag_names: ["a", "b"])
+      patch "/completion_kit/api/v1/datasets/#{dataset.id}",
+        params: { tag_names: ["c"] }.to_json,
+        headers: headers
+      expect(dataset.reload.tag_names).to eq(["c"])
+    end
+
+    it "clears all tags on PATCH with empty array" do
+      dataset = create(:completion_kit_dataset)
+      dataset.update!(tag_names: ["a"])
+      patch "/completion_kit/api/v1/datasets/#{dataset.id}",
+        params: { tag_names: [] }.to_json,
+        headers: headers
+      expect(dataset.reload.tag_names).to eq([])
+    end
+
+    it "exposes tags in GET show" do
+      dataset = create(:completion_kit_dataset)
+      dataset.update!(tag_names: ["alpha"])
+      get "/completion_kit/api/v1/datasets/#{dataset.id}", headers: headers
+      body = JSON.parse(response.body)
+      expect(body["tags"].map { |t| t["name"] }).to eq(["alpha"])
+    end
+  end
 end

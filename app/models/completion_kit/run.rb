@@ -179,7 +179,8 @@ module CompletionKit
         failed_response_ids: responses.where(status: "failed").pluck(:id),
         failure_summary: failure_summary,
         error_message: error_message,
-        metric_ids: metric_ids
+        metric_ids: metric_ids,
+        tags: tags.as_json
       }
     end
 

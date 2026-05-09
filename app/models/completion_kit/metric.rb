@@ -76,7 +76,8 @@ module CompletionKit
       {
         id: id, name: name, key: key, instruction: instruction,
         rubric_bands: rubric_bands,
-        created_at: created_at, updated_at: updated_at
+        created_at: created_at, updated_at: updated_at,
+        tags: tags.as_json
       }
     end
 

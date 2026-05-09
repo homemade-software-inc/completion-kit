@@ -23,9 +23,10 @@ module CompletionKit
 
         def update
           if @prompt.runs.exists?
-            new_prompt = @prompt.clone_as_new_version(prompt_params.to_h)
+            new_prompt = @prompt.clone_as_new_version(prompt_params.except(:tag_names).to_h)
             new_prompt.publish!
-            render json: new_prompt
+            new_prompt.update!(tag_names: prompt_params[:tag_names]) if prompt_params.key?(:tag_names)
+            render json: new_prompt.reload
           elsif @prompt.update(prompt_params)
             render json: @prompt
           else
@@ -56,7 +57,7 @@ module CompletionKit
         end
 
         def prompt_params
-          params.permit(:name, :description, :template, :llm_model)
+          params.permit(:name, :description, :template, :llm_model, tag_names: [])
         end
       end
     end

@@ -10,7 +10,8 @@ module CompletionKit
     def as_json(options = {})
       {
         id: id, name: name, csv_data: csv_data,
-        created_at: created_at, updated_at: updated_at
+        created_at: created_at, updated_at: updated_at,
+        tags: tags.as_json
       }
     end
 

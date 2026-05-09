@@ -76,7 +76,8 @@ module CompletionKit
         end
 
         def run_params
-          params.permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, metric_ids: [])
+          params.permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature,
+            metric_ids: [], tag_names: [])
         end
       end
     end

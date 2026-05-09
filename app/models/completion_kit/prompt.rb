@@ -79,7 +79,8 @@ module CompletionKit
       {
         id: id, name: name, description: description, template: template,
         llm_model: llm_model, family_key: family_key, version_number: version_number,
-        current: current, created_at: created_at, updated_at: updated_at
+        current: current, created_at: created_at, updated_at: updated_at,
+        tags: tags.as_json
       }
     end
 
