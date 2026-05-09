@@ -25,10 +25,11 @@
   </div>
 </section>
 
-<%= render "completion_kit/tags/inline_editor",
-      record: @prompt,
-      param_namespace: :prompt,
-      submit_path: update_tags_prompt_path(@prompt) %>
+<% if @prompt.tags.any? %>
+  <div class="tag-marks-row tag-marks-row--header">
+    <%= render "completion_kit/tags/marks", tags: @prompt.tags %>
+  </div>
+<% end %>
 
 <section>
   <div class="ck-prompt-preview__header">

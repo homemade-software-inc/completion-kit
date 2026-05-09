@@ -12,10 +12,11 @@
   </div>
 </section>
 
-<%= render "completion_kit/tags/inline_editor",
-      record: @metric,
-      param_namespace: :metric,
-      submit_path: update_tags_metric_path(@metric) %>
+<% if @metric.tags.any? %>
+  <div class="tag-marks-row tag-marks-row--header">
+    <%= render "completion_kit/tags/marks", tags: @metric.tags %>
+  </div>
+<% end %>
 
 <% if @metric.instruction.present? %>
 <section class="ck-card">

@@ -92,17 +92,4 @@ RSpec.describe "CompletionKit metrics", type: :request do
     expect(response.body).to include("Filter by tag")
   end
 
-  it "updates tags via the dedicated update_tags endpoint" do
-    metric = create(:completion_kit_metric, name: "Tagged metric")
-    metric.update!(tag_names: ["alpha"])
-
-    patch "/completion_kit/metrics/#{metric.id}/update_tags", params: {
-      metric: { tag_names: ["beta", "gamma"] }
-    }
-    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
-    expect(metric.reload.tag_names).to match_array(["beta", "gamma"])
-
-    patch "/completion_kit/metrics/#{metric.id}/update_tags", params: { metric: {} }
-    expect(metric.reload.tag_names).to eq([])
-  end
 end

@@ -180,20 +180,4 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).to include("Filter by tag")
   end
 
-  it "updates tags via update_tags without creating a new version (even when prompt has runs)" do
-    prompt = create(:completion_kit_prompt, name: "Tagged Prompt", family_key: "tag-fam", version_number: 1)
-    create(:completion_kit_run, prompt: prompt)
-
-    expect do
-      patch "/completion_kit/prompts/#{prompt.id}/update_tags", params: {
-        prompt: { tag_names: ["alpha", "beta"] }
-      }
-    end.not_to change(CompletionKit::Prompt, :count)
-
-    expect(response).to redirect_to("/completion_kit/prompts/#{prompt.id}")
-    expect(prompt.reload.tag_names).to match_array(["alpha", "beta"])
-
-    patch "/completion_kit/prompts/#{prompt.id}/update_tags", params: { prompt: {} }
-    expect(prompt.reload.tag_names).to eq([])
-  end
 end

@@ -1,7 +1,7 @@
 module CompletionKit
   class PromptsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_prompt, only: [:show, :edit, :update, :destroy, :publish, :update_tags]
+    before_action :set_prompt, only: [:show, :edit, :update, :destroy, :publish]
 
     def index
       @prompts = apply_tag_filter(Prompt.current_versions.includes(:runs, :tags).order(created_at: :desc))
@@ -51,11 +51,6 @@ module CompletionKit
     def publish
       @prompt.publish!
       redirect_to prompt_path(@prompt), notice: "#{@prompt.display_name} is now the current version."
-    end
-
-    def update_tags
-      @prompt.update!(tag_names: Array(params.dig(:prompt, :tag_names)))
-      redirect_to prompt_path(@prompt), notice: "Tags updated."
     end
 
     private

@@ -320,17 +320,4 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("Filter by tag")
   end
 
-  it "updates tags via the dedicated update_tags endpoint" do
-    run = create(:completion_kit_run, prompt: prompt, name: "Tagged run")
-    run.update!(tag_names: ["alpha"])
-
-    patch "/completion_kit/runs/#{run.id}/update_tags", params: {
-      run: { tag_names: ["beta"] }
-    }
-    expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
-    expect(run.reload.tag_names).to eq(["beta"])
-
-    patch "/completion_kit/runs/#{run.id}/update_tags", params: { run: {} }
-    expect(run.reload.tag_names).to eq([])
-  end
 end
