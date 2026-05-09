@@ -116,6 +116,17 @@ module CompletionKit
       diff_tokens(old_text, new_text, :new)
     end
 
+    def tag_pill_class(tag, outline: false)
+      ["tag", "tag-#{tag.color}", ("tag-outline" if outline)].compact.join(" ")
+    end
+
+    def tag_filter_url(base_path, selected, toggling)
+      remaining = selected.reject { |t| t.id == toggling.id }
+      next_set = selected.include?(toggling) ? remaining : remaining + [toggling]
+      return base_path if next_set.empty?
+      "#{base_path}?#{{ tag: next_set.map(&:name) }.to_query}"
+    end
+
     private
 
     def diff_tokens(old_text, new_text, side)

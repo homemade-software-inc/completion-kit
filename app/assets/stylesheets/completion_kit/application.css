@@ -3396,3 +3396,61 @@ a.ck-metric-group-pill {
   text-overflow: ellipsis;
 }
 
+:root {
+  --tag-crimson: #F24E1E;
+  --tag-burnt-orange: #FF8A00;
+  --tag-amber: #FFC700;
+  --tag-mint: #14AE5C;
+  --tag-deep-emerald: #00623F;
+  --tag-electric-cyan: #00D1FF;
+  --tag-cobalt-blue: #0D99FF;
+  --tag-deep-indigo: #5551FF;
+  --tag-amethyst: #9747FF;
+  --tag-rose: #FF5CBE;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  line-height: 1.2;
+}
+
+.tag-crimson       { background-color: var(--tag-crimson); }
+.tag-burnt-orange  { background-color: var(--tag-burnt-orange); }
+.tag-amber         { background-color: var(--tag-amber); color: #000; }
+.tag-mint          { background-color: var(--tag-mint); }
+.tag-deep-emerald  { background-color: var(--tag-deep-emerald); }
+.tag-electric-cyan { background-color: var(--tag-electric-cyan); color: #000; }
+.tag-cobalt-blue   { background-color: var(--tag-cobalt-blue); }
+.tag-deep-indigo   { background-color: var(--tag-deep-indigo); }
+.tag-amethyst      { background-color: var(--tag-amethyst); }
+.tag-rose          { background-color: var(--tag-rose); }
+
+.tag-outline {
+  background-color: transparent !important;
+  border: 1px solid currentColor;
+}
+.tag-outline.tag-crimson       { color: var(--tag-crimson); }
+.tag-outline.tag-burnt-orange  { color: var(--tag-burnt-orange); }
+.tag-outline.tag-amber         { color: var(--tag-amber); }
+.tag-outline.tag-mint          { color: var(--tag-mint); }
+.tag-outline.tag-deep-emerald  { color: var(--tag-deep-emerald); }
+.tag-outline.tag-electric-cyan { color: var(--tag-electric-cyan); }
+.tag-outline.tag-cobalt-blue   { color: var(--tag-cobalt-blue); }
+.tag-outline.tag-deep-indigo   { color: var(--tag-deep-indigo); }
+.tag-outline.tag-amethyst      { color: var(--tag-amethyst); }
+.tag-outline.tag-rose          { color: var(--tag-rose); }
+
+.ck-tag-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.ck-tag-picker label { cursor: pointer; user-select: none; }
+.ck-tag-picker__new { margin-top: 12px; }
+
+.ck-tag-filter { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0; }
+.ck-tag-filter__label { font-size: 12px; color: var(--ck-muted); }
+.ck-tag-filter__clear { font-size: 12px; }
+
