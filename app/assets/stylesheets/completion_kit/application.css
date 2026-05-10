@@ -3579,17 +3579,26 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 
 /* Settings page kicker — small label above the page title on settings pages */
 .ck-settings-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
   font-family: var(--ck-mono);
   font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--ck-dim);
-  margin: 0 0 0.65rem;
+  margin: 0 0 0.85rem;
 }
 .ck-settings-kicker__sep {
-  margin: 0 0.45rem;
   opacity: 0.55;
 }
+.ck-settings-kicker__link {
+  color: var(--ck-muted);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+.ck-settings-kicker__link:hover { color: var(--ck-text); }
 
 .tag-marks-row--header {
   margin-top: -0.5rem;

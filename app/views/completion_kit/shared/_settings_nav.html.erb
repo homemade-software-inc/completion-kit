@@ -1,3 +1,9 @@
 <p class="ck-settings-kicker">
-  Settings <span class="ck-settings-kicker__sep">/</span> <%= section_label %>
+  Settings <span class="ck-settings-kicker__sep">/</span>
+  <% link = local_assigns[:section_link] %>
+  <%= link ? link_to(section_label, link, class: "ck-settings-kicker__link") : section_label %>
+  <% if local_assigns[:trail].present? %>
+    <span class="ck-settings-kicker__sep">/</span>
+    <%= trail.html_safe %>
+  <% end %>
 </p>

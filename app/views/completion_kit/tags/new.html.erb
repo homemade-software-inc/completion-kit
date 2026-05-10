@@ -1,9 +1,10 @@
-<%= render "completion_kit/shared/settings_nav", section_label: "Tags" %>
+<% pill = content_tag(:span, content_tag(:span, "your tag", id: "tag-pill-text", data: { placeholder: "your tag" }),
+       id: "tag-breadcrumb-pill", class: tag_pill_class(@tag)) %>
 
-<ol class="ck-breadcrumb">
-  <li><%= link_to "Tags", tags_path %></li>
-  <li>New</li>
-</ol>
+<%= render "completion_kit/shared/settings_nav",
+      section_label: "Tags",
+      section_link: tags_path,
+      trail: pill %>
 
 <section class="ck-page-header">
   <div>

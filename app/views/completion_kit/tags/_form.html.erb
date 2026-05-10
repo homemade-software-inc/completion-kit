@@ -19,6 +19,19 @@
       <% end %>
     </div>
 
+    <script>
+      (function() {
+        var input = document.getElementById("tag_name");
+        var text = document.getElementById("tag-pill-text");
+        if (!input || !text) return;
+        var fallback = text.dataset.placeholder || "";
+        input.addEventListener("input", function() {
+          var v = input.value.trim().toLowerCase();
+          text.textContent = v.length ? v : fallback;
+        });
+      })();
+    </script>
+
     <div class="ck-actions ck-actions--split">
       <% if tag.persisted? %>
         <%= button_to "Delete tag", tag_path(tag), method: :delete,

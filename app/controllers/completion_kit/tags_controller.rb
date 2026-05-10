@@ -8,7 +8,7 @@ module CompletionKit
     end
 
     def new
-      @tag = Tag.new
+      @tag = Tag.new(color: Tag::COLORS.sample)
     end
 
     def edit
