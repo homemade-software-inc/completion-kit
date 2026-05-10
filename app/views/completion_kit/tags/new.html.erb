@@ -1,4 +1,6 @@
-<% pill = content_tag(:span, content_tag(:span, "your tag", id: "tag-pill-text", data: { placeholder: "your tag" }),
+<% display_name = @tag.name.presence || "your tag" %>
+<% pill = content_tag(:span,
+       content_tag(:span, display_name, id: "tag-pill-text", data: { placeholder: "your tag" }),
        id: "tag-breadcrumb-pill", class: tag_pill_class(@tag)) %>
 
 <%= render "completion_kit/shared/settings_nav",
