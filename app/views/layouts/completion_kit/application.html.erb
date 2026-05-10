@@ -58,7 +58,24 @@ document.addEventListener("turbo:load", function() {
     el.textContent = d.toLocaleString(undefined, {year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
   });
   ckTickRelativeTimes();
+  ckAutoFocusFirstError();
 });
+
+function ckAutoFocusFirstError() {
+  var marker = document.querySelector(
+    "form .ck-flash--alert, form [aria-invalid='true'], form .ck-field-error"
+  );
+  if (!marker) return;
+  var form = marker.closest("form");
+  if (!form) return;
+  var target = form.querySelector("[aria-invalid='true']") ||
+    form.querySelector("input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=reset]):not([type=file]), textarea, select");
+  if (!target || typeof target.focus !== "function") return;
+  target.focus({ preventScroll: false });
+  if (typeof target.setSelectionRange === "function" && typeof target.value === "string") {
+    try { target.setSelectionRange(target.value.length, target.value.length); } catch (e) {}
+  }
+}
 
 function ckRelativeTime(then) {
   var seconds = Math.round((Date.now() - then.getTime()) / 1000);
