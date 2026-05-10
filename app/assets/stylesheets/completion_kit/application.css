@@ -3444,7 +3444,8 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 .tag:has(> #tag-pill-text:empty) { gap: 0; padding-right: 8px; }
 
 .tag-crimson       { background-color: var(--tag-crimson);       --current-tag-color: var(--tag-crimson); }
-.tag-burnt-orange  { background-color: var(--tag-burnt-orange);  --current-tag-color: var(--tag-burnt-orange); }
+.tag-burnt-orange  { background-color: var(--tag-burnt-orange);  --current-tag-color: var(--tag-burnt-orange);  color: #2a1300; }
+.tag-burnt-orange::before { background: rgba(0, 0, 0, 0.55); }
 .tag-amber         { background-color: var(--tag-amber);         --current-tag-color: var(--tag-amber);         color: #1a0f00; }
 .tag-amber::before { background: rgba(0, 0, 0, 0.55); }
 .tag-mint          { background-color: var(--tag-mint);          --current-tag-color: var(--tag-mint); }
@@ -3454,7 +3455,8 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 .tag-cobalt-blue   { background-color: var(--tag-cobalt-blue);   --current-tag-color: var(--tag-cobalt-blue); }
 .tag-deep-indigo   { background-color: var(--tag-deep-indigo);   --current-tag-color: var(--tag-deep-indigo); }
 .tag-amethyst      { background-color: var(--tag-amethyst);      --current-tag-color: var(--tag-amethyst); }
-.tag-rose          { background-color: var(--tag-rose);          --current-tag-color: var(--tag-rose); }
+.tag-rose          { background-color: var(--tag-rose);          --current-tag-color: var(--tag-rose);          color: #2a0017; }
+.tag-rose::before  { background: rgba(0, 0, 0, 0.6); }
 
 .tag-outline {
   background-color: transparent !important;
