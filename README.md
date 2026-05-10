@@ -15,7 +15,7 @@ It's the difference between "this prompt seems to work" and "this prompt scores 
 
 **[completionkit.com](https://completionkit.com)** | **[RubyGems](https://rubygems.org/gems/completion-kit)**
 
-> **CompletionKit Cloud** is coming — hosted, managed CompletionKit with zero setup. Early access opening soon at [app.completionkit.com](https://app.completionkit.com).
+> **CompletionKit Cloud** — hosted, managed CompletionKit with zero setup. Same engine, run for you. See plans at [completionkit.com/pricing](https://completionkit.com/pricing).
 
 ![Prompts index](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/prompts.png)
 
@@ -25,9 +25,13 @@ It's the difference between "this prompt seems to work" and "this prompt scores 
 
 ## Quick Start
 
-### Run the standalone app
+### Use CompletionKit Cloud
 
-The fastest way to start. No existing Rails app needed.
+The fastest way to start — no install, no servers to run. Sign up at [completionkit.com](https://completionkit.com) and you get the same engine you'd self-host, hosted for you. Best fit if you want to skip the Rails ops.
+
+### Or run the standalone app
+
+Self-host the same engine. No existing Rails app needed.
 
 ```bash
 git clone https://github.com/homemade-software-inc/completion-kit.git
