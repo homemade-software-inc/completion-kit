@@ -1,19 +1,17 @@
 <%= form_with(model: metric_group, url: metric_group.persisted? ? metric_group_path(metric_group) : metric_groups_path, local: true) do |form| %>
-  <% if metric_group.errors.any? %>
-    <div class="ck-flash ck-flash--alert">
-      <p class="ck-flash__title"><%= pluralize(metric_group.errors.count, "problem") %> prevented this metric group from being saved.</p>
-      <ul class="ck-error-list">
-        <% metric_group.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
+  <% name_error = metric_group.errors[:name].first %>
 
   <div class="ck-card ck-form-card">
     <div class="ck-field">
       <%= form.label :name, "Metric group name", class: "ck-label" %>
-      <%= form.text_field :name, class: "ck-input", placeholder: "Support quality" %>
+      <%= form.text_field :name,
+            class: ["ck-input", ("ck-input--error" if name_error)].compact.join(" "),
+            placeholder: "Support quality",
+            autofocus: !metric_group.persisted?,
+            "aria-invalid": name_error ? "true" : nil %>
+      <% if name_error %>
+        <p class="ck-field-error" role="alert"><%= name_error %></p>
+      <% end %>
     </div>
 
     <div class="ck-field">
@@ -21,22 +19,64 @@
       <%= form.text_area :description, rows: 3, class: "ck-input ck-input--area", placeholder: "When this metric group should be used." %>
     </div>
 
+    <%= render "completion_kit/tags/picker", record: metric_group, param_namespace: :metric_group %>
+
     <div class="ck-field">
       <p class="ck-label">Metrics in this group</p>
-      <p class="ck-hint">Pick the metrics to include.</p>
-      <div class="ck-list ck-list--compact">
+      <p class="ck-hint">Pick the metrics to include. Filter the list by tag to narrow it down.</p>
+
+      <% available_filter_tags = @metrics.flat_map(&:tags).uniq.sort_by(&:name) %>
+      <% if available_filter_tags.any? %>
+        <div class="ck-metric-tag-filter" data-metric-tag-filter>
+          <span class="ck-metric-tag-filter__label">Filter by tag</span>
+          <% available_filter_tags.each do |tag| %>
+            <button type="button"
+                    class="<%= tag_pill_class(tag, outline: true) %> ck-metric-tag-filter__chip"
+                    data-filter-tag="<%= tag.name %>"
+                    onclick="ckToggleMetricGroupFilter(this)"><%= tag.name %></button>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div class="ck-metric-checkboxes" data-metric-checkboxes>
         <% @metrics.each do |metric| %>
-          <label class="ck-item">
-            <%= check_box_tag "metric_group[metric_ids][]", metric.id, metric_group.metrics.exists?(metric.id), class: "ck-checkbox" %>
-            <span>
-              <strong><%= metric.name %></strong>
-              <span class="ck-meta-copy"><%= metric.instruction.presence || "No instruction set." %></span>
+          <label class="ck-checkbox-label" data-metric-tags="<%= metric.tag_names.join(",") %>">
+            <%= check_box_tag "metric_group[metric_ids][]", metric.id, metric_group.metrics.exists?(metric.id), class: "ck-checkbox", id: "metric_group_metric_#{metric.id}" %>
+            <span class="ck-checkbox-label__box" aria-hidden="true"></span>
+            <span class="ck-checkbox-label__body">
+              <span class="ck-checkbox-label__text"><%= metric.name %></span>
+              <% if metric.instruction.present? %>
+                <span class="ck-checkbox-label__hint"><%= truncate(metric.instruction.to_s, length: 90) %></span>
+              <% end %>
+              <% if metric.tags.any? %>
+                <div class="tag-marks-row">
+                  <%= render "completion_kit/tags/marks", tags: metric.tags %>
+                </div>
+              <% end %>
             </span>
           </label>
         <% end %>
       </div>
       <%= hidden_field_tag "metric_group[metric_ids][]", "" %>
     </div>
+
+    <script>
+      function ckToggleMetricGroupFilter(btn) {
+        btn.classList.toggle("tag-outline");
+        var bar = btn.closest("[data-metric-tag-filter]");
+        var grid = bar && bar.parentElement.querySelector("[data-metric-checkboxes]");
+        if (!grid) return;
+        var active = Array.prototype.map.call(
+          bar.querySelectorAll(".ck-metric-tag-filter__chip:not(.tag-outline)"),
+          function(b) { return b.getAttribute("data-filter-tag"); }
+        );
+        grid.querySelectorAll(".ck-checkbox-label").forEach(function(lbl) {
+          var tags = (lbl.getAttribute("data-metric-tags") || "").split(",").filter(Boolean);
+          var visible = active.length === 0 || tags.some(function(t) { return active.indexOf(t) !== -1; });
+          lbl.style.display = visible ? "" : "none";
+        });
+      }
+    </script>
 
     <div class="ck-actions">
       <% if metric_group.persisted? %>

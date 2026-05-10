@@ -149,7 +149,7 @@ module CompletionKit
       @prompts = Prompt.order(:name)
       @datasets = Dataset.order(:name)
       @metric_groups = MetricGroup.includes(:metrics).order(:name)
-      @all_metrics = Metric.order(:name)
+      @all_metrics = Metric.includes(:tags).order(:name)
     end
 
     def run_params

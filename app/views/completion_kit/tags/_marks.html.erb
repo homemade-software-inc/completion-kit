@@ -1,6 +1,3 @@
 <% Array(tags).each do |tag| %>
-  <span class="tag-mark">
-    <span class="tag-mark__dot" style="background: var(--tag-<%= tag.color %>); --mark-glow: var(--tag-<%= tag.color %>);"></span>
-    <%= tag.name %>
-  </span>
+  <span class="tag-mark" style="--mark-color: var(--tag-<%= tag.color %>);"><%= tag.name %></span>
 <% end %>

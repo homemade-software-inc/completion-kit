@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_metric_group, only: [:show, :update, :destroy]
 
         def index
-          render json: MetricGroup.order(created_at: :desc)
+          render json: MetricGroup.includes(:tags).order(created_at: :desc)
         end
 
         def show
@@ -45,7 +45,7 @@ module CompletionKit
         end
 
         def metric_group_params
-          params.permit(:name, :description, metric_ids: [])
+          params.permit(:name, :description, metric_ids: [], tag_names: [])
         end
       end
     end

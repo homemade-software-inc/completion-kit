@@ -20,7 +20,8 @@ module CompletionKit
             type: "object",
             properties: {
               name: {type: "string"}, description: {type: "string"},
-              metric_ids: {type: "array", items: {type: "integer"}}
+              metric_ids: {type: "array", items: {type: "integer"}},
+              tag_names: {type: "array", items: {type: "string"}}
             },
             required: ["name"]
           },
@@ -32,7 +33,8 @@ module CompletionKit
             type: "object",
             properties: {
               id: {type: "integer"}, name: {type: "string"}, description: {type: "string"},
-              metric_ids: {type: "array", items: {type: "integer"}}
+              metric_ids: {type: "array", items: {type: "integer"}},
+              tag_names: {type: "array", items: {type: "string"}}
             },
             required: ["id"]
           },
@@ -55,6 +57,7 @@ module CompletionKit
 
       def self.create(args)
         metric_group = CompletionKit::MetricGroup.new(args.slice("name", "description"))
+        metric_group.tag_names = args["tag_names"] if args.key?("tag_names")
         if metric_group.save
           metric_group.replace_metrics!(args["metric_ids"])
           text_result(metric_group.reload.as_json)
@@ -67,6 +70,7 @@ module CompletionKit
         metric_group = CompletionKit::MetricGroup.find(args["id"])
         if metric_group.update(args.except("id", "metric_ids").slice("name", "description"))
           metric_group.replace_metrics!(args["metric_ids"]) if args.key?("metric_ids")
+          metric_group.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(metric_group.reload.as_json)
         else
           error_result(metric_group.errors.full_messages.join(", "))

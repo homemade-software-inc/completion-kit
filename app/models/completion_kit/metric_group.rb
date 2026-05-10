@@ -1,5 +1,7 @@
 module CompletionKit
   class MetricGroup < ApplicationRecord
+    include CompletionKit::Taggable
+
     self.table_name = "completion_kit_metric_groups"
 
     has_many :metric_group_memberships, -> { order(:position, :id) }, dependent: :destroy
@@ -23,7 +25,8 @@ module CompletionKit
       {
         id: id, name: name, description: description,
         created_at: created_at, updated_at: updated_at,
-        metric_ids: metric_ids
+        metric_ids: metric_ids,
+        tags: tags.as_json
       }
     end
   end

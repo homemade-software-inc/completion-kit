@@ -13,27 +13,53 @@
   </div>
 </section>
 
+<%= render "completion_kit/tags/filter_bar",
+      available: @available_tags,
+      selected: @selected_tags,
+      base_path: metric_groups_path %>
+
 <% if @metric_groups.any? %>
   <table class="ck-results-table">
     <thead>
       <tr>
         <th>Name</th>
         <th>Description</th>
-        <th>Metrics</th>
+        <th>Members</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
       <% @metric_groups.each do |metric_group| %>
         <tr onclick="window.location='<%= metric_group_path(metric_group) %>'" style="cursor: pointer;">
-          <td><strong><%= metric_group.name %></strong></td>
-          <td class="ck-meta-copy"><%= truncate(metric_group.description.to_s, length: 90).presence || "—" %></td>
-          <td class="ck-meta-copy"><%= metric_group.metrics.any? ? metric_group.metrics.map(&:name).join(", ") : "empty" %></td>
+          <td>
+            <strong><%= metric_group.name %></strong>
+            <% if metric_group.tags.any? %>
+              <div class="tag-marks-row">
+                <%= render "completion_kit/tags/marks", tags: metric_group.tags %>
+              </div>
+            <% end %>
+          </td>
+          <td class="ck-meta-copy ck-clamp-2"><%= metric_group.description.presence || "—" %></td>
+          <td>
+            <% if metric_group.metrics.any? %>
+              <div class="ck-mg-members">
+                <% metric_group.metrics.each do |m| %>
+                  <span class="ck-mg-member"><%= m.name %></span>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="ck-metrics-table__dim">empty</span>
+            <% end %>
+          </td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
       <% end %>
     </tbody>
   </table>
+<% elsif @selected_tags.any? %>
+  <div class="ck-empty">
+    <p>No metric groups match these tags. <%= link_to "Clear filters", metric_groups_path, class: "ck-link" %>.</p>
+  </div>
 <% else %>
   <div class="ck-empty">
     <p>No metric groups yet. <%= link_to "Create one", new_metric_group_path, class: "ck-link" %> if you want to group multiple metrics and apply them together.</p>

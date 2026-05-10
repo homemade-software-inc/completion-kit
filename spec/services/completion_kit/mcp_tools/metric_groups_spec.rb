@@ -66,5 +66,21 @@ RSpec.describe CompletionKit::McpTools::MetricGroups do
       result = described_class.call("metric_groups_delete", {"id" => metric_group.id})
       expect(result[:content].first[:text]).to include("deleted")
     end
+
+    it "round-trips tag_names on metric_groups_create" do
+      expect do
+        described_class.call("metric_groups_create",
+          { "name" => "Tagged Group", "tag_names" => ["alpha"] })
+      end.to change(CompletionKit::Tag, :count).by(1)
+      expect(CompletionKit::MetricGroup.find_by!(name: "Tagged Group").tag_names).to eq(["alpha"])
+    end
+
+    it "replaces tag_names on metric_groups_update" do
+      group = create(:completion_kit_metric_group)
+      group.update!(tag_names: ["a"])
+      described_class.call("metric_groups_update",
+        { "id" => group.id, "tag_names" => ["b"] })
+      expect(group.reload.tag_names).to eq(["b"])
+    end
   end
 end

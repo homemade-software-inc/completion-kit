@@ -1,9 +1,10 @@
 module CompletionKit
   class MetricGroupsController < ApplicationController
+    include CompletionKit::TagFiltering
     before_action :set_metric_group, only: [:show, :edit, :update, :destroy]
 
     def index
-      @metric_groups = MetricGroup.includes(:metrics).order(:name)
+      @metric_groups = apply_tag_filter(MetricGroup.includes(:metrics, :tags).order(:name))
     end
 
     def show
@@ -11,16 +12,16 @@ module CompletionKit
 
     def new
       @metric_group = MetricGroup.new
-      @metrics = Metric.order(:name)
+      @metrics = Metric.includes(:tags).order(:name)
     end
 
     def edit
-      @metrics = Metric.order(:name)
+      @metrics = Metric.includes(:tags).order(:name)
     end
 
     def create
       @metric_group = MetricGroup.new(metric_group_params.except(:metric_ids))
-      @metrics = Metric.order(:name)
+      @metrics = Metric.includes(:tags).order(:name)
 
       if @metric_group.save
         @metric_group.replace_metrics!(metric_group_params[:metric_ids])
@@ -31,7 +32,7 @@ module CompletionKit
     end
 
     def update
-      @metrics = Metric.order(:name)
+      @metrics = Metric.includes(:tags).order(:name)
 
       if @metric_group.update(metric_group_params.except(:metric_ids))
         @metric_group.replace_metrics!(metric_group_params[:metric_ids])
@@ -53,7 +54,7 @@ module CompletionKit
     end
 
     def metric_group_params
-      params.require(:metric_group).permit(:name, :description, metric_ids: [])
+      params.require(:metric_group).permit(:name, :description, metric_ids: [], tag_names: [])
     end
   end
 end

@@ -2,7 +2,9 @@
 <% display_name = @tag.name.presence || original %>
 <% pill = content_tag(:span,
        content_tag(:span, display_name, id: "tag-pill-text", data: { placeholder: original }),
-       id: "tag-breadcrumb-pill", class: tag_pill_class(@tag)) %>
+       id: "tag-breadcrumb-pill",
+       class: "tag-mark",
+       style: "--mark-color: var(--tag-#{@tag.color});") %>
 
 <%= render "completion_kit/shared/settings_nav",
       section_label: "Tags",
