@@ -3412,6 +3412,7 @@ a.ck-metric-group-pill {
 .tag {
   display: inline-flex;
   align-items: center;
+  gap: 7px;
   padding: 3px 9px 3px 8px;
   min-height: 1.55em;
   border-radius: 5px;
@@ -3432,7 +3433,6 @@ a.ck-metric-group-pill {
   content: "";
   width: 6px;
   height: 6px;
-  margin-right: 7px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.85);
   flex-shrink: 0;
@@ -3444,9 +3444,9 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 .tag:has(> #tag-pill-text:empty) {
   aspect-ratio: 1;
   padding: 0;
+  gap: 0;
   justify-content: center;
 }
-.tag:has(> #tag-pill-text:empty)::before { margin-right: 0; }
 
 .tag-crimson       { background-color: var(--tag-crimson);       --current-tag-color: var(--tag-crimson); }
 .tag-burnt-orange  { background-color: var(--tag-burnt-orange);  --current-tag-color: var(--tag-burnt-orange);  color: #2a1300; }
