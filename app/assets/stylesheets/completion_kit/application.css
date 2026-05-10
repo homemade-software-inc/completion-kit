@@ -3440,8 +3440,9 @@ a.ck-metric-group-pill {
 a.tag, label.tag { cursor: pointer; }
 a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 
-.tag:has(> #tag-pill-text:empty) {
-  aspect-ratio: 1;
+.tag--empty {
+  width: 1.85em;
+  height: 1.85em;
   padding: 0;
   gap: 0;
   justify-content: center;

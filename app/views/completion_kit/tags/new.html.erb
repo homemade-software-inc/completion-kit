@@ -1,7 +1,8 @@
 <% display_name = @tag.name.presence.to_s %>
+<% pill_class = [tag_pill_class(@tag), ("tag--empty" if display_name.empty?)].compact.join(" ") %>
 <% pill = content_tag(:span,
        content_tag(:span, display_name, id: "tag-pill-text", data: { placeholder: "" }),
-       id: "tag-breadcrumb-pill", class: tag_pill_class(@tag)) %>
+       id: "tag-breadcrumb-pill", class: pill_class) %>
 
 <%= render "completion_kit/shared/settings_nav",
       section_label: "Tags",
