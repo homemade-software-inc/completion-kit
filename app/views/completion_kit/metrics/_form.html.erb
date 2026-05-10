@@ -46,7 +46,17 @@
     <%= render "completion_kit/tags/picker", record: metric, param_namespace: :metric %>
 
     <div class="ck-actions">
-      <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
+      <% if metric.persisted? %>
+        <%= button_to metric_path(metric), method: :delete,
+              form_class: "inline-block",
+              class: "ck-icon-btn",
+              title: "Delete metric",
+              "aria-label": "Delete metric",
+              data: { turbo_confirm: "Delete \"#{metric.name}\"? Reviews referencing this metric will keep their scores but lose the link." } do %>
+          <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
+        <% end %>
+      <% end %>
+      <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(metric.persisted? ? "Save metric" : "Create metric", class: ck_button_classes(:dark)) %>
     </div>
   </div>
