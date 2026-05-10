@@ -7,9 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-09
+
 ### Added
 
-- **Tags** — Polymorphic domain tags for metrics, prompts, runs, and datasets with a 10-color auto-assigned palette. Filter each index page by tag (`?tag[]=...` URL params, OR semantics across multiple selected tags). Tag CRUD via web UI (`/tags`), REST API (`/api/v1/tags`), and MCP tools (`tags_list`, `tags_get`, `tags_create`, `tags_update`, `tags_delete`). The four taggable resources accept a `tag_names: [...]` field on their existing create/update endpoints with auto-create semantics — passing an unknown name silently creates the tag. Replace semantics on PATCH (passing `tag_names: ["foo"]` removes any tag not in the list).
+- **Tags** — Polymorphic domain tags for metrics, prompts, runs, datasets, and metric groups with a 10-color auto-assigned palette. Filter each index page by tag (`?tag[]=...` URL params, OR semantics across multiple selected tags). Tag CRUD via web UI (`/tags` under Settings), REST API (`/api/v1/tags`), and MCP tools (`tags_list`, `tags_get`, `tags_create`, `tags_update`, `tags_delete`). All taggable resources accept a `tag_names: [...]` field on their existing create/update endpoints with auto-create + replace semantics.
+- **In-form tag filter for metric selection** — runs form and metric_group form let you narrow the visible metrics by their tags before checking which ones to apply.
+- **Settings dropdown** — top-nav `Settings ▾` consolidates `Providers` and `Tags` (porting the `<details>`-based menu pattern from completion-kit-cloud).
+- **Site-wide cascade-aware delete confirmations** — every edit form's trash button shows a count of what gets deleted (e.g. "Delete 'X'? Cascades through 3 runs and 75 responses (and their reviews)").
+- **Autofocus on form errors and `/new` pages** — site-wide `turbo:load` handler focuses the first invalid field when validation fails, or the first field on a fresh `/new` page.
+
+### Changed
+
+- **Dataset deletion now cascades to runs** (was `restrict_with_error`) — mirrors `Prompt.has_many :runs, dependent: :destroy`.
+- **bin/dev** in `standalone/` now actually launches `Procfile.dev` (web + worker) via foreman instead of just `bin/rails server`.
+- **Customer-support seed data** — replaces the property-listings demo with three retail prompts (Support Reply Generator, Ticket Triage, Ticket Summary), 9 scoped metrics across three Reply/Triage/Summary metric groups, 15 scored responses, and tag wiring across `customer-support`, `reply`, `triage`, `summary`.
 
 ## [0.4.8] - 2026-05-07
 
