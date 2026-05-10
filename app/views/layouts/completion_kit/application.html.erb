@@ -58,21 +58,16 @@ document.addEventListener("turbo:load", function() {
     el.textContent = d.toLocaleString(undefined, {year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
   });
   ckTickRelativeTimes();
-  ckBindTagPreview();
   ckAutoFocusFirstError();
 });
 
-function ckBindTagPreview() {
-  var input = document.getElementById("tag_name");
+document.addEventListener("input", function(e) {
+  if (!e.target || e.target.id !== "tag_name") return;
   var text = document.getElementById("tag-pill-text");
-  if (!input || !text || input.dataset.tagPreviewBound) return;
-  input.dataset.tagPreviewBound = "1";
-  var fallback = text.dataset.placeholder || "";
-  input.addEventListener("input", function() {
-    var v = input.value.trim().toLowerCase();
-    text.textContent = v.length ? v : fallback;
-  });
-}
+  if (!text) return;
+  var v = e.target.value.trim().toLowerCase();
+  text.textContent = v.length ? v : (text.dataset.placeholder || "");
+});
 
 function ckAutoFocusFirstError() {
   var fieldSelector = "input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=reset]):not([type=file]), textarea, select";
