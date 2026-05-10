@@ -2986,6 +2986,10 @@ a.ck-metric-group-pill {
   white-space: nowrap;
 }
 
+.ck-runs-table__identity .tag-marks-row {
+  padding-left: 1.2rem;
+}
+
 .ck-runs-table__config-link {
   color: var(--ck-muted);
   text-decoration: none;
@@ -3644,10 +3648,11 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
   border-color: var(--ck-line-strong);
   color: color-mix(in srgb, var(--mark-color) 80%, var(--ck-text));
 }
-button.tag-mark, a.tag-mark {
-  border: 0;
-  background: color-mix(in srgb, var(--mark-color) 24%, transparent);
+button.tag-mark {
+  font: inherit;
   cursor: pointer;
+}
+a.tag-mark {
   text-decoration: none;
 }
 
