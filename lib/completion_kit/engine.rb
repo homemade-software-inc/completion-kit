@@ -8,7 +8,11 @@ module CompletionKit
     paths.add "app/services", eager_load: true
 
     def self.register_assets(app)
-      app.config.assets.precompile += %w( completion_kit/application.css completion_kit/logo.svg )
+      app.config.assets.precompile += %w(
+        completion_kit/application.css
+        completion_kit/application.js
+        completion_kit/logo.svg
+      )
     end
 
     initializer("completion_kit.assets") { |app| Engine.register_assets(app) }

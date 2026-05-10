@@ -64,6 +64,17 @@ bin/rails db:migrate
 
 The engine mounts at `/completion_kit` in your app. CompletionKit's generate and judge flows enqueue Active Job jobs (`CompletionKit::GenerateRowJob`, `CompletionKit::JudgeReviewJob`, `CompletionKit::RunCompletionCheckJob`), so your host app needs an Active Job adapter that actually processes them — Solid Queue, Sidekiq, GoodJob, etc. The `:async` adapter is **not** suitable for production: it runs jobs in the web Puma's thread pool with no durability and no retry, and a long LLM call will block request handling.
 
+### Host-app layout integration
+
+If your host app overrides the engine layout (e.g. `layout "application"` on engine controllers, or rendering engine views inside your own shell), include both the engine's stylesheet and JavaScript in that layout:
+
+```erb
+<%= stylesheet_link_tag "completion_kit/application", media: "all" %>
+<%= javascript_include_tag "completion_kit/application", defer: true %>
+```
+
+Without the JavaScript include, in-page behaviours silently fail: live tag-breadcrumb updates, relative-time ticking, CSV row hover-expand, model-refresh progress, focus-first-error, and local-time formatting.
+
 ## Providers
 
 CompletionKit discovers available models from each provider's API automatically.

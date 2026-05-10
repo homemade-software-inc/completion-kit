@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-05-10
+
+### Changed
+
+- **Layout JavaScript externalized into an asset.** Behaviour-critical JS that previously lived inline in the engine layout (live tag-breadcrumb updates, `[data-local-time]` formatting, relative-time ticking, CSV row hover-expand, model-refresh progress, focus-first-error) now ships as `completion_kit/application.js`. Host apps that override the engine layout must add `<%= javascript_include_tag "completion_kit/application", defer: true %>` alongside the existing stylesheet include — without it, those behaviours silently fail.
+
+### Fixed
+
+- **Tag breadcrumb live update** — Rails `form_with` doesn't auto-generate `id` attributes; the input listener was matching against `id="tag_name"` which was never rendered. The form now sets the id explicitly, and a request-spec assertion guards against future regressions.
+
 ## [0.5.0] - 2026-05-09
 
 ### Added

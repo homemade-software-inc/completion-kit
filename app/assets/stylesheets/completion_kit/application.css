@@ -3563,6 +3563,8 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
   align-items: center;
   gap: 5px;
   padding: 2px 8px;
+  min-height: 22px;
+  box-sizing: border-box;
   border: 1px solid transparent;
   border-radius: 4px;
   font-family: var(--ck-mono);

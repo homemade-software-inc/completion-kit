@@ -47,14 +47,12 @@ RSpec.describe "CompletionKit tags", type: :request do
   end
 
   describe "live breadcrumb pill update wiring" do
-    it "renders the input id, the pill, and the document-level input listener on /new" do
+    it "renders the input id, the pill, and includes the engine application JS on /new" do
       get "/completion_kit/tags/new"
       expect(response.body).to include('id="tag_name"')
       expect(response.body).to include('id="tag-pill-text"')
       expect(response.body).to include('id="tag-breadcrumb-pill"')
-      expect(response.body).to match(/document\.addEventListener\(["']input["']/)
-      expect(response.body).to match(/e\.target\.id\s*!==\s*["']tag_name["']/)
-      expect(response.body).to include("tag-pill-text")
+      expect(response.body).to match(/<script[^>]+src=["'][^"']*completion_kit\/application[^"']*\.js[^"']*["']/)
     end
 
     it "renders the same wiring on /edit" do
