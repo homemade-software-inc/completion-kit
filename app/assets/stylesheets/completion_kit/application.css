@@ -3440,6 +3440,8 @@ a.ck-metric-group-pill {
 a.tag, label.tag { cursor: pointer; }
 a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 
+.tag:has(> #tag-pill-text:empty) { gap: 0; padding-right: 8px; }
+
 .tag-crimson       { background-color: var(--tag-crimson);       --current-tag-color: var(--tag-crimson); }
 .tag-burnt-orange  { background-color: var(--tag-burnt-orange);  --current-tag-color: var(--tag-burnt-orange); }
 .tag-amber         { background-color: var(--tag-amber);         --current-tag-color: var(--tag-amber);         color: #1a0f00; }
