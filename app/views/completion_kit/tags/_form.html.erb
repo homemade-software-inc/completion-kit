@@ -18,13 +18,11 @@
       (function() {
         var input = document.getElementById("tag_name");
         var text = document.getElementById("tag-pill-text");
-        var pill = document.getElementById("tag-breadcrumb-pill");
         if (!input || !text) return;
         var fallback = text.dataset.placeholder || "";
         input.addEventListener("input", function() {
           var v = input.value.trim().toLowerCase();
           text.textContent = v.length ? v : fallback;
-          if (pill) pill.classList.toggle("tag--empty", text.textContent.length === 0);
         });
       })();
     </script>
