@@ -24,6 +24,16 @@
     <%= render "completion_kit/tags/picker", record: dataset, param_namespace: :dataset %>
 
     <div class="ck-actions">
+      <% if dataset.persisted? %>
+        <%= button_to dataset_path(dataset), method: :delete,
+              form_class: "inline-block",
+              class: "ck-icon-btn",
+              title: "Delete dataset",
+              "aria-label": "Delete dataset",
+              data: { turbo_confirm: "Delete \"#{dataset.name}\"? This will fail if any runs still reference it." } do %>
+          <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
+        <% end %>
+      <% end %>
       <%= link_to "Cancel", datasets_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(dataset.persisted? ? "Save dataset" : "Create dataset", class: ck_button_classes(:dark)) %>
     </div>

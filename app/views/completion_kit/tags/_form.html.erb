@@ -15,7 +15,7 @@
       <% end %>
     </div>
 
-<div class="ck-actions ck-actions--split">
+<div class="ck-actions">
       <% if tag.persisted? %>
         <%= button_to tag_path(tag), method: :delete,
               form_class: "inline-block",
@@ -25,13 +25,9 @@
               data: { turbo_confirm: "Delete \"#{tag.name}\"? This removes the tag from every linked metric, prompt, run, and dataset." } do %>
           <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
         <% end %>
-      <% else %>
-        <span></span>
       <% end %>
-      <div class="ck-actions">
-        <%= link_to "Cancel", tags_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
-        <%= form.submit(tag.persisted? ? "Save tag" : "Create tag", class: ck_button_classes(:dark)) %>
-      </div>
+      <%= link_to "Cancel", tags_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
+      <%= form.submit(tag.persisted? ? "Save tag" : "Create tag", class: ck_button_classes(:dark)) %>
     </div>
   </div>
 <% end %>

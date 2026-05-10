@@ -3621,13 +3621,6 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
   margin-bottom: 1.25rem;
 }
 
-.ck-actions--split {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
-}
 
 .ck-input--error {
   border-color: var(--ck-danger);

@@ -39,6 +39,16 @@
     </div>
 
     <div class="ck-actions">
+      <% if metric_group.persisted? %>
+        <%= button_to metric_group_path(metric_group), method: :delete,
+              form_class: "inline-block",
+              class: "ck-icon-btn",
+              title: "Delete metric group",
+              "aria-label": "Delete metric group",
+              data: { turbo_confirm: "Delete \"#{metric_group.name}\"? Member metrics are kept; only this grouping is removed." } do %>
+          <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
+        <% end %>
+      <% end %>
       <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(metric_group.persisted? ? "Save metric group" : "Create metric group", class: ck_button_classes(:dark)) %>
     </div>
