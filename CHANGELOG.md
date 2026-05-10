@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-05-10
+
+### Changed
+
+- **Terminal job failures now report to `Rails.error`.** `GenerateRowJob` and `JudgeReviewJob` send their `rescue_from(StandardError)` failures through `Rails.error.report(error, handled: true, context: { ... })` before recording the terminal failure on the row/review. Any registered error subscriber (Sentry, custom logger, etc.) will pick these up automatically; no opt-in or configuration required. No behavior change for hosts with no subscribers.
+
 ## [0.5.1] - 2026-05-10
 
 ### Changed
