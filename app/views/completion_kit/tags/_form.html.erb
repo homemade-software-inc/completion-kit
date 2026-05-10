@@ -1,20 +1,15 @@
 <%= form_with(model: tag, local: true) do |form| %>
-  <% if tag.errors.any? %>
-    <div class="ck-flash ck-flash--alert">
-      <p class="ck-flash__title"><%= pluralize(tag.errors.count, "problem") %> prevented this tag from being saved.</p>
-      <ul class="ck-error-list">
-        <% tag.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
-
   <div class="ck-card ck-form-card">
+    <% name_error = tag.errors[:name].first %>
     <div class="ck-field">
       <%= form.label :name, "Tag name", class: "ck-label" %>
-      <%= form.text_field :name, class: "ck-input", placeholder: "e.g. production" %>
-      <% unless tag.persisted? %>
+      <%= form.text_field :name,
+            class: ["ck-input", ("ck-input--error" if name_error)].compact.join(" "),
+            placeholder: "e.g. production",
+            "aria-invalid": name_error ? "true" : nil %>
+      <% if name_error %>
+        <p class="ck-field-error" role="alert"><%= name_error %></p>
+      <% elsif !tag.persisted? %>
         <p class="ck-hint">Color is auto-assigned from a 10-color palette.</p>
       <% end %>
     </div>
