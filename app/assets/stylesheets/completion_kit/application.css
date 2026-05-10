@@ -3438,6 +3438,8 @@ a.ck-metric-group-pill {
   flex-shrink: 0;
 }
 
+.tag > span:empty { display: none; }
+
 a.tag, label.tag { cursor: pointer; }
 a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 
