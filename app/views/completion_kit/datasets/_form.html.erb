@@ -26,9 +26,12 @@
     <div class="ck-actions">
       <% if dataset.persisted? %>
         <% runs_n = dataset.runs.count %>
-        <% confirm = runs_n.zero? ?
-             "Delete \"#{dataset.name}\"? It has no runs." :
-             "Can't delete \"#{dataset.name}\" — #{pluralize(runs_n, 'run')} still #{runs_n == 1 ? 'references' : 'reference'} it. Delete those runs first." %>
+        <% responses_n = CompletionKit::Response.where(run_id: dataset.runs.select(:id)).count %>
+        <% confirm = if runs_n.zero?
+             "Delete \"#{dataset.name}\"? It has no runs."
+           else
+             "Delete \"#{dataset.name}\"? Cascades through #{pluralize(runs_n, 'run')} and #{pluralize(responses_n, 'response')} (and their reviews) that used this dataset."
+           end %>
         <%= button_to dataset_path(dataset), method: :delete,
               form_class: "inline-block",
               class: "ck-icon-btn",

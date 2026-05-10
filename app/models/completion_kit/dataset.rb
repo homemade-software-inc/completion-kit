@@ -2,7 +2,7 @@ module CompletionKit
   class Dataset < ApplicationRecord
     include CompletionKit::Taggable
 
-    has_many :runs, dependent: :restrict_with_error
+    has_many :runs, dependent: :destroy
 
     validates :name, presence: true
     validates :csv_data, presence: true
