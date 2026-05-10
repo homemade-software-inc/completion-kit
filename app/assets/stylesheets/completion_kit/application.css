@@ -3412,8 +3412,9 @@ a.ck-metric-group-pill {
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 4px 9px;
+  min-height: 1.55em;
   border-radius: 5px;
   font-family: var(--ck-mono);
   font-size: 12.5px;
