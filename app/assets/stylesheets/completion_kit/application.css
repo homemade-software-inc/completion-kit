@@ -3596,6 +3596,14 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
   margin-bottom: 1.25rem;
 }
 
+.ck-actions--split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+}
+
 /* Filter bar — its own visual moment */
 .ck-tag-filter {
   display: flex;
@@ -3628,56 +3636,4 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 }
 .ck-tag-filter__clear:hover { color: var(--ck-accent); }
 
-/* Tags index — colored leading edge per row */
-.ck-tags-list {
-  border: 1px solid var(--ck-line);
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--ck-surface);
-}
-.ck-tags-list__row {
-  display: grid;
-  grid-template-columns: 6px minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 1.25rem;
-  padding-right: 1.25rem;
-  border-top: 1px solid var(--ck-line);
-  transition: background 120ms ease;
-}
-.ck-tags-list__row:first-child { border-top: 0; }
-.ck-tags-list__row:hover { background: var(--ck-surface-hover); }
-.ck-tags-list__edge {
-  align-self: stretch;
-  background: var(--row-color, var(--ck-line));
-  width: 6px;
-}
-.ck-tags-list__name {
-  padding: 0.95rem 0;
-  font-family: var(--ck-mono);
-  font-size: 13.5px;
-  letter-spacing: 0.01em;
-  color: var(--ck-text);
-}
-.ck-tags-list__count {
-  font-family: var(--ck-mono);
-  font-size: 11px;
-  color: var(--ck-muted);
-  letter-spacing: 0.06em;
-}
-.ck-tags-list__count--zero { color: var(--ck-dim); }
-.ck-tags-list__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-.ck-tags-list__actions form { margin: 0; }
-.ck-tags-list__actions button.ck-link {
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  font: inherit;
-  color: var(--ck-muted);
-}
-.ck-tags-list__actions button.ck-link:hover { color: var(--ck-danger); }
 

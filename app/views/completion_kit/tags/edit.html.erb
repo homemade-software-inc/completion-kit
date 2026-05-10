@@ -1,6 +1,8 @@
+<%= render "completion_kit/shared/settings_nav", section_label: "Tags" %>
+
 <ol class="ck-breadcrumb">
   <li><%= link_to "Tags", tags_path %></li>
-  <li>Edit</li>
+  <li><%= @tag.name %></li>
 </ol>
 
 <section class="ck-page-header">

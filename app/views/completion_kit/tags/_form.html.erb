@@ -11,14 +11,33 @@
   <% end %>
 
   <div class="ck-card ck-form-card">
+    <% if tag.persisted? %>
+      <div class="ck-field">
+        <p class="ck-label">Preview</p>
+        <span class="<%= tag_pill_class(tag) %>"><%= tag.name %></span>
+      </div>
+    <% end %>
+
     <div class="ck-field">
       <%= form.label :name, "Tag name", class: "ck-label" %>
       <%= form.text_field :name, class: "ck-input", placeholder: "marine biology" %>
+      <% unless tag.persisted? %>
+        <p class="ck-hint">Color is auto-assigned from a 10-color palette.</p>
+      <% end %>
     </div>
 
-    <div class="ck-actions">
-      <%= link_to "Cancel", tags_path, class: ck_button_classes(:light, variant: :outline) %>
-      <%= form.submit(tag.persisted? ? "Save tag" : "Create tag", class: ck_button_classes(:dark)) %>
+    <div class="ck-actions ck-actions--split">
+      <% if tag.persisted? %>
+        <%= button_to "Delete tag", tag_path(tag), method: :delete,
+              form: { data: { turbo_confirm: "Delete \"#{tag.name}\"? This removes the tag from every linked metric, prompt, run, and dataset." } },
+              class: ck_button_classes(:red, variant: :outline) %>
+      <% else %>
+        <span></span>
+      <% end %>
+      <div class="ck-actions">
+        <%= link_to "Cancel", tags_path, class: ck_button_classes(:light, variant: :outline) %>
+        <%= form.submit(tag.persisted? ? "Save tag" : "Create tag", class: ck_button_classes(:dark)) %>
+      </div>
     </div>
   </div>
 <% end %>
