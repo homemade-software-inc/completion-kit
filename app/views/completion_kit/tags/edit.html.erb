@@ -13,16 +13,6 @@
   <div>
     <h1 class="ck-title">Edit tag</h1>
   </div>
-  <div class="ck-actions">
-    <%= button_to tag_path(@tag), method: :delete,
-          form_class: "inline-block",
-          class: "ck-icon-btn",
-          title: "Delete tag",
-          "aria-label": "Delete tag",
-          data: { turbo_confirm: "Delete \"#{@tag.name}\"? This removes the tag from every linked metric, prompt, run, and dataset." } do %>
-      <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
-    <% end %>
-  </div>
 </section>
 
 <%= render "form", tag: @tag %>
