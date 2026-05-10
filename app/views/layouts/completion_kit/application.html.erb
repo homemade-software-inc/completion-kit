@@ -62,14 +62,17 @@ document.addEventListener("turbo:load", function() {
 });
 
 function ckAutoFocusFirstError() {
-  var marker = document.querySelector(
-    "form .ck-flash--alert, form [aria-invalid='true'], form .ck-field-error"
-  );
-  if (!marker) return;
-  var form = marker.closest("form");
-  if (!form) return;
-  var target = form.querySelector("[aria-invalid='true']") ||
-    form.querySelector("input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=reset]):not([type=file]), textarea, select");
+  var fieldSelector = "input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=reset]):not([type=file]), textarea, select";
+  var marker = document.querySelector("form .ck-flash--alert, form [aria-invalid='true'], form .ck-field-error");
+
+  var target;
+  if (marker) {
+    var form = marker.closest("form");
+    target = form && (form.querySelector("[aria-invalid='true']") || form.querySelector(fieldSelector));
+  } else if (/\/new(\/|$)/.test(window.location.pathname)) {
+    target = document.querySelector("form " + fieldSelector);
+  }
+
   if (!target || typeof target.focus !== "function") return;
   target.focus({ preventScroll: false });
   if (typeof target.setSelectionRange === "function" && typeof target.value === "string") {
