@@ -17,12 +17,18 @@
 
 <div class="ck-actions">
       <% if tag.persisted? %>
+        <% applied_n = tag.taggings.count %>
+        <% confirm = if applied_n.zero?
+             "Delete \"#{tag.name}\"? It's not currently applied to anything."
+           else
+             "Delete \"#{tag.name}\"? It's currently applied to #{pluralize(applied_n, 'item')} — they'll lose this tag."
+           end %>
         <%= button_to tag_path(tag), method: :delete,
               form_class: "inline-block",
               class: "ck-icon-btn",
               title: "Delete tag",
               "aria-label": "Delete tag",
-              data: { turbo_confirm: "Delete \"#{tag.name}\"? This removes the tag from every linked metric, prompt, run, and dataset." } do %>
+              data: { turbo_confirm: confirm } do %>
           <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
         <% end %>
       <% end %>

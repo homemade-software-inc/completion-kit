@@ -40,12 +40,16 @@
 
     <div class="ck-actions">
       <% if metric_group.persisted? %>
+        <% members_n = metric_group.metrics.count %>
+        <% confirm = members_n.zero? ?
+             "Delete \"#{metric_group.name}\"? It has no members." :
+             "Delete \"#{metric_group.name}\"? Removes this grouping. #{pluralize(members_n, 'member metric')} #{members_n == 1 ? 'is' : 'are'} kept." %>
         <%= button_to metric_group_path(metric_group), method: :delete,
               form_class: "inline-block",
               class: "ck-icon-btn",
               title: "Delete metric group",
               "aria-label": "Delete metric group",
-              data: { turbo_confirm: "Delete \"#{metric_group.name}\"? Member metrics are kept; only this grouping is removed." } do %>
+              data: { turbo_confirm: confirm } do %>
           <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
         <% end %>
       <% end %>

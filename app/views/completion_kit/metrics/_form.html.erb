@@ -47,12 +47,18 @@
 
     <div class="ck-actions">
       <% if metric.persisted? %>
+        <% groups_n = metric.metric_groups.count %>
+        <% reviews_n = metric.reviews.count %>
+        <% parts = [] %>
+        <% parts << "in #{pluralize(groups_n, 'metric group')} (removed from each)" if groups_n > 0 %>
+        <% parts << "scored in #{pluralize(reviews_n, 'review')} (scores kept, link cleared)" if reviews_n > 0 %>
+        <% confirm = parts.empty? ? "Delete \"#{metric.name}\"? It's not in use." : "Delete \"#{metric.name}\"? It's #{parts.to_sentence}." %>
         <%= button_to metric_path(metric), method: :delete,
               form_class: "inline-block",
               class: "ck-icon-btn",
               title: "Delete metric",
               "aria-label": "Delete metric",
-              data: { turbo_confirm: "Delete \"#{metric.name}\"? Reviews referencing this metric will keep their scores but lose the link." } do %>
+              data: { turbo_confirm: confirm } do %>
           <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
         <% end %>
       <% end %>

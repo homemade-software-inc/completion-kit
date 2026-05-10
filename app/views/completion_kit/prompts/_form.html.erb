@@ -51,12 +51,19 @@
 
     <div class="ck-actions">
       <% if prompt.persisted? %>
+        <% runs_n = prompt.runs.count %>
+        <% responses_n = prompt.responses.count %>
+        <% confirm = if runs_n.zero?
+             "Delete \"#{prompt.display_name}\"? This version has no runs."
+           else
+             "Delete \"#{prompt.display_name}\"? Cascades through #{pluralize(runs_n, 'run')} and #{pluralize(responses_n, 'response')} (and their reviews). Other versions of this prompt are untouched."
+           end %>
         <%= button_to prompt_path(prompt), method: :delete,
               form_class: "inline-block",
               class: "ck-icon-btn",
               title: "Delete prompt",
               "aria-label": "Delete prompt",
-              data: { turbo_confirm: "Delete \"#{prompt.name}\"? This deletes all runs and responses for this prompt." } do %>
+              data: { turbo_confirm: confirm } do %>
           <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
         <% end %>
       <% end %>

@@ -25,12 +25,16 @@
 
     <div class="ck-actions">
       <% if dataset.persisted? %>
+        <% runs_n = dataset.runs.count %>
+        <% confirm = runs_n.zero? ?
+             "Delete \"#{dataset.name}\"? It has no runs." :
+             "Can't delete \"#{dataset.name}\" — #{pluralize(runs_n, 'run')} still #{runs_n == 1 ? 'references' : 'reference'} it. Delete those runs first." %>
         <%= button_to dataset_path(dataset), method: :delete,
               form_class: "inline-block",
               class: "ck-icon-btn",
               title: "Delete dataset",
               "aria-label": "Delete dataset",
-              data: { turbo_confirm: "Delete \"#{dataset.name}\"? This will fail if any runs still reference it." } do %>
+              data: { turbo_confirm: confirm } do %>
           <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
         <% end %>
       <% end %>
