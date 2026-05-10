@@ -3440,18 +3440,18 @@ a.ck-metric-group-pill {
 a.tag, label.tag { cursor: pointer; }
 a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 
-.tag-crimson       { background-color: var(--tag-crimson); }
-.tag-burnt-orange  { background-color: var(--tag-burnt-orange); }
-.tag-amber         { background-color: var(--tag-amber); color: #1a0f00; }
+.tag-crimson       { background-color: var(--tag-crimson);       --current-tag-color: var(--tag-crimson); }
+.tag-burnt-orange  { background-color: var(--tag-burnt-orange);  --current-tag-color: var(--tag-burnt-orange); }
+.tag-amber         { background-color: var(--tag-amber);         --current-tag-color: var(--tag-amber);         color: #1a0f00; }
 .tag-amber::before { background: rgba(0, 0, 0, 0.55); }
-.tag-mint          { background-color: var(--tag-mint); }
-.tag-deep-emerald  { background-color: var(--tag-deep-emerald); }
-.tag-electric-cyan { background-color: var(--tag-electric-cyan); color: #001620; }
+.tag-mint          { background-color: var(--tag-mint);          --current-tag-color: var(--tag-mint); }
+.tag-deep-emerald  { background-color: var(--tag-deep-emerald);  --current-tag-color: var(--tag-deep-emerald); }
+.tag-electric-cyan { background-color: var(--tag-electric-cyan); --current-tag-color: var(--tag-electric-cyan); color: #001620; }
 .tag-electric-cyan::before { background: rgba(0, 0, 0, 0.55); }
-.tag-cobalt-blue   { background-color: var(--tag-cobalt-blue); }
-.tag-deep-indigo   { background-color: var(--tag-deep-indigo); }
-.tag-amethyst      { background-color: var(--tag-amethyst); }
-.tag-rose          { background-color: var(--tag-rose); }
+.tag-cobalt-blue   { background-color: var(--tag-cobalt-blue);   --current-tag-color: var(--tag-cobalt-blue); }
+.tag-deep-indigo   { background-color: var(--tag-deep-indigo);   --current-tag-color: var(--tag-deep-indigo); }
+.tag-amethyst      { background-color: var(--tag-amethyst);      --current-tag-color: var(--tag-amethyst); }
+.tag-rose          { background-color: var(--tag-rose);          --current-tag-color: var(--tag-rose); }
 
 .tag-outline {
   background-color: transparent !important;
@@ -3518,25 +3518,22 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 }
 .ck-tag-picker__input::placeholder { color: var(--ck-dim); }
 
-/* Picker chips: visual state derived live from the hidden checkbox.
-   Default appearance is filled; unchecked input flips to outline. */
+/* Picker chips: unchecked = neutral pill with a small tag-colored dot.
+   Avoids looking "applied" simply because the tag color is on screen. */
 .ck-tag-picker label.tag:has(input:not(:checked)) {
   background-color: transparent !important;
-  border: 1px solid currentColor;
+  border: 1px solid var(--ck-line);
+  color: var(--ck-muted);
   box-shadow: none;
   filter: none;
 }
-.ck-tag-picker label.tag:has(input:not(:checked))::before { background: currentColor; }
-.ck-tag-picker label.tag.tag-crimson:has(input:not(:checked))       { color: var(--tag-crimson); }
-.ck-tag-picker label.tag.tag-burnt-orange:has(input:not(:checked))  { color: var(--tag-burnt-orange); }
-.ck-tag-picker label.tag.tag-amber:has(input:not(:checked))         { color: var(--tag-amber); }
-.ck-tag-picker label.tag.tag-mint:has(input:not(:checked))          { color: var(--tag-mint); }
-.ck-tag-picker label.tag.tag-deep-emerald:has(input:not(:checked))  { color: var(--tag-deep-emerald); }
-.ck-tag-picker label.tag.tag-electric-cyan:has(input:not(:checked)) { color: var(--tag-electric-cyan); }
-.ck-tag-picker label.tag.tag-cobalt-blue:has(input:not(:checked))   { color: var(--tag-cobalt-blue); }
-.ck-tag-picker label.tag.tag-deep-indigo:has(input:not(:checked))   { color: var(--tag-deep-indigo); }
-.ck-tag-picker label.tag.tag-amethyst:has(input:not(:checked))      { color: var(--tag-amethyst); }
-.ck-tag-picker label.tag.tag-rose:has(input:not(:checked))          { color: var(--tag-rose); }
+.ck-tag-picker label.tag:has(input:not(:checked))::before {
+  background: var(--current-tag-color);
+}
+.ck-tag-picker label.tag:has(input:not(:checked)):hover {
+  border-color: var(--ck-line-strong);
+  color: var(--ck-text);
+}
 
 /* Top-nav settings menu (ported from completion-kit-cloud) */
 .ck-settings-menu {
