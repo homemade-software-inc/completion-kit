@@ -3414,7 +3414,7 @@ a.ck-metric-group-pill {
   align-items: center;
   gap: 6px;
   padding: 4px 9px;
-  min-height: 1.55em;
+  min-height: calc(1.4em + 8px);
   border-radius: 5px;
   font-family: var(--ck-mono);
   font-size: 12.5px;
