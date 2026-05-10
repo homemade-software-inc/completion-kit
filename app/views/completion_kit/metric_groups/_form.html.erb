@@ -39,7 +39,7 @@
     </div>
 
     <div class="ck-actions">
-      <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(metric_group.persisted? ? "Save metric group" : "Create metric group", class: ck_button_classes(:dark)) %>
     </div>
   </div>

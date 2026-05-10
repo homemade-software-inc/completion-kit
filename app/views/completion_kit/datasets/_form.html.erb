@@ -24,7 +24,7 @@
     <%= render "completion_kit/tags/picker", record: dataset, param_namespace: :dataset %>
 
     <div class="ck-actions">
-      <%= link_to "Cancel", datasets_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= link_to "Cancel", datasets_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(dataset.persisted? ? "Save dataset" : "Create dataset", class: ck_button_classes(:dark)) %>
     </div>
   </div>

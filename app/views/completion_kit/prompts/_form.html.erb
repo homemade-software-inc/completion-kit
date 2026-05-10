@@ -50,7 +50,7 @@
     <%= render "completion_kit/tags/picker", record: prompt, param_namespace: :prompt %>
 
     <div class="ck-actions">
-      <%= link_to "Cancel", prompts_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= link_to "Cancel", prompts_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(prompt.persisted? ? "Save prompt" : "Create prompt", class: ck_button_classes(:dark), disabled: available.empty?) %>
     </div>
   </div>

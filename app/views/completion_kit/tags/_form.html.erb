@@ -29,7 +29,7 @@
         <span></span>
       <% end %>
       <div class="ck-actions">
-        <%= link_to "Cancel", tags_path, class: ck_button_classes(:light, variant: :outline) %>
+        <%= link_to "Cancel", tags_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
         <%= form.submit(tag.persisted? ? "Save tag" : "Create tag", class: ck_button_classes(:dark)) %>
       </div>
     </div>

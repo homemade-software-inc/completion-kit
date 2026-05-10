@@ -251,7 +251,7 @@ updateRunForm();
     <%= render "completion_kit/tags/picker", record: run, param_namespace: :run %>
 
     <div class="ck-actions">
-      <%= link_to "Cancel", run.persisted? ? run_path(run) : runs_path, class: ck_button_classes(:light, variant: :outline) %>
+      <%= link_to "Cancel", run.persisted? ? run_path(run) : runs_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(run.persisted? ? "Save run" : "Create run", class: ck_button_classes(:dark), id: "run-submit") %>
     </div>
   </div>
