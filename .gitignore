@@ -10,6 +10,7 @@
 .idea/
 spec/dummy/tmp/
 .superpowers/
+.claude/
 **/master.key
 standalone/tmp/
 standalone/log/*.log
