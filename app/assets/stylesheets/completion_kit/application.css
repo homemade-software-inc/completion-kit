@@ -3412,7 +3412,7 @@ a.ck-metric-group-pill {
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   padding: 4px 10px;
   border-radius: 5px;
   font-family: var(--ck-mono);
