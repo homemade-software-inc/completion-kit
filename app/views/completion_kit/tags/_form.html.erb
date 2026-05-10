@@ -17,9 +17,14 @@
 
 <div class="ck-actions ck-actions--split">
       <% if tag.persisted? %>
-        <%= button_to "Delete tag", tag_path(tag), method: :delete,
-              form: { data: { turbo_confirm: "Delete \"#{tag.name}\"? This removes the tag from every linked metric, prompt, run, and dataset." } },
-              class: ck_button_classes(:red, variant: :outline) %>
+        <%= button_to tag_path(tag), method: :delete,
+              form_class: "inline-block",
+              class: "ck-icon-btn",
+              title: "Delete tag",
+              "aria-label": "Delete tag",
+              data: { turbo_confirm: "Delete \"#{tag.name}\"? This removes the tag from every linked metric, prompt, run, and dataset." } do %>
+          <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
+        <% end %>
       <% else %>
         <span></span>
       <% end %>
