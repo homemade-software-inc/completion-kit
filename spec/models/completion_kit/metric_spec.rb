@@ -1,6 +1,22 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::Metric, type: :model do
+  describe "destroy cascade" do
+    it "destroys metric_group memberships and nullifies the metric link on reviews" do
+      metric = create(:completion_kit_metric)
+      group = create(:completion_kit_metric_group)
+      create(:completion_kit_metric_group_membership, metric_group: group, metric: metric)
+      response = create(:completion_kit_response, run: create(:completion_kit_run, prompt: create(:completion_kit_prompt, template: "Static prompt without variables")))
+      review = create(:completion_kit_review, response: response, metric: metric)
+
+      expect { metric.destroy! }
+        .to change(CompletionKit::MetricGroupMembership, :count).by(-1)
+        .and change(CompletionKit::Review, :count).by(0)
+
+      expect(review.reload.metric_id).to be_nil
+    end
+  end
+
   it "fills in default rubric bands on a new metric" do
     metric = described_class.create!(name: "Default metric")
 
