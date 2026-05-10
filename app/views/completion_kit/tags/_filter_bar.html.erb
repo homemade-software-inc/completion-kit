@@ -5,7 +5,8 @@
       <% on = selected.any? { |s| s.id == tag.id } %>
       <%= link_to tag.name,
             tag_filter_url(base_path, selected, tag),
-            class: tag_pill_class(tag, outline: !on) %>
+            class: ["tag-mark", ("tag-mark--off" unless on)].compact.join(" "),
+            style: "--mark-color: var(--tag-#{tag.color});" %>
     <% end %>
     <% if selected.any? %>
       <%= link_to "× clear", base_path, class: "ck-tag-filter__clear" %>

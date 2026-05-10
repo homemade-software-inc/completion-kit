@@ -34,7 +34,7 @@
               </div>
             <% end %>
           </td>
-          <td class="ck-meta-copy ck-clamp-2"><%= metric.instruction.presence || "—" %></td>
+          <td class="ck-meta-copy"><div class="ck-clamp-2"><%= metric.instruction.presence || "—" %></div></td>
           <td>
             <% groups = metric.metric_groups %>
             <% if groups.any? %>
