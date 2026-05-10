@@ -2,7 +2,7 @@
 
 <ol class="ck-breadcrumb">
   <li><%= link_to "Tags", tags_path %></li>
-  <li><%= @tag.name %></li>
+  <li><span class="<%= tag_pill_class(@tag) %>"><%= @tag.name %></span></li>
 </ol>
 
 <section class="ck-page-header">
