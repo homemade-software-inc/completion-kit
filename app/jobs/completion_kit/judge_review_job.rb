@@ -23,6 +23,7 @@ module CompletionKit
     discard_on CompletionKit::ConfigurationError
 
     rescue_from(StandardError) do |error|
+      Rails.error.report(error, handled: true, context: { job: self.class.name, run_id: @run_id, review_id: @review_id })
       record_terminal_failure!(error)
       enqueue_completion_check
     end
