@@ -6,6 +6,7 @@
       <%= form.text_field :name,
             class: ["ck-input", ("ck-input--error" if name_error)].compact.join(" "),
             placeholder: "e.g. production",
+            autofocus: true,
             "aria-invalid": name_error ? "true" : nil %>
       <% if name_error %>
         <p class="ck-field-error" role="alert"><%= name_error %></p>
