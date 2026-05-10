@@ -4,6 +4,7 @@
     <div class="ck-field">
       <%= form.label :name, "Tag name", class: "ck-label" %>
       <%= form.text_field :name,
+            id: "tag_name",
             class: ["ck-input", ("ck-input--error" if name_error)].compact.join(" "),
             placeholder: "e.g. production",
             autofocus: true,
