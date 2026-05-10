@@ -320,4 +320,22 @@ neighbourhood_responses.each do |rd|
   end
 end
 
-puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews"
+CompletionKit::Tag.find_or_create_by!(name: "real estate")
+
+%w[Accuracy Persuasiveness Tone Conciseness Completeness].each do |metric_name|
+  CompletionKit::Metric.find_by(name: metric_name)&.update!(tag_names: ["real estate"])
+end
+CompletionKit::Metric.find_by(name: "Local Relevance")&.update!(tag_names: ["real estate"])
+CompletionKit::Metric.find_by(name: "Engagement")&.update!(tag_names: ["real estate"])
+
+["Property Listing Generator", "Property Summary", "Neighbourhood Guide"].each do |prompt_name|
+  CompletionKit::Prompt.where(name: prompt_name).each { |p| p.update!(tag_names: ["real estate"]) }
+end
+
+CompletionKit::Dataset.find_by(name: "Property Listings — AU")&.update!(tag_names: ["real estate"])
+
+["Property Listing Generator — v1 #1", "Property Summary — v1 #1", "Neighbourhood Guide — v1 #1"].each do |run_name|
+  CompletionKit::Run.find_by(name: run_name)&.update!(tag_names: ["real estate"])
+end
+
+puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews, #{CompletionKit::Tag.count} tags"

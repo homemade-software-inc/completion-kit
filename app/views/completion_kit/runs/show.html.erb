@@ -7,6 +7,12 @@
 
 <%= render "status_header", run: @run %>
 
+<% if @run.tags.any? %>
+  <div class="tag-marks-row tag-marks-row--header">
+    <%= render "completion_kit/tags/marks", tags: @run.tags %>
+  </div>
+<% end %>
+
 <% if @run.dataset %>
   <% dataset_lines = @run.dataset.csv_data.to_s.lines %>
   <% dataset_preview_lines = dataset_lines.first(50) %>

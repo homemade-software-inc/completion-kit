@@ -1,0 +1,18 @@
+<% original = @tag.name_was.presence || "tag" %>
+<% display_name = @tag.name.presence || original %>
+<% pill = content_tag(:span,
+       content_tag(:span, display_name, id: "tag-pill-text", data: { placeholder: original }),
+       id: "tag-breadcrumb-pill", class: tag_pill_class(@tag)) %>
+
+<%= render "completion_kit/shared/settings_nav",
+      section_label: "Tags",
+      section_link: tags_path,
+      trail: pill %>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Edit tag</h1>
+  </div>
+</section>
+
+<%= render "form", tag: @tag %>

@@ -61,5 +61,20 @@ RSpec.describe CompletionKit::McpTools::Metrics do
       result = described_class.call("metrics_delete", {"id" => metric.id})
       expect(result[:content].first[:text]).to include("deleted")
     end
+
+    it "round-trips tag_names on metrics_create with auto-create" do
+      expect do
+        described_class.call("metrics_create",
+          {"name" => "T", "instruction" => "x", "tag_names" => ["new"]})
+      end.to change(CompletionKit::Tag, :count).by(1)
+      found = CompletionKit::Metric.find_by!(name: "T")
+      expect(found.tag_names).to eq(["new"])
+    end
+
+    it "replaces tag_names on metrics_update" do
+      metric.update!(tag_names: ["a", "b"])
+      described_class.call("metrics_update", {"id" => metric.id, "tag_names" => ["c"]})
+      expect(metric.reload.tag_names).to eq(["c"])
+    end
   end
 end

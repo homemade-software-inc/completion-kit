@@ -241,6 +241,19 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to redirect_to("/completion_kit/runs/#{new_run.id}")
   end
 
+  it "round-trips tag_names on create and update" do
+    post "/completion_kit/runs", params: {
+      run: { name: "R", prompt_id: prompt.id, tag_names: ["beta"] }
+    }
+    run = CompletionKit::Run.find_by!(name: "R")
+    expect(run.tag_names).to eq(["beta"])
+
+    patch "/completion_kit/runs/#{run.id}", params: {
+      run: { tag_names: [] }
+    }
+    expect(run.reload.tag_names).to eq([])
+  end
+
   it "rerun redirects with an alert when start! fails on the new run" do
     source_run = create(:completion_kit_run, prompt: prompt, status: "completed")
     allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
@@ -274,4 +287,37 @@ RSpec.describe "CompletionKit runs", type: :request do
     suggestion = CompletionKit::Suggestion.order(:id).last
     expect(response).to redirect_to("/completion_kit/suggestions/#{suggestion.id}?from=run")
   end
+
+  it "filters runs by tag" do
+    marine_run = create(:completion_kit_run, prompt: prompt, name: "Shark classifier run")
+    real_estate_run = create(:completion_kit_run, prompt: prompt, name: "Property listing run")
+    marine_run.update!(tag_names: ["marine biology"])
+    real_estate_run.update!(tag_names: ["real estate"])
+
+    get "/completion_kit/runs?tag[]=marine biology"
+    expect(response.body).to include("Shark classifier run")
+    expect(response.body).not_to include("Property listing run")
+
+    get "/completion_kit/runs?tag[]=marine biology&tag[]=real estate"
+    expect(response.body).to include("Shark classifier run")
+    expect(response.body).to include("Property listing run")
+
+    get "/completion_kit/runs"
+    expect(response.body).to include("Shark classifier run")
+    expect(response.body).to include("Property listing run")
+  end
+
+  it "renders no filter bar when no tags exist" do
+    create(:completion_kit_run, prompt: prompt, name: "Basic run")
+    get "/completion_kit/runs"
+    expect(response.body).not_to include("Filter by tag")
+  end
+
+  it "shows the filter bar when tags exist" do
+    CompletionKit::Tag.create!(name: "z")
+    create(:completion_kit_run, prompt: prompt, name: "Basic run")
+    get "/completion_kit/runs"
+    expect(response.body).to include("Filter by tag")
+  end
+
 end

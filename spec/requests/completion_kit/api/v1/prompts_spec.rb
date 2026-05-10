@@ -102,4 +102,39 @@ RSpec.describe "API V1 Prompts", type: :request do
       expect(prompt.reload.template).not_to eq("Updated {{content}}")
     end
   end
+
+  describe "tag_names round-trip" do
+    it "auto-creates and replaces tags" do
+      post "/completion_kit/api/v1/prompts",
+        params: { name: "P", template: "hi", llm_model: "gpt-4o-mini",
+                  tag_names: ["alpha"] }.to_json,
+        headers: headers
+      prompt = CompletionKit::Prompt.find_by!(name: "P")
+      expect(prompt.tag_names).to eq(["alpha"])
+      expect(JSON.parse(response.body)["tags"].first["name"]).to eq("alpha")
+
+      patch "/completion_kit/api/v1/prompts/#{prompt.id}",
+        params: { tag_names: ["beta"] }.to_json,
+        headers: headers
+      expect(prompt.reload.tag_names).to eq(["beta"])
+
+      patch "/completion_kit/api/v1/prompts/#{prompt.id}",
+        params: { tag_names: [] }.to_json,
+        headers: headers
+      expect(prompt.reload.tag_names).to eq([])
+    end
+
+    it "applies tag_names to cloned version when prompt has runs" do
+      prompt = create(:completion_kit_prompt)
+      create(:completion_kit_run, prompt: prompt)
+
+      patch "/completion_kit/api/v1/prompts/#{prompt.id}",
+        params: { tag_names: ["cloned-tag"] }.to_json,
+        headers: headers
+      expect(response).to have_http_status(:ok)
+      new_id = JSON.parse(response.body)["id"]
+      new_prompt = CompletionKit::Prompt.find(new_id)
+      expect(new_prompt.tag_names).to eq(["cloned-tag"])
+    end
+  end
 end

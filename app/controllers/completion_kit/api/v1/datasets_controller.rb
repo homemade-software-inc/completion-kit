@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_dataset, only: [:show, :update, :destroy]
 
         def index
-          render json: Dataset.order(created_at: :desc)
+          render json: Dataset.includes(:tags).order(created_at: :desc)
         end
 
         def show
@@ -43,7 +43,7 @@ module CompletionKit
         end
 
         def dataset_params
-          params.permit(:name, :csv_data)
+          params.permit(:name, :csv_data, tag_names: [])
         end
       end
     end

@@ -8,6 +8,11 @@
   </div>
 </section>
 
+<%= render "completion_kit/tags/filter_bar",
+      available: @available_tags,
+      selected: @selected_tags,
+      base_path: datasets_path %>
+
 <% if @datasets.any? %>
   <table class="ck-results-table">
     <thead>
@@ -22,7 +27,14 @@
     <tbody>
       <% @datasets.each do |dataset| %>
         <tr onclick="window.location='<%= dataset_path(dataset) %>'" style="cursor: pointer;">
-          <td><strong><%= dataset.name %></strong></td>
+          <td>
+            <strong><%= dataset.name %></strong>
+            <% if dataset.tags.any? %>
+              <div class="tag-marks-row">
+                <%= render "completion_kit/tags/marks", tags: dataset.tags %>
+              </div>
+            <% end %>
+          </td>
           <td><%= dataset.row_count %></td>
           <td><%= dataset.runs.count %></td>
           <td class="ck-meta-copy"><time datetime="<%= dataset.created_at.iso8601 %>"><%= dataset.created_at.strftime("%b %-d, %Y") %></time></td>
@@ -31,6 +43,10 @@
       <% end %>
     </tbody>
   </table>
+<% elsif @selected_tags.any? %>
+  <div class="ck-empty">
+    <p>No datasets match these tags. <%= link_to "Clear filters", datasets_path, class: "ck-link" %>.</p>
+  </div>
 <% else %>
   <div class="ck-empty">
     No datasets yet. Create one to use with your prompts.

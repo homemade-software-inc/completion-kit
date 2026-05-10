@@ -1,0 +1,18 @@
+<% display_name = @tag.name.presence.to_s %>
+<% pill = content_tag(:span,
+       content_tag(:span, display_name, id: "tag-pill-text", data: { placeholder: "" }),
+       id: "tag-breadcrumb-pill", class: tag_pill_class(@tag)) %>
+
+<%= render "completion_kit/shared/settings_nav",
+      section_label: "Tags",
+      section_link: tags_path,
+      trail: pill %>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">New tag</h1>
+    <p class="ck-lead">Tags help you filter metrics, prompts, runs, and datasets by domain.</p>
+  </div>
+</section>
+
+<%= render "form", tag: @tag %>

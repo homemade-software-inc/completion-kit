@@ -145,4 +145,45 @@ RSpec.describe "API V1 Runs", type: :request do
       expect(JSON.parse(response.body)["errors"]).to eq(["Cannot start run"])
     end
   end
+
+  describe "tag_names round-trip" do
+    let(:prompt) { create(:completion_kit_prompt, template: "Static prompt") }
+
+    it "auto-creates new tags on POST and includes them in the response" do
+      expect do
+        post "/completion_kit/api/v1/runs",
+          params: { prompt_id: prompt.id, tag_names: ["new"] }.to_json,
+          headers: headers
+      end.to change(CompletionKit::Tag, :count).by(1)
+      run = CompletionKit::Run.find(JSON.parse(response.body)["id"])
+      expect(run.tag_names).to eq(["new"])
+      expect(JSON.parse(response.body)["tags"].map { |t| t["name"] }).to eq(["new"])
+    end
+
+    it "replaces tags on PATCH" do
+      run = create(:completion_kit_run)
+      run.update!(tag_names: ["a", "b"])
+      patch "/completion_kit/api/v1/runs/#{run.id}",
+        params: { tag_names: ["c"] }.to_json,
+        headers: headers
+      expect(run.reload.tag_names).to eq(["c"])
+    end
+
+    it "clears all tags on PATCH with empty array" do
+      run = create(:completion_kit_run)
+      run.update!(tag_names: ["a"])
+      patch "/completion_kit/api/v1/runs/#{run.id}",
+        params: { tag_names: [] }.to_json,
+        headers: headers
+      expect(run.reload.tag_names).to eq([])
+    end
+
+    it "exposes tags in GET show" do
+      run = create(:completion_kit_run)
+      run.update!(tag_names: ["alpha"])
+      get "/completion_kit/api/v1/runs/#{run.id}", headers: headers
+      body = JSON.parse(response.body)
+      expect(body["tags"].map { |t| t["name"] }).to eq(["alpha"])
+    end
+  end
 end

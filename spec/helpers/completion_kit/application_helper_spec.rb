@@ -187,4 +187,35 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(result).to include("hello")
     end
   end
+
+  describe "#tag_pill_class" do
+    let(:tag) { CompletionKit::Tag.create!(name: "x") }
+
+    it "returns filled classes by default" do
+      expect(helper.tag_pill_class(tag)).to eq("tag tag-#{tag.color}")
+    end
+
+    it "adds tag-outline when outline is true" do
+      expect(helper.tag_pill_class(tag, outline: true)).to eq("tag tag-#{tag.color} tag-outline")
+    end
+  end
+
+  describe "#tag_filter_url" do
+    let(:base) { "/completion_kit/metrics" }
+    let(:tag_a) { CompletionKit::Tag.create!(name: "a") }
+    let(:tag_b) { CompletionKit::Tag.create!(name: "b") }
+
+    it "adds the tag when not currently selected" do
+      expect(helper.tag_filter_url(base, [], tag_a)).to eq("#{base}?tag%5B%5D=a")
+    end
+
+    it "removes the tag when currently selected" do
+      expect(helper.tag_filter_url(base, [tag_a], tag_a)).to eq(base)
+    end
+
+    it "preserves other selected tags when toggling" do
+      url = helper.tag_filter_url(base, [tag_a, tag_b], tag_a)
+      expect(url).to eq("#{base}?tag%5B%5D=b")
+    end
+  end
 end

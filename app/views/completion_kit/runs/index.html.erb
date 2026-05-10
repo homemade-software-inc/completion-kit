@@ -8,6 +8,11 @@
   </div>
 </section>
 
+<%= render "completion_kit/tags/filter_bar",
+      available: @available_tags,
+      selected: @selected_tags,
+      base_path: runs_path %>
+
 <% if @runs.any? %>
   <table class="ck-results-table ck-runs-table">
     <thead>
@@ -26,6 +31,10 @@
       <% end %>
     </tbody>
   </table>
+<% elsif @selected_tags.any? %>
+  <div class="ck-empty">
+    <p>No runs match these tags. <%= link_to "Clear filters", runs_path, class: "ck-link" %>.</p>
+  </div>
 <% else %>
   <div class="ck-empty">No runs yet.&ensp;<%= link_to "Create your first run →", new_run_path, class: "ck-link" %></div>
 <% end %>

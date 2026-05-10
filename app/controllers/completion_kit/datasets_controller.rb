@@ -1,9 +1,10 @@
 module CompletionKit
   class DatasetsController < ApplicationController
+    include CompletionKit::TagFiltering
     before_action :set_dataset, only: [:show, :edit, :update, :destroy]
 
     def index
-      @datasets = Dataset.includes(:runs).order(created_at: :desc)
+      @datasets = apply_tag_filter(Dataset.includes(:runs, :tags).order(created_at: :desc))
     end
 
     def show
@@ -47,7 +48,7 @@ module CompletionKit
     end
 
     def dataset_params
-      params.require(:dataset).permit(:name, :csv_data)
+      params.require(:dataset).permit(:name, :csv_data, tag_names: [])
     end
   end
 end

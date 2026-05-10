@@ -1,6 +1,8 @@
 module CompletionKit
   class Dataset < ApplicationRecord
-    has_many :runs, dependent: :restrict_with_error
+    include CompletionKit::Taggable
+
+    has_many :runs, dependent: :destroy
 
     validates :name, presence: true
     validates :csv_data, presence: true
@@ -8,7 +10,8 @@ module CompletionKit
     def as_json(options = {})
       {
         id: id, name: name, csv_data: csv_data,
-        created_at: created_at, updated_at: updated_at
+        created_at: created_at, updated_at: updated_at,
+        tags: tags.as_json
       }
     end
 

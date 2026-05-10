@@ -47,8 +47,27 @@
       <p class="ck-field-hint" id="refresh-status" style="min-height: 1.2em; margin-top: -0.25rem; font-size: 0.75rem;">&nbsp;</p>
     </div>
 
+    <%= render "completion_kit/tags/picker", record: prompt, param_namespace: :prompt %>
+
     <div class="ck-actions">
-      <%= link_to "Cancel", prompts_path, class: ck_button_classes(:light, variant: :outline) %>
+      <% if prompt.persisted? %>
+        <% runs_n = prompt.runs.count %>
+        <% responses_n = prompt.responses.count %>
+        <% confirm = if runs_n.zero?
+             "Delete \"#{prompt.display_name}\"? This version has no runs."
+           else
+             "Delete \"#{prompt.display_name}\"? Cascades through #{pluralize(runs_n, 'run')} and #{pluralize(responses_n, 'response')} (and their reviews). Other versions of this prompt are untouched."
+           end %>
+        <%= button_to prompt_path(prompt), method: :delete,
+              form_class: "inline-block",
+              class: "ck-icon-btn",
+              title: "Delete prompt",
+              "aria-label": "Delete prompt",
+              data: { turbo_confirm: confirm } do %>
+          <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
+        <% end %>
+      <% end %>
+      <%= link_to "Cancel", prompts_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(prompt.persisted? ? "Save prompt" : "Create prompt", class: ck_button_classes(:dark), disabled: available.empty?) %>
     </div>
   </div>

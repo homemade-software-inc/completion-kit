@@ -34,7 +34,8 @@ module CompletionKit
         McpTools::Datasets.definitions +
         McpTools::Metrics.definitions +
         McpTools::MetricGroups.definitions +
-        McpTools::ProviderCredentials.definitions
+        McpTools::ProviderCredentials.definitions +
+        McpTools::Tags.definitions
     end
 
     def self.call_tool(name, arguments)
@@ -46,6 +47,7 @@ module CompletionKit
       when /\Ametrics_/              then McpTools::Metrics.call(name, arguments)
       when /\Ametric_groups_/        then McpTools::MetricGroups.call(name, arguments)
       when /\Aprovider_credentials_/ then McpTools::ProviderCredentials.call(name, arguments)
+      when /\Atags_/                 then McpTools::Tags.call(name, arguments)
       else raise MethodNotFound, "Unknown tool: #{name}"
       end
     end

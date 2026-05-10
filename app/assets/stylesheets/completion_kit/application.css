@@ -501,6 +501,11 @@ tr:hover .ck-chip--publish {
   transform: translateY(-1px);
 }
 
+.ck-button:focus-visible {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 2px;
+}
+
 .ck-button--primary {
   background: var(--ck-accent);
   color: #080b14;
@@ -1529,6 +1534,11 @@ tr:hover .ck-chip--publish {
   background: rgba(255, 255, 255, 0.05);
   border-color: var(--ck-line-strong);
   color: var(--ck-danger);
+}
+
+.ck-icon-btn:focus-visible {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 2px;
 }
 
 .ck-icon-btn--spinning svg {
@@ -3395,4 +3405,269 @@ a.ck-metric-group-pill {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+:root {
+  --tag-crimson: #F24E1E;
+  --tag-burnt-orange: #FF8A00;
+  --tag-amber: #FFC700;
+  --tag-mint: #14AE5C;
+  --tag-deep-emerald: #00623F;
+  --tag-electric-cyan: #00D1FF;
+  --tag-cobalt-blue: #0D99FF;
+  --tag-deep-indigo: #5551FF;
+  --tag-amethyst: #9747FF;
+  --tag-rose: #FF5CBE;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  min-height: calc(1.4em + 8px);
+  border-radius: 5px;
+  font-family: var(--ck-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: lowercase;
+  color: white;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition: filter 120ms ease;
+  text-decoration: none;
+  user-select: none;
+}
+
+.tag::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  flex-shrink: 0;
+}
+
+.tag > span:empty { display: none; }
+
+a.tag, label.tag { cursor: pointer; }
+a.tag:hover, label.tag:hover { filter: brightness(1.12); }
+
+
+.tag-crimson       { background-color: var(--tag-crimson);       --current-tag-color: var(--tag-crimson); }
+.tag-burnt-orange  { background-color: var(--tag-burnt-orange);  --current-tag-color: var(--tag-burnt-orange);  color: #2a1300; }
+.tag-burnt-orange::before { background: rgba(0, 0, 0, 0.55); }
+.tag-amber         { background-color: var(--tag-amber);         --current-tag-color: var(--tag-amber);         color: #1a0f00; }
+.tag-amber::before { background: rgba(0, 0, 0, 0.55); }
+.tag-mint          { background-color: var(--tag-mint);          --current-tag-color: var(--tag-mint); }
+.tag-deep-emerald  { background-color: var(--tag-deep-emerald);  --current-tag-color: var(--tag-deep-emerald); }
+.tag-electric-cyan { background-color: var(--tag-electric-cyan); --current-tag-color: var(--tag-electric-cyan); color: #001620; }
+.tag-electric-cyan::before { background: rgba(0, 0, 0, 0.55); }
+.tag-cobalt-blue   { background-color: var(--tag-cobalt-blue);   --current-tag-color: var(--tag-cobalt-blue); }
+.tag-deep-indigo   { background-color: var(--tag-deep-indigo);   --current-tag-color: var(--tag-deep-indigo); }
+.tag-amethyst      { background-color: var(--tag-amethyst);      --current-tag-color: var(--tag-amethyst); }
+.tag-rose          { background-color: var(--tag-rose);          --current-tag-color: var(--tag-rose);          color: #2a0017; }
+.tag-rose::before  { background: rgba(0, 0, 0, 0.6); }
+
+.tag-outline {
+  background-color: transparent !important;
+  border: 1px solid currentColor;
+  box-shadow: none;
+}
+.tag-outline::before { background: currentColor; }
+.tag-outline.tag-crimson       { color: var(--tag-crimson); }
+.tag-outline.tag-burnt-orange  { color: var(--tag-burnt-orange); }
+.tag-outline.tag-amber         { color: var(--tag-amber); }
+.tag-outline.tag-mint          { color: var(--tag-mint); }
+.tag-outline.tag-deep-emerald  { color: var(--tag-deep-emerald); }
+.tag-outline.tag-electric-cyan { color: var(--tag-electric-cyan); }
+.tag-outline.tag-cobalt-blue   { color: var(--tag-cobalt-blue); }
+.tag-outline.tag-deep-indigo   { color: var(--tag-deep-indigo); }
+.tag-outline.tag-amethyst      { color: var(--tag-amethyst); }
+.tag-outline.tag-rose          { color: var(--tag-rose); }
+
+/* Inline mark — quiet "color dot + name" used on row metadata */
+.tag-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--ck-mono);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  color: var(--ck-muted);
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+.tag-mark + .tag-mark { margin-left: 0.8rem; }
+.tag-mark__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.tag-marks-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+/* Picker — flat row of chips + inline input, no enclosing field */
+.ck-tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+.ck-tag-picker__input {
+  flex: 1;
+  min-width: 160px;
+  background: transparent;
+  border: 0;
+  padding: 2px 0;
+  color: var(--ck-text);
+  font-family: var(--ck-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  outline: none;
+}
+.ck-tag-picker__input::placeholder { color: var(--ck-dim); }
+
+/* Picker chips: unchecked = neutral pill with a small tag-colored dot.
+   Avoids looking "applied" simply because the tag color is on screen. */
+.ck-tag-picker label.tag:has(input:not(:checked)) {
+  background-color: transparent !important;
+  border: 1px solid var(--ck-line);
+  color: var(--ck-muted);
+  box-shadow: none;
+  filter: none;
+}
+.ck-tag-picker label.tag:has(input:not(:checked))::before {
+  background: var(--current-tag-color);
+}
+.ck-tag-picker label.tag:has(input:not(:checked)):hover {
+  border-color: var(--ck-line-strong);
+  color: var(--ck-text);
+}
+
+/* Top-nav settings menu (ported from completion-kit-cloud) */
+.ck-settings-menu {
+  position: relative;
+}
+.ck-settings-menu__trigger {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.ck-settings-menu__trigger::-webkit-details-marker {
+  display: none;
+}
+.ck-settings-menu__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  padding: 0.5rem;
+  background: var(--ck-surface);
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  white-space: nowrap;
+}
+.ck-settings-menu__item {
+  display: block;
+  padding: 0.5rem 0.65rem;
+  border-radius: calc(var(--ck-radius) - 2px);
+  font-family: var(--ck-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ck-text);
+  transition: background 0.15s, color 0.15s;
+}
+.ck-settings-menu__item:hover {
+  background: var(--ck-surface-hover);
+}
+
+/* Settings page kicker — small label above the page title on settings pages */
+.ck-settings-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  font-family: var(--ck-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
+  margin: 0 0 0.85rem;
+}
+.ck-settings-kicker__sep {
+  opacity: 0.55;
+}
+.ck-settings-kicker__link {
+  color: var(--ck-muted);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+.ck-settings-kicker__link:hover { color: var(--ck-text); }
+
+.tag-marks-row--header {
+  margin-top: -0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+
+.ck-input--error {
+  border-color: var(--ck-danger);
+  background: rgba(248, 113, 113, 0.05);
+}
+.ck-input--error:focus {
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
+  border-color: var(--ck-danger);
+}
+
+.ck-field-error {
+  margin: 0.35rem 0 0;
+  color: var(--ck-danger);
+  font-family: var(--ck-sans);
+  font-size: 0.95rem;
+}
+
+/* Filter bar — its own visual moment */
+.ck-tag-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 1.1rem 0 1.6rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--ck-surface-soft);
+  border: 1px solid var(--ck-line);
+  border-radius: 6px;
+}
+.ck-tag-filter__label {
+  font-family: var(--ck-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
+  margin-right: 0.4rem;
+}
+.ck-tag-filter__clear {
+  margin-left: auto;
+  font-family: var(--ck-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ck-muted);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+.ck-tag-filter__clear:hover { color: var(--ck-accent); }
+
 

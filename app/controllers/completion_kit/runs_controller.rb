@@ -1,10 +1,11 @@
 module CompletionKit
   class RunsController < ApplicationController
+    include CompletionKit::TagFiltering
     before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :rerun, :refresh_status]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
-      @runs = Run.includes(:prompt, :dataset, responses: :reviews).order(created_at: :desc)
+      @runs = apply_tag_filter(Run.includes(:prompt, :dataset, :tags, responses: :reviews).order(created_at: :desc))
     end
 
     def show
@@ -152,7 +153,7 @@ module CompletionKit
     end
 
     def run_params
-      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, metric_ids: [])
+      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, metric_ids: [], tag_names: [])
     end
 
   end

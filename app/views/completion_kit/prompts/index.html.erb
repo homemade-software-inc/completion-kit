@@ -8,6 +8,11 @@
   </div>
 </section>
 
+<%= render "completion_kit/tags/filter_bar",
+      available: @available_tags,
+      selected: @selected_tags,
+      base_path: prompts_path %>
+
 <% if @prompts.any? %>
   <table class="ck-results-table ck-prompts-table">
     <thead>
@@ -23,7 +28,14 @@
     <tbody>
       <% @prompts.each do |prompt| %>
         <tr onclick="window.location='<%= prompt_path(prompt) %>'" style="cursor: pointer;">
-          <td><strong><%= prompt.name %></strong></td>
+          <td>
+            <strong><%= prompt.name %></strong>
+            <% if prompt.tags.any? %>
+              <div class="tag-marks-row">
+                <%= render "completion_kit/tags/marks", tags: prompt.tags %>
+              </div>
+            <% end %>
+          </td>
           <% latest_version = prompt.family_versions.maximum(:version_number) %>
           <td>
             <span class="ck-chip ck-chip--soft"><%= prompt.version_label %></span>
@@ -58,6 +70,10 @@
       <% end %>
     </tbody>
   </table>
+<% elsif @selected_tags.any? %>
+  <div class="ck-empty">
+    <p>No prompts match these tags. <%= link_to "Clear filters", prompts_path, class: "ck-link" %>.</p>
+  </div>
 <% else %>
   <div class="ck-empty">
     No prompts yet. Create one to get started.

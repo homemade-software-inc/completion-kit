@@ -136,6 +136,7 @@ Only one mode can be active.
 - **Response.** The model's output for one dataset row, with reviews attached.
 - **Metric.** An evaluation dimension with a name, instruction, evaluation steps, and a 1-5 star scoring scale. The LLM judge uses this to score each response.
 - **Metric Group.** A reusable group of metrics you can apply to a run as a set.
+- **Tag.** A domain label you can attach to prompts, runs, metrics, and datasets. Auto-assigned from a 10-color palette. Filter any index page by tag (`?tag[]=...`).
 - **Provider Credential.** An API key for a model provider. Encrypted at rest, never returned through the API.
 
 ## REST API

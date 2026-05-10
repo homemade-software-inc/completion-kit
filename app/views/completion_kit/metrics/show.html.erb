@@ -12,6 +12,12 @@
   </div>
 </section>
 
+<% if @metric.tags.any? %>
+  <div class="tag-marks-row tag-marks-row--header">
+    <%= render "completion_kit/tags/marks", tags: @metric.tags %>
+  </div>
+<% end %>
+
 <% if @metric.instruction.present? %>
 <section class="ck-card">
   <p class="ck-kicker">Instruction</p>

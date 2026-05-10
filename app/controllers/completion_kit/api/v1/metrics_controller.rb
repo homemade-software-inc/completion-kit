@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_metric, only: [:show, :update, :destroy]
 
         def index
-          render json: Metric.order(created_at: :desc)
+          render json: Metric.includes(:tags).order(created_at: :desc)
         end
 
         def show
@@ -43,7 +43,8 @@ module CompletionKit
         end
 
         def metric_params
-          params.permit(:name, :instruction, rubric_bands: [:stars, :description])
+          params.permit(:name, :instruction,
+            rubric_bands: [:stars, :description], tag_names: [])
         end
       end
     end

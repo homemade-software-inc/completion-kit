@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_run, only: [:show, :update, :destroy, :generate, :retry_failures]
 
         def index
-          render json: Run.order(created_at: :desc)
+          render json: Run.includes(:tags).order(created_at: :desc)
         end
 
         def show
@@ -76,7 +76,8 @@ module CompletionKit
         end
 
         def run_params
-          params.permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, metric_ids: [])
+          params.permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature,
+            metric_ids: [], tag_names: [])
         end
       end
     end

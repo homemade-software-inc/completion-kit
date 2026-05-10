@@ -1,0 +1,14 @@
+<% if available.any? %>
+  <div class="ck-tag-filter">
+    <span class="ck-tag-filter__label">Filter by tag</span>
+    <% available.each do |tag| %>
+      <% on = selected.any? { |s| s.id == tag.id } %>
+      <%= link_to tag.name,
+            tag_filter_url(base_path, selected, tag),
+            class: tag_pill_class(tag, outline: !on) %>
+    <% end %>
+    <% if selected.any? %>
+      <%= link_to "× clear", base_path, class: "ck-tag-filter__clear" %>
+    <% end %>
+  </div>
+<% end %>

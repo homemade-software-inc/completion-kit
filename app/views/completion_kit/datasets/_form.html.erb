@@ -21,8 +21,27 @@
       <%= form.text_area :csv_data, rows: 12, class: "ck-input ck-input--area ck-input--code", placeholder: "content,audience\nFirst ticket text,internal\nSecond ticket text,customer" %>
     </div>
 
+    <%= render "completion_kit/tags/picker", record: dataset, param_namespace: :dataset %>
+
     <div class="ck-actions">
-      <%= link_to "Cancel", datasets_path, class: ck_button_classes(:light, variant: :outline) %>
+      <% if dataset.persisted? %>
+        <% runs_n = dataset.runs.count %>
+        <% responses_n = CompletionKit::Response.where(run_id: dataset.runs.select(:id)).count %>
+        <% confirm = if runs_n.zero?
+             "Delete \"#{dataset.name}\"? It has no runs."
+           else
+             "Delete \"#{dataset.name}\"? Cascades through #{pluralize(runs_n, 'run')} and #{pluralize(responses_n, 'response')} (and their reviews) that used this dataset."
+           end %>
+        <%= button_to dataset_path(dataset), method: :delete,
+              form_class: "inline-block",
+              class: "ck-icon-btn",
+              title: "Delete dataset",
+              "aria-label": "Delete dataset",
+              data: { turbo_confirm: confirm } do %>
+          <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
+        <% end %>
+      <% end %>
+      <%= link_to "Cancel", datasets_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(dataset.persisted? ? "Save dataset" : "Create dataset", class: ck_button_classes(:dark)) %>
     </div>
   </div>

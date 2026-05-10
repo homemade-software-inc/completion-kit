@@ -6,7 +6,7 @@ RSpec.describe "JSON serialization" do
 
     it "includes expected attributes" do
       json = prompt.as_json
-      expect(json.keys).to match_array(%i[id name description template llm_model family_key version_number current created_at updated_at])
+      expect(json.keys).to match_array(%i[id name description template llm_model family_key version_number current created_at updated_at tags])
     end
   end
 
@@ -30,7 +30,7 @@ RSpec.describe "JSON serialization" do
 
     it "includes expected attributes" do
       json = dataset.as_json
-      expect(json.keys).to match_array(%i[id name csv_data created_at updated_at])
+      expect(json.keys).to match_array(%i[id name csv_data created_at updated_at tags])
     end
   end
 
@@ -39,7 +39,7 @@ RSpec.describe "JSON serialization" do
 
     it "includes expected attributes" do
       json = metric.as_json
-      expect(json.keys).to match_array(%i[id name key instruction rubric_bands created_at updated_at])
+      expect(json.keys).to match_array(%i[id name key instruction rubric_bands created_at updated_at tags])
     end
   end
 

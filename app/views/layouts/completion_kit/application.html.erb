@@ -22,7 +22,16 @@
         <%= link_to "Metrics", metrics_path, class: request.path.start_with?(metrics_path) || request.path.start_with?(metric_groups_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
         <%= link_to "Datasets", datasets_path, class: active.(datasets_path) %>
         <%= link_to "Runs", runs_path, class: active.(runs_path) %>
-        <%= link_to "Settings", provider_credentials_path, class: active.(provider_credentials_path) %>
+        <% settings_active = request.path.start_with?(provider_credentials_path) || request.path.start_with?(tags_path) %>
+        <details class="ck-settings-menu">
+          <summary class="<%= settings_active ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %> ck-settings-menu__trigger" aria-label="Settings">
+            Settings
+          </summary>
+          <div class="ck-settings-menu__panel" role="menu">
+            <%= link_to "Providers", provider_credentials_path, class: "ck-settings-menu__item" %>
+            <%= link_to "Tags", tags_path, class: "ck-settings-menu__item" %>
+          </div>
+        </details>
         <%= link_to "API", api_reference_path, class: active.(api_reference_path) %>
         <% if main_app.respond_to?(:logout_path) %>
           <%= button_to "Log out", main_app.logout_path, method: :delete, class: ck_button_classes(:light, variant: :outline) %>
@@ -49,7 +58,35 @@ document.addEventListener("turbo:load", function() {
     el.textContent = d.toLocaleString(undefined, {year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
   });
   ckTickRelativeTimes();
+  ckAutoFocusFirstError();
 });
+
+document.addEventListener("input", function(e) {
+  if (!e.target || e.target.id !== "tag_name") return;
+  var text = document.getElementById("tag-pill-text");
+  if (!text) return;
+  var v = e.target.value.trim().toLowerCase();
+  text.textContent = v.length ? v : (text.dataset.placeholder || "");
+});
+
+function ckAutoFocusFirstError() {
+  var fieldSelector = "input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=reset]):not([type=file]), textarea, select";
+  var marker = document.querySelector("form .ck-flash--alert, form [aria-invalid='true'], form .ck-field-error");
+
+  var target;
+  if (marker) {
+    var form = marker.closest("form");
+    target = form && (form.querySelector("[aria-invalid='true']") || form.querySelector(fieldSelector));
+  } else if (/\/new(\/|$)/.test(window.location.pathname)) {
+    target = document.querySelector("form " + fieldSelector);
+  }
+
+  if (!target || typeof target.focus !== "function") return;
+  target.focus({ preventScroll: false });
+  if (typeof target.setSelectionRange === "function" && typeof target.value === "string") {
+    try { target.setSelectionRange(target.value.length, target.value.length); } catch (e) {}
+  }
+}
 
 function ckRelativeTime(then) {
   var seconds = Math.round((Date.now() - then.getTime()) / 1000);

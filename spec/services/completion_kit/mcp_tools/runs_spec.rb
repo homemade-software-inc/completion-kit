@@ -93,5 +93,20 @@ RSpec.describe CompletionKit::McpTools::Runs do
       result = described_class.call("runs_update", {"id" => run.id, "name" => ""})
       expect(result[:isError]).to be true
     end
+
+    it "round-trips tag_names on runs_create with auto-create" do
+      expect do
+        described_class.call("runs_create",
+          {"name" => "Tagged Run", "prompt_id" => prompt.id, "tag_names" => ["new-tag"]})
+      end.to change(CompletionKit::Tag, :count).by(1)
+      found = CompletionKit::Run.find_by!(name: "Tagged Run")
+      expect(found.tag_names).to eq(["new-tag"])
+    end
+
+    it "replaces tag_names on runs_update" do
+      run.update!(tag_names: ["a", "b"])
+      described_class.call("runs_update", {"id" => run.id, "tag_names" => ["c"]})
+      expect(run.reload.tag_names).to eq(["c"])
+    end
   end
 end

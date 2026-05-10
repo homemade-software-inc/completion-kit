@@ -1,0 +1,39 @@
+<%= form_with(model: tag, local: true) do |form| %>
+  <div class="ck-card ck-form-card">
+    <% name_error = tag.errors[:name].first %>
+    <div class="ck-field">
+      <%= form.label :name, "Tag name", class: "ck-label" %>
+      <%= form.text_field :name,
+            class: ["ck-input", ("ck-input--error" if name_error)].compact.join(" "),
+            placeholder: "e.g. production",
+            autofocus: true,
+            "aria-invalid": name_error ? "true" : nil %>
+      <% if name_error %>
+        <p class="ck-field-error" role="alert"><%= name_error %></p>
+      <% elsif !tag.persisted? %>
+        <p class="ck-hint">Color is auto-assigned from a 10-color palette.</p>
+      <% end %>
+    </div>
+
+<div class="ck-actions">
+      <% if tag.persisted? %>
+        <% applied_n = tag.taggings.count %>
+        <% confirm = if applied_n.zero?
+             "Delete \"#{tag.name}\"? It's not currently applied to anything."
+           else
+             "Delete \"#{tag.name}\"? It's currently applied to #{pluralize(applied_n, 'item')} — they'll lose this tag."
+           end %>
+        <%= button_to tag_path(tag), method: :delete,
+              form_class: "inline-block",
+              class: "ck-icon-btn",
+              title: "Delete tag",
+              "aria-label": "Delete tag",
+              data: { turbo_confirm: confirm } do %>
+          <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
+        <% end %>
+      <% end %>
+      <%= link_to "Cancel", tags_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
+      <%= form.submit(tag.persisted? ? "Save tag" : "Create tag", class: ck_button_classes(:dark)) %>
+    </div>
+  </div>
+<% end %>

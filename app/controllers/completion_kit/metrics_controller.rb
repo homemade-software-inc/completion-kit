@@ -1,9 +1,10 @@
 module CompletionKit
   class MetricsController < ApplicationController
+    include CompletionKit::TagFiltering
     before_action :set_metric, only: [:show, :edit, :update, :destroy]
 
     def index
-      @metrics = Metric.includes(:metric_groups).order(:name)
+      @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
     end
 
     def show
@@ -46,7 +47,8 @@ module CompletionKit
     end
 
     def metric_params
-      params.require(:metric).permit(:name, :instruction, rubric_bands: [:stars, :description])
+      params.require(:metric).permit(:name, :instruction,
+        rubric_bands: [:stars, :description], tag_names: [])
     end
   end
 end

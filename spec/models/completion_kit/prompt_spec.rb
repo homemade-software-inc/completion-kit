@@ -1,6 +1,23 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::Prompt, type: :model do
+  describe "destroy cascade" do
+    it "destroys runs, responses, and reviews; other versions of the family are untouched" do
+      v1 = create(:completion_kit_prompt, name: "Family", family_key: "fam-cascade", version_number: 1, template: "Static prompt without variables")
+      v2 = create(:completion_kit_prompt, name: "Family", family_key: "fam-cascade", version_number: 2, template: "Static prompt without variables")
+      run = create(:completion_kit_run, prompt: v1)
+      response = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: response)
+
+      expect { v1.destroy! }
+        .to change(CompletionKit::Run, :count).by(-1)
+        .and change(CompletionKit::Response, :count).by(-1)
+        .and change(CompletionKit::Review, :count).by(-1)
+
+      expect(CompletionKit::Prompt.exists?(v2.id)).to be(true)
+    end
+  end
+
   it "exposes the available model list" do
     create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     expect(described_class.available_models).to include(hash_including(id: "gpt-5.4-mini"))

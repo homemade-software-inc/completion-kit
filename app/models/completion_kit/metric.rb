@@ -1,5 +1,7 @@
 module CompletionKit
   class Metric < ApplicationRecord
+    include CompletionKit::Taggable
+
     DEFAULT_RUBRIC_BANDS = [
       { "stars" => 5, "description" => "Fully meets or exceeds all criteria. No meaningful issues." },
       { "stars" => 4, "description" => "Meets criteria well. Minor issues only." },
@@ -74,7 +76,8 @@ module CompletionKit
       {
         id: id, name: name, key: key, instruction: instruction,
         rubric_bands: rubric_bands,
-        created_at: created_at, updated_at: updated_at
+        created_at: created_at, updated_at: updated_at,
+        tags: tags.as_json
       }
     end
 

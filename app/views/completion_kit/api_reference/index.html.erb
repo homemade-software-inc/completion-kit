@@ -64,6 +64,7 @@ end %>
   <input type="radio" name="ck-api-tab" id="ck-tab-datasets" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-metrics" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-metric-groups" class="ck-api-tabs__radio">
+  <input type="radio" name="ck-api-tab" id="ck-tab-tags" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-providers" class="ck-api-tabs__radio">
 
   <nav class="ck-api-tabs__nav">
@@ -74,6 +75,7 @@ end %>
     <label for="ck-tab-datasets" class="ck-api-tabs__label">Datasets <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-metrics" class="ck-api-tabs__label">Metrics <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-metric-groups" class="ck-api-tabs__label">Metric Groups <span class="ck-api-tabs__count">5</span></label>
+    <label for="ck-tab-tags" class="ck-api-tabs__label">Tags <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-providers" class="ck-api-tabs__label">Providers <span class="ck-api-tabs__count">5</span></label>
   </nav>
 
@@ -251,6 +253,42 @@ end %>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metric_groups/:id</p>
         <p class="ck-meta-copy">Get, update, or delete a metric group. PATCH with <code>metric_ids</code> replaces all metric associations.</p>
+      </div>
+    </div>
+
+    <div class="ck-api-tabs__panel">
+      <h2 class="ck-section-title">Tags</h2>
+      <p class="ck-copy">Domain labels you can attach to metrics, prompts, runs, and datasets. Tags are auto-assigned a color from a 10-color palette. Each index page can be filtered by one or more tags using <code>?tag[]=name</code> query params (OR semantics).</p>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/tags</p>
+        <p class="ck-meta-copy">List all tags with name and color.</p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl #{@base_url}/api/v1/tags \\\n  -H \"Authorization: Bearer #{token_display}\"" %>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/tags</p>
+        <p class="ck-meta-copy">Create a tag.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code></p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/tags \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"real estate\"}'" %>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/tags/:id</p>
+        <p class="ck-meta-copy">Get, update, or delete a tag. PATCH accepts <code>name</code>. DELETE returns 204 No Content and removes all taggings for this tag.</p>
+      </div>
+      <div class="ck-api-endpoint" style="padding-top: 1rem;">
+        <p class="ck-kicker" style="margin-bottom: 0.5rem;">Tagging resources</p>
+        <p class="ck-meta-copy">Metrics, prompts, runs, and datasets accept a <code>tag_names</code> array on their create and update endpoints. Passing a name that does not yet exist silently creates the tag. On PATCH, the list replaces all existing tags for that record (omit the field to leave tags unchanged).</p>
+        <%= render "example", base_url: @base_url, token: token_display, real_token: @token, cmd: "curl -X POST #{@base_url}/api/v1/metrics \\\n  -H \"Authorization: Bearer #{token_display}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"Accuracy\", \"tag_names\": [\"real estate\"]}'" %>
+      </div>
+      <div class="ck-api-endpoint" style="padding-top: 1rem;">
+        <p class="ck-kicker" style="margin-bottom: 0.5rem;">MCP tools</p>
+        <div class="ck-mcp-tools">
+          <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_list</code><span class="ck-mcp-tool__desc">List all tags</span></div>
+          <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_get</code><span class="ck-mcp-tool__desc">Get a tag by ID</span></div>
+          <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_create</code><span class="ck-mcp-tool__desc">Create a tag (name required)</span></div>
+          <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_update</code><span class="ck-mcp-tool__desc">Update a tag's name</span></div>
+          <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_delete</code><span class="ck-mcp-tool__desc">Delete a tag and remove all its taggings</span></div>
+        </div>
+        <p class="ck-meta-copy" style="margin-top: 0.75rem;">The existing <code>metrics_create</code>, <code>metrics_update</code>, <code>prompts_create</code>, <code>prompts_update</code>, <code>runs_create</code>, <code>runs_update</code>, <code>datasets_create</code>, and <code>datasets_update</code> tools all accept a <code>tag_names</code> parameter with the same auto-create and replace semantics as the REST API.</p>
       </div>
     </div>
 

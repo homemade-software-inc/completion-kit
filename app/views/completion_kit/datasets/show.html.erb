@@ -12,6 +12,12 @@
   </div>
 </section>
 
+<% if @dataset.tags.any? %>
+  <div class="tag-marks-row tag-marks-row--header">
+    <%= render "completion_kit/tags/marks", tags: @dataset.tags %>
+  </div>
+<% end %>
+
 <section>
   <p class="ck-kicker">CSV preview</p>
   <%
