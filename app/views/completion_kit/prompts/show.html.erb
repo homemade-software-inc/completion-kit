@@ -36,7 +36,10 @@
     <p class="ck-kicker">Prompt</p>
     <% judged_run = @runs.select { |r| r.prompt_id == @prompt.id && r.status == "completed" }.find { |r| r.responses.joins(:reviews).exists? } %>
     <% if judged_run %>
-      <%= button_to "Suggest improvements", suggest_run_path(judged_run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" %>
+      <%= button_to suggest_run_path(judged_run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" do %>
+        <%= heroicon_tag "sparkles", variant: :outline, size: 14, "aria-hidden": "true" %>
+        Suggest improvements
+      <% end %>
     <% else %>
       <p class="ck-hint"><%= link_to "Run a test with judging configured", new_run_path(prompt_id: @prompt.id), class: "ck-link" %> to get AI-suggested improvements.</p>
     <% end %>

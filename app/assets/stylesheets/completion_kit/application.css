@@ -482,6 +482,7 @@ tr:hover .ck-chip--publish {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.4rem;
   min-height: 2rem;
   padding: 0.4rem 0.75rem;
   border: 1px solid transparent;

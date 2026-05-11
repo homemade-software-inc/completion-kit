@@ -18,10 +18,6 @@ It's the difference between "this prompt seems to work" and "this prompt scores 
 
 > **CompletionKit Cloud** — hosted, managed CompletionKit with zero setup. Same engine, run for you. See plans at [completionkit.com/pricing](https://completionkit.com/pricing).
 
-![Prompts index](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/prompts.png)
-
-![Prompt detail with metrics and rubrics](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/prompt-detail.png)
-
 ![Test run with scored results](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/test-run.png)
 
 ## Quick Start
