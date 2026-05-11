@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="https://badge.fury.io/rb/completion-kit"><img src="https://badge.fury.io/rb/completion-kit.svg" alt="Gem Version" /></a>
   <a href="https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml"><img src="https://github.com/homemade-software-inc/completion-kit/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <img src="https://img.shields.io/badge/coverage-100%25-brightgreen" alt="coverage" />
 </p>
