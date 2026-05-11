@@ -37,7 +37,7 @@
     <% judged_run = @runs.select { |r| r.prompt_id == @prompt.id && r.status == "completed" }.find { |r| r.responses.joins(:reviews).exists? } %>
     <% if judged_run %>
       <%= button_to suggest_run_path(judged_run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" do %>
-        <%= heroicon_tag "sparkles", variant: :outline, size: 14, "aria-hidden": "true" %>
+        <%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>
         Suggest improvements
       <% end %>
     <% else %>

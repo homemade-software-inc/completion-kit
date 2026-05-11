@@ -494,8 +494,16 @@ tr:hover .ck-chip--publish {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.ck-magic-icon {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+  color: var(--ck-warning);
 }
 
 .ck-button:hover {

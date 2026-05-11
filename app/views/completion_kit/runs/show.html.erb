@@ -67,7 +67,7 @@
       <%= link_to "View suggestion", suggestion_path(latest_suggestion, from: "run"), class: ck_button_classes(:light, variant: :outline) + " ck-button--sm" %>
     <% elsif @run.status == "completed" && @run.responses.joins(:reviews).exists? %>
       <%= button_to suggest_run_path(@run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" do %>
-        <%= heroicon_tag "sparkles", variant: :outline, size: 14, "aria-hidden": "true" %>
+        <%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>
         Suggest improvements
       <% end %>
     <% end %>
