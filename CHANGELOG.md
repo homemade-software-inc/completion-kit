@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-05-10
+
+### Changed
+
+- **Sparkles ✨ icon on Suggest improvements buttons.** The "Suggest improvements" action on `runs/show` and `prompts/show` now renders a `sparkles` heroicon ahead of the label — same convention as other "AI magic" affordances in modern UI.
+- **`.ck-button` icon-text spacing baked in.** Added `gap: 0.4rem` to the base button. Future icon+text buttons no longer need per-button rules.
+
 ## [0.5.2] - 2026-05-10
 
 ### Changed
