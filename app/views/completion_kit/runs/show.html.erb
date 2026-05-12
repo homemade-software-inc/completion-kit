@@ -80,7 +80,7 @@
 
 <% if @run.dataset %>
   <dialog id="dataset-preview-<%= @run.id %>" class="ck-modal" onclick="if(event.target===this)this.close()">
-    <article class="ck-modal__panel" onclick="event.stopPropagation()">
+    <article class="ck-modal__panel" tabindex="-1" autofocus onclick="event.stopPropagation()">
       <header class="ck-modal__header">
         <div class="ck-modal__heading">
           <h2 class="ck-modal__title"><%= @run.dataset.name %></h2>

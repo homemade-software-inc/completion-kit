@@ -29,7 +29,7 @@ RSpec.describe "CompletionKit prompts", type: :request do
     get "#{base_path}/#{prompt.id}"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Visible Prompt")
-    expect(response.body).not_to include("Changes from")
+    expect(response.body).not_to include("ck-vdiff-")
 
     create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     get "#{base_path}/new"
@@ -43,25 +43,26 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).not_to include("saving creates a new version")
   end
 
-  it "shows a template diff against the previous version when viewing a later version" do
+  it "offers a per-version diff modal from the versions table, with a template word-diff when the template changed" do
     create(:completion_kit_prompt, name: "Diffed", family_key: "fam-diff", version_number: 1, current: false, template: "Summarise {{content}}.", llm_model: "gpt-4o")
     v2 = create(:completion_kit_prompt, name: "Diffed", family_key: "fam-diff", version_number: 2, current: true, template: "Summarise {{content}} in two sentences.", llm_model: "gpt-4o")
 
     get "#{base_path}/#{v2.id}"
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Changes from v1")
+    expect(response.body).to include("from v1")
+    expect(response.body).to include("ck-vdiff-#{v2.id}")
     expect(response.body).to include("ck-suggest-diff")
   end
 
-  it "shows a model change against the previous version even when the template is unchanged" do
+  it "shows a model change in the diff modal even when the template is unchanged" do
     create(:completion_kit_prompt, name: "Reroled", family_key: "fam-model", version_number: 1, current: false, template: "Same {{x}}", llm_model: "gpt-4o-mini")
     v2 = create(:completion_kit_prompt, name: "Reroled", family_key: "fam-model", version_number: 2, current: true, template: "Same {{x}}", llm_model: "claude-sonnet-4-6")
 
     get "#{base_path}/#{v2.id}"
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Changes from v1")
+    expect(response.body).to include("ck-vdiff-#{v2.id}")
     expect(response.body).to match(/ck-version-change__old[^>]*>gpt-4o-mini/)
     expect(response.body).to match(/ck-version-change__new[^>]*>claude-sonnet-4-6/)
     expect(response.body).not_to include("ck-suggest-diff")
@@ -180,6 +181,8 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).to include("Current")
     expect(response.body).to include("Make current")
     expect(response.body).to include("/completion_kit/prompts/#{v2.id}")
+    expect(response.body).to include("from v1")
+    expect(response.body).to include("ck-vdiff-#{v2.id}")
   end
 
   it "round-trips tag_names on create and update" do

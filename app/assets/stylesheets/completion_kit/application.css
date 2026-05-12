@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap');
 
 .turbo-progress-bar {
   background-color: var(--ck-accent);
@@ -422,6 +423,42 @@ tr:hover .ck-chip--publish {
   background: var(--ck-accent-soft);
   border-color: rgba(6, 182, 212, 0.2);
   color: var(--ck-accent);
+}
+
+.ck-chip--warn {
+  position: relative;
+  background: var(--ck-warning-soft);
+  border-color: rgba(224, 164, 88, 0.4);
+  color: var(--ck-warning);
+}
+
+/* a hand-scrawled note floating over the version chip, with an arrow pointing down at it */
+.ck-old-version-flag {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 1.45rem);
+  transform: translateX(-38%) rotate(-2deg);
+  white-space: nowrap;
+  font-family: 'Caveat', 'Comic Sans MS', cursive;
+  font-size: 1.1rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ck-warning);
+  pointer-events: none;
+}
+.ck-old-version-flag__arrow {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.15rem);
+  transform: translateX(-50%) rotate(-12deg);
+  width: 15px;
+  height: 19px;
+  color: var(--ck-warning);
+  pointer-events: none;
+  overflow: visible;
 }
 
 .ck-chip--warning {
@@ -1331,25 +1368,18 @@ tr:hover .ck-chip--publish {
 
 .ck-modal__body .ck-version-change + .ck-suggest-diff { margin-top: 0.9rem; }
 
-.ck-version-diff-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.6rem;
-  padding: 0.35rem 0.7rem;
-  background: transparent;
-  border: 1px solid var(--ck-line);
-  border-radius: var(--ck-radius);
+.ck-cell-link {
+  background: none;
+  border: none;
+  padding: 0;
   font-family: var(--ck-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ck-muted);
+  font-size: 0.8rem;
+  color: var(--ck-accent);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
-.ck-version-diff-trigger:hover { border-color: var(--ck-accent); color: var(--ck-accent); }
+.ck-cell-link:hover { color: var(--ck-accent-hover); }
 
 .ck-field-hint {
   font-family: var(--ck-sans);
@@ -2109,6 +2139,10 @@ select.ck-input {
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
   overflow: hidden;
 }
+/* the panel is the dialog's autofocus target (so the close button isn't auto-focused);
+   it's a container, not a control, so don't show a ring on it */
+.ck-modal__panel:focus,
+.ck-modal__panel:focus-visible { outline: none; }
 
 .ck-modal__header {
   display: flex;
@@ -2145,9 +2179,8 @@ select.ck-input {
 
 .ck-modal__close {
   appearance: none;
+  position: relative;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 28px;
   height: 28px;
   padding: 0;
@@ -2156,12 +2189,25 @@ select.ck-input {
   outline: none;
   background: transparent;
   color: var(--ck-dim);
-  font-family: var(--ck-sans);
-  font-size: 1.5rem;
-  line-height: 1;
+  font-size: 0;
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
 }
+/* the "×" is drawn as two crossed bars centred on the button, so it (and the
+   focus ring around the button) sit dead centre regardless of font metrics */
+.ck-modal__close::before,
+.ck-modal__close::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 13px;
+  height: 1.6px;
+  border-radius: 1px;
+  background: currentColor;
+}
+.ck-modal__close::before { transform: translate(-50%, -50%) rotate(45deg); }
+.ck-modal__close::after  { transform: translate(-50%, -50%) rotate(-45deg); }
 
 .ck-modal__close:hover {
   color: var(--ck-text);
@@ -2180,6 +2226,8 @@ select.ck-input {
   overflow: auto;
   padding: 0 1.5rem;
 }
+/* no footer? then the body needs its own bottom padding */
+.ck-modal__body:last-child { padding-bottom: 1.5rem; }
 
 .ck-modal__footer {
   display: flex;
