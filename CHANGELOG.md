@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-05-12
+
 ### Added
 
 - **Onboarding checklist at the engine root.** A fresh install now lands on a setup checklist — connect a provider → upload a dataset → write a prompt → run it — with progress tracking, a highlighted "next up" step, and per-step "done" state derived from whether those records exist. Once all four are present (or you click "Skip setup"), the root redirects straight to Prompts. Re-open it any time from **Settings → Getting started**. Dismissal is a cookie — no schema, host-app-agnostic. No auto-seeded data.
+
+### Fixed
+
+- **Suggest improvements ✨ icon sizing/color.** The `sparkles` heroicon added in 0.5.3 fell back to the 24px outline variant and ballooned to fill the button; it's now sized to the label (`1.1em`) and stroked in `--ck-warning` gold via a `.ck-magic-icon` class. `.ck-button` also gained `white-space: nowrap` so labels stop wrapping.
 
 ## [0.5.3] - 2026-05-10
 
