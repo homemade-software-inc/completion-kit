@@ -1681,36 +1681,37 @@ tr:hover .ck-chip--publish {
   border: 1px solid transparent;
   border-radius: var(--ck-radius);
   font-family: var(--ck-sans);
+  font-size: 0.9rem;
+  line-height: 1.6;
   animation: ck-flash-in 0.22s ease both;
 }
 .ck-flash--notice { background: rgba(45, 212, 168, 0.08); border-color: rgba(45, 212, 168, 0.32); }
 .ck-flash--alert  { background: rgba(248, 113, 113, 0.08); border-color: rgba(248, 113, 113, 0.32); }
 
-/* layout flash: a mono status tag (the engine's kicker treatment) + the message */
-.ck-flash--row { display: flex; align-items: baseline; gap: 0.6rem; }
+/* layout flash: a mono status tag (the engine's kicker treatment) inline before the message */
 .ck-flash__label {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
+  margin-right: 0.6rem;
   font-family: var(--ck-mono);
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  line-height: 1.4;
+  white-space: nowrap;
 }
 .ck-flash__label::before {
   content: "";
+  display: inline-block;
   width: 6px;
   height: 6px;
+  margin-right: 0.45rem;
   border-radius: 50%;
   background: currentColor;
   box-shadow: 0 0 7px currentColor;
+  vertical-align: 0.12em;
 }
 .ck-flash--notice .ck-flash__label { color: var(--ck-success); }
 .ck-flash--alert  .ck-flash__label { color: var(--ck-danger); }
-.ck-flash__body { font-size: 0.9rem; line-height: 1.55; color: var(--ck-text); }
+.ck-flash__body { color: var(--ck-text); }
 
 /* form-error summary inside .ck-flash--alert: title sentence + ck-error-list */
 .ck-flash__title { margin: 0; font-weight: 600; color: var(--ck-danger); }
