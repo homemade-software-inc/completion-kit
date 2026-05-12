@@ -1375,6 +1375,14 @@ tr:hover .ck-chip--publish {
 .ck-results-table tbody tr.ck-results-table__row--active td:last-child {
   box-shadow: inset 0 2px 0 var(--ck-accent), inset 0 -2px 0 var(--ck-accent), inset -2px 0 0 var(--ck-accent);
 }
+/* when it's the last row, round its bottom corners so the border isn't clipped
+   by the table's rounded container */
+.ck-results-table tbody tr.ck-results-table__row--active:last-child td:first-child {
+  border-bottom-left-radius: calc(var(--ck-radius-lg) - 1px);
+}
+.ck-results-table tbody tr.ck-results-table__row--active:last-child td:last-child {
+  border-bottom-right-radius: calc(var(--ck-radius-lg) - 1px);
+}
 .ck-results-table tbody tr.ck-results-table__row--active strong { color: var(--ck-accent-hover); }
 
 .ck-field-hint {
