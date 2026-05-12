@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-05-12
+
+### Added
+
+- **Navigable prompt version history.** The Versions table on a prompt page now lists every version with a best-score column, links each row to that version's page, badges the current one **Published** (and gives the others an inline **Publish** button), and outlines the version you're viewing. A `Δ` link opens an on-demand modal showing what changed from the previous version — the model swap as before→after chips and a word-level template diff (reusing the "Suggest improvements" diff styling).
+- **Description + API endpoint on the prompts index.** Each prompt now shows its description and its API path with a copy button, right under the name.
+- **Custom 400 and 422 error pages** in the standalone app, matching the existing 404/500 cards.
+
+### Changed
+
+- **On-brand flash & error callouts.** Notice/alert messages are now a mono uppercase status tag with a glowing dot in a faint tinted box — the same visual language as the worker-health banner — instead of a left-accent bar.
+- **Models grouped by family/vendor everywhere, with a count.** The provider page's models table is sectioned by family (OpenAI: GPT-5, GPT-4, o-series, …) / upstream vendor (OpenRouter), the generation- and judge-model dropdowns group their options the same way, and the providers index shows how many models each credential has.
+- **Refresh-models button disables and spins while discovery is running**, so a second discovery can't be kicked off mid-run.
+- **Clearer prompt-form note** when editing a prompt that already has runs — it just says saving will create a new version; the misleading "publishing freezes the template" wording is gone (there's no separate publish step in the save flow).
+
 ## [0.5.5] - 2026-05-12
 
 ### Added
