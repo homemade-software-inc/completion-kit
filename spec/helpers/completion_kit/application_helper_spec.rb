@@ -78,6 +78,17 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       result = helper.ck_grouped_models(models, "nonexistent")
       expect(result).not_to include("retired")
     end
+
+    it "marks judge options that are not yet confirmed with (?)" do
+      models = [
+        { id: "openai/confirmed", name: "Confirmed", provider: "openrouter", judging_confirmed: true },
+        { id: "openai/untested", name: "Untested", provider: "openrouter", judging_confirmed: false }
+      ]
+      result = helper.ck_grouped_models(models)
+      expect(result).to include("Untested (?)")
+      expect(result).to include(">Confirmed<")
+      expect(result).not_to include("Confirmed (?)")
+    end
   end
 
   describe "#ck_grouped_models with openrouter" do

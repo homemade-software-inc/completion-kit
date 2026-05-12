@@ -8,6 +8,9 @@ module CompletionKit
 
     scope :active, -> { where(status: "active") }
     scope :for_generation, -> { active.where(supports_generation: true) }
-    scope :for_judging, -> { active.where(supports_judging: true) }
+    # Includes models not yet confirmed as judges (supports_judging: nil) — worth
+    # a try, and a successful run flips them to confirmed. Only models known to be
+    # bad judges (false) are excluded.
+    scope :for_judging, -> { active.where(supports_judging: [true, nil]) }
   end
 end

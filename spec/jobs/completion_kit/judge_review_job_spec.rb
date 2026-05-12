@@ -46,6 +46,47 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     expect(review.error_status).to eq(429)
   end
 
+  it "promotes an untested judge model to confirmed after a successful review" do
+    model = create(:completion_kit_model, provider: "openai", model_id: "gpt-4o",
+                   supports_generation: true, supports_judging: nil, judging_error: "stale",
+                   status: "active")
+    fake_judge = double("judge", evaluate: { score: 5, feedback: "ok" })
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+
+    described_class.perform_now(response.id, metric.id)
+
+    expect(model.reload).to have_attributes(supports_judging: true, judging_error: nil)
+  end
+
+  it "leaves a model already flagged as a bad judge alone after a successful review" do
+    model = create(:completion_kit_model, provider: "openai", model_id: "gpt-4o",
+                   supports_generation: true, supports_judging: false, status: "active")
+    fake_judge = double("judge", evaluate: { score: 5, feedback: "ok" })
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+
+    described_class.perform_now(response.id, metric.id)
+
+    expect(model.reload.supports_judging).to be(false)
+  end
+
+  it "fails just that review (not the run) and does not touch the model when the judge raises" do
+    model = create(:completion_kit_model, provider: "openai", model_id: "gpt-4o",
+                   supports_generation: true, supports_judging: nil, status: "active")
+    fake_judge = double("judge")
+    allow(fake_judge).to receive(:evaluate).and_raise(RuntimeError, "judge melted down")
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+
+    expect { described_class.perform_now(response.id, metric.id) }.not_to raise_error
+
+    review = response.reviews.find_by(metric_id: metric.id)
+    expect(review.status).to eq("failed")
+    expect(review.error_message).to include("judge melted down")
+    expect(model.reload.supports_judging).to be_nil
+  end
+
   it "enqueues RunCompletionCheckJob with the run_id" do
     fake_judge = double("judge", evaluate: { score: 4, feedback: "ok" })
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)

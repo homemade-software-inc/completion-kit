@@ -71,12 +71,22 @@ module CompletionKit
       )
       review.save!
 
+      confirm_judging_capability(run.judge_model)
       run.send(:broadcast_response_update, response)
       run.send(:broadcast_progress)
       enqueue_completion_check
     end
 
     private
+
+    # A model with supports_judging == nil ("untested") just produced a valid
+    # review — promote it to confirmed. No-op once confirmed (so repeated runs
+    # don't churn the row), and a model already flagged as a bad judge stays so.
+    def confirm_judging_capability(judge_model_id)
+      model = Model.find_by(provider: ApiConfig.provider_for_model(judge_model_id), model_id: judge_model_id)
+      return unless model && model.supports_judging.nil?
+      model.update_columns(supports_judging: true, judging_error: nil)
+    end
 
     def record_terminal_failure!(error)
       response_id = @response_id || arguments.first

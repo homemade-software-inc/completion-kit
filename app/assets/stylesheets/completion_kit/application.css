@@ -1148,6 +1148,22 @@ tr:hover .ck-chip--publish {
   font-size: 0.85rem;
 }
 
+.ck-model-table__unknown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--ck-muted);
+  font-family: var(--ck-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+}
+
 .ck-model-list__summary {
   display: flex;
   align-items: center;

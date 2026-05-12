@@ -556,62 +556,66 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
     let(:openrouter_response_body) do
       {
         data: [
-          { id: "openai/gpt-4o-mini", name: "GPT-4o Mini", context_length: 128_000 },
-          { id: "anthropic/claude-3.5-sonnet", name: "Claude 3.5 Sonnet", context_length: 200_000 },
-          { id: "tiny/legacy-2k", name: "Legacy 2k", context_length: 2_048 },
-          { id: "deprecated/old-model", name: "Old Model", context_length: 32_000, deprecated: true }
+          { id: "openai/gpt-4o-mini", name: "GPT-4o Mini", context_length: 128_000, architecture: { output_modalities: ["text"] } },
+          { id: "vendor/no-modalities", name: "No Modalities", context_length: 64_000 },
+          { id: "vendor/image-gen", name: "Image Gen", context_length: 32_000, architecture: { output_modalities: ["image"] } },
+          { id: "tiny/legacy-2k", name: "Legacy 2k", context_length: 2_048, architecture: { output_modalities: ["text"] } },
+          { id: "deprecated/old-model", name: "Old Model", context_length: 32_000, deprecated: true, architecture: { output_modalities: ["text"] } }
         ]
       }.to_json
     end
 
-    let(:openrouter_judge_response) do
-      faraday_response(success: true, body: { choices: [{ message: { content: "Score: 4\nFeedback: ok" } }] }.to_json)
-    end
-
-    it "discovers openrouter models, filters by context length and deprecation, marks supports_generation true and probes judging" do
+    it "derives capabilities from metadata: text models active, image models failed, judging unknown, all probed-stamped" do
       stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
-      stub_faraday_post(openrouter_judge_response)
-
-      service = described_class.new(config: config)
-      service.refresh!
-
-      models = CompletionKit::Model.where(provider: "openrouter")
-      expect(models.pluck(:model_id)).to contain_exactly(
-        "openai/gpt-4o-mini",
-        "anthropic/claude-3.5-sonnet"
-      )
-      expect(models.where(supports_generation: true).count).to eq(2)
-      expect(models.where(supports_judging: true).count).to eq(2)
-      expect(models.where("probed_at IS NOT NULL").count).to eq(2)
-    end
-
-    it "skips generation probing for openrouter (assumed supported) but probes judging" do
-      stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
-      stub_faraday_post(openrouter_judge_response)
-
-      service = described_class.new(config: config)
-      expect(service).not_to receive(:probe_generation)
-      expect(service).to receive(:probe_judging).at_least(:once).and_call_original
-      service.refresh!
-    end
-
-    it "sends openrouter judge probes to the chat/completions endpoint with referer headers" do
-      stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
-      probe_request = stub_faraday_post(openrouter_judge_response)
 
       described_class.new(config: config).refresh!
 
-      expect(probe_request.path).to eq("/api/v1/chat/completions")
-      expect(probe_request.headers["Authorization"]).to eq("Bearer or-test")
-      expect(probe_request.headers["HTTP-Referer"]).to eq("https://completionkit.com")
-      expect(probe_request.headers["X-Title"]).to eq("CompletionKit")
+      models = CompletionKit::Model.where(provider: "openrouter").index_by(&:model_id)
+      expect(models.keys).to contain_exactly("openai/gpt-4o-mini", "vendor/no-modalities", "vendor/image-gen")
+
+      text_model = models["openai/gpt-4o-mini"]
+      expect(text_model).to have_attributes(supports_generation: true, supports_judging: nil, status: "active")
+      expect(text_model.probed_at).to be_present
+
+      # missing architecture.output_modalities -> historical default of text-capable
+      expect(models["vendor/no-modalities"]).to have_attributes(supports_generation: true, status: "active")
+
+      image_model = models["vendor/image-gen"]
+      expect(image_model).to have_attributes(supports_generation: false, supports_judging: nil, status: "failed")
+      expect(image_model.probed_at).to be_present
+    end
+
+    it "does not make any live probe calls for openrouter" do
+      stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
+
+      service = described_class.new(config: config)
+      expect(service).not_to receive(:probe_generation)
+      expect(service).not_to receive(:probe_judging)
+      expect(faraday_connection_stub).not_to receive(:post)
+      service.refresh!
     end
 
     it "stores display_name from the openrouter API name field" do
       stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
-      stub_faraday_post(openrouter_judge_response)
       described_class.new(config: config).refresh!
       expect(CompletionKit::Model.find_by(model_id: "openai/gpt-4o-mini").display_name).to eq("GPT-4o Mini")
+    end
+
+    it "re-derives supports_generation on refresh but preserves a learned supports_judging" do
+      learned = CompletionKit::Model.create!(
+        provider: "openrouter", model_id: "openai/gpt-4o-mini", display_name: "old name",
+        status: "active", supports_generation: true, supports_judging: true, probed_at: 1.day.ago
+      )
+      regressed = CompletionKit::Model.create!(
+        provider: "openrouter", model_id: "vendor/image-gen", display_name: "Image Gen",
+        status: "active", supports_generation: true, supports_judging: nil
+      )
+      stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
+
+      described_class.new(config: config).refresh!
+
+      expect(learned.reload).to have_attributes(supports_judging: true, supports_generation: true, status: "active", display_name: "GPT-4o Mini")
+      expect(regressed.reload).to have_attributes(supports_generation: false, status: "failed")
     end
 
     it "raises DiscoveryError when openrouter fetch returns 401" do

@@ -72,6 +72,11 @@ module CompletionKit
       CompletionKit::ProviderCredential::PROVIDER_LABELS[provider.to_s] || provider.to_s.titleize
     end
 
+    def ck_model_option_label(model)
+      return "#{model[:name]} (?)" if model.key?(:judging_confirmed) && !model[:judging_confirmed]
+      model[:name]
+    end
+
     def ck_grouped_models(models, selected = nil)
       if selected.present? && models.none? { |m| m[:id] == selected }
         retired = CompletionKit::Model.find_by(model_id: selected)
@@ -90,7 +95,7 @@ module CompletionKit
       end
 
       ordered_keys = groups.keys.sort_by { |label| [label.start_with?("OpenRouter") ? 1 : 0, label] }
-      grouped = ordered_keys.map { |label| [label, groups[label].map { |m| [m[:name], m[:id]] }] }
+      grouped = ordered_keys.map { |label| [label, groups[label].map { |m| [ck_model_option_label(m), m[:id]] }] }
       grouped_options_for_select(grouped, selected)
     end
 

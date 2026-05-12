@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **OpenRouter discovery is now metadata-driven and instant.** OpenRouter publishes capability metadata in its model list, so the engine derives capabilities from it instead of probing each of ~350 models with a live call (which took ~18 min). `supports_generation` now comes from `architecture.output_modalities` — fixing a bug where every OpenRouter model, including image-generation ones, was marked generation-capable. `supports_judging` stays **unknown ("?")** until a real run proves it; a successful judged review promotes the model to confirmed. Discovery skips probing for OpenRouter entirely.
+- **Judge-capability is now a three-state.** `supports_judging` of `nil` means "untested" — rendered as `?` on the provider page's models table and `(?)` in judge pickers. Untested models are still selectable as judges (only models known to be bad judges are hidden), and the first successful run with one flips it to `✓`. Runtime judge failures stay graceful: a flaky judge fails just that row's review, the run carries on, and a single failure never demotes the model.
+
 ## [0.5.4] - 2026-05-12
 
 ### Added

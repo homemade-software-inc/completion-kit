@@ -13,8 +13,13 @@ module CompletionKit
     end
 
     def refresh!(&on_progress)
-      models_with_names = fetch_models
-      reconcile(models_with_names)
+      discovered = fetch_models
+      reconcile(discovered)
+      # OpenRouter publishes capability metadata (output modalities, etc.), so we
+      # derive everything from the model list and skip live probing entirely.
+      # Judging stays unknown ("?") until a real run proves it.
+      return if @provider == "openrouter"
+
       probe_new_models(&on_progress)
     end
 
@@ -86,8 +91,17 @@ module CompletionKit
         next nil if entry["deprecated"] == true
         context_length = entry["context_length"].to_i
         next nil if context_length < 8192
-        { id: entry["id"], display_name: entry["name"] }
+        { id: entry["id"], display_name: entry["name"], supports_generation: openrouter_text_output?(entry) }
       end
+    end
+
+    # OpenRouter exposes architecture.output_modalities (e.g. ["text"], ["image"],
+    # ["text", "image"]). A model can be used for generation/judging only if it
+    # outputs text. When the field is missing we keep the historical default of
+    # treating the model as text-capable.
+    def openrouter_text_output?(entry)
+      modalities = Array(entry.dig("architecture", "output_modalities")).map(&:to_s)
+      modalities.empty? || modalities.include?("text")
     end
 
     def fetch_ollama_models
@@ -100,35 +114,67 @@ module CompletionKit
       JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
     end
 
-    def reconcile(models_with_names)
-      api_model_ids = models_with_names.map { |m| m[:id] }
-      names_by_id = models_with_names.each_with_object({}) { |m, h| h[m[:id]] = m[:display_name] }
+    def reconcile(discovered)
+      api_model_ids = discovered.map { |m| m[:id] }
+      meta_by_id = discovered.index_by { |m| m[:id] }
       existing = Model.where(provider: @provider).index_by(&:model_id)
 
       api_model_ids.each do |model_id|
-        if existing[model_id]
-          attrs = { status: "active", retired_at: nil }
-          attrs[:display_name] = names_by_id[model_id] if names_by_id[model_id].present?
-          existing[model_id].update!(attrs) if existing[model_id].status == "retired" || names_by_id[model_id].present?
+        meta = meta_by_id[model_id]
+        if (model = existing[model_id])
+          reconcile_existing_model(model, meta)
         else
-          attrs = {
-            provider: @provider,
-            model_id: model_id,
-            display_name: names_by_id[model_id],
-            status: "active",
-            discovered_at: Time.current
-          }
-          if %w[openrouter ollama].include?(@provider)
-            attrs[:supports_generation] = true
-            attrs[:probed_at] = nil
-          end
-          Model.create!(attrs)
+          Model.create!(new_model_attrs(model_id, meta))
         end
       end
 
-      active_not_in_api = Model.where(provider: @provider, status: "active")
-                               .where.not(model_id: api_model_ids)
-      active_not_in_api.update_all(status: "retired", retired_at: Time.current)
+      Model.where(provider: @provider, status: "active")
+           .where.not(model_id: api_model_ids)
+           .update_all(status: "retired", retired_at: Time.current)
+    end
+
+    def new_model_attrs(model_id, meta)
+      attrs = {
+        provider: @provider,
+        model_id: model_id,
+        display_name: meta[:display_name],
+        status: "active",
+        discovered_at: Time.current
+      }
+      if @provider == "openrouter"
+        supports_generation = meta[:supports_generation] != false
+        attrs.merge!(
+          supports_generation: supports_generation,
+          supports_judging: nil,
+          probed_at: Time.current,
+          status: supports_generation ? "active" : "failed"
+        )
+      elsif @provider == "ollama"
+        attrs[:supports_generation] = true
+        attrs[:probed_at] = nil
+      end
+      attrs
+    end
+
+    def reconcile_existing_model(model, meta)
+      if @provider == "openrouter"
+        # Re-derive generation capability from the published metadata every refresh
+        # (fixes models discovered before capability metadata was used). Leave
+        # supports_judging alone — it's "learned" from successful runs.
+        supports_generation = meta[:supports_generation] != false
+        model.update!(
+          display_name: meta[:display_name].presence || model.display_name,
+          supports_generation: supports_generation,
+          generation_error: nil,
+          probed_at: Time.current,
+          status: supports_generation ? "active" : "failed",
+          retired_at: nil
+        )
+      else
+        attrs = { status: "active", retired_at: nil }
+        attrs[:display_name] = meta[:display_name] if meta[:display_name].present?
+        model.update!(attrs) if model.status == "retired" || meta[:display_name].present?
+      end
     end
 
     def probe_new_models(&on_progress)
@@ -223,7 +269,6 @@ module CompletionKit
       case @provider
       when "openai" then openai_probe(model_id, input, max_tokens)
       when "anthropic" then anthropic_probe(model_id, input, max_tokens)
-      when "openrouter" then openrouter_probe(model_id, input, max_tokens)
       when "ollama" then ollama_probe(model_id, input, max_tokens)
       else raise ArgumentError, "Unsupported probe provider: #{@provider}"
       end
@@ -286,23 +331,6 @@ module CompletionKit
         req.headers["Content-Type"] = "application/json"
         req.headers["x-api-key"] = @api_key
         req.headers["anthropic-version"] = "2023-06-01"
-        req.body = { model: model_id, messages: [{ role: "user", content: input }], max_tokens: max_tokens }.to_json
-      end
-    end
-
-    def openrouter_probe(model_id, input, max_tokens)
-      conn = Faraday.new(url: "https://openrouter.ai") do |f|
-        f.options.timeout = 30
-        f.options.open_timeout = 5
-        f.request :retry, max: 1, interval: 0.5
-        f.adapter Faraday.default_adapter
-      end
-      conn.post do |req|
-        req.url "/api/v1/chat/completions"
-        req.headers["Content-Type"] = "application/json"
-        req.headers["Authorization"] = "Bearer #{@api_key}"
-        req.headers["HTTP-Referer"] = "https://completionkit.com"
-        req.headers["X-Title"] = "CompletionKit"
         req.body = { model: model_id, messages: [{ role: "user", content: input }], max_tokens: max_tokens }.to_json
       end
     end

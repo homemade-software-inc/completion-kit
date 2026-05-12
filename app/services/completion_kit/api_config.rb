@@ -61,7 +61,9 @@ module CompletionKit
               end
       query = query.where(provider: provider) if provider.present?
       models = query.order(:provider, :display_name).map do |m|
-        { id: m.model_id, name: m.display_name || m.model_id, provider: m.provider }
+        entry = { id: m.model_id, name: m.display_name || m.model_id, provider: m.provider }
+        entry[:judging_confirmed] = !m.supports_judging.nil? if scope == :judging
+        entry
       end
 
       return models if models.any?
