@@ -1363,7 +1363,7 @@ tr:hover .ck-chip--publish {
 /* the version currently being viewed gets a solid accent fill on its row */
 .ck-results-table tbody tr.ck-results-table__row--active,
 .ck-results-table tbody tr.ck-results-table__row--active:hover {
-  background: var(--ck-accent);
+  background: #0891b2;
 }
 .ck-results-table tbody tr.ck-results-table__row--active td,
 .ck-results-table tbody tr.ck-results-table__row--active td strong,
