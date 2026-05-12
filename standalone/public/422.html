@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>404 — CompletionKit</title>
+<title>422 — CompletionKit</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="/favicon.ico">
 <style>
@@ -18,6 +18,8 @@
     --dim: #64748b;
     --accent: #06b6d4;
     --accent-soft: rgba(6, 182, 212, 0.10);
+    --warn: #e0a458;
+    --warn-soft: rgba(224, 164, 88, 0.12);
     --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', ui-monospace, monospace;
   }
 
@@ -36,7 +38,7 @@
     content: ""; position: fixed; inset: -6rem -6rem auto -6rem; height: 60vh;
     pointer-events: none; z-index: 0;
     background:
-      radial-gradient(ellipse 60% 70% at 50% 0%, var(--accent-soft) 0%, transparent 65%),
+      radial-gradient(ellipse 60% 70% at 50% 0%, var(--warn-soft) 0%, transparent 65%),
       repeating-linear-gradient(90deg, transparent 0 27px, rgba(148,163,184,0.035) 27px 28px),
       repeating-linear-gradient(0deg,  transparent 0 27px, rgba(148,163,184,0.035) 27px 28px);
     -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
@@ -67,8 +69,8 @@
     background: rgba(255,255,255,0.015);
     font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase;
   }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-  .status-label { color: var(--accent); font-weight: 600; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+  .status-label { color: var(--warn); font-weight: 600; }
   .panel-bar .code-tag { margin-left: auto; color: var(--dim); letter-spacing: 0.1em; }
 
   .panel-body { padding: 2.25rem 1.75rem 1.9rem; }
@@ -77,14 +79,15 @@
     line-height: 0.95; letter-spacing: -0.04em; color: var(--text);
     display: flex; gap: 0.04em;
   }
-  .code .hole { color: transparent; -webkit-text-stroke: 2px var(--line-strong); position: relative; }
-  .code .hole::after {
-    content: ""; position: absolute; inset: 0.18em 0.14em;
-    border: 1px dashed var(--accent); border-radius: 999px; opacity: 0.45;
+  /* the "2"s get a struck-through validation feel */
+  .code .bad { color: var(--text); position: relative; }
+  .code .bad::after {
+    content: ""; position: absolute; left: -0.05em; right: -0.05em; top: 52%;
+    height: 0.07em; background: var(--warn); transform: rotate(-12deg); opacity: 0.7;
   }
 
   .title { margin: 0.9rem 0 0.5rem; font-size: 1.15rem; font-weight: 600; color: var(--text); }
-  .msg { margin: 0; font-size: 0.92rem; line-height: 1.6; color: var(--muted); max-width: 40ch; }
+  .msg { margin: 0; font-size: 0.92rem; line-height: 1.6; color: var(--muted); max-width: 42ch; }
 
   .actions { margin-top: 1.6rem; display: flex; flex-wrap: wrap; gap: 0.65rem; }
   .btn {
@@ -100,10 +103,10 @@
   .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
   .log { margin: 1.1rem 0.2rem 0; font-size: 0.74rem; letter-spacing: 0.02em; color: var(--dim); }
-  .log .arrow { color: var(--accent); }
+  .log .warn { color: var(--warn); }
   .cursor {
     display: inline-block; width: 0.5em; height: 1em; margin-left: 0.15em; vertical-align: -0.12em;
-    background: var(--accent); animation: blink 1.1s steps(1) infinite;
+    background: var(--warn); animation: blink 1.1s steps(1) infinite;
   }
   @keyframes blink { 50% { opacity: 0; } }
 
@@ -121,18 +124,18 @@
     <div class="panel">
       <div class="panel-bar">
         <span class="status-dot"></span>
-        <span class="status-label">No match</span>
-        <span class="code-tag">HTTP 404</span>
+        <span class="status-label">Didn't validate</span>
+        <span class="code-tag">HTTP 422</span>
       </div>
       <div class="panel-body">
-        <p class="code"><span>4</span><span class="hole">0</span><span>4</span></p>
-        <h1 class="title">This route returned nothing.</h1>
-        <p class="msg">The page you were after has moved, been deleted, or never existed. Nothing matched — there's no handler for it.</p>
+        <p class="code"><span class="bad">4</span><span class="bad">2</span><span class="bad">2</span></p>
+        <h1 class="title">We got the request — it just didn't check out.</h1>
+        <p class="msg">The submission was well-formed but couldn't be processed: a validation failed, or the data didn't fit. Go back, fix what's flagged, and try again.</p>
         <div class="actions">
           <a href="/" class="btn btn-primary">&larr; Back to CompletionKit</a>
           <a href="/" class="btn btn-ghost">&#x21bb; Start over</a>
         </div>
-        <p class="log">// <span class="arrow">GET</span> &lt;unmapped path&gt; &rarr; no route<span class="cursor"></span></p>
+        <p class="log">// <span class="warn">REJECTED</span> request entity failed validation &rarr; 422<span class="cursor"></span></p>
       </div>
     </div>
   </div>
