@@ -27,6 +27,7 @@
 
         <div class="ck-provider-card__meta">
           <span><%= provider_credential.api_endpoint.presence || default_endpoints[provider_credential.provider] %></span>
+          <span><%= provider_credential.model_count %> models</span>
           <span><%= provider_credential.prompt_count %> prompts</span>
           <span><%= provider_credential.judge_count %> judges</span>
           <span><% if provider_credential.last_used_at %>Used <time data-relative-time datetime="<%= provider_credential.last_used_at.utc.iso8601 %>"><%= time_ago_in_words(provider_credential.last_used_at) %></time> ago<% else %>Never used<% end %></span>

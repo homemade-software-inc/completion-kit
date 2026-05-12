@@ -105,11 +105,16 @@ document.addEventListener("mouseout", function(e) {
 });
 
 var ckRefreshing = false;
+function ckSetRefreshButtonsBusy(busy) {
+  document.querySelectorAll('.ck-icon-btn[title="Refresh models"]').forEach(function(btn) {
+    btn.classList.toggle('ck-icon-btn--spinning', busy);
+    btn.disabled = busy;
+  });
+}
 function ckRefreshModels() {
   if (ckRefreshing) return;
   ckRefreshing = true;
-  var btn = document.querySelector('.ck-icon-btn[title="Refresh models"]');
-  if (btn) btn.classList.add('ck-icon-btn--spinning');
+  ckSetRefreshButtonsBusy(true);
   ckUpdateRefreshProgress();
   var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
   fetch("/completion_kit/refresh_models", {
@@ -149,8 +154,7 @@ document.addEventListener("turbo:before-stream-render", function(event) {
   }
   if (target === "prompt_llm_model" || target === "run_judge_model") {
     ckRefreshing = false;
-    var btn = document.querySelector('.ck-icon-btn[title="Refresh models"]');
-    if (btn) btn.classList.remove('ck-icon-btn--spinning');
+    ckSetRefreshButtonsBusy(false);
     var status = document.getElementById('refresh-status');
     if (status) { status.textContent = 'Models updated.'; setTimeout(function() { status.textContent = ' '; }, 3000); }
   }

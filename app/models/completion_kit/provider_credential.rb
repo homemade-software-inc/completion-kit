@@ -47,6 +47,14 @@ module CompletionKit
       false
     end
 
+    def model_count
+      Model.where(provider: provider).active.count
+    end
+
+    def self.discovery_in_progress?
+      where(discovery_status: "discovering").exists?
+    end
+
     def prompt_count
       model_ids = Model.where(provider: provider).pluck(:model_id)
       return 0 if model_ids.empty?

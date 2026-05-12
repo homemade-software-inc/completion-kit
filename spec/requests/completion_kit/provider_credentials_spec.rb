@@ -11,10 +11,14 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
 
   it "covers index, new, edit, create, update, and invalid branches" do
     credential = create(:completion_kit_provider_credential, provider: "openai")
+    create(:completion_kit_provider_credential, provider: "ollama", api_key: "ollama-key")
+    create(:completion_kit_model, provider: "ollama", model_id: "llama3", status: "active", supports_generation: true)
 
     get base_path
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("OpenAI")
+    expect(response.body).to include("0 models")
+    expect(response.body).to include("1 models")
 
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)

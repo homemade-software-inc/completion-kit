@@ -41,6 +41,17 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).to include("Visible Prompt")
   end
 
+  it "renders the model refresh button disabled and spinning while discovery is in progress" do
+    create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test", discovery_status: "discovering")
+    create(:completion_kit_model, provider: "openai", model_id: "gpt-4o", status: "active", supports_generation: true)
+
+    get "#{base_path}/new"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to match(/<button[^>]*title="Refresh models"[^>]*\bdisabled\b/)
+    expect(response.body).to match(/<button[^>]*class="[^"]*ck-icon-btn--spinning[^"]*"[^>]*title="Refresh models"/)
+  end
+
   it "creates a prompt with valid params" do
     expect do
       post base_path, params: valid_params
