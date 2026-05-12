@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Onboarding checklist at the engine root.** A fresh install now lands on a setup checklist — connect a provider → upload a dataset → write a prompt → run it — with progress tracking, a highlighted "next up" step, and per-step "done" state derived from whether those records exist. Once all four are present (or you click "Skip setup"), the root redirects straight to Prompts. Re-open it any time from **Settings → Getting started**. Dismissal is a cookie — no schema, host-app-agnostic. No auto-seeded data.
+
 ## [0.5.3] - 2026-05-10
 
 ### Changed

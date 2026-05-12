@@ -1,0 +1,80 @@
+<div class="ck-launch <%= "ck-launch--ready" if @checklist.complete? %>">
+  <div class="ck-launch__field" aria-hidden="true"></div>
+
+  <header class="ck-launch__header">
+    <p class="ck-launch__overline">Welcome to CompletionKit</p>
+    <h1 class="ck-launch__org">Your prompts need tests too</h1>
+    <p class="ck-launch__handle">Four steps from a fresh install to a scored test run.</p>
+  </header>
+
+  <% if @checklist.complete? %>
+    <section class="ck-launch__ready-panel">
+      <p class="ck-launch__ready-flag">
+        <span class="ck-launch__ready-dot" aria-hidden="true"></span>
+        You're all set up
+      </p>
+      <p class="ck-launch__ready-copy">Jump in wherever you like.</p>
+      <div class="ck-launch__quicklinks">
+        <%= link_to "Prompts",  prompts_path,  class: "ck-launch__quicklink" %>
+        <%= link_to "Datasets", datasets_path, class: "ck-launch__quicklink" %>
+        <%= link_to "Metrics",  metrics_path,  class: "ck-launch__quicklink" %>
+        <%= link_to "Runs",     runs_path,     class: "ck-launch__quicklink" %>
+      </div>
+    </section>
+  <% else %>
+    <% next_index = @checklist.steps.index { |s| !s.done? } %>
+    <% progress = @checklist.progress %>
+    <section class="ck-launch__panel">
+      <div class="ck-launch__progress">
+        <div class="ck-launch__progress-head">
+          <h2 class="ck-launch__progress-title">Finish setting up</h2>
+          <p class="ck-launch__progress-count"><%= progress[:done] %> of <%= progress[:total] %> done</p>
+        </div>
+        <div class="ck-launch__progress-bar" role="img" aria-label="<%= progress[:done] %> of <%= progress[:total] %> setup steps complete">
+          <span class="ck-launch__progress-fill" style="width: <%= progress[:percent] %>%"></span>
+        </div>
+      </div>
+
+      <ol class="ck-launch__steps">
+        <% @checklist.steps.each_with_index do |step, i| %>
+          <%
+            state = if step.done?
+                      "done"
+                    elsif i == next_index
+                      "next"
+                    else
+                      "pending"
+                    end
+            step_path = public_send(step.path_name)
+          %>
+          <li class="ck-launch__step ck-launch__step--<%= state %>" style="--i: <%= i %>">
+            <span class="ck-launch__step-num" aria-hidden="true"><%= format("%02d", i + 1) %><% if step.done? %><span class="ck-launch__step-tick">✓</span><% end %></span>
+            <div class="ck-launch__step-body">
+              <div class="ck-launch__step-head">
+                <h3 class="ck-launch__step-title">
+                  <% if step.done? %>
+                    <%= step.title %>
+                  <% else %>
+                    <%= link_to step.title, step_path %>
+                  <% end %>
+                </h3>
+                <% if state == "next" %><span class="ck-launch__step-tag">Next up</span><% end %>
+              </div>
+              <p class="ck-launch__step-desc"><%= step.description %></p>
+              <% if state == "next" %>
+                <%= link_to step_path, class: "ck-launch__step-cta" do %>Start <span aria-hidden="true">&rarr;</span><% end %>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ol>
+
+      <div class="ck-launch__panel-footer">
+        <%= button_to dismiss_onboarding_path, method: :post, class: "ck-launch__dismiss", form: { style: "display:inline" } do %>
+          Skip setup &mdash; go to the app <span aria-hidden="true">&rarr;</span>
+        <% end %>
+        <p class="ck-launch__dismiss-hint">You can come back to this from <strong>Settings &rarr; Getting started</strong> any time.</p>
+      </div>
+    </section>
+  <% end %>
+</div>

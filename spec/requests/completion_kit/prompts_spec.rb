@@ -13,10 +13,10 @@ RSpec.describe "CompletionKit prompts", type: :request do
     }
   end
 
-  it "renders the engine root and prompts index" do
+  it "renders the prompts index" do
     prompt = create(:completion_kit_prompt, name: "Root Prompt")
 
-    get "/completion_kit"
+    get base_path
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("CompletionKit")

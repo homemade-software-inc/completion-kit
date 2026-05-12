@@ -23,7 +23,7 @@
         <%= link_to "Metrics", metrics_path, class: request.path.start_with?(metrics_path) || request.path.start_with?(metric_groups_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
         <%= link_to "Datasets", datasets_path, class: active.(datasets_path) %>
         <%= link_to "Runs", runs_path, class: active.(runs_path) %>
-        <% settings_active = request.path.start_with?(provider_credentials_path) || request.path.start_with?(tags_path) %>
+        <% settings_active = request.path.start_with?(provider_credentials_path) || request.path.start_with?(tags_path) || request.path.start_with?(onboarding_path) %>
         <details class="ck-settings-menu">
           <summary class="<%= settings_active ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %> ck-settings-menu__trigger" aria-label="Settings">
             Settings
@@ -31,6 +31,7 @@
           <div class="ck-settings-menu__panel" role="menu">
             <%= link_to "Providers", provider_credentials_path, class: "ck-settings-menu__item" %>
             <%= link_to "Tags", tags_path, class: "ck-settings-menu__item" %>
+            <%= link_to "Getting started", onboarding_path(reset: 1), class: "ck-settings-menu__item" %>
           </div>
         </details>
         <%= link_to "API", api_reference_path, class: active.(api_reference_path) %>

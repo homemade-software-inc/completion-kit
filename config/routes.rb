@@ -1,5 +1,8 @@
 CompletionKit::Engine.routes.draw do
-  root to: "prompts#index"
+  root to: "onboarding#show"
+
+  get "onboarding", to: "onboarding#show", as: :onboarding
+  post "onboarding/dismiss", to: "onboarding#dismiss", as: :dismiss_onboarding
 
   resources :prompts do
     member do
