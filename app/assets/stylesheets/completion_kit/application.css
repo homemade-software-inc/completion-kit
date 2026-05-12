@@ -1360,18 +1360,42 @@ tr:hover .ck-chip--publish {
 }
 .ck-version-cell__label { display: flex; align-items: center; gap: 0.5rem; }
 
-/* the version currently being viewed gets a glowing blue focus ring on its row */
+/* the version currently being viewed gets a glowing accent border on its row.
+   Drawn on the cells because Safari doesn't paint box-shadow on <tr>. Each cell
+   contributes a 2px accent edge (top/bottom on all, left on the first cell,
+   right on the last) so the borders join into one continuous rectangle, plus an
+   outward glow emitted only away from the row (up/down on every cell, sideways
+   on the end cells) — so the halo wraps the row, not each cell. */
 .ck-results-table tbody tr.ck-results-table__row--active,
 .ck-results-table tbody tr.ck-results-table__row--active:hover {
-  position: relative;
   background: rgba(6, 182, 212, 0.13);
+}
+.ck-results-table tbody tr.ck-results-table__row--active td {
   box-shadow:
-    inset 0 0 0 2px var(--ck-accent),
-    inset 0 0 24px -2px rgba(6, 182, 212, 0.6),
-    0 0 18px -2px var(--ck-accent);
+    inset 0 2px 0 var(--ck-accent),
+    inset 0 -2px 0 var(--ck-accent),
+    0 -4px 18px -2px rgba(6, 182, 212, 0.55),
+    0 4px 18px -2px rgba(6, 182, 212, 0.55);
+}
+.ck-results-table tbody tr.ck-results-table__row--active td:first-child {
+  box-shadow:
+    inset 0 2px 0 var(--ck-accent),
+    inset 0 -2px 0 var(--ck-accent),
+    inset 2px 0 0 var(--ck-accent),
+    -12px 0 18px -4px rgba(6, 182, 212, 0.55),
+    0 -4px 18px -2px rgba(6, 182, 212, 0.55),
+    0 4px 18px -2px rgba(6, 182, 212, 0.55);
+}
+.ck-results-table tbody tr.ck-results-table__row--active td:last-child {
+  box-shadow:
+    inset 0 2px 0 var(--ck-accent),
+    inset 0 -2px 0 var(--ck-accent),
+    inset -2px 0 0 var(--ck-accent),
+    12px 0 18px -4px rgba(6, 182, 212, 0.55),
+    0 -4px 18px -2px rgba(6, 182, 212, 0.55),
+    0 4px 18px -2px rgba(6, 182, 212, 0.55);
 }
 .ck-results-table tbody tr.ck-results-table__row--active strong { color: var(--ck-accent); }
-.ck-results-table tbody tr.ck-results-table__row--active td { position: relative; z-index: 1; }
 
 .ck-field-hint {
   font-family: var(--ck-sans);
