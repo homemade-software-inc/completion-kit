@@ -61,7 +61,6 @@
           <th>Model</th>
           <th>Best score</th>
           <th>Created</th>
-          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -70,12 +69,19 @@
           <% pred = predecessor_of[v] %>
           <tr class="<%= "ck-results-table__row--active" if v.id == @prompt.id %>" onclick="window.location='<%= prompt_path(v) %>'" style="cursor: pointer;">
             <td>
-              <span class="ck-version-cell">
-                <span class="ck-version-cell__label"><strong>v<%= v.version_number %></strong><% if v.current? %> <span class="ck-chip">Published</span><% end %></span>
+              <div class="ck-version-cell">
+                <div class="ck-version-cell__label" onclick="event.stopPropagation()">
+                  <strong>v<%= v.version_number %></strong>
+                  <% if v.current? %>
+                    <span class="ck-chip">Published</span>
+                  <% else %>
+                    <%= button_to "Publish", publish_prompt_path(v), method: :post, class: "ck-chip ck-chip--publish", form_class: "inline-block" %>
+                  <% end %>
+                </div>
                 <% if version_changed.call(v, pred) %>
                   <button type="button" class="ck-cell-link ck-cell-link--delta" title="What changed from v<%= pred.version_number %>" onclick="event.stopPropagation();document.getElementById('ck-vdiff-<%= v.id %>').showModal()">&Delta;</button>
                 <% end %>
-              </span>
+              </div>
             </td>
             <td><span class="ck-chip ck-chip--soft"><%= v.llm_model %></span></td>
             <td>
@@ -86,11 +92,6 @@
               <% end %>
             </td>
             <td class="ck-meta-copy"><time datetime="<%= v.created_at.iso8601 %>" data-local-time><%= v.created_at.utc.strftime("%b %-d, %Y at %-I:%M %p UTC") %></time></td>
-            <td onclick="event.stopPropagation()">
-              <% unless v.current? %>
-                <%= button_to "Publish", publish_prompt_path(v), method: :post, class: "ck-chip ck-chip--publish", form_class: "inline-block" %>
-              <% end %>
-            </td>
           </tr>
         <% end %>
       </tbody>
