@@ -92,28 +92,37 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
   end
 
   describe "#ck_grouped_models with openrouter" do
-    it "splits openrouter models into optgroups by upstream namespace" do
+    it "splits openrouter models into optgroups by upstream namespace and openai by family" do
       models = [
         { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", provider: "openai" },
         { id: "openai/gpt-4o-mini", name: "GPT-4o Mini", provider: "openrouter" },
         { id: "openai/gpt-5", name: "GPT-5", provider: "openrouter" },
         { id: "anthropic/claude-sonnet", name: "Claude Sonnet", provider: "openrouter" },
+        { id: "~anthropic/claude-sonnet-latest", name: "Claude Sonnet latest", provider: "openrouter" },
         { id: "meta-llama/llama-3.3-70b", name: "Llama 3.3 70B", provider: "openrouter" }
       ]
       html = helper.ck_grouped_models(models)
-      expect(html).to include('label="OpenAI"')
+      expect(html).to include('label="OpenAI — GPT-4"')
       expect(html).to include('label="OpenRouter — openai"')
-      expect(html).to include('label="OpenRouter — anthropic"')
+      expect(html).to include('label="OpenRouter — anthropic"') # ~anthropic merged in
       expect(html).to include('label="OpenRouter — meta-llama"')
     end
 
-    it "groups direct providers as before" do
+    it "groups openai models by family in a sensible order, ahead of other direct providers" do
       models = [
-        { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", provider: "openai" },
+        { id: "o3-mini", name: "o3 Mini", provider: "openai" },
+        { id: "gpt-4o", name: "GPT-4o", provider: "openai" },
+        { id: "gpt-5.4", name: "GPT-5.4", provider: "openai" },
         { id: "claude-sonnet-4-6", name: "Claude Sonnet 4.6", provider: "anthropic" }
       ]
       html = helper.ck_grouped_models(models)
-      expect(html).to include('label="OpenAI"')
+      labels = html.scan(/label="([^"]+)"/).flatten
+      expect(labels).to eq(["OpenAI — GPT-5", "OpenAI — GPT-4", "OpenAI — o-series", "Anthropic"])
+    end
+
+    it "groups other direct providers as a single optgroup" do
+      models = [{ id: "claude-sonnet-4-6", name: "Claude Sonnet 4.6", provider: "anthropic" }]
+      html = helper.ck_grouped_models(models)
       expect(html).to include('label="Anthropic"')
     end
   end

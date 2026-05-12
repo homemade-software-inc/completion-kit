@@ -120,18 +120,31 @@ module CompletionKit
         end
       end
 
-      groups = models.group_by do |m|
-        if m[:provider] == "openrouter"
-          upstream = m[:id].to_s.split("/", 2).first
-          "OpenRouter — #{upstream}"
-        else
-          ck_provider_label(m[:provider])
-        end
-      end
-
-      ordered_keys = groups.keys.sort_by { |label| [label.start_with?("OpenRouter") ? 1 : 0, label] }
+      groups = models.group_by { |m| ck_model_optgroup_label(m) }
+      ordered_keys = groups.keys.sort_by { |label| ck_model_optgroup_sort_key(label) }
       grouped = ordered_keys.map { |label| [label, groups[label].map { |m| [ck_model_option_label(m), m[:id]] }] }
       grouped_options_for_select(grouped, selected)
+    end
+
+    # Optgroup label for the model select — mirrors the provider models table:
+    # OpenRouter splits by upstream vendor, OpenAI splits by family, everyone
+    # else is a single group.
+    def ck_model_optgroup_label(model)
+      case model[:provider]
+      when "openrouter" then "OpenRouter — #{model[:id].to_s.split("/", 2).first.delete_prefix("~")}"
+      when "openai"     then "OpenAI — #{ck_openai_model_family(model[:id])}"
+      else ck_provider_label(model[:provider])
+      end
+    end
+
+    def ck_model_optgroup_sort_key(label)
+      if label.start_with?("OpenAI — ")
+        [0, OPENAI_MODEL_FAMILY_ORDER.index(label.delete_prefix("OpenAI — ")), label]
+      elsif label.start_with?("OpenRouter")
+        [2, 0, label]
+      else
+        [1, 0, label]
+      end
     end
 
     def ck_model_options_html(scope)
