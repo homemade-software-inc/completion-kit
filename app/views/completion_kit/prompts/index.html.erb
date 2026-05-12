@@ -30,11 +30,15 @@
         <tr onclick="window.location='<%= prompt_path(prompt) %>'" style="cursor: pointer;">
           <td>
             <strong><%= prompt.name %></strong>
+            <% if prompt.description.present? %>
+              <p class="ck-prompts-table__desc"><%= truncate(prompt.description, length: 120) %></p>
+            <% end %>
             <% if prompt.tags.any? %>
               <div class="tag-marks-row">
                 <%= render "completion_kit/tags/marks", tags: prompt.tags %>
               </div>
             <% end %>
+            <code class="ck-prompts-table__endpoint"><%= api_v1_prompt_path(prompt.slug) %></code>
           </td>
           <% latest_version = prompt.family_versions.maximum(:version_number) %>
           <td>

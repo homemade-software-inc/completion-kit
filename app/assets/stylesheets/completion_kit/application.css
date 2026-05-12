@@ -2913,6 +2913,26 @@ select.ck-input {
   color: var(--ck-dim);
 }
 
+.ck-prompts-table__desc {
+  margin: 0.3rem 0 0;
+  font-family: var(--ck-sans);
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ck-muted);
+  white-space: normal;
+  max-width: 56ch;
+}
+
+.ck-prompts-table__endpoint {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: var(--ck-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.01em;
+  color: var(--ck-dim);
+}
+
 .ck-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
