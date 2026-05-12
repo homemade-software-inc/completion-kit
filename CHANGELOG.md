@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.7] - 2026-05-12
+
+### Added
+
+- **API reference page is reusable by a host app.** The docs body — prompt cards, endpoint tabs, MCP tools list, copy-paste examples — is now a standalone partial (`completion_kit/api_reference/_body`) taking `base_url:` / `token:` (default `YOUR_TOKEN`) / `real_token:` / `published_prompts:` locals, so a host can render it from its own controller: a public, crawlable docs page with placeholders, or an in-app page with the workspace's real token. The Authentication card is its own partial too, swappable via `CompletionKit.config.api_reference_authentication_partial` for hosts (e.g. multi-tenant ones) that manage their own bearer tokens. The engine's own `/api_reference` page renders identically.
+- **New runs inherit the previous run's tags.** Opening the new-run form pre-selects the tags of the most recent run in that prompt's family; "Re-run" carries the source run's tags over too.
+
+### Fixed
+
+- **False "no worker is processing jobs" banner.** SolidQueue workers heartbeat every 60s by default, but the health check only looked back 30s — so a healthy worker was flagged as down between beats while jobs were visibly being processed. The window is now 2 minutes.
+
+### Changed
+
+- **More vertical breathing room in the run form's Metrics section** — the label, the hint, the "Groups" sub-header, and the group pills were bunched too tightly together.
+
 ## [0.5.6] - 2026-05-12
 
 ### Added
