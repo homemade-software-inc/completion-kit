@@ -1298,6 +1298,37 @@ tr:hover .ck-chip--publish {
   color: var(--ck-muted);
 }
 
+.ck-version-change {
+  margin: 0.5rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-family: var(--ck-mono);
+  font-size: 0.8rem;
+}
+.ck-version-change__label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
+}
+.ck-version-change__old {
+  padding: 0.15em 0.5em;
+  border-radius: var(--ck-radius);
+  background: var(--ck-danger-soft);
+  color: var(--ck-danger);
+  text-decoration: line-through;
+}
+.ck-version-change__arrow { color: var(--ck-dim); }
+.ck-version-change__new {
+  padding: 0.15em 0.5em;
+  border-radius: var(--ck-radius);
+  background: var(--ck-success-soft);
+  color: var(--ck-success);
+}
+
 .ck-field-hint {
   font-family: var(--ck-sans);
   font-size: 0.8rem;

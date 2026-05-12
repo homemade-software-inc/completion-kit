@@ -50,23 +50,35 @@
 </section>
 
 <% previous_version = @prompt.family_versions.where("version_number < ?", @prompt.version_number).order(version_number: :desc).first %>
-<% if previous_version && previous_version.template != @prompt.template %>
+<% model_changed = previous_version && previous_version.llm_model != @prompt.llm_model %>
+<% template_changed = previous_version && previous_version.template != @prompt.template %>
+<% if model_changed || template_changed %>
   <section class="ck-card--spaced">
     <p class="ck-kicker">Changes from <%= previous_version.version_label %></p>
-    <div class="ck-suggest-diff" style="margin-top: 0.5rem;">
-      <div class="ck-suggest-diff__pane">
-        <div class="ck-suggest-diff__header">
-          <span class="ck-suggest-diff__label ck-suggest-diff__label--before"><%= previous_version.version_label %></span>
+    <% if model_changed %>
+      <p class="ck-version-change">
+        <span class="ck-version-change__label">Model</span>
+        <span class="ck-version-change__old"><%= previous_version.llm_model %></span>
+        <span class="ck-version-change__arrow" aria-hidden="true">&rarr;</span>
+        <span class="ck-version-change__new"><%= @prompt.llm_model %></span>
+      </p>
+    <% end %>
+    <% if template_changed %>
+      <div class="ck-suggest-diff" style="margin-top: 0.6rem;">
+        <div class="ck-suggest-diff__pane">
+          <div class="ck-suggest-diff__header">
+            <span class="ck-suggest-diff__label ck-suggest-diff__label--before"><%= previous_version.version_label %></span>
+          </div>
+          <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(previous_version.template, @prompt.template) %></pre>
         </div>
-        <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(previous_version.template, @prompt.template) %></pre>
-      </div>
-      <div class="ck-suggest-diff__pane">
-        <div class="ck-suggest-diff__header">
-          <span class="ck-suggest-diff__label ck-suggest-diff__label--after"><%= @prompt.version_label %><% if @prompt.current? %> (current)<% end %></span>
+        <div class="ck-suggest-diff__pane">
+          <div class="ck-suggest-diff__header">
+            <span class="ck-suggest-diff__label ck-suggest-diff__label--after"><%= @prompt.version_label %><% if @prompt.current? %> (current)<% end %></span>
+          </div>
+          <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(previous_version.template, @prompt.template) %></pre>
         </div>
-        <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(previous_version.template, @prompt.template) %></pre>
       </div>
-    </div>
+    <% end %>
   </section>
 <% end %>
 

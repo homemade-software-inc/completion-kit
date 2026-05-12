@@ -43,15 +43,28 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).not_to include("saving creates a new version")
   end
 
-  it "shows a diff against the previous version when viewing a later version" do
-    create(:completion_kit_prompt, name: "Diffed", family_key: "fam-diff", version_number: 1, current: false, template: "Summarise {{content}}.")
-    v2 = create(:completion_kit_prompt, name: "Diffed", family_key: "fam-diff", version_number: 2, current: true, template: "Summarise {{content}} in two sentences.")
+  it "shows a template diff against the previous version when viewing a later version" do
+    create(:completion_kit_prompt, name: "Diffed", family_key: "fam-diff", version_number: 1, current: false, template: "Summarise {{content}}.", llm_model: "gpt-4o")
+    v2 = create(:completion_kit_prompt, name: "Diffed", family_key: "fam-diff", version_number: 2, current: true, template: "Summarise {{content}} in two sentences.", llm_model: "gpt-4o")
 
     get "#{base_path}/#{v2.id}"
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Changes from v1")
     expect(response.body).to include("ck-suggest-diff")
+  end
+
+  it "shows a model change against the previous version even when the template is unchanged" do
+    create(:completion_kit_prompt, name: "Reroled", family_key: "fam-model", version_number: 1, current: false, template: "Same {{x}}", llm_model: "gpt-4o-mini")
+    v2 = create(:completion_kit_prompt, name: "Reroled", family_key: "fam-model", version_number: 2, current: true, template: "Same {{x}}", llm_model: "claude-sonnet-4-6")
+
+    get "#{base_path}/#{v2.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Changes from v1")
+    expect(response.body).to match(/ck-version-change__old[^>]*>gpt-4o-mini/)
+    expect(response.body).to match(/ck-version-change__new[^>]*>claude-sonnet-4-6/)
+    expect(response.body).not_to include("ck-suggest-diff")
   end
 
   it "notes on the edit form that saving creates a new version once that version has runs" do
