@@ -39,6 +39,17 @@ RSpec.describe "CompletionKit prompts", type: :request do
     get "#{base_path}/#{prompt.id}/edit"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Visible Prompt")
+    expect(response.body).not_to include("saving creates a new version")
+  end
+
+  it "notes on the edit form that saving creates a new version once the prompt has runs" do
+    prompt = create(:completion_kit_prompt)
+    create(:completion_kit_run, prompt: prompt, dataset: create(:completion_kit_dataset))
+
+    get "#{base_path}/#{prompt.id}/edit"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("saving creates a new version of this prompt")
   end
 
   it "renders the model refresh button disabled and spinning while discovery is in progress" do

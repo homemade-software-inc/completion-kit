@@ -142,7 +142,7 @@ Only one mode can be active.
 
 ## Concepts
 
-- **Prompt.** A versioned template with `{{variable}}` placeholders. Publishing freezes the template; editing a published prompt creates a new version.
+- **Prompt.** A versioned template with `{{variable}}` placeholders. Editing a prompt that's already been run creates a new version, so earlier results stay reproducible.
 - **Dataset.** A CSV of real inputs. Each row becomes one test case.
 - **Run.** One execution of a prompt against a dataset. Captures every input (model, temperature, metrics) and stores all outputs and scores.
 - **Response.** The model's output for one dataset row, with reviews attached.

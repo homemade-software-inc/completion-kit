@@ -10,6 +10,10 @@
     </div>
   <% end %>
 
+  <% if prompt.persisted? && prompt.runs.exists? %>
+    <p class="ck-version-note">Editing <%= prompt.version_label %> — it has runs, so saving creates a new version of this prompt.</p>
+  <% end %>
+
   <div class="ck-card ck-form-card">
     <div class="ck-field">
       <%= form.label :name, "Name", class: "ck-label" %>

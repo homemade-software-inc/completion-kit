@@ -1289,6 +1289,15 @@ tr:hover .ck-chip--publish {
   max-width: 36rem;
 }
 
+.ck-version-note {
+  margin: 0 0 1rem;
+  max-width: 36rem;
+  font-family: var(--ck-sans);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ck-muted);
+}
+
 .ck-field-hint {
   font-family: var(--ck-sans);
   font-size: 0.8rem;
