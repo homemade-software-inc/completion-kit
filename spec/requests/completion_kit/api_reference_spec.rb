@@ -44,4 +44,17 @@ RSpec.describe "CompletionKit API reference", type: :request do
     get "/completion_kit/api_reference"
     expect(response.body).to include("No API token configured")
   end
+
+  it "lets the host swap in its own authentication partial" do
+    CompletionKit.config.api_reference_authentication_partial = "spec_host/api_token_panel"
+    CompletionKit.config.api_token = "workspace-token-abc123"
+
+    get "/completion_kit/api_reference"
+
+    expect(response.body).to include("spec-host-token-panel")
+    expect(response.body).to include("workspace-token-abc123")
+    expect(response.body).not_to include("No API token configured")
+  ensure
+    CompletionKit.instance_variable_set(:@config, nil)
+  end
 end

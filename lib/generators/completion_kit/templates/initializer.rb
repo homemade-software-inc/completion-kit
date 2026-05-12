@@ -37,6 +37,10 @@ CompletionKit.configure do |config|
   # API Authentication
   # config.api_token = ENV['COMPLETION_KIT_API_TOKEN']
 
+  # API reference page: swap in your own Authentication card (e.g. a multi-tenant
+  # token-management panel). The partial receives a `token:` local.
+  # config.api_reference_authentication_partial = "my_app/api_token_panel"
+
   # Web UI Authentication
   # config.username = "admin"
   # config.password = ENV['COMPLETION_KIT_PASSWORD']

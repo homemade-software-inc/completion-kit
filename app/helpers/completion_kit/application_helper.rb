@@ -72,6 +72,12 @@ module CompletionKit
       CompletionKit::ProviderCredential::PROVIDER_LABELS[provider.to_s] || provider.to_s.titleize
     end
 
+    def ck_masked_token(token)
+      return "YOUR_TOKEN" if token.blank?
+      return "••••••••" if token.length < 12
+      "#{token[0..3]}#{'•' * [token.length - 8, 4].max}#{token[-4..]}"
+    end
+
     OPENAI_MODEL_FAMILY_ORDER = ["GPT-5", "GPT-4", "o-series", "GPT-3.5", "GPT-OSS", "Other"].freeze
 
     def ck_openai_model_family(model_id)

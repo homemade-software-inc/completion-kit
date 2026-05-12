@@ -1,0 +1,11 @@
+<% if token.present? %>
+  <% masked = ck_masked_token(token) %>
+  <div style="display: flex; align-items: center; gap: 0.4rem; margin: 0.5rem 0;">
+    <button type="button" class="ck-chip ck-token-toggle" onclick="ckToggleToken(this)" data-masked="<%= masked %>" data-real="<%= token %>" aria-label="Reveal API token" aria-pressed="false" style="cursor: pointer;"><%= masked %></button>
+    <button type="button" class="ck-icon-btn" title="Copy token" aria-label="Copy API token" onclick="var b=this;navigator.clipboard.writeText('<%= token %>').then(function(){b.classList.add('ck-api-copy--done');setTimeout(function(){b.classList.remove('ck-api-copy--done')},1500)})">
+      <%= heroicon_tag "clipboard-document", variant: :outline, size: 14, "aria-hidden": "true" %>
+    </button>
+  </div>
+<% else %>
+  <p class="ck-meta-copy">No API token configured. Set <code>COMPLETION_KIT_API_TOKEN</code> to enable API access.</p>
+<% end %>
