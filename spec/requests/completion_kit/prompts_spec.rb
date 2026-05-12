@@ -29,6 +29,7 @@ RSpec.describe "CompletionKit prompts", type: :request do
     get "#{base_path}/#{prompt.id}"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Visible Prompt")
+    expect(response.body).not_to include("Changes from")
 
     create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     get "#{base_path}/new"
@@ -42,14 +43,25 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).not_to include("saving creates a new version")
   end
 
-  it "notes on the edit form that saving creates a new version once the prompt has runs" do
+  it "shows a diff against the previous version when viewing a later version" do
+    create(:completion_kit_prompt, name: "Diffed", family_key: "fam-diff", version_number: 1, current: false, template: "Summarise {{content}}.")
+    v2 = create(:completion_kit_prompt, name: "Diffed", family_key: "fam-diff", version_number: 2, current: true, template: "Summarise {{content}} in two sentences.")
+
+    get "#{base_path}/#{v2.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Changes from v1")
+    expect(response.body).to include("ck-suggest-diff")
+  end
+
+  it "notes on the edit form that saving creates a new version once that version has runs" do
     prompt = create(:completion_kit_prompt)
     create(:completion_kit_run, prompt: prompt, dataset: create(:completion_kit_dataset))
 
     get "#{base_path}/#{prompt.id}/edit"
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("saving creates a new version of this prompt")
+    expect(response.body).to include("saving creates a new version")
   end
 
   it "renders the model refresh button disabled and spinning while discovery is in progress" do
@@ -146,14 +158,15 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response).to redirect_to("/completion_kit/prompts")
   end
 
-  it "shows Publish button for non-current versions and Current badge for current" do
-    v1 = create(:completion_kit_prompt, name: "Prompt", family_key: "fam-1", version_number: 1, current: true)
-    v2 = create(:completion_kit_prompt, name: "Prompt", family_key: "fam-1", version_number: 2, current: false)
+  it "lists versions with a Make-current control for non-current ones, a Current badge for the current, and clickable rows" do
+    v1 = create(:completion_kit_prompt, name: "Prompt", family_key: "fam-1", version_number: 1, current: true, template: "v1 {{x}}")
+    v2 = create(:completion_kit_prompt, name: "Prompt", family_key: "fam-1", version_number: 2, current: false, template: "v2 {{x}}")
 
     get "/completion_kit/prompts/#{v1.id}"
 
     expect(response.body).to include("Current")
-    expect(response.body).to include("Publish")
+    expect(response.body).to include("Make current")
+    expect(response.body).to include("/completion_kit/prompts/#{v2.id}")
   end
 
   it "round-trips tag_names on create and update" do

@@ -7,7 +7,9 @@
   <div>
     <div class="ck-inline">
       <h1 class="ck-title"><%= @prompt.name %></h1>
+      <span class="ck-chip ck-chip--soft"><%= @prompt.version_label %></span>
       <span class="ck-chip"><%= @prompt.llm_model %></span>
+      <% unless @prompt.current? %><span class="ck-chip" style="background: var(--ck-warning-soft); color: var(--ck-warning);">Older version</span><% end %>
     </div>
     <% if @prompt.description.present? %>
       <p class="ck-meta-copy"><%= @prompt.description %></p>
@@ -47,7 +49,28 @@
   <pre class="ck-code ck-code--dark"><%= @prompt.template %></pre>
 </section>
 
-<% versions = @prompt.family_versions %>
+<% previous_version = @prompt.family_versions.where("version_number < ?", @prompt.version_number).order(version_number: :desc).first %>
+<% if previous_version && previous_version.template != @prompt.template %>
+  <section class="ck-card--spaced">
+    <p class="ck-kicker">Changes from <%= previous_version.version_label %></p>
+    <div class="ck-suggest-diff" style="margin-top: 0.5rem;">
+      <div class="ck-suggest-diff__pane">
+        <div class="ck-suggest-diff__header">
+          <span class="ck-suggest-diff__label ck-suggest-diff__label--before"><%= previous_version.version_label %></span>
+        </div>
+        <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(previous_version.template, @prompt.template) %></pre>
+      </div>
+      <div class="ck-suggest-diff__pane">
+        <div class="ck-suggest-diff__header">
+          <span class="ck-suggest-diff__label ck-suggest-diff__label--after"><%= @prompt.version_label %><% if @prompt.current? %> (current)<% end %></span>
+        </div>
+        <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(previous_version.template, @prompt.template) %></pre>
+      </div>
+    </div>
+  </section>
+<% end %>
+
+<% versions = @prompt.family_versions.includes(runs: { responses: :reviews }) %>
 <% if versions.size > 1 %>
   <section class="ck-card--spaced">
     <p class="ck-kicker">Versions</p>
@@ -56,21 +79,33 @@
         <tr>
           <th>Version</th>
           <th>Model</th>
+          <th>Best score</th>
           <th>Created</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         <% versions.each do |v| %>
-          <tr>
-            <td><strong>v<%= v.version_number %></strong></td>
-            <td><span class="ck-chip ck-chip--soft"><%= v.llm_model %></span></td>
-            <td class="ck-meta-copy"><time datetime="<%= v.created_at.iso8601 %>" data-local-time><%= v.created_at.utc.strftime("%b %-d, %Y at %-I:%M %p UTC") %></time></td>
+          <% best_score = v.runs.map(&:avg_score).compact.max %>
+          <tr onclick="window.location='<%= prompt_path(v) %>'" style="cursor: pointer;">
             <td>
+              <strong>v<%= v.version_number %></strong>
+              <% if v.id == @prompt.id %><span class="ck-meta-copy" style="margin-left: 0.4rem;">viewing</span><% end %>
+            </td>
+            <td><span class="ck-chip ck-chip--soft"><%= v.llm_model %></span></td>
+            <td>
+              <% if best_score %>
+                <span class="<%= ck_badge_classes(ck_score_kind(best_score)) %>"><%= best_score %></span>
+              <% else %>
+                <span class="ck-prompts-table__dim">—</span>
+              <% end %>
+            </td>
+            <td class="ck-meta-copy"><time datetime="<%= v.created_at.iso8601 %>" data-local-time><%= v.created_at.utc.strftime("%b %-d, %Y at %-I:%M %p UTC") %></time></td>
+            <td onclick="event.stopPropagation()">
               <% if v.current? %>
                 <span class="ck-chip">Current</span>
               <% else %>
-                <%= button_to "Publish", publish_prompt_path(v), method: :post, class: "ck-chip ck-chip--publish", form_class: "inline-block" %>
+                <%= button_to "Make current", publish_prompt_path(v), method: :post, class: "ck-chip ck-chip--publish", form_class: "inline-block" %>
               <% end %>
             </td>
           </tr>
