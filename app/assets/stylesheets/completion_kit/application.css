@@ -2930,12 +2930,12 @@ select.ck-input {
   line-height: 1.45;
   color: var(--ck-muted);
   white-space: normal;
-  max-width: 56ch;
+  max-width: 42ch;
 }
 
 .ck-endpoint--compact {
   margin-top: 0.45rem;
-  max-width: 100%;
+  max-width: 26rem;
 }
 .ck-endpoint--compact .ck-endpoint__url {
   min-width: 0;
