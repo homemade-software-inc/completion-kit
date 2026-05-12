@@ -2933,14 +2933,17 @@ select.ck-input {
   max-width: 56ch;
 }
 
-.ck-prompts-table__endpoint {
-  display: block;
-  margin-top: 0.35rem;
-  font-family: var(--ck-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.01em;
-  color: var(--ck-dim);
+.ck-endpoint--compact {
+  margin-top: 0.45rem;
+  max-width: 100%;
 }
+.ck-endpoint--compact .ck-endpoint__url {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ck-endpoint--compact .ck-icon-btn { flex-shrink: 0; }
 
 .ck-clamp-2 {
   display: -webkit-box;
