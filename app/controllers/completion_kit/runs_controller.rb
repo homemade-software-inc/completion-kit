@@ -28,6 +28,11 @@ module CompletionKit
 
     def new
       @run = Run.new(prompt_id: params[:prompt_id])
+      prompt = Prompt.find_by(id: @run.prompt_id)
+      if prompt
+        last_run = Run.where(prompt_id: prompt.family_versions.ids).order(created_at: :desc).first
+        @run.tag_names = last_run.tag_names if last_run
+      end
     end
 
     def edit
@@ -79,6 +84,7 @@ module CompletionKit
         dataset_id: @run.dataset_id,
         judge_model: @run.judge_model,
         temperature: @run.temperature,
+        tag_names: @run.tag_names,
         status: "pending"
       )
       new_run.replace_metrics!(@run.metric_ids)

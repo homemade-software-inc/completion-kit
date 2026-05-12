@@ -22,6 +22,27 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("Run A")
   end
 
+  it "renders the new-run form with no prompt preselected" do
+    get "#{base_path}/new"
+    expect(response).to have_http_status(:ok)
+  end
+
+  it "renders the new-run form when the prompt has no prior runs" do
+    fresh = create(:completion_kit_prompt, name: "Untouched Prompt")
+    get "#{base_path}/new", params: { prompt_id: fresh.id }
+    expect(response).to have_http_status(:ok)
+  end
+
+  it "inherits tags from the most recent run of the prompt family on the new-run form" do
+    create(:completion_kit_run, prompt: prompt, tag_names: ["real estate", "priority"])
+
+    get "#{base_path}/new", params: { prompt_id: prompt.id }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to match(/<input(?=[^>]*name="run\[tag_names\]\[\]")(?=[^>]*value="real estate")(?=[^>]*\bchecked\b)/)
+    expect(response.body).to match(/<input(?=[^>]*name="run\[tag_names\]\[\]")(?=[^>]*value="priority")(?=[^>]*\bchecked\b)/)
+  end
+
   it "sorts responses by score when judge is configured" do
     run = create(:completion_kit_run, prompt: prompt, name: "Run A")
     r1 = create(:completion_kit_response, run: run)
@@ -239,6 +260,15 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(new_run.temperature).to eq(0.3)
     expect(new_run.metric_ids).to eq([metric.id])
     expect(response).to redirect_to("/completion_kit/runs/#{new_run.id}")
+  end
+
+  it "rerun carries over the source run's tags" do
+    source_run = create(:completion_kit_run, prompt: prompt, status: "completed", tag_names: ["alpha", "beta"])
+    allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
+
+    post "#{base_path}/#{source_run.id}/rerun"
+
+    expect(CompletionKit::Run.order(:id).last.tag_names).to match_array(%w[alpha beta])
   end
 
   it "round-trips tag_names on create and update" do
