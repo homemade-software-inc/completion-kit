@@ -1360,12 +1360,22 @@ tr:hover .ck-chip--publish {
 }
 .ck-version-cell__label { display: flex; align-items: center; gap: 0.5rem; }
 
-/* the version currently being viewed gets a solid teal fill on its row */
+/* the version currently being viewed gets a solid accent fill on its row */
 .ck-results-table tbody tr.ck-results-table__row--active,
 .ck-results-table tbody tr.ck-results-table__row--active:hover {
-  background: #0e4651;
+  background: var(--ck-accent);
 }
-.ck-results-table tbody tr.ck-results-table__row--active strong { color: var(--ck-accent-hover); }
+.ck-results-table tbody tr.ck-results-table__row--active td,
+.ck-results-table tbody tr.ck-results-table__row--active td strong,
+.ck-results-table tbody tr.ck-results-table__row--active .ck-cell-link--delta,
+.ck-results-table tbody tr.ck-results-table__row--active .ck-prompts-table__dim {
+  color: var(--ck-bg-strong);
+}
+.ck-results-table tbody tr.ck-results-table__row--active .ck-chip {
+  background: rgba(8, 11, 20, 0.16);
+  border-color: rgba(8, 11, 20, 0.28);
+  color: var(--ck-bg-strong);
+}
 
 .ck-field-hint {
   font-family: var(--ck-sans);
