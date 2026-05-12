@@ -46,8 +46,9 @@
     <div class="ck-wrap">
     <% flash.each do |type, message| %>
       <% notice = type.to_s == "notice" %>
-      <div class="ck-flash <%= notice ? "ck-flash--notice" : "ck-flash--alert" %>" role="<%= notice ? "status" : "alert" %>">
-        <span class="ck-flash__dot" aria-hidden="true"></span><%= message %>
+      <div class="ck-flash ck-flash--row <%= notice ? "ck-flash--notice" : "ck-flash--alert" %>" role="<%= notice ? "status" : "alert" %>">
+        <span class="ck-flash__label"><%= notice ? "Notice" : "Alert" %></span>
+        <span class="ck-flash__body"><%= message %></span>
       </div>
     <% end %>
 

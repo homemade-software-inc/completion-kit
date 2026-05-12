@@ -1678,36 +1678,42 @@ tr:hover .ck-chip--publish {
 .ck-flash {
   margin-bottom: 1.25rem;
   padding: 0.8rem 1rem;
-  border: 1px solid var(--ck-line);
-  border-left: 3px solid var(--ck-line-strong);
+  border: 1px solid transparent;
   border-radius: var(--ck-radius);
-  background: var(--ck-surface);
   font-family: var(--ck-sans);
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: var(--ck-text);
   animation: ck-flash-in 0.22s ease both;
 }
+.ck-flash--notice { background: rgba(45, 212, 168, 0.08); border-color: rgba(45, 212, 168, 0.32); }
+.ck-flash--alert  { background: rgba(248, 113, 113, 0.08); border-color: rgba(248, 113, 113, 0.32); }
 
-.ck-flash--notice { border-left-color: var(--ck-success); }
-.ck-flash--alert  { border-left-color: var(--ck-danger); }
-
-.ck-flash__dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 0.55rem;
-  border-radius: 50%;
-  vertical-align: 0.05em;
-}
-.ck-flash--notice .ck-flash__dot { background: var(--ck-success); box-shadow: 0 0 7px var(--ck-success); }
-.ck-flash--alert  .ck-flash__dot { background: var(--ck-danger);  box-shadow: 0 0 7px var(--ck-danger); }
-
-.ck-flash__title {
-  margin: 0;
+/* layout flash: a mono status tag (the engine's kicker treatment) + the message */
+.ck-flash--row { display: flex; align-items: baseline; gap: 0.6rem; }
+.ck-flash__label {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--ck-mono);
+  font-size: 0.7rem;
   font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.4;
 }
-.ck-flash--alert .ck-flash__title { color: var(--ck-danger); }
+.ck-flash__label::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 7px currentColor;
+}
+.ck-flash--notice .ck-flash__label { color: var(--ck-success); }
+.ck-flash--alert  .ck-flash__label { color: var(--ck-danger); }
+.ck-flash__body { font-size: 0.9rem; line-height: 1.55; color: var(--ck-text); }
+
+/* form-error summary inside .ck-flash--alert: title sentence + ck-error-list */
+.ck-flash__title { margin: 0; font-weight: 600; color: var(--ck-danger); }
 
 @media (prefers-reduced-motion: reduce) {
   .ck-flash { animation: none; }
