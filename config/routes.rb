@@ -3,6 +3,7 @@ CompletionKit::Engine.routes.draw do
 
   get "onboarding", to: "onboarding#show", as: :onboarding
   post "onboarding/dismiss", to: "onboarding#dismiss", as: :dismiss_onboarding
+  post "onboarding/sample-data", to: "onboarding#sample_data", as: :onboarding_sample_data
 
   resources :prompts do
     member do

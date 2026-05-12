@@ -54,6 +54,24 @@ module CompletionKit
         end
       end
 
+      describe "#sample_loadable?" do
+        it "is true while neither a dataset nor a prompt exists" do
+          expect(checklist.sample_loadable?).to be(true)
+          create(:completion_kit_provider_credential)
+          expect(described_class.new.sample_loadable?).to be(true)
+        end
+
+        it "is false once a dataset exists" do
+          create(:completion_kit_dataset)
+          expect(checklist.sample_loadable?).to be(false)
+        end
+
+        it "is false once a prompt exists" do
+          create(:completion_kit_prompt)
+          expect(checklist.sample_loadable?).to be(false)
+        end
+      end
+
       describe "#progress" do
         it "reports zero progress on a fresh install" do
           expect(checklist.progress).to eq(done: 0, total: 4, percent: 0)

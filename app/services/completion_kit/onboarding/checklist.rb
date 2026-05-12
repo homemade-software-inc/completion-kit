@@ -50,6 +50,13 @@ module CompletionKit
         steps.all?(&:done?)
       end
 
+      # Whether the "Load sample data" button should show — only while neither
+      # the dataset nor the prompt step is done (SampleData.install! no-ops
+      # otherwise, so the button would do nothing).
+      def sample_loadable?
+        steps.none? { |s| %i[dataset prompt].include?(s.key) && s.done? }
+      end
+
       def progress
         done = steps.count(&:done?)
         { done: done, total: steps.size, percent: ((done.to_f / steps.size) * 100).round }

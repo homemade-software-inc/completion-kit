@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Opt-in "Load sample data" on the onboarding page.** A quiet, secondary button that seeds one starter dataset (`Sample: Customer tickets`) and one starter prompt (`Sample: Support reply`) so you can poke around without a blank slate. Shows only while neither a dataset nor a prompt exists; idempotent; never creates a provider credential or a run. Nothing is auto-seeded — a fresh install still reads 0/4.
+
 ### Changed
 
 - **OpenRouter discovery is now metadata-driven and instant.** OpenRouter publishes capability metadata in its model list, so the engine derives capabilities from it instead of probing each of ~350 models with a live call (which took ~18 min). `supports_generation` now comes from `architecture.output_modalities` — fixing a bug where every OpenRouter model, including image-generation ones, was marked generation-capable. `supports_judging` stays **unknown ("?")** until a real run proves it; a successful judged review promotes the model to confirmed. Discovery skips probing for OpenRouter entirely.

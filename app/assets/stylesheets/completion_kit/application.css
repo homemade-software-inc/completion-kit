@@ -4024,6 +4024,48 @@ a.tag-mark {
 }
 .ck-launch__step-cta:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
+/* Opt-in starter data — quiet, secondary (bright cyan is reserved for the next-step CTA) */
+.ck-launch__sample {
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem 1.25rem;
+  border: 1px dashed var(--ck-line);
+  border-radius: var(--ck-radius);
+  background: var(--ck-bg-strong);
+}
+.ck-launch__sample-copy {
+  margin: 0;
+  flex: 1 1 18rem;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--ck-muted);
+}
+.ck-launch__sample-copy code { font-family: var(--ck-mono); font-size: 0.85em; color: var(--ck-text); }
+.ck-launch__sample-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.5rem 0.95rem;
+  background: transparent;
+  border: 1px solid var(--ck-line);
+  color: var(--ck-text);
+  border-radius: var(--ck-radius);
+  font-family: var(--ck-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.ck-launch__sample-cta:hover { border-color: var(--ck-accent); color: var(--ck-accent); background: var(--ck-accent-soft); }
+
 .ck-launch__panel-footer {
   margin-top: 1.75rem;
   padding-top: 1.25rem;
