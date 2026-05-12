@@ -41,26 +41,31 @@
                 </tr>
               </thead>
               <tbody>
-                <% models.each do |m| %>
-                  <tr>
-                    <td class="ck-model-table__name"><%= m.display_name || m.model_id %></td>
-                    <td class="ck-model-table__cap">
-                      <% if m.supports_generation %>
-                        <span class="ck-model-table__tick" aria-label="Supports generation">✓</span>
-                      <% else %>
-                        <span class="ck-model-table__dash" aria-label="No generation support">—</span>
-                      <% end %>
-                    </td>
-                    <td class="ck-model-table__cap">
-                      <% if m.supports_judging %>
-                        <span class="ck-model-table__tick" aria-label="Supports judging">✓</span>
-                      <% elsif m.supports_judging.nil? %>
-                        <span class="ck-model-table__unknown" aria-label="Untested as judge" title="Untested as a judge — selectable; a successful run confirms it">?</span>
-                      <% else %>
-                        <span class="ck-model-table__dash" aria-label="Not usable as judge">—</span>
-                      <% end %>
-                    </td>
-                  </tr>
+                <% ck_model_table_sections(models).each do |section_label, section_models| %>
+                  <% if section_label %>
+                    <tr class="ck-model-table__section"><td colspan="3"><%= section_label %></td></tr>
+                  <% end %>
+                  <% section_models.each do |m| %>
+                    <tr>
+                      <td class="ck-model-table__name"><%= m.display_name || m.model_id %></td>
+                      <td class="ck-model-table__cap">
+                        <% if m.supports_generation %>
+                          <span class="ck-model-table__tick" aria-label="Supports generation">✓</span>
+                        <% else %>
+                          <span class="ck-model-table__dash" aria-label="No generation support">—</span>
+                        <% end %>
+                      </td>
+                      <td class="ck-model-table__cap">
+                        <% if m.supports_judging %>
+                          <span class="ck-model-table__tick" aria-label="Supports judging">✓</span>
+                        <% elsif m.supports_judging.nil? %>
+                          <span class="ck-model-table__unknown" aria-label="Untested as judge" title="Untested as a judge — selectable; a successful run confirms it">?</span>
+                        <% else %>
+                          <span class="ck-model-table__dash" aria-label="Not usable as judge">—</span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
                 <% end %>
               </tbody>
             </table>

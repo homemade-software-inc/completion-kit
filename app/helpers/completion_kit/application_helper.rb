@@ -72,6 +72,41 @@ module CompletionKit
       CompletionKit::ProviderCredential::PROVIDER_LABELS[provider.to_s] || provider.to_s.titleize
     end
 
+    OPENAI_MODEL_FAMILY_ORDER = ["GPT-5", "GPT-4", "o-series", "GPT-3.5", "GPT-OSS", "Other"].freeze
+
+    def ck_openai_model_family(model_id)
+      id = model_id.to_s
+      return "GPT-5" if id.match?(/\Agpt-5/i)
+      return "GPT-4" if id.match?(/\Agpt-4/i)
+      return "GPT-3.5" if id.match?(/\Agpt-3/i)
+      return "GPT-OSS" if id.match?(/\Agpt-oss/i)
+      return "o-series" if id.match?(/\Ao\d/i)
+      "Other"
+    end
+
+    # Groups a provider's models for the models-card table, mirroring how the
+    # dropdown sub-groups: OpenRouter clusters by upstream vendor (the part
+    # before "/"); OpenAI clusters by family; everyone else stays flat. Returns
+    # [[section_label_or_nil, [models]], ...]. A single section collapses to a
+    # nil label so we don't render a redundant header.
+    def ck_model_table_sections(models)
+      models = models.to_a
+      sections =
+        case models.first&.provider
+        when "openrouter"
+          models.group_by { |m| m.model_id.to_s.split("/", 2).first.delete_prefix("~") }
+                .sort_by { |label, _| label }
+        when "openai"
+          grouped = models.group_by { |m| ck_openai_model_family(m.model_id) }
+          ordered = OPENAI_MODEL_FAMILY_ORDER.filter_map { |label| [label, grouped[label]] if grouped[label] }
+          extras = (grouped.keys - OPENAI_MODEL_FAMILY_ORDER).sort.map { |label| [label, grouped[label]] }
+          ordered + extras
+        else
+          [[nil, models]]
+        end
+      sections.size <= 1 ? [[nil, models]] : sections
+    end
+
     def ck_model_option_label(model)
       return "#{model[:name]} (?)" if model.key?(:judging_confirmed) && !model[:judging_confirmed]
       model[:name]

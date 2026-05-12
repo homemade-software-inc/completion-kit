@@ -1164,6 +1164,17 @@ tr:hover .ck-chip--publish {
   cursor: help;
 }
 
+.ck-model-table tr.ck-model-table__section td {
+  padding: 0.85rem 0 0.3rem;
+  font-family: var(--ck-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
+}
+.ck-model-table tr.ck-model-table__section:first-child td { padding-top: 0; }
+
 .ck-model-list__summary {
   display: flex;
   align-items: center;
