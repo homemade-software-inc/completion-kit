@@ -118,6 +118,64 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#ck_openai_model_family" do
+    it "buckets openai model ids by family" do
+      expect(helper.ck_openai_model_family("gpt-5.4-mini")).to eq("GPT-5")
+      expect(helper.ck_openai_model_family("gpt-4o")).to eq("GPT-4")
+      expect(helper.ck_openai_model_family("gpt-4.1-nano")).to eq("GPT-4")
+      expect(helper.ck_openai_model_family("gpt-3.5-turbo")).to eq("GPT-3.5")
+      expect(helper.ck_openai_model_family("gpt-oss-120b")).to eq("GPT-OSS")
+      expect(helper.ck_openai_model_family("o1")).to eq("o-series")
+      expect(helper.ck_openai_model_family("o3-mini")).to eq("o-series")
+      expect(helper.ck_openai_model_family("o4-mini-high")).to eq("o-series")
+      expect(helper.ck_openai_model_family("chatgpt-4o-latest")).to eq("Other")
+    end
+  end
+
+  describe "#ck_model_table_sections" do
+    def model(provider, id) = CompletionKit::Model.new(provider: provider, model_id: id)
+
+    it "groups openrouter models by upstream vendor, alphabetically, merging ~aliases" do
+      models = [
+        model("openrouter", "meta-llama/llama-3.3-70b"),
+        model("openrouter", "anthropic/claude-sonnet-4.6"),
+        model("openrouter", "openai/gpt-4o-mini"),
+        model("openrouter", "~anthropic/claude-sonnet-latest")
+      ]
+      sections = helper.ck_model_table_sections(models)
+      expect(sections.map(&:first)).to eq(%w[anthropic meta-llama openai])
+      expect(sections.first.last.map(&:model_id)).to contain_exactly("anthropic/claude-sonnet-4.6", "~anthropic/claude-sonnet-latest")
+    end
+
+    it "groups openai models by family in a sensible order, extras last" do
+      models = [
+        model("openai", "o3-mini"),
+        model("openai", "gpt-4o"),
+        model("openai", "gpt-5.4"),
+        model("openai", "chatgpt-4o-latest"),
+        model("openai", "gpt-3.5-turbo")
+      ]
+      expect(helper.ck_model_table_sections(models).map(&:first)).to eq(["GPT-5", "GPT-4", "o-series", "GPT-3.5", "Other"])
+    end
+
+    it "leaves other providers flat with no section label" do
+      models = [model("anthropic", "claude-opus-4-7"), model("anthropic", "claude-haiku-4-5")]
+      sections = helper.ck_model_table_sections(models)
+      expect(sections.size).to eq(1)
+      expect(sections.first.first).to be_nil
+      expect(sections.first.last.size).to eq(2)
+    end
+
+    it "collapses a single section to a nil label" do
+      sections = helper.ck_model_table_sections([model("openai", "gpt-4o"), model("openai", "gpt-4.1-mini")])
+      expect(sections).to eq([[nil, sections.first.last]])
+    end
+
+    it "handles an empty list" do
+      expect(helper.ck_model_table_sections([])).to eq([[nil, []]])
+    end
+  end
+
   describe "#ck_model_options_html" do
     it "returns empty string when no models exist for scope" do
       result = helper.ck_model_options_html(:generation)
