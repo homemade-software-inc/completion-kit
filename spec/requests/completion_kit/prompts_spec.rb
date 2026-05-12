@@ -50,7 +50,7 @@ RSpec.describe "CompletionKit prompts", type: :request do
     get "#{base_path}/#{v2.id}"
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("from v1")
+    expect(response.body).to include("ck-cell-link--delta")
     expect(response.body).to include("ck-vdiff-#{v2.id}")
     expect(response.body).to include("ck-suggest-diff")
   end
@@ -172,16 +172,17 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response).to redirect_to("/completion_kit/prompts")
   end
 
-  it "lists versions with a Make-current control for non-current ones, a Current badge for the current, and clickable rows" do
+  it "lists versions: Published badge for the current one, Publish button for the others, the viewed row highlighted, clickable rows, per-version diff link" do
     v1 = create(:completion_kit_prompt, name: "Prompt", family_key: "fam-1", version_number: 1, current: true, template: "v1 {{x}}")
     v2 = create(:completion_kit_prompt, name: "Prompt", family_key: "fam-1", version_number: 2, current: false, template: "v2 {{x}}")
 
-    get "/completion_kit/prompts/#{v1.id}"
+    get "/completion_kit/prompts/#{v2.id}"
 
-    expect(response.body).to include("Current")
-    expect(response.body).to include("Make current")
-    expect(response.body).to include("/completion_kit/prompts/#{v2.id}")
-    expect(response.body).to include("from v1")
+    expect(response.body).to include("Published")
+    expect(response.body).to include("Publish")
+    expect(response.body).to include("/completion_kit/prompts/#{v1.id}")
+    expect(response.body).to include("ck-results-table__row--active")
+    expect(response.body).to include("ck-cell-link--delta")
     expect(response.body).to include("ck-vdiff-#{v2.id}")
   end
 

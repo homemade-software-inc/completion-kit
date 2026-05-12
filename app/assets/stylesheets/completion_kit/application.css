@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap');
 
 .turbo-progress-bar {
   background-color: var(--ck-accent);
@@ -423,42 +422,6 @@ tr:hover .ck-chip--publish {
   background: var(--ck-accent-soft);
   border-color: rgba(6, 182, 212, 0.2);
   color: var(--ck-accent);
-}
-
-.ck-chip--warn {
-  position: relative;
-  background: var(--ck-warning-soft);
-  border-color: rgba(224, 164, 88, 0.4);
-  color: var(--ck-warning);
-}
-
-/* a hand-scrawled note floating over the version chip, with an arrow pointing down at it */
-.ck-old-version-flag {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 1.45rem);
-  transform: translateX(-38%) rotate(-2deg);
-  white-space: nowrap;
-  font-family: 'Caveat', 'Comic Sans MS', cursive;
-  font-size: 1.1rem;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--ck-warning);
-  pointer-events: none;
-}
-.ck-old-version-flag__arrow {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 0.15rem);
-  transform: translateX(-50%) rotate(-12deg);
-  width: 15px;
-  height: 19px;
-  color: var(--ck-warning);
-  pointer-events: none;
-  overflow: visible;
 }
 
 .ck-chip--warning {
@@ -1380,6 +1343,30 @@ tr:hover .ck-chip--publish {
   text-underline-offset: 2px;
 }
 .ck-cell-link:hover { color: var(--ck-accent-hover); }
+.ck-cell-link--delta {
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--ck-dim);
+}
+.ck-cell-link--delta:hover { color: var(--ck-accent); }
+
+/* Version-history table: cell that pairs the version label (left) with the diff trigger (right) */
+.ck-version-cell {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.ck-version-cell__label { display: inline-flex; align-items: baseline; gap: 0.45rem; }
+
+/* the version currently being viewed glows */
+.ck-results-table tbody tr.ck-results-table__row--active,
+.ck-results-table tbody tr.ck-results-table__row--active:hover {
+  background: var(--ck-accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--ck-accent), inset 0 0 18px -4px var(--ck-accent);
+}
+.ck-results-table tbody tr.ck-results-table__row--active strong { color: var(--ck-accent); }
 
 .ck-field-hint {
   font-family: var(--ck-sans);

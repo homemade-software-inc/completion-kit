@@ -50,7 +50,7 @@ module CompletionKit
 
     def publish
       @prompt.publish!
-      redirect_to prompt_path(@prompt), notice: "#{@prompt.display_name} is now the current version."
+      redirect_to prompt_path(@prompt), notice: "#{@prompt.display_name} is now the published version."
     end
 
     private
