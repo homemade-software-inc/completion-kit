@@ -1329,6 +1329,28 @@ tr:hover .ck-chip--publish {
   color: var(--ck-success);
 }
 
+.ck-modal__body .ck-version-change + .ck-suggest-diff { margin-top: 0.9rem; }
+
+.ck-version-diff-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding: 0.35rem 0.7rem;
+  background: transparent;
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
+  font-family: var(--ck-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ck-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.ck-version-diff-trigger:hover { border-color: var(--ck-accent); color: var(--ck-accent); }
+
 .ck-field-hint {
   font-family: var(--ck-sans);
   font-size: 0.8rem;

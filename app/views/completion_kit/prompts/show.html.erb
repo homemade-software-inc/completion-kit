@@ -53,33 +53,47 @@
 <% model_changed = previous_version && previous_version.llm_model != @prompt.llm_model %>
 <% template_changed = previous_version && previous_version.template != @prompt.template %>
 <% if model_changed || template_changed %>
-  <section class="ck-card--spaced">
-    <p class="ck-kicker">Changes from <%= previous_version.version_label %></p>
-    <% if model_changed %>
-      <p class="ck-version-change">
-        <span class="ck-version-change__label">Model</span>
-        <span class="ck-version-change__old"><%= previous_version.llm_model %></span>
-        <span class="ck-version-change__arrow" aria-hidden="true">&rarr;</span>
-        <span class="ck-version-change__new"><%= @prompt.llm_model %></span>
-      </p>
-    <% end %>
-    <% if template_changed %>
-      <div class="ck-suggest-diff" style="margin-top: 0.6rem;">
-        <div class="ck-suggest-diff__pane">
-          <div class="ck-suggest-diff__header">
-            <span class="ck-suggest-diff__label ck-suggest-diff__label--before"><%= previous_version.version_label %></span>
-          </div>
-          <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(previous_version.template, @prompt.template) %></pre>
+  <button type="button" class="ck-version-diff-trigger" onclick="document.getElementById('ck-version-diff-modal').showModal()">
+    Changes from <%= previous_version.version_label %> <span aria-hidden="true">&rarr;</span>
+  </button>
+
+  <dialog id="ck-version-diff-modal" class="ck-modal" onclick="if(event.target===this)this.close()">
+    <article class="ck-modal__panel" onclick="event.stopPropagation()">
+      <header class="ck-modal__header">
+        <div class="ck-modal__heading">
+          <h2 class="ck-modal__title">Changes from <%= previous_version.version_label %></h2>
+          <span class="ck-modal__meta"><%= previous_version.version_label %> &rarr; <%= @prompt.version_label %><% if @prompt.current? %> (current)<% end %></span>
         </div>
-        <div class="ck-suggest-diff__pane">
-          <div class="ck-suggest-diff__header">
-            <span class="ck-suggest-diff__label ck-suggest-diff__label--after"><%= @prompt.version_label %><% if @prompt.current? %> (current)<% end %></span>
+        <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">&times;</button>
+      </header>
+      <div class="ck-modal__body">
+        <% if model_changed %>
+          <p class="ck-version-change">
+            <span class="ck-version-change__label">Model</span>
+            <span class="ck-version-change__old"><%= previous_version.llm_model %></span>
+            <span class="ck-version-change__arrow" aria-hidden="true">&rarr;</span>
+            <span class="ck-version-change__new"><%= @prompt.llm_model %></span>
+          </p>
+        <% end %>
+        <% if template_changed %>
+          <div class="ck-suggest-diff">
+            <div class="ck-suggest-diff__pane">
+              <div class="ck-suggest-diff__header">
+                <span class="ck-suggest-diff__label ck-suggest-diff__label--before"><%= previous_version.version_label %></span>
+              </div>
+              <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(previous_version.template, @prompt.template) %></pre>
+            </div>
+            <div class="ck-suggest-diff__pane">
+              <div class="ck-suggest-diff__header">
+                <span class="ck-suggest-diff__label ck-suggest-diff__label--after"><%= @prompt.version_label %></span>
+              </div>
+              <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(previous_version.template, @prompt.template) %></pre>
+            </div>
           </div>
-          <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(previous_version.template, @prompt.template) %></pre>
-        </div>
+        <% end %>
       </div>
-    <% end %>
-  </section>
+    </article>
+  </dialog>
 <% end %>
 
 <% versions = @prompt.family_versions.includes(runs: { responses: :reviews }) %>
