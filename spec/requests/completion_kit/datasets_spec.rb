@@ -28,6 +28,29 @@ RSpec.describe "CompletionKit datasets", type: :request do
     expect(response.body).to include("Visible Dataset")
     expect(response.body).to include("CSV preview")
     expect(response.body).to include("Run on dataset")
+    expect(response.body).to include("Download CSV")
+  end
+
+  it "downloads the dataset as a CSV attachment named from the dataset" do
+    csv = "ticket,priority\nA broken switch,P2\n"
+    dataset = create(:completion_kit_dataset, name: "Customer Tickets — sample", csv_data: csv)
+
+    get "#{base_path}/#{dataset.id}.csv"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.media_type).to eq("text/csv")
+    expect(response.headers["Content-Disposition"]).to include("attachment")
+    expect(response.headers["Content-Disposition"]).to include("customer-tickets-sample.csv")
+    expect(response.body).to eq(csv)
+  end
+
+  it "falls back to a dataset-id filename when the name slugifies to blank" do
+    dataset = create(:completion_kit_dataset, name: "—", csv_data: "a,b\n1,2\n")
+
+    get "#{base_path}/#{dataset.id}.csv"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.headers["Content-Disposition"]).to include("dataset-#{dataset.id}.csv")
   end
 
   it "renders the new form" do

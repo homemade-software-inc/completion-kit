@@ -9,6 +9,16 @@ module CompletionKit
 
     def show
       @runs = @dataset.runs.includes(:prompt, :responses).order(created_at: :desc)
+      respond_to do |format|
+        format.html
+        format.csv do
+          slug = @dataset.name.to_s.parameterize.presence || "dataset-#{@dataset.id}"
+          send_data @dataset.csv_data.to_s,
+                    type: "text/csv",
+                    filename: "#{slug}.csv",
+                    disposition: "attachment"
+        end
+      end
     end
 
     def new

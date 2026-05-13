@@ -1862,7 +1862,18 @@ tr:hover .ck-chip--publish {
   background: var(--ck-bg-strong);
   overflow: auto;
   max-height: 60vh;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ck-line-strong) transparent;
 }
+.ck-csv-table-wrap::-webkit-scrollbar { width: 10px; height: 10px; }
+.ck-csv-table-wrap::-webkit-scrollbar-track { background: transparent; }
+.ck-csv-table-wrap::-webkit-scrollbar-thumb {
+  background: var(--ck-line-strong);
+  border-radius: 5px;
+  border: 2px solid var(--ck-bg-strong);
+}
+.ck-csv-table-wrap::-webkit-scrollbar-thumb:hover { background: var(--ck-muted); }
+.ck-csv-table-wrap::-webkit-scrollbar-corner { background: transparent; }
 
 .ck-modal__body .ck-csv-table-wrap {
   margin-top: 0;
