@@ -93,10 +93,10 @@
 
     <div class="ck-field" id="metrics-field">
       <label class="ck-label">Metrics</label>
-      <p class="ck-field-hint" id="metrics-hint"></p>
       <% if @all_metrics.empty? %>
         <p class="ck-field-hint" style="color: var(--ck-warning);">No metrics yet.&ensp;<%= link_to "Create a metric", new_metric_path, class: "ck-link" %></p>
       <% else %>
+        <p class="ck-field-hint" id="metrics-hint"></p>
         <% if @metric_groups.any? %>
           <div class="ck-metric-groups">
             <span class="ck-metric-groups__label">Groups</span>

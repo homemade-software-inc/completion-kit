@@ -27,6 +27,18 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to have_http_status(:ok)
   end
 
+  it "skips the empty metrics-hint placeholder when there are no metrics" do
+    get "#{base_path}/new"
+    expect(response.body).not_to include('id="metrics-hint"')
+    expect(response.body).to include("No metrics yet")
+  end
+
+  it "still renders the metrics-hint placeholder when there are metrics (the JS populates it)" do
+    create(:completion_kit_metric)
+    get "#{base_path}/new"
+    expect(response.body).to include('id="metrics-hint"')
+  end
+
   it "renders the new-run form when the prompt has no prior runs" do
     fresh = create(:completion_kit_prompt, name: "Untouched Prompt")
     get "#{base_path}/new", params: { prompt_id: fresh.id }

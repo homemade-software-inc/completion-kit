@@ -2763,8 +2763,10 @@ select.ck-input {
 
 /* the metrics field stacks several sub-sections (hint, groups, divider, tag
    filter, checkboxes) — give it more vertical breathing room than a plain field,
-   and extra separation from the run-tags field that follows it */
-#metrics-field {
+   and extra separation from the run-tags field that follows it. Only when the
+   checkboxes are actually present, though — when there are no metrics the field
+   is just "label + warning" and should be a normal compact field. */
+#metrics-field:has(.ck-metric-checkboxes) {
   gap: 0.85rem;
   margin-bottom: 1.25rem;
 }
