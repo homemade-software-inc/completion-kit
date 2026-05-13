@@ -2589,6 +2589,12 @@ select.ck-input {
   margin-top: 0.5rem;
 }
 
+/* one code size for every example on the API reference page — the curl blocks
+   and the MCP install snippets are the same partial and should match */
+.ck-api-example .ck-code {
+  font-size: 0.78rem;
+}
+
 .ck-api-copy {
   position: absolute;
   top: 0.5rem;
@@ -3608,7 +3614,6 @@ a.ck-metric-group-pill {
 .ck-mcp-install-card .ck-code {
   border-radius: 0;
   border: none;
-  font-size: 0.72rem;
   padding: 1rem 1rem 1.1rem;
   line-height: 1.7;
 }
