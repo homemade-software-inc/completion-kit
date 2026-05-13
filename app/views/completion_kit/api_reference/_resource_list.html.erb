@@ -1,0 +1,10 @@
+<%# title: heading text; items: array of hashes for _resource_card (name:, url:, dom_id:, subtitle?:, meta?:) %>
+<% items = Array(local_assigns.fetch(:items, [])) %>
+<% if items.any? %>
+  <div class="ck-api-endpoint" style="padding-top: 1rem;">
+    <p class="ck-kicker" style="margin-bottom: 0.5rem;"><%= local_assigns.fetch(:title) %></p>
+    <% items.each do |item| %>
+      <%= render "completion_kit/api_reference/resource_card", item %>
+    <% end %>
+  </div>
+<% end %>

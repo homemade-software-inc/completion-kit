@@ -2,6 +2,12 @@
   token = local_assigns.fetch(:token, "YOUR_TOKEN")
   real_token = local_assigns.fetch(:real_token, nil)
   published_prompts = local_assigns.fetch(:published_prompts, [])
+  recent_runs = local_assigns.fetch(:recent_runs, [])
+  datasets = local_assigns.fetch(:datasets, [])
+  metrics = local_assigns.fetch(:metrics, [])
+  metric_groups = local_assigns.fetch(:metric_groups, [])
+  tags = local_assigns.fetch(:tags, [])
+  provider_credentials = local_assigns.fetch(:provider_credentials, [])
 %>
 <div class="ck-api-tabs">
   <input type="radio" name="ck-api-tab" id="ck-tab-mcp" class="ck-api-tabs__radio" checked>
@@ -86,28 +92,11 @@
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/prompts/:id</p>
         <p class="ck-meta-copy">Get a single prompt by ID.</p>
       </div>
-      <% if published_prompts.any? %>
-        <div class="ck-api-endpoint" style="padding-top: 1rem;">
-          <p class="ck-kicker" style="margin-bottom: 0.5rem;">Your published prompts</p>
-          <% published_prompts.each do |p| %>
-            <div class="ck-api-prompt-card">
-              <div class="ck-api-prompt-card__top">
-                <div>
-                  <strong class="ck-api-prompt-card__name"><%= p.name %></strong>
-                  <% if p.description.present? %>
-                    <p class="ck-api-prompt-card__desc"><%= p.description %></p>
-                  <% end %>
-                </div>
-                <span class="ck-chip" style="text-transform: none; flex-shrink: 0;"><%= p.llm_model %></span>
-              </div>
-              <div class="ck-api-prompt-card__url">
-                <code class="ck-endpoint__url" id="prompt_ep_<%= p.id %>"><%= base_url %>/api/v1/prompts/<%= p.slug %></code>
-                <button type="button" class="ck-icon-btn" title="Copy endpoint" aria-label="Copy endpoint URL" onclick="navigator.clipboard.writeText(document.getElementById('prompt_ep_<%= p.id %>').textContent)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg></button>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
+      <%= render "completion_kit/api_reference/resource_list", title: "Your published prompts",
+            items: published_prompts.map { |p|
+              { name: p.name, subtitle: p.description, meta: p.llm_model,
+                url: "#{base_url}/api/v1/prompts/#{p.slug}", dom_id: "prompt_ep_#{p.id}" }
+            } %>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/prompts/:id</p>
         <p class="ck-meta-copy">Update a prompt. Accepts same params as create.</p>
@@ -140,6 +129,11 @@
         <p class="ck-meta-copy">Get a run with status, progress, response count, and average score.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl #{base_url}/api/v1/runs/1 \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
+      <%= render "completion_kit/api_reference/resource_list", title: "Your recent runs",
+            items: recent_runs.map { |r|
+              { name: r.name, meta: r.status.to_s.titleize,
+                url: "#{base_url}/api/v1/runs/#{r.id}", dom_id: "run_ep_#{r.id}" }
+            } %>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/generate</p>
         <p class="ck-meta-copy">Start generating responses. Returns 202 Accepted. Poll the run to check progress.</p>
@@ -167,6 +161,11 @@
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:run_id/responses/:id</p>
         <p class="ck-meta-copy">Get a single response with its review scores and feedback.</p>
       </div>
+      <%= render "completion_kit/api_reference/resource_list", title: "Your responses",
+            items: recent_runs.first(1).map { |r|
+              { name: "#{r.name} — responses",
+                url: "#{base_url}/api/v1/runs/#{r.id}/responses", dom_id: "responses_ep_#{r.id}" }
+            } %>
     </div>
 
     <div class="ck-api-tabs__panel">
@@ -186,6 +185,11 @@
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/datasets/:id</p>
         <p class="ck-meta-copy">Get, update, or delete a dataset.</p>
       </div>
+      <%= render "completion_kit/api_reference/resource_list", title: "Your datasets",
+            items: datasets.map { |d|
+              { name: d.name, meta: pluralize([d.csv_data.to_s.lines.count - 1, 0].max, "row"),
+                url: "#{base_url}/api/v1/datasets/#{d.id}", dom_id: "dataset_ep_#{d.id}" }
+            } %>
     </div>
 
     <div class="ck-api-tabs__panel">
@@ -205,6 +209,11 @@
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metrics/:id</p>
         <p class="ck-meta-copy">Get, update, or delete a metric.</p>
       </div>
+      <%= render "completion_kit/api_reference/resource_list", title: "Your metrics",
+            items: metrics.map { |m|
+              { name: m.name, subtitle: m.instruction.presence&.truncate(100),
+                url: "#{base_url}/api/v1/metrics/#{m.id}", dom_id: "metric_ep_#{m.id}" }
+            } %>
     </div>
 
     <div class="ck-api-tabs__panel">
@@ -223,6 +232,11 @@
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metric_groups/:id</p>
         <p class="ck-meta-copy">Get, update, or delete a metric group. PATCH with <code>metric_ids</code> replaces all metric associations.</p>
       </div>
+      <%= render "completion_kit/api_reference/resource_list", title: "Your metric groups",
+            items: metric_groups.map { |g|
+              { name: g.name, subtitle: g.description.presence, meta: pluralize(g.metric_ids.size, "metric"),
+                url: "#{base_url}/api/v1/metric_groups/#{g.id}", dom_id: "metric_group_ep_#{g.id}" }
+            } %>
     </div>
 
     <div class="ck-api-tabs__panel">
@@ -243,6 +257,11 @@
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/tags/:id</p>
         <p class="ck-meta-copy">Get, update, or delete a tag. PATCH accepts <code>name</code>. DELETE returns 204 No Content and removes all taggings for this tag.</p>
       </div>
+      <%= render "completion_kit/api_reference/resource_list", title: "Your tags",
+            items: tags.map { |t|
+              { name: t.name, meta: t.color,
+                url: "#{base_url}/api/v1/tags/#{t.id}", dom_id: "tag_ep_#{t.id}" }
+            } %>
       <div class="ck-api-endpoint" style="padding-top: 1rem;">
         <p class="ck-kicker" style="margin-bottom: 0.5rem;">Tagging resources</p>
         <p class="ck-meta-copy">Metrics, prompts, runs, and datasets accept a <code>tag_names</code> array on their create and update endpoints. Passing a name that does not yet exist silently creates the tag. On PATCH, the list replaces all existing tags for that record (omit the field to leave tags unchanged).</p>
@@ -277,6 +296,11 @@
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/provider_credentials/:id</p>
         <p class="ck-meta-copy">Get, update, or delete a provider credential.</p>
       </div>
+      <%= render "completion_kit/api_reference/resource_list", title: "Your providers",
+            items: provider_credentials.map { |pc|
+              { name: ck_provider_label(pc.provider), meta: pluralize(pc.model_count, "model"),
+                url: "#{base_url}/api/v1/provider_credentials/#{pc.id}", dom_id: "provider_ep_#{pc.id}" }
+            } %>
     </div>
 
   </div>
