@@ -50,7 +50,7 @@ module CompletionKit
     end
 
     def update
-      if @run.responses.any?
+      if @run.responses.any? && run_generation_changed?
         attrs = run_params.except(:metric_ids).to_h
         attrs.delete("name") if attrs["name"].to_s == @run.name.to_s
         new_run = Run.create!(attrs.merge(status: "pending"))
@@ -160,6 +160,30 @@ module CompletionKit
 
     def run_params
       params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, metric_ids: [], tag_names: [])
+    end
+
+    # Editing a run that already has results forks a new run — but only when a
+    # field that affects generation or judging changed. Renaming or retagging is
+    # pure metadata and updates the run in place.
+    GENERATION_RUN_FIELDS = %i[prompt_id dataset_id judge_model temperature].freeze
+
+    def run_generation_changed?
+      GENERATION_RUN_FIELDS.each do |field|
+        next unless run_params.key?(field)
+        return true if normalize_run_field(field, run_params[field]) != normalize_run_field(field, @run.public_send(field))
+      end
+      return false unless params[:run].key?(:metric_ids)
+      Array(params[:run][:metric_ids]).map(&:to_i).reject(&:zero?).sort != @run.metric_ids.sort
+    end
+
+    def normalize_run_field(field, value)
+      s = value.to_s.strip
+      return nil if s.empty?
+      case field
+      when :temperature then s.to_f
+      when :prompt_id, :dataset_id then s.to_i
+      else s
+      end
     end
 
   end

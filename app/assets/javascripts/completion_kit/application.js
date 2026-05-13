@@ -36,33 +36,32 @@ function ckAutoFocusFirstError() {
 
 function ckRelativeTime(then) {
   var seconds = Math.round((Date.now() - then.getTime()) / 1000);
-  if (seconds < 5) return "just now";
-  if (seconds < 60) return "less than a minute";
+  if (seconds < 60) return "just now";
   var minutes = Math.round(seconds / 60);
-  if (minutes < 60) return minutes === 1 ? "1 minute" : minutes + " minutes";
+  if (minutes < 60) return (minutes === 1 ? "1 minute" : minutes + " minutes") + " ago";
   var hours = Math.round(minutes / 60);
-  if (hours < 24) return hours === 1 ? "about 1 hour" : "about " + hours + " hours";
+  if (hours < 24) return (hours === 1 ? "about 1 hour" : "about " + hours + " hours") + " ago";
   var days = Math.round(hours / 24);
-  if (days < 30) return days === 1 ? "1 day" : days + " days";
+  if (days < 30) return (days === 1 ? "1 day" : days + " days") + " ago";
   var months = Math.round(days / 30);
-  if (months < 12) return months === 1 ? "about 1 month" : "about " + months + " months";
+  if (months < 12) return (months === 1 ? "about 1 month" : "about " + months + " months") + " ago";
   var years = Math.round(days / 365);
-  return years === 1 ? "about 1 year" : "about " + years + " years";
+  return (years === 1 ? "about 1 year" : "about " + years + " years") + " ago";
 }
 
 function ckRelativeTimeCompact(then) {
   var seconds = Math.round((Date.now() - then.getTime()) / 1000);
-  if (seconds < 60) return "now";
+  if (seconds < 60) return "just now";
   var minutes = Math.round(seconds / 60);
-  if (minutes < 60) return minutes + "m";
+  if (minutes < 60) return minutes + "m ago";
   var hours = Math.round(minutes / 60);
-  if (hours < 24) return hours + "h";
+  if (hours < 24) return hours + "h ago";
   var days = Math.round(hours / 24);
-  if (days < 30) return days + "d";
+  if (days < 30) return days + "d ago";
   var months = Math.round(days / 30);
-  if (months < 12) return months + "mo";
+  if (months < 12) return months + "mo ago";
   var years = Math.round(days / 365);
-  return years + "y";
+  return years + "y ago";
 }
 
 function ckTickRelativeTimes() {

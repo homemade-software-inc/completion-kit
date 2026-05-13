@@ -165,30 +165,80 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(run.reload.metric_ids).to eq([metric.id])
   end
 
-  it "creates a new run when updating a run with responses" do
+  it "updates a run with responses in place when only the name changes" do
     run = create(:completion_kit_run, prompt: prompt, name: "Original")
     run.responses.create!(response_text: "Some output")
 
     expect do
-      patch "#{base_path}/#{run.id}", params: { run: { name: "Updated", prompt_id: prompt.id } }
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Renamed", prompt_id: prompt.id } }
+    end.not_to change(CompletionKit::Run, :count)
+
+    expect(run.reload.name).to eq("Renamed")
+    expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
+  end
+
+  it "updates a run with responses in place when only the tags change" do
+    run = create(:completion_kit_run, prompt: prompt)
+    run.responses.create!(response_text: "Some output")
+
+    expect do
+      patch "#{base_path}/#{run.id}", params: { run: { prompt_id: prompt.id, tag_names: ["real estate"] } }
+    end.not_to change(CompletionKit::Run, :count)
+
+    expect(run.reload.tag_names).to eq(["real estate"])
+    expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
+  end
+
+  it "updates a run with responses in place when metrics are resubmitted unchanged" do
+    metric = create(:completion_kit_metric)
+    run = create(:completion_kit_run, prompt: prompt)
+    run.replace_metrics!([metric.id])
+    run.responses.create!(response_text: "Some output")
+
+    expect do
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Renamed", prompt_id: prompt.id, metric_ids: [metric.id] } }
+    end.not_to change(CompletionKit::Run, :count)
+
+    expect(run.reload.name).to eq("Renamed")
+  end
+
+  it "forks a new run when the dataset changes on a run with responses" do
+    run = create(:completion_kit_run, prompt: prompt, name: "Original")
+    run.responses.create!(response_text: "Some output")
+    new_dataset = create(:completion_kit_dataset)
+
+    expect do
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Original", prompt_id: prompt.id, dataset_id: new_dataset.id } }
     end.to change(CompletionKit::Run, :count).by(1)
 
     new_run = CompletionKit::Run.order(:id).last
-    expect(new_run.name).to eq("Updated")
+    expect(new_run.dataset_id).to eq(new_dataset.id)
     expect(new_run.status).to eq("pending")
+    expect(new_run.name).not_to eq(run.name)
     expect(response).to redirect_to("/completion_kit/runs/#{new_run.id}")
     expect(run.reload.name).to eq("Original")
   end
 
-  it "auto-renames the new run when the user did not change the name" do
-    run = create(:completion_kit_run, prompt: prompt, name: "Property Summary — v1 #1")
+  it "forks a new run when the judge model changes on a run with responses" do
+    run = create(:completion_kit_run, prompt: prompt)
     run.responses.create!(response_text: "Some output")
 
-    patch "#{base_path}/#{run.id}", params: { run: { name: "Property Summary — v1 #1", prompt_id: prompt.id } }
+    expect do
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Original", prompt_id: prompt.id, judge_model: "claude-haiku-4-5" } }
+    end.to change(CompletionKit::Run, :count).by(1)
 
-    new_run = CompletionKit::Run.order(:id).last
-    expect(new_run.name).not_to eq(run.name)
-    expect(new_run.name).to match(/#2\z/)
+    expect(CompletionKit::Run.order(:id).last.judge_model).to eq("claude-haiku-4-5")
+  end
+
+  it "forks a new run when the temperature changes on a run with responses" do
+    run = create(:completion_kit_run, prompt: prompt, temperature: 1.0)
+    run.responses.create!(response_text: "Some output")
+
+    expect do
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Original", prompt_id: prompt.id, temperature: "0.3" } }
+    end.to change(CompletionKit::Run, :count).by(1)
+
+    expect(CompletionKit::Run.order(:id).last.temperature).to eq(0.3)
   end
 
   it "carries metric_ids onto the new run when updating a run with responses" do

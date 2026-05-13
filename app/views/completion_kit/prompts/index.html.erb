@@ -66,7 +66,7 @@
               <span class="ck-prompts-table__runs-count"><%= family_runs.count %></span>
               <% last_run = family_runs.order(created_at: :desc).first %>
               <% if last_run %>
-                <span class="ck-prompts-table__runs-when">last <time data-relative-time datetime="<%= last_run.created_at.utc.iso8601 %>"><%= time_ago_in_words(last_run.created_at) %></time> ago</span>
+                <span class="ck-prompts-table__runs-when">last <time data-relative-time datetime="<%= last_run.created_at.utc.iso8601 %>"><%= time_ago_in_words(last_run.created_at) %> ago</time></span>
               <% else %>
                 <span class="ck-prompts-table__runs-when">never run</span>
               <% end %>

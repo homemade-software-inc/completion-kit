@@ -2753,9 +2753,11 @@ select.ck-input {
 }
 
 /* the metrics field stacks several sub-sections (hint, groups, divider, tag
-   filter, checkboxes) — give it more vertical breathing room than a plain field */
+   filter, checkboxes) — give it more vertical breathing room than a plain field,
+   and extra separation from the run-tags field that follows it */
 #metrics-field {
   gap: 0.85rem;
+  margin-bottom: 1.25rem;
 }
 
 .ck-metric-groups {

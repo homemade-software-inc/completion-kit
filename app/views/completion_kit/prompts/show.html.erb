@@ -181,7 +181,7 @@
             <td><strong><%= s.run.name %></strong></td>
             <td class="ck-meta-copy"><%= truncate(s.reasoning.to_s, length: 100) %></td>
             <td><%= s.applied_at? ? content_tag(:span, "Applied", class: "ck-chip", style: "background: var(--ck-success-soft); color: var(--ck-success);") : "&mdash;".html_safe %></td>
-            <td class="ck-meta-copy"><time data-relative-time datetime="<%= s.created_at.utc.iso8601 %>"><%= time_ago_in_words(s.created_at) %></time> ago</td>
+            <td class="ck-meta-copy"><time data-relative-time datetime="<%= s.created_at.utc.iso8601 %>"><%= time_ago_in_words(s.created_at) %> ago</time></td>
             <td class="ck-results-table__arrow">&rarr;</td>
           </tr>
         <% end %>
