@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.8] - 2026-05-12
+
+### Fixed
+
+- **API reference tabs rendered blank.** The Metric Groups, Tags, and Providers tabs showed an empty panel — the tab stylesheet still mapped an old 8-tab layout (with a renamed `criteria` id) while the page now has 9 tabs. The `:checked → panel` rules cover all nine again, and a spec keeps the radios, panels, and CSS in sync from here on.
+- **Relative timestamps no longer read "now ago".** Labels like the runs list "When" column render a complete phrase — "just now" under a minute, "3m ago" / "3d ago" otherwise — instead of appending a stray " ago" to "now".
+
+### Changed
+
+- **Editing only a run's name or tags no longer forks a new run.** A run that already has results forks a fresh copy only when something affecting generation or judging changed (prompt, dataset, judge model, temperature, metrics); renaming or retagging updates the run in place.
+- **API reference: "Your published prompts" moved into the Prompts section.** The per-prompt URL cards used to lead the page; they're now a subsection inside the Prompts tab, after the `GET /api/v1/prompts/:id` docs — so a host rendering the docs body standalone doesn't open with a pile of prompt cards.
+- **More breathing room between the run form's Metrics section and the Run tags field.**
+
 ## [0.5.7] - 2026-05-12
 
 ### Added
