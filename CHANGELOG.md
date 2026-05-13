@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.9] - 2026-05-12
+
+### Fixed
+
+- **Consistent code-example font size on the API reference page.** The `curl` examples and the MCP install snippets are rendered by the same partial but displayed at different sizes (0.9rem vs 0.72rem); they're both 0.78rem now.
+
 ## [0.5.8] - 2026-05-12
 
 ### Fixed
