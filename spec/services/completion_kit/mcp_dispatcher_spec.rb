@@ -9,10 +9,10 @@ RSpec.describe CompletionKit::McpDispatcher do
       expect(result[:capabilities][:tools]).to eq({listChanged: false})
     end
 
-    it "returns a session_id and caches it" do
+    it "returns a session_id and records an active session" do
       result = described_class.initialize_session
       expect(result[:session_id]).to be_present
-      expect(Rails.cache.exist?("mcp_session:#{result[:session_id]}")).to be true
+      expect(CompletionKit::McpSession.active?(result[:session_id])).to be true
     end
   end
 

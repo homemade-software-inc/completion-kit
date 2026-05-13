@@ -204,6 +204,14 @@ ActiveRecord::Schema.define do
             [:tag_id, :taggable_type, :taggable_id],
             unique: true,
             name: "idx_taggings_unique"
+
+  create_table :completion_kit_mcp_sessions, force: true do |t|
+    t.string :session_id, null: false
+    t.datetime :expires_at, null: false
+    t.timestamps
+  end
+  add_index :completion_kit_mcp_sessions, :session_id, unique: true
+  add_index :completion_kit_mcp_sessions, :expires_at
 end
 
 FactoryBot.definition_file_paths = [File.expand_path("factories", __dir__)]

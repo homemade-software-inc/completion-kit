@@ -6,10 +6,8 @@ module CompletionKit
     PROTOCOL_VERSION = "2025-03-26"
 
     def self.initialize_session
-      session_id = SecureRandom.uuid
-      Rails.cache.write("mcp_session:#{session_id}", true, expires_in: 1.hour)
       {
-        session_id: session_id,
+        session_id: McpSession.start!,
         protocolVersion: PROTOCOL_VERSION,
         serverInfo: {name: "CompletionKit", version: CompletionKit::VERSION},
         capabilities: {tools: {listChanged: false}}

@@ -10,12 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_09_205304) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_13_071452) do
   create_table "completion_kit_datasets", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "csv_data", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "completion_kit_mcp_sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "session_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_completion_kit_mcp_sessions_on_expires_at"
+    t.index ["session_id"], name: "index_completion_kit_mcp_sessions_on_session_id", unique: true
   end
 
   create_table "completion_kit_metric_group_memberships", force: :cascade do |t|

@@ -17,7 +17,7 @@ module CompletionKit
       end
 
       session_id = request.headers["Mcp-Session-Id"]
-      unless session_id && Rails.cache.exist?("mcp_session:#{session_id}")
+      unless McpSession.active?(session_id)
         render json: jsonrpc_error(request_body["id"], -32000, "Session not initialized. Send initialize first."), status: :bad_request
         return
       end
@@ -40,7 +40,7 @@ module CompletionKit
 
     def destroy
       session_id = request.headers["Mcp-Session-Id"]
-      Rails.cache.delete("mcp_session:#{session_id}") if session_id
+      McpSession.destroy_session(session_id) if session_id
       head :ok
     end
 
