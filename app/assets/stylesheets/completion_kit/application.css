@@ -2590,9 +2590,10 @@ select.ck-input {
 }
 
 /* one code size for every example on the API reference page — the curl blocks
-   and the MCP install snippets are the same partial and should match */
+   and the MCP install snippets are the same partial and should match (this is
+   the MCP-card size that reads well) */
 .ck-api-example .ck-code {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
 }
 
 .ck-api-copy {
