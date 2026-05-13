@@ -262,7 +262,7 @@ form.button_to {
 .ck-meta-copy,
 .ck-note,
 .ck-hint {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   line-height: 1.6;
 }
 
@@ -3571,7 +3571,7 @@ a.ck-metric-group-pill {
 }
 
 .ck-mcp-tool__desc {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--ck-muted);
 }
 
@@ -3595,7 +3595,7 @@ a.ck-metric-group-pill {
   gap: 0.5rem;
   padding: 0.6rem 0.85rem;
   font-family: var(--ck-mono);
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   font-weight: 500;
   color: var(--ck-text);
   border-bottom: 1px solid var(--ck-line);
@@ -3669,7 +3669,7 @@ a.ck-metric-group-pill {
 }
 
 .ck-api-prompt-card__desc {
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   color: var(--ck-muted);
   margin: 0.2rem 0 0;
   line-height: 1.4;
