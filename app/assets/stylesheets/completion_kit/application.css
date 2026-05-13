@@ -1269,6 +1269,13 @@ tr:hover .ck-chip--publish {
   color: var(--ck-accent);
 }
 
+/* the main prompt template block on prompts/show — bigger padding + a
+   touch more line-height since this is the page's primary content */
+.ck-code--prompt {
+  padding: 1.5rem;
+  line-height: 1.75;
+}
+
 .ck-note-box {
   background: var(--ck-surface-soft);
   border: 1px solid var(--ck-line);
