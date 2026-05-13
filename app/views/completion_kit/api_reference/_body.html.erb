@@ -3,29 +3,6 @@
   real_token = local_assigns.fetch(:real_token, nil)
   published_prompts = local_assigns.fetch(:published_prompts, [])
 %>
-<% if published_prompts.any? %>
-  <div class="ck-api-prompts-section">
-    <p class="ck-kicker">Your prompts</p>
-    <% published_prompts.each do |p| %>
-      <div class="ck-api-prompt-card">
-        <div class="ck-api-prompt-card__top">
-          <div>
-            <strong class="ck-api-prompt-card__name"><%= p.name %></strong>
-            <% if p.description.present? %>
-              <p class="ck-api-prompt-card__desc"><%= p.description %></p>
-            <% end %>
-          </div>
-          <span class="ck-chip" style="text-transform: none; flex-shrink: 0;"><%= p.llm_model %></span>
-        </div>
-        <div class="ck-api-prompt-card__url">
-          <code class="ck-endpoint__url" id="prompt_ep_<%= p.id %>"><%= base_url %>/api/v1/prompts/<%= p.slug %></code>
-          <button type="button" class="ck-icon-btn" title="Copy endpoint" aria-label="Copy endpoint URL" onclick="navigator.clipboard.writeText(document.getElementById('prompt_ep_<%= p.id %>').textContent)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg></button>
-        </div>
-      </div>
-    <% end %>
-  </div>
-<% end %>
-
 <div class="ck-api-tabs">
   <input type="radio" name="ck-api-tab" id="ck-tab-mcp" class="ck-api-tabs__radio" checked>
   <input type="radio" name="ck-api-tab" id="ck-tab-prompts" class="ck-api-tabs__radio">
@@ -109,6 +86,28 @@
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/prompts/:id</p>
         <p class="ck-meta-copy">Get a single prompt by ID.</p>
       </div>
+      <% if published_prompts.any? %>
+        <div class="ck-api-endpoint" style="padding-top: 1rem;">
+          <p class="ck-kicker" style="margin-bottom: 0.5rem;">Your published prompts</p>
+          <% published_prompts.each do |p| %>
+            <div class="ck-api-prompt-card">
+              <div class="ck-api-prompt-card__top">
+                <div>
+                  <strong class="ck-api-prompt-card__name"><%= p.name %></strong>
+                  <% if p.description.present? %>
+                    <p class="ck-api-prompt-card__desc"><%= p.description %></p>
+                  <% end %>
+                </div>
+                <span class="ck-chip" style="text-transform: none; flex-shrink: 0;"><%= p.llm_model %></span>
+              </div>
+              <div class="ck-api-prompt-card__url">
+                <code class="ck-endpoint__url" id="prompt_ep_<%= p.id %>"><%= base_url %>/api/v1/prompts/<%= p.slug %></code>
+                <button type="button" class="ck-icon-btn" title="Copy endpoint" aria-label="Copy endpoint URL" onclick="navigator.clipboard.writeText(document.getElementById('prompt_ep_<%= p.id %>').textContent)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg></button>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/prompts/:id</p>
         <p class="ck-meta-copy">Update a prompt. Accepts same params as create.</p>

@@ -12,18 +12,20 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     html = render_body(base_url: "https://docs.example.test")
 
     expect(html).to include("YOUR_TOKEN")
-    expect(html).not_to include("Your prompts")
+    expect(html).not_to include("Your published prompts")
+    expect(html).not_to include("ck-api-prompts-section")
     expect(html).to include("ck-api-endpoint")
     expect(html).to include("ck-mcp-tool__name")
     expect(html).to include("https://docs.example.test/api/v1/prompts")
   end
 
-  it "shows the prompts section when published prompts are passed" do
+  it "lists the published prompts inside the Prompts section" do
     prompt = create(:completion_kit_prompt, name: "Crawlable Prompt")
 
     html = render_body(base_url: "https://app.example.test", published_prompts: [prompt])
 
-    expect(html).to include("Your prompts")
+    expect(html).to include("Your published prompts")
+    expect(html).not_to include("ck-api-prompts-section")
     expect(html).to include("Crawlable Prompt")
     expect(html).to include("https://app.example.test/api/v1/prompts/#{prompt.slug}")
   end
