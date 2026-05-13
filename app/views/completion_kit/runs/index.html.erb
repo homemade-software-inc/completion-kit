@@ -14,23 +14,7 @@
       base_path: runs_path %>
 
 <% if @runs.any? %>
-  <table class="ck-results-table ck-runs-table">
-    <thead>
-      <tr>
-        <th>Run</th>
-        <th>Responses</th>
-        <th>Metrics</th>
-        <th>Avg score</th>
-        <th>When</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @runs.each do |run| %>
-        <%= render "row", run: run %>
-      <% end %>
-    </tbody>
-  </table>
+  <%= render "completion_kit/runs/table", runs: @runs %>
 <% elsif @selected_tags.any? %>
   <div class="ck-empty">
     <p>No runs match these tags. <%= link_to "Clear filters", runs_path, class: "ck-link" %>.</p>

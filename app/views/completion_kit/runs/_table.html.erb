@@ -1,0 +1,19 @@
+<%# Renders a runs table. Locals: runs: enumerable of CompletionKit::Run. %>
+<% runs = local_assigns.fetch(:runs) %>
+<table class="ck-results-table ck-runs-table" style="margin-top: 0.5rem;">
+  <thead>
+    <tr>
+      <th>Run</th>
+      <th>Responses</th>
+      <th>Metrics</th>
+      <th>Avg score</th>
+      <th>When</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% runs.each do |run| %>
+      <%= render "completion_kit/runs/row", run: run %>
+    <% end %>
+  </tbody>
+</table>
