@@ -244,5 +244,17 @@ module CompletionKit
       end
       table
     end
+
+    def ck_format_maybe_json(text)
+      s = text.to_s
+      return s if s.strip.empty?
+      first = s.strip[0]
+      return s unless first == "{" || first == "["
+      begin
+        JSON.pretty_generate(JSON.parse(s))
+      rescue JSON::ParserError
+        s
+      end
+    end
   end
 end

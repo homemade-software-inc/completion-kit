@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.13] - 2026-05-14
+
+### Changed
+
+- **Response detail page**: Input / Response / Expected blocks now cap at 28rem and scroll inside a wrapper `<div>` instead of overflowing the page. Inline JSON is pretty-printed automatically when the payload starts with `{` or `[`. Big BB-style judge inputs are readable without dwarfing the rest of the page.
+- **Runs table**: long run names truncate with ellipsis at 27rem so the metadata columns (responses, metrics, avg score, when) stay clustered next to the name instead of being pushed to the page edge. Same partial across runs/index, dataset/show, and prompt/show.
+- **Dark color-scheme**: `:root` declares `color-scheme: dark` so native scrollbars on inner scroll regions (dataset CSV preview, response code blocks) match the browser's main scrollbar instead of falling back to light-mode overlay scrollbars on Safari.
+
 ## [0.5.12] - 2026-05-14
 
 ### Fixed

@@ -67,7 +67,7 @@
 
 <section>
   <p class="ck-kicker">Input</p>
-  <pre class="ck-code ck-code--dark"><%= begin; JSON.pretty_generate(JSON.parse(@response.input_data)); rescue; @response.input_data; end %></pre>
+  <div class="ck-code-scroll-wrap"><pre class="ck-code"><%= ck_format_maybe_json(@response.input_data) %></pre></div>
 </section>
 
 <section class="ck-card--spaced">
@@ -77,13 +77,13 @@
       <span class="ck-chip ck-chip--soft" style="text-transform: none;"><%= @run.prompt.llm_model %></span>
     <% end %>
   </div>
-  <pre class="ck-code"><%= @response.response_text %></pre>
+  <div class="ck-code-scroll-wrap"><pre class="ck-code"><%= ck_format_maybe_json(@response.response_text) %></pre></div>
 </section>
 
 <% if @response.expected_output.present? %>
   <section class="ck-card--spaced">
     <p class="ck-kicker">Expected</p>
-    <pre class="ck-code"><%= @response.expected_output %></pre>
+    <div class="ck-code-scroll-wrap"><pre class="ck-code"><%= ck_format_maybe_json(@response.expected_output) %></pre></div>
   </section>
 <% end %>
 

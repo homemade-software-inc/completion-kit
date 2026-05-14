@@ -39,6 +39,7 @@
 }
 
 html {
+  color-scheme: dark;
   font-size: 18px;
   line-height: 1.5;
   scrollbar-gutter: stable;
@@ -1284,6 +1285,24 @@ tr:hover .ck-chip--publish {
   line-height: 1.75;
 }
 
+/* Scrollable code-block wrapper — caps height for big payloads. Inner
+   <pre> drops its own border/radius so the wrapper owns the edge. We
+   leave the scrollbar unstyled so it matches the browser/page scrollbar. */
+.ck-code-scroll-wrap {
+  margin-top: 0.5rem;
+  max-height: 28rem;
+  overflow: auto;
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
+  background: var(--ck-bg-strong);
+}
+.ck-code-scroll-wrap > .ck-code {
+  margin-top: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .ck-note-box {
   background: var(--ck-surface-soft);
   border: 1px solid var(--ck-line);
@@ -1873,22 +1892,7 @@ tr:hover .ck-chip--publish {
   background: var(--ck-bg-strong);
   overflow: auto;
   max-height: 60vh;
-  scrollbar-width: thin;
-  scrollbar-color: var(--ck-line-strong) var(--ck-bg);
 }
-.ck-csv-table-wrap::-webkit-scrollbar { width: 12px; height: 12px; background: var(--ck-bg); }
-.ck-csv-table-wrap::-webkit-scrollbar-track {
-  background: var(--ck-bg);
-  border-left: 1px solid var(--ck-line);
-  border-top: 1px solid var(--ck-line);
-}
-.ck-csv-table-wrap::-webkit-scrollbar-thumb {
-  background: var(--ck-line-strong);
-  border-radius: 6px;
-  border: 3px solid var(--ck-bg);
-}
-.ck-csv-table-wrap::-webkit-scrollbar-thumb:hover { background: var(--ck-muted); }
-.ck-csv-table-wrap::-webkit-scrollbar-corner { background: var(--ck-bg); }
 
 .ck-modal__body .ck-csv-table-wrap {
   margin-top: 0;
@@ -3197,6 +3201,7 @@ a.ck-metric-group-pill {
   white-space: nowrap;
 }
 
+
 .ck-runs-table th {
   vertical-align: middle;
   white-space: nowrap;
@@ -3208,10 +3213,20 @@ a.ck-metric-group-pill {
   padding-bottom: 0.7rem;
 }
 
+.ck-runs-table th:first-child,
+.ck-runs-table td:first-child {
+  width: 1%;
+}
+
 .ck-runs-table th:nth-child(n+2),
 .ck-runs-table td:nth-child(n+2) {
   width: 1%;
   white-space: nowrap;
+}
+
+.ck-runs-table th:last-child,
+.ck-runs-table td:last-child {
+  width: auto;
 }
 
 .ck-runs-table__identity {
@@ -3219,10 +3234,23 @@ a.ck-metric-group-pill {
   flex-direction: column;
   gap: 0.25rem;
   min-width: 0;
+  width: 27rem;
+  max-width: 100%;
 }
 
 .ck-runs-table .ck-run-name {
   line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ck-runs-table .ck-run-name strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .ck-runs-table__config {
