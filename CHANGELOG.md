@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.12] - 2026-05-14
+
+### Fixed
+
+- **MCP "Session not initialized" on multi-tenant hosts and after activity gaps**, even though 0.5.10 moved sessions to the database. Two causes, both fixed:
+  - `CompletionKit::ApplicationRecord` applies the host app's `tenant_scope` as a default_scope to every engine model — including `McpSession`, whose table has no `organization_id` column. Every session lookup was either erroring (no such column) or short-circuiting to `WHERE 1=0`, returning the live session as "not found". `McpSession` now goes through `.unscoped` on every query so the per-tenant default_scope can't touch it. Sessions are per-CONNECTION, not per-tenant.
+  - The 1-hour TTL was a hard wall: a session that initialized at T+0 died at T+1h regardless of activity. `McpSession.active?` now slides `expires_at` forward on each call (only after the halfway mark, to avoid writing the row on every tool call). Idle for > TTL still expires; active conversations don't.
+
 ## [0.5.11] - 2026-05-14
 
 ### Added
