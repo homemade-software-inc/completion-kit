@@ -179,6 +179,18 @@ module CompletionKit
       ["tag", "tag-#{tag.color}", ("tag-outline" if outline)].compact.join(" ")
     end
 
+    def ck_format_maybe_json(text)
+      s = text.to_s
+      return s if s.strip.empty?
+      first = s.strip[0]
+      return s unless first == "{" || first == "["
+      begin
+        JSON.pretty_generate(JSON.parse(s))
+      rescue JSON::ParserError
+        s
+      end
+    end
+
     def tag_filter_url(base_path, selected, toggling)
       remaining = selected.reject { |t| t.id == toggling.id }
       next_set = selected.include?(toggling) ? remaining : remaining + [toggling]
@@ -243,18 +255,6 @@ module CompletionKit
         end
       end
       table
-    end
-
-    def ck_format_maybe_json(text)
-      s = text.to_s
-      return s if s.strip.empty?
-      first = s.strip[0]
-      return s unless first == "{" || first == "["
-      begin
-        JSON.pretty_generate(JSON.parse(s))
-      rescue JSON::ParserError
-        s
-      end
     end
   end
 end

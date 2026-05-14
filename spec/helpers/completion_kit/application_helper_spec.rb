@@ -296,4 +296,29 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(url).to eq("#{base}?tag%5B%5D=b")
     end
   end
+
+  describe "#ck_format_maybe_json" do
+    it "returns the input unchanged when blank or whitespace-only" do
+      expect(helper.ck_format_maybe_json("")).to eq("")
+      expect(helper.ck_format_maybe_json("   \n  ")).to eq("   \n  ")
+      expect(helper.ck_format_maybe_json(nil)).to eq("")
+    end
+
+    it "returns the input unchanged when it doesn't start with { or [" do
+      expect(helper.ck_format_maybe_json("Hello world")).to eq("Hello world")
+    end
+
+    it "pretty-prints a JSON object" do
+      expect(helper.ck_format_maybe_json('{"a":1,"b":2}')).to eq("{\n  \"a\": 1,\n  \"b\": 2\n}")
+    end
+
+    it "pretty-prints a JSON array" do
+      expect(helper.ck_format_maybe_json('[1,2]')).to eq("[\n  1,\n  2\n]")
+    end
+
+    it "returns the raw input when JSON parsing fails" do
+      malformed = '{"oops": '
+      expect(helper.ck_format_maybe_json(malformed)).to eq(malformed)
+    end
+  end
 end
