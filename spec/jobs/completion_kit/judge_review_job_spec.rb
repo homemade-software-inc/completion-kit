@@ -33,6 +33,30 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     expect(review.metric_name).to eq("Quality")
   end
 
+  it "evaluates a judge-only response (no prompt template) without blowing up" do
+    judge_only = create(:completion_kit_run,
+                        prompt: nil,
+                        dataset: create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n"),
+                        judge_model: "gpt-4o",
+                        output_column: "actual_output")
+    CompletionKit::RunMetric.create!(run: judge_only, metric: metric, position: 1)
+    bare_response = create(:completion_kit_response, run: judge_only, response_text: "hello")
+
+    captured_prompt = :unset
+    fake_judge = double("judge")
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+    allow(fake_judge).to receive(:evaluate) do |_output, _expected, prompt, **_kw|
+      captured_prompt = prompt
+      {score: 3, feedback: "ok"}
+    end
+
+    described_class.perform_now(bare_response.id, metric.id)
+
+    expect(captured_prompt).to be_nil
+    expect(bare_response.reviews.find_by(metric_id: metric.id).status).to eq("succeeded")
+  end
+
   it "records terminal failure context" do
     allow_any_instance_of(described_class).to receive(:perform).and_raise(
       CompletionKit::RateLimitError.new("limit", provider: "anthropic", status: 429)

@@ -159,7 +159,7 @@ module CompletionKit
     end
 
     def run_params
-      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, metric_ids: [], tag_names: [])
+      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :output_column, metric_ids: [], tag_names: [])
     end
 
     # Editing a run that already has results forks a new run — but only when a

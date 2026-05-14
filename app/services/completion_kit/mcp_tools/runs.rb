@@ -15,16 +15,17 @@ module CompletionKit
           handler: :get
         },
         "runs_create" => {
-          description: "Create a run",
+          description: "Create a run. Omit prompt_id and provide output_column for a judge-only run that grades a pre-existing dataset column instead of generating new outputs.",
           inputSchema: {
             type: "object",
             properties: {
               name: {type: "string"}, prompt_id: {type: "integer"},
               dataset_id: {type: "integer"}, judge_model: {type: "string"},
+              output_column: {type: "string", description: "Dataset column to grade when prompt_id is omitted; defaults to \"actual_output\"."},
               metric_ids: {type: "array", items: {type: "integer"}},
               tag_names: {type: "array", items: {type: "string"}}
             },
-            required: ["name", "prompt_id"]
+            required: ["name"]
           },
           handler: :create
         },
@@ -35,6 +36,7 @@ module CompletionKit
             properties: {
               id: {type: "integer"}, name: {type: "string"},
               dataset_id: {type: "integer"}, judge_model: {type: "string"},
+              output_column: {type: "string"},
               metric_ids: {type: "array", items: {type: "integer"}},
               tag_names: {type: "array", items: {type: "string"}}
             },
@@ -63,7 +65,7 @@ module CompletionKit
       end
 
       def self.create(args)
-        run = Run.new(args.slice("name", "prompt_id", "dataset_id", "judge_model"))
+        run = Run.new(args.slice("name", "prompt_id", "dataset_id", "judge_model", "output_column"))
         if run.save
           run.replace_metrics!(args["metric_ids"])
           run.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
@@ -75,7 +77,7 @@ module CompletionKit
 
       def self.update(args)
         run = Run.find(args["id"])
-        if run.update(args.except("id", "metric_ids", "tag_names").slice("name", "dataset_id", "judge_model"))
+        if run.update(args.except("id", "metric_ids", "tag_names").slice("name", "dataset_id", "judge_model", "output_column"))
           run.replace_metrics!(args["metric_ids"]) if args.key?("metric_ids")
           run.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(run.reload.as_json)

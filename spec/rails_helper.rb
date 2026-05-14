@@ -97,7 +97,7 @@ ActiveRecord::Schema.define do
 
   create_table :completion_kit_runs, force: true do |t|
     t.string :name
-    t.references :prompt, null: false
+    t.references :prompt
     t.references :dataset
     t.string :judge_model
     t.string :status
@@ -107,6 +107,7 @@ ActiveRecord::Schema.define do
     t.text :failure_summary
     t.float :temperature, default: 1.0
     t.boolean :temperature_ignored, default: false, null: false
+    t.string :output_column
     t.timestamps
   end
 

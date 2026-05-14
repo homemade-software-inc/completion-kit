@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_13_071452) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_14_175345) do
   create_table "completion_kit_datasets", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "csv_data", null: false
@@ -155,9 +155,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_071452) do
     t.text "failure_summary"
     t.string "judge_model"
     t.string "name"
+    t.string "output_column"
     t.integer "progress_current", default: 0
     t.integer "progress_total", default: 0
-    t.integer "prompt_id", null: false
+    t.integer "prompt_id"
     t.string "status"
     t.float "temperature", default: 0.7
     t.boolean "temperature_ignored", default: false, null: false

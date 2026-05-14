@@ -5,7 +5,7 @@ module CompletionKit
 
     STATUSES = %w[pending running completed failed].freeze
 
-    belongs_to :prompt
+    belongs_to :prompt, optional: true
     belongs_to :dataset, optional: true
     has_many :responses, dependent: :destroy
     has_many :run_metrics, -> { order(:position) }, dependent: :destroy
@@ -15,9 +15,17 @@ module CompletionKit
     validates :name, presence: true
     validates :status, inclusion: { in: STATUSES }
     validate :dataset_supplies_prompt_variables
+    validate :judge_only_run_supplies_output_column
 
     before_validation :set_default_status, on: :create
     before_validation :set_auto_name, on: :create
+
+    # A judge-only run grades a pre-existing column on the dataset instead of
+    # generating new outputs. No prompt is attached; the response text is read
+    # from row[output_column]; no LLM generation happens.
+    def judge_only?
+      prompt.nil?
+    end
 
     def missing_dataset_variables
       return [] unless prompt
@@ -89,9 +97,14 @@ module CompletionKit
 
       return fail_with_summary!("Dataset has no rows") if rows.empty?
 
-      client = LlmClient.for_model(prompt.llm_model, ApiConfig.for_model(prompt.llm_model))
-      unless client.configured?
-        return fail_with_summary!("LLM API not configured: #{client.configuration_errors.join(', ')}")
+      if judge_only?
+        column = output_column.presence || "actual_output"
+        return fail_with_summary!("Dataset has no \"#{column}\" column") unless dataset && dataset.headers.include?(column)
+      else
+        client = LlmClient.for_model(prompt.llm_model, ApiConfig.for_model(prompt.llm_model))
+        unless client.configured?
+          return fail_with_summary!("LLM API not configured: #{client.configuration_errors.join(', ')}")
+        end
       end
 
       transaction do
@@ -105,14 +118,27 @@ module CompletionKit
         )
         rows.each_with_index do |row, index|
           input = row.empty? ? nil : row.to_json
-          response = responses.create!(
+          attrs = {
             status: "pending",
             row_index: index,
             input_data: input,
             expected_output: row["expected_output"]
-          )
-          GenerateRowJob.perform_later(id, response.id)
+          }
+          if judge_only?
+            attrs[:status] = "succeeded"
+            attrs[:response_text] = row[output_column.presence || "actual_output"].to_s
+          end
+
+          response = responses.create!(attrs)
+
+          if judge_only?
+            metrics.each { |m| JudgeReviewJob.perform_later(response.id, m.id) } if judge_configured?
+          else
+            GenerateRowJob.perform_later(id, response.id)
+          end
         end
+
+        RunCompletionCheckJob.perform_later(id) if judge_only?
       end
 
       broadcast_ui
@@ -288,6 +314,20 @@ module CompletionKit
         errors.add(:dataset_id, "is required: prompt uses #{missing.join(', ')}")
       else
         errors.add(:dataset_id, "is missing columns required by the prompt: #{missing.join(', ')}")
+      end
+    end
+
+    def judge_only_run_supplies_output_column
+      return if prompt.present?
+
+      if dataset.nil?
+        errors.add(:dataset_id, "is required for a judge-only run (no prompt)")
+        return
+      end
+
+      column = output_column.presence || "actual_output"
+      unless dataset.headers.include?(column)
+        errors.add(:output_column, "\"#{column}\" is not a column on dataset \"#{dataset.name}\"")
       end
     end
   end

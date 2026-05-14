@@ -54,7 +54,7 @@ module CompletionKit
       evaluation = judge.evaluate(
         response.response_text,
         response.expected_output,
-        run.prompt.template,
+        run.prompt&.template,
         criteria: metric.instruction.to_s,
         rubric_text: metric.display_rubric_text,
         input_data: response.input_data
