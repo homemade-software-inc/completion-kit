@@ -126,11 +126,19 @@ form.button_to {
   font-weight: 700;
   letter-spacing: 0.02em;
   text-decoration: none;
-  color: var(--ck-accent);
+  color: #3AD0E6;
 }
 
 .ck-brand img {
   display: block;
+}
+
+.ck-brand__name {
+  padding-top: 0.75rem;
+}
+
+.ck-brand__kit {
+  color: #AFEDF7;
 }
 
 .ck-topbar__copy {

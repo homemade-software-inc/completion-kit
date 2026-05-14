@@ -11,7 +11,8 @@ module CompletionKit
       app.config.assets.precompile += %w(
         completion_kit/application.css
         completion_kit/application.js
-        completion_kit/logo.svg
+        completion_kit/logo.png
+        completion_kit/favicon.ico
       )
     end
 
