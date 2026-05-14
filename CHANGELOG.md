@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.11] - 2026-05-14
+
+### Added
+
+- **Judge-only runs** (issue #26): grade a pre-existing dataset column instead of generating new outputs. `prompt_id` is now optional on a Run; when omitted, each Response's text is read from `row[output_column]` (default `actual_output`, overridable) and the judge runs as normal. Drives the "I already have 1,000 production outputs I want to score" workflow — no need to regenerate the artifact you're trying to grade. Available via REST (`POST /api/v1/runs` with `output_column`, no `prompt_id`), MCP (`runs_create`), and a new "Judge-only run" checkbox on the create-run form that swaps the Prompt field for an Output-column input. **Host apps need `bin/rails completion_kit:install:migrations && db:migrate` to pick up the new column.**
+
+### Changed
+
+- **README — "Three ways to run it"** framing. The Quick Start now leads with hosted ([completionkit.com](https://completionkit.com), recommended), then self-hosted standalone, then Rails engine — same engine across all three. Lead callout pushes Cloud directly.
+
 ## [0.5.10] - 2026-05-14
 
 ### Added
