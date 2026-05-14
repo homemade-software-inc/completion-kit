@@ -1874,17 +1874,21 @@ tr:hover .ck-chip--publish {
   overflow: auto;
   max-height: 60vh;
   scrollbar-width: thin;
-  scrollbar-color: var(--ck-line-strong) transparent;
+  scrollbar-color: var(--ck-line-strong) var(--ck-bg);
 }
-.ck-csv-table-wrap::-webkit-scrollbar { width: 10px; height: 10px; }
-.ck-csv-table-wrap::-webkit-scrollbar-track { background: transparent; }
+.ck-csv-table-wrap::-webkit-scrollbar { width: 12px; height: 12px; background: var(--ck-bg); }
+.ck-csv-table-wrap::-webkit-scrollbar-track {
+  background: var(--ck-bg);
+  border-left: 1px solid var(--ck-line);
+  border-top: 1px solid var(--ck-line);
+}
 .ck-csv-table-wrap::-webkit-scrollbar-thumb {
   background: var(--ck-line-strong);
-  border-radius: 5px;
-  border: 2px solid var(--ck-bg-strong);
+  border-radius: 6px;
+  border: 3px solid var(--ck-bg);
 }
 .ck-csv-table-wrap::-webkit-scrollbar-thumb:hover { background: var(--ck-muted); }
-.ck-csv-table-wrap::-webkit-scrollbar-corner { background: transparent; }
+.ck-csv-table-wrap::-webkit-scrollbar-corner { background: var(--ck-bg); }
 
 .ck-modal__body .ck-csv-table-wrap {
   margin-top: 0;
