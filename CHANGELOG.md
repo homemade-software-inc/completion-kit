@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.10] - 2026-05-14
+
+### Added
+
+- **API reference: "Your <X>" cards in every section.** The Prompts panel's per-prompt cards are now mirrored in **Runs** (last 10, with status), **Responses**, **Datasets** (with row count), **Metrics** (with truncated instruction), **Metric Groups** (with metric count), **Tags** (with color), and **Providers** (with model count) — each card shows the resource name, a meta chip, and the real `GET /api/v1/X/:id` URL with a copy button. New optional collection locals on `_body.html.erb` so a host can still render the generic public docs with just `base_url:`.
+- **Download CSV button on the dataset show page.** Slugified filename from the dataset's name (`"Customer Tickets — sample"` → `customer-tickets-sample.csv`), falling back to `dataset-<id>.csv` when the name slugifies to blank.
+- **New brand mark** — trimmed puzzle-piece symbol replaces the old `logo.svg`; "Completion" in `#3AD0E6` and "Kit" in `#AFEDF7` (the symbol's palette); favicon is a clean single tilted piece, sized as a multi-res `.ico`.
+
+### Fixed
+
+- **MCP sessions survive Puma restarts and deploys.** Sessions were stored in `Rails.cache`; with the default in-process `:memory_store`, every restart silently wiped every active MCP session and long-lived clients hit "Session not initialized" until they re-init'd. They're now in a `completion_kit_mcp_sessions` table — durable, cross-process, no new dependency. Expired rows are opportunistically pruned on every new initialize. **Host apps need to run `bin/rails completion_kit:install:migrations` and `db:migrate` to pick up the table.**
+- **Compact metrics field when there are no metrics yet.** The empty `<p id="metrics-hint">` placeholder used to add a ~50px ghost gap between the Metrics label and the "No metrics yet" warning; it only renders when there *are* metrics for the JS to talk about now, and the field's wider gap + bottom margin only apply via `:has(.ck-metric-checkboxes)`.
+
+### Changed
+
+- **One prose font size across the app.** `.ck-copy / .ck-meta-copy / .ck-note / .ck-hint` were `0.95rem`, `.ck-mcp-tool__desc` `0.8rem`, `.ck-mcp-install-card__header` and `.ck-api-prompt-card__desc` `0.78rem` — all now `0.9rem`. Headings, kickers, mono identifiers, code blocks, and field hints (their own smaller tier) untouched.
+- **Prompts show page: vertical rhythm + grouped metadata.** Tags moved up into the page header alongside name / version / model / description / endpoint; the prompt template `<pre>` gets a `.ck-code--prompt` modifier (1.5rem padding, 1.75 line-height); the Prompt section now takes `ck-card--spaced` for a consistent rhythm above. Identity → template → versions → runs each read as distinct regions.
+- **On-theme scrollbars on the dataset CSV preview** (webkit + Firefox/Safari 17+) so the preview wrap stops being a bright UA strip in the middle of the dark UI.
+- **Single shared partial for the runs table.** `runs/index`, `datasets/show`, and `prompts/show` were hand-copying the same `<table class="ck-results-table ck-runs-table">` markup; they all render `completion_kit/runs/_table.html.erb` now.
+
 ## [0.5.9] - 2026-05-12
 
 ### Fixed
