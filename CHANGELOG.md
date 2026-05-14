@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.14] - 2026-05-14
+
+### Fixed
+
+- **Judge calls on reasoning models silently returning 1-star** (issue #28). Reasoning models (GPT-5 Pro family, o-series, etc.) charge reasoning tokens against `max_tokens` in chat-completions. With our previous default of 1000, ~40% of BB-sized judge prompts hit `finish_reason: "length"` and a non-trivial share returned empty visible content, which the parser then coerced to score 1.0. Two changes:
+  - `OpenRouterClient` and `OpenAiClient` default `max_tokens` bumped from 1000 to 8192. Pay-as-you-use providers only bill actual completion tokens; the higher cap only matters when the model needs the headroom.
+  - Both clients now treat truncation and empty content as errors instead of returning a blank string. OpenRouter: `finish_reason: "length"` → error. OpenAI Responses API: `status: "incomplete"` (with reason from `incomplete_details`) → error. Empty content after `.strip` → error. `JudgeService` already raises on `"Error:"`-prefixed responses, so these surface as real review failures rather than silent 1-stars.
+
 ## [0.5.13] - 2026-05-14
 
 ### Changed

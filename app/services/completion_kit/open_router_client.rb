@@ -13,7 +13,7 @@ module CompletionKit
       return "Error: API key not configured" unless configured?
 
       model = options[:model] || "openai/gpt-4o-mini"
-      max_tokens = options[:max_tokens] || 1000
+      max_tokens = options[:max_tokens] || 8192
       temperature = options[:temperature] || 0.7
 
       response = post_chat(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
@@ -34,7 +34,13 @@ module CompletionKit
 
       if response.success?
         data = JSON.parse(response.body)
-        data.dig("choices", 0, "message", "content").to_s.strip
+        choice = data.dig("choices", 0) || {}
+        if choice["finish_reason"] == "length"
+          return "Error: response truncated by max_tokens=#{max_tokens} before visible content was emitted (reasoning model burned through the budget)"
+        end
+        content = choice.dig("message", "content").to_s.strip
+        return "Error: model returned empty content" if content.empty?
+        content
       else
         "Error: #{response.status} - #{response.body}"
       end

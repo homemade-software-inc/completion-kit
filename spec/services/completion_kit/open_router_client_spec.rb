@@ -109,6 +109,23 @@ RSpec.describe CompletionKit::OpenRouterClient, type: :service do
       result = described_class.new(config).generate_completion("hi")
       expect(result).to eq("Error: kaboom")
     end
+
+    it "returns an error when finish_reason is 'length' (reasoning model burned through the budget)" do
+      stub_faraday_post(faraday_response(success: true, body: {
+        choices: [{ finish_reason: "length", message: { content: "" } }]
+      }.to_json))
+
+      result = described_class.new(config).generate_completion("hi", model: "openai/gpt-5.5-pro")
+      expect(result).to start_with("Error: response truncated by max_tokens=")
+    end
+
+    it "returns an error when content comes back empty even on a clean stop" do
+      stub_faraday_post(faraday_response(success: true, body: {
+        choices: [{ finish_reason: "stop", message: { content: "   " } }]
+      }.to_json))
+
+      expect(described_class.new(config).generate_completion("hi")).to eq("Error: model returned empty content")
+    end
   end
 
   describe "#available_models" do

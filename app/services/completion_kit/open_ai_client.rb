@@ -15,7 +15,7 @@ module CompletionKit
       return "Error: API key not configured" unless configured?
 
       model = options[:model] || "gpt-4.1-mini"
-      max_tokens = options[:max_tokens] || 1000
+      max_tokens = options[:max_tokens] || 8192
       temperature = options[:temperature] || 0.7
 
       response = post_responses(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
@@ -36,8 +36,14 @@ module CompletionKit
 
       if response.success?
         data = JSON.parse(response.body)
+        if data["status"] == "incomplete"
+          reason = data.dig("incomplete_details", "reason") || "unknown"
+          return "Error: response incomplete (#{reason}) — increase max_tokens=#{max_tokens} or pick a non-reasoning judge model"
+        end
         message = Array(data["output"]).find { |o| o["type"] == "message" }
-        message&.dig("content", 0, "text").to_s.strip
+        content = message&.dig("content", 0, "text").to_s.strip
+        return "Error: model returned empty content" if content.empty?
+        content
       else
         "Error: #{response.status} - #{response.body}"
       end

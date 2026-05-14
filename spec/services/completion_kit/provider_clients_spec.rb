@@ -178,11 +178,30 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     end
   end
 
-  it "returns empty string when OpenAI response output has no message item" do
+  it "returns an error when OpenAI response output has no message item (reasoning model ate the budget)" do
     client = CompletionKit::OpenAiClient.new(api_key: "openai-key")
     stub_faraday(faraday_response(success: true, body: { output: [{ type: "reasoning" }] }.to_json))
 
-    expect(client.generate_completion("prompt", model: "o1-preview")).to eq("")
+    expect(client.generate_completion("prompt", model: "o1-preview")).to eq("Error: model returned empty content")
+  end
+
+  it "returns an error when OpenAI marks the response as incomplete due to max_output_tokens" do
+    client = CompletionKit::OpenAiClient.new(api_key: "openai-key")
+    stub_faraday(faraday_response(success: true, body: {
+      status: "incomplete",
+      incomplete_details: { reason: "max_output_tokens" },
+      output: []
+    }.to_json))
+
+    result = client.generate_completion("prompt", model: "gpt-5.5-pro")
+    expect(result).to start_with("Error: response incomplete (max_output_tokens)")
+  end
+
+  it "falls back to a generic incomplete reason when OpenAI omits incomplete_details" do
+    client = CompletionKit::OpenAiClient.new(api_key: "openai-key")
+    stub_faraday(faraday_response(success: true, body: { status: "incomplete", output: [] }.to_json))
+
+    expect(client.generate_completion("prompt")).to start_with("Error: response incomplete (unknown)")
   end
 
   it "retries OpenAI request without temperature when the model rejects it" do
