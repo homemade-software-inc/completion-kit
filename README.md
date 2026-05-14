@@ -14,21 +14,23 @@ Run every prompt against real data. Score each output with an LLM judge against 
 
 It's the difference between "this prompt seems to work" and "this prompt scores 4.3 out of 5 across 200 inputs, up from 3.8 last version."
 
-**[completionkit.com](https://completionkit.com)** | **[RubyGems](https://rubygems.org/gems/completion-kit)**
+**[Start on completionkit.com →](https://completionkit.com)** | **[RubyGems](https://rubygems.org/gems/completion-kit)**
 
-> **CompletionKit Cloud** — hosted, managed CompletionKit with zero setup. Same engine, run for you. See plans at [completionkit.com/pricing](https://completionkit.com/pricing).
+> **Just want to use it?** [CompletionKit Cloud](https://completionkit.com) is the same engine, fully hosted — zero install, no Rails ops, plans at [completionkit.com/pricing](https://completionkit.com/pricing).
 
 ![Test run with scored results](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/test-run.png)
 
-## Quick Start
+## Three ways to run it
 
-### Use CompletionKit Cloud
+Same engine, same UI, same REST API and MCP server — pick the deployment that fits.
 
-The fastest way to start — no install, no servers to run. Sign up at [completionkit.com](https://completionkit.com) and you get the same engine you'd self-host, hosted for you. Best fit if you want to skip the Rails ops.
+### 1. Hosted — [completionkit.com](https://completionkit.com) (recommended)
 
-### Or run the standalone app
+The fastest path. Sign up and you're running on the same engine you'd self-host, without touching a Rails app. No `db:migrate`, no Puma, no Solid Queue, no provider key management — multi-tenant workspaces, your team logs in, you go. Plans at [completionkit.com/pricing](https://completionkit.com/pricing).
 
-Self-host the same engine. No existing Rails app needed.
+### 2. Self-hosted — the bundled standalone Rails app
+
+Run it on your own infra. No existing Rails app required; Postgres + any Rails-friendly host (Fly, Render, Heroku, Docker, …).
 
 ```bash
 git clone https://github.com/homemade-software-inc/completion-kit.git
@@ -38,7 +40,7 @@ bin/rails completion_kit:install:migrations
 bin/rails db:migrate
 ```
 
-Then run **both** processes — a web server and a Solid Queue worker. In two terminals:
+Run **both** a web server and a Solid Queue worker. In two terminals:
 
 ```bash
 bin/rails server
@@ -50,9 +52,9 @@ bin/jobs
 
 Or with [foreman](https://github.com/ddollar/foreman) in one terminal: `foreman start -f Procfile.dev`.
 
-Visit `http://localhost:3000`. Add a provider credential (Settings), create a prompt, upload a CSV dataset, and run it.
+Visit `http://localhost:3000`. Add a provider credential (Settings), create a prompt, upload a CSV dataset, and run it. See [Deploying self-hosted](#deploying-self-hosted) for the production-env setup.
 
-### Or mount as an engine in your existing Rails app
+### 3. Rails engine — mount into your existing Rails app
 
 ```ruby
 gem "completion-kit"
@@ -63,11 +65,9 @@ bin/rails generate completion_kit:install
 bin/rails db:migrate
 ```
 
-The engine mounts at `/completion_kit` in your app. CompletionKit's generate and judge flows enqueue Active Job jobs (`CompletionKit::GenerateRowJob`, `CompletionKit::JudgeReviewJob`, `CompletionKit::RunCompletionCheckJob`), so your host app needs an Active Job adapter that actually processes them — Solid Queue, Sidekiq, GoodJob, etc. The `:async` adapter is **not** suitable for production: it runs jobs in the web Puma's thread pool with no durability and no retry, and a long LLM call will block request handling.
+The engine mounts at `/completion_kit`. Generate / judge flows enqueue Active Job jobs (`CompletionKit::GenerateRowJob`, `CompletionKit::JudgeReviewJob`, `CompletionKit::RunCompletionCheckJob`), so your host app needs an Active Job adapter that actually processes them — Solid Queue, Sidekiq, GoodJob, etc. The `:async` adapter is **not** suitable for production: it runs jobs in the web Puma's thread pool with no durability and no retry, and a long LLM call will block request handling.
 
-### Host-app layout integration
-
-If your host app overrides the engine layout (e.g. `layout "application"` on engine controllers, or rendering engine views inside your own shell), include both the engine's stylesheet and JavaScript in that layout:
+**Host-app layout integration.** If your host app overrides the engine layout (e.g. `layout "application"` on engine controllers, or rendering engine views inside your own shell), include both the engine's stylesheet and JavaScript in that layout:
 
 ```erb
 <%= stylesheet_link_tag "completion_kit/application", media: "all" %>
@@ -183,7 +183,7 @@ CompletionKit runs a [Model Context Protocol](https://modelcontextprotocol.io) s
 
 The in-app API reference page has install snippets you can copy straight into your MCP client config.
 
-## Deploying the standalone app
+## Deploying self-hosted
 
 Any Rails-friendly host works (Fly, Heroku, Render, Docker, etc.). Point it at a Postgres instance via `DATABASE_URL`, set your provider env vars, and run `cd standalone && bin/rails db:migrate` on each deploy.
 
