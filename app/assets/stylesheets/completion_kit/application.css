@@ -1537,6 +1537,9 @@ tr:hover .ck-chip--publish {
   display: grid;
   gap: 0.4rem;
 }
+.ck-field[hidden] {
+  display: none;
+}
 
 .ck-field--spacious {
   margin-top: 0.3rem;

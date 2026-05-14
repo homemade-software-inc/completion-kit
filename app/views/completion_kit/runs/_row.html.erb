@@ -6,8 +6,12 @@
         <strong><%= run.name %></strong>
       </span>
       <div class="ck-runs-table__config">
-        <%= link_to run.prompt.name, prompt_path(run.prompt), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>
-        <span class="ck-runs-table__version">v<%= run.prompt.version_number %></span>
+        <% if run.prompt %>
+          <%= link_to run.prompt.name, prompt_path(run.prompt), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>
+          <span class="ck-runs-table__version">v<%= run.prompt.version_number %></span>
+        <% else %>
+          <span class="ck-runs-table__version">Judge-only</span>
+        <% end %>
         <% if run.dataset %>
           <span class="ck-runs-table__sep">·</span>
           <%= link_to run.dataset.name, dataset_path(run.dataset), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>

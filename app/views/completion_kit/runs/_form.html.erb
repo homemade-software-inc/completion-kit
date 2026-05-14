@@ -17,6 +17,17 @@
     </div>
 
     <div class="ck-field">
+      <label class="ck-checkbox-label">
+        <%= check_box_tag "run[judge_only]", "1", run.persisted? && run.judge_only?, id: "run_judge_only", class: "ck-checkbox" %>
+        <span class="ck-checkbox-label__box" aria-hidden="true"></span>
+        <span class="ck-checkbox-label__body">
+          <span class="ck-checkbox-label__text">Judge-only run</span>
+          <span class="ck-checkbox-label__hint">Grade an existing column on the dataset instead of running a prompt. Roughly half the LLM calls per row.</span>
+        </span>
+      </label>
+    </div>
+
+    <div class="ck-field" id="prompt-field">
       <%= form.label :prompt_id, "Prompt", class: "ck-label" %>
       <%= form.select :prompt_id,
             @prompts.map { |p|
@@ -41,6 +52,12 @@
         <p class="ck-prompt-summary__description" id="prompt-summary-description" hidden></p>
         <p class="ck-prompt-summary__template" id="prompt-summary-template"></p>
       </div>
+    </div>
+
+    <div class="ck-field" id="output-column-field" hidden>
+      <%= form.label :output_column, "Output column", class: "ck-label" %>
+      <%= form.text_field :output_column, value: run.output_column.presence || "actual_output", class: "ck-input", id: "run_output_column", placeholder: "actual_output" %>
+      <p class="ck-field-hint">Name of the dataset column whose value will be graded as the response. Defaults to <code>actual_output</code>.</p>
     </div>
 
     <div class="ck-field" id="dataset-field">
@@ -157,6 +174,15 @@
 function updateRunForm() {
   var promptEl = document.getElementById('run_prompt_id');
   var judgeEl = document.getElementById('run_judge_model');
+  var judgeOnlyEl = document.getElementById('run_judge_only');
+  var judgeOnly = !!(judgeOnlyEl && judgeOnlyEl.checked);
+  var promptField = document.getElementById('prompt-field');
+  var outputColumnField = document.getElementById('output-column-field');
+  var outputColumnEl = document.getElementById('run_output_column');
+  if (promptField) promptField.hidden = judgeOnly;
+  if (outputColumnField) outputColumnField.hidden = !judgeOnly;
+  if (judgeOnly && promptEl) promptEl.value = '';
+
   var prompt = promptEl ? promptEl.value : '';
   var judge = judgeEl ? judgeEl.value : '';
   var metrics = document.querySelectorAll('input[name="run[metric_ids][]"]:checked');
@@ -222,11 +248,28 @@ function updateRunForm() {
     }
   }
 
-  var valid = prompt !== '';
+  var valid;
+  if (judgeOnly) {
+    valid = !!dataset;
+    if (dataset && datasetEl && outputColumnEl) {
+      var headersJudge = (datasetEl.options[datasetEl.selectedIndex] && datasetEl.options[datasetEl.selectedIndex].dataset.headers ? datasetEl.options[datasetEl.selectedIndex].dataset.headers.split(/,\s*/) : []).filter(Boolean);
+      var col = (outputColumnEl.value || 'actual_output').trim();
+      if (col === '' || headersJudge.indexOf(col) === -1) {
+        valid = false;
+        if (datasetField) datasetField.className = 'ck-field ck-field--error';
+        if (datasetHint) datasetHint.textContent = "Dataset has no \"" + col + "\" column — pick a different output column or dataset.";
+      }
+    } else if (!dataset) {
+      if (datasetField) datasetField.className = 'ck-field ck-field--info';
+      if (datasetHint) datasetHint.textContent = 'Judge-only runs need a dataset that supplies the output column.';
+    }
+  } else {
+    valid = prompt !== '';
+    if (hasVars && !dataset) valid = false;
+    if (missingVars.length > 0) valid = false;
+  }
   if (judge && metrics.length === 0) valid = false;
   if (!judge && metrics.length > 0) valid = false;
-  if (hasVars && !dataset) valid = false;
-  if (missingVars.length > 0) valid = false;
   if (submitBtn) submitBtn.disabled = !valid;
 
   ckUpdateMetricGroupsState();
@@ -260,9 +303,13 @@ function ckUpdateMetricGroupsState() {
 var judgeEl = document.getElementById('run_judge_model');
 var promptEl = document.getElementById('run_prompt_id');
 var datasetEl = document.getElementById('run_dataset_id');
+var judgeOnlyEl = document.getElementById('run_judge_only');
+var outputColumnEl = document.getElementById('run_output_column');
 if (judgeEl) judgeEl.addEventListener('change', updateRunForm);
 if (promptEl) promptEl.addEventListener('change', updateRunForm);
 if (datasetEl) datasetEl.addEventListener('change', updateRunForm);
+if (judgeOnlyEl) judgeOnlyEl.addEventListener('change', updateRunForm);
+if (outputColumnEl) outputColumnEl.addEventListener('input', updateRunForm);
 document.querySelectorAll('input[name="run[metric_ids][]"]').forEach(function(cb) {
   cb.addEventListener('change', updateRunForm);
 });

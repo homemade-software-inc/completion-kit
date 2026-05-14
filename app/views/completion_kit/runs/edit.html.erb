@@ -1,6 +1,10 @@
 <ol class="ck-breadcrumb">
-  <li><%= link_to "Prompts", prompts_path %></li>
-  <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
+  <% if @run.prompt %>
+    <li><%= link_to "Prompts", prompts_path %></li>
+    <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
+  <% else %>
+    <li><%= link_to "Runs", runs_path %></li>
+  <% end %>
   <li><%= link_to @run.name, run_path(@run) %></li>
   <li>Edit</li>
 </ol>

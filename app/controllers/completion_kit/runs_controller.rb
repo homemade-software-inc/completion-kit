@@ -165,7 +165,7 @@ module CompletionKit
     # Editing a run that already has results forks a new run — but only when a
     # field that affects generation or judging changed. Renaming or retagging is
     # pure metadata and updates the run in place.
-    GENERATION_RUN_FIELDS = %i[prompt_id dataset_id judge_model temperature].freeze
+    GENERATION_RUN_FIELDS = %i[prompt_id dataset_id judge_model temperature output_column].freeze
 
     def run_generation_changed?
       GENERATION_RUN_FIELDS.each do |field|

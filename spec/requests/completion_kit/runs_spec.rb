@@ -139,6 +139,28 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to redirect_to(%r{/completion_kit/runs/\d+})
   end
 
+  it "creates a judge-only run with no prompt and an output_column" do
+    dataset = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+
+    expect do
+      post base_path, params: { run: { name: "Judge baseline", dataset_id: dataset.id, output_column: "actual_output" } }
+    end.to change(CompletionKit::Run, :count).by(1)
+
+    run = CompletionKit::Run.order(:id).last
+    expect(run.prompt_id).to be_nil
+    expect(run.output_column).to eq("actual_output")
+    expect(run).to be_judge_only
+  end
+
+  it "rejects a judge-only run when the dataset lacks the output_column" do
+    dataset = create(:completion_kit_dataset, csv_data: "input,response\nhi,hello\n")
+
+    post base_path, params: { run: { name: "Bad column", dataset_id: dataset.id, output_column: "actual_output" } }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include("is not a column on dataset")
+  end
+
   it "creates a run with metric_ids" do
     metric = create(:completion_kit_metric)
 

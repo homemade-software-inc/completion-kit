@@ -59,24 +59,33 @@
   </div>
 </div>
 
-<div class="ck-prompt-preview">
-  <div class="ck-prompt-preview__header">
-    <p class="ck-kicker">Prompt</p>
-    <% latest_suggestion = @run.suggestions.order(created_at: :desc).first %>
-    <% if latest_suggestion %>
-      <%= link_to "View suggestion", suggestion_path(latest_suggestion, from: "run"), class: ck_button_classes(:light, variant: :outline) + " ck-button--sm" %>
-    <% elsif @run.status == "completed" && @run.responses.joins(:reviews).exists? %>
-      <%= button_to suggest_run_path(@run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" do %>
-        <%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>
-        Suggest improvements
+<% if @run.prompt %>
+  <div class="ck-prompt-preview">
+    <div class="ck-prompt-preview__header">
+      <p class="ck-kicker">Prompt</p>
+      <% latest_suggestion = @run.suggestions.order(created_at: :desc).first %>
+      <% if latest_suggestion %>
+        <%= link_to "View suggestion", suggestion_path(latest_suggestion, from: "run"), class: ck_button_classes(:light, variant: :outline) + " ck-button--sm" %>
+      <% elsif @run.status == "completed" && @run.responses.joins(:reviews).exists? %>
+        <%= button_to suggest_run_path(@run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" do %>
+          <%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>
+          Suggest improvements
+        <% end %>
       <% end %>
+    </div>
+    <p class="ck-prompt-preview__text" id="prompt_text"><%= @run.prompt.template %></p>
+    <% if @run.prompt.template.length > 200 %>
+      <button type="button" class="ck-disclosure-toggle" id="prompt_toggle" aria-expanded="false" aria-controls="prompt_text" onclick="var t=document.getElementById('prompt_text');var l=this;var expanded=t.classList.toggle('ck-prompt-preview__text--expanded');l.firstChild.textContent=expanded?'Show less':'Show more';l.setAttribute('aria-expanded',expanded?'true':'false')"><span>Show more</span></button>
     <% end %>
   </div>
-  <p class="ck-prompt-preview__text" id="prompt_text"><%= @run.prompt.template %></p>
-  <% if @run.prompt.template.length > 200 %>
-    <button type="button" class="ck-disclosure-toggle" id="prompt_toggle" aria-expanded="false" aria-controls="prompt_text" onclick="var t=document.getElementById('prompt_text');var l=this;var expanded=t.classList.toggle('ck-prompt-preview__text--expanded');l.firstChild.textContent=expanded?'Show less':'Show more';l.setAttribute('aria-expanded',expanded?'true':'false')"><span>Show more</span></button>
-  <% end %>
-</div>
+<% else %>
+  <div class="ck-prompt-preview">
+    <div class="ck-prompt-preview__header">
+      <p class="ck-kicker">Output source</p>
+    </div>
+    <p class="ck-prompt-preview__text">Dataset column <code><%= @run.output_column.presence || "actual_output" %></code> — no prompt generated these outputs.</p>
+  </div>
+<% end %>
 
 <% if @run.dataset %>
   <dialog id="dataset-preview-<%= @run.id %>" class="ck-modal" onclick="if(event.target===this)this.close()">
