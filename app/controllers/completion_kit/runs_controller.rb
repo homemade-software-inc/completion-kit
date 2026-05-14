@@ -84,6 +84,7 @@ module CompletionKit
         dataset_id: @run.dataset_id,
         judge_model: @run.judge_model,
         temperature: @run.temperature,
+        output_column: @run.output_column,
         tag_names: @run.tag_names,
         status: "pending"
       )
@@ -108,6 +109,11 @@ module CompletionKit
     end
 
     def suggest
+      if @run.prompt.nil?
+        redirect_to run_path(@run), alert: "Judge-only runs don't have a prompt to improve."
+        return
+      end
+
       service = PromptImprovementService.new(@run)
       result = service.suggest
       suggestion = @run.suggestions.create!(

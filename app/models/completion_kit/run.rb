@@ -194,6 +194,7 @@ module CompletionKit
       {
         id: id, name: name, status: status, prompt_id: prompt_id,
         dataset_id: dataset_id, judge_model: judge_model, temperature: temperature,
+        output_column: output_column,
         created_at: created_at, updated_at: updated_at,
         responses_count: responses.count, avg_score: avg_score,
         progress_current: snap[:generated_done],
@@ -300,10 +301,14 @@ module CompletionKit
 
     def set_auto_name
       return if name.present?
-      return unless prompt.present?
 
-      count = Run.where(prompt_id: prompt_id).count + 1
-      self.name = "#{prompt.name} — v#{prompt.version_number} ##{count}"
+      if prompt.present?
+        count = Run.where(prompt_id: prompt_id).count + 1
+        self.name = "#{prompt.name} — v#{prompt.version_number} ##{count}"
+      elsif dataset.present?
+        count = Run.where(prompt_id: nil, dataset_id: dataset.id).count + 1
+        self.name = "#{dataset.name} — judge-only ##{count}"
+      end
     end
 
     def dataset_supplies_prompt_variables

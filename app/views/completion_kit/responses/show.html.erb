@@ -1,6 +1,10 @@
 <ol class="ck-breadcrumb">
-  <li><%= link_to "Prompts", prompts_path %></li>
-  <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
+  <% if @run.prompt %>
+    <li><%= link_to "Prompts", prompts_path %></li>
+    <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>
+  <% else %>
+    <li><%= link_to "Runs", runs_path %></li>
+  <% end %>
   <li><%= link_to @run.name, run_path(@run) %></li>
   <li>Response #<%= @response_number %></li>
 </ol>
@@ -30,20 +34,29 @@
     <span class="ck-run-config__key">Run</span>
     <%= link_to @run.name, run_path(@run), class: "ck-link" %>
   </div>
-  <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Prompt</span>
-    <%= link_to @run.prompt.display_name, prompt_path(@run.prompt), class: "ck-link" %>
-  </div>
+  <% if @run.prompt %>
+    <div class="ck-run-config__row">
+      <span class="ck-run-config__key">Prompt</span>
+      <%= link_to @run.prompt.display_name, prompt_path(@run.prompt), class: "ck-link" %>
+    </div>
+  <% else %>
+    <div class="ck-run-config__row">
+      <span class="ck-run-config__key">Output</span>
+      <span>Dataset column <code><%= @run.output_column.presence || "actual_output" %></code></span>
+    </div>
+  <% end %>
   <% if @run.dataset %>
     <div class="ck-run-config__row">
       <span class="ck-run-config__key">Dataset</span>
       <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
     </div>
   <% end %>
-  <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Model</span>
-    <span style="text-transform: none;"><%= @run.prompt.llm_model %></span>
-  </div>
+  <% if @run.prompt %>
+    <div class="ck-run-config__row">
+      <span class="ck-run-config__key">Model</span>
+      <span style="text-transform: none;"><%= @run.prompt.llm_model %></span>
+    </div>
+  <% end %>
   <% if @run.judge_model.present? %>
     <div class="ck-run-config__row">
       <span class="ck-run-config__key">Judge</span>
@@ -60,7 +73,9 @@
 <section class="ck-card--spaced">
   <div class="ck-prompt-preview__header">
     <p class="ck-kicker">Response</p>
-    <span class="ck-chip ck-chip--soft" style="text-transform: none;"><%= @run.prompt.llm_model %></span>
+    <% if @run.prompt %>
+      <span class="ck-chip ck-chip--soft" style="text-transform: none;"><%= @run.prompt.llm_model %></span>
+    <% end %>
   </div>
   <pre class="ck-code"><%= @response.response_text %></pre>
 </section>

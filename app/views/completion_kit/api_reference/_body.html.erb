@@ -121,7 +121,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs</p>
         <p class="ck-meta-copy">Create a new run.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>prompt_id</code>&emsp;<strong>Optional:</strong>&ensp;<code>name</code>, <code>dataset_id</code>, <code>metric_ids</code>, <code>judge_model</code></p>
+        <p class="ck-api-params"><strong>Optional:</strong>&ensp;<code>name</code>, <code>prompt_id</code>, <code>dataset_id</code>, <code>metric_ids</code>, <code>judge_model</code>, <code>output_column</code> (judge-only: omit <code>prompt_id</code> and grade a dataset column instead, default <code>actual_output</code>)</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"prompt_id\": 1, \"dataset_id\": 1, \"metric_ids\": [1, 2]}'" %>
       </div>
       <div class="ck-api-endpoint">

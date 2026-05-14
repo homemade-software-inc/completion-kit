@@ -21,6 +21,18 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).to include(metric_group.metrics.first.name)
   end
 
+  it "renders show for a judge-only run (no prompt) without crashing" do
+    dataset = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+    judge_only_run = create(:completion_kit_run, prompt: nil, dataset: dataset, output_column: "actual_output", name: "Judge baseline")
+    judge_only_response = create(:completion_kit_response, run: judge_only_run, response_text: "hello", expected_output: nil)
+
+    get "/completion_kit/runs/#{judge_only_run.id}/responses/#{judge_only_response.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Judge baseline")
+    expect(response.body).to include("actual_output")
+  end
+
   it "renders show without expected output" do
     get "/completion_kit/runs/#{run.id}/responses/#{response_without_expected.id}"
 

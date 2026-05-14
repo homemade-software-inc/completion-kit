@@ -52,6 +52,21 @@ RSpec.describe CompletionKit::McpTools::Runs do
       expect(content["metric_ids"]).to eq([metric.id])
     end
 
+    it "creates a judge-only run with no prompt_id and an output_column" do
+      dataset = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+
+      result = described_class.call("runs_create", {
+        "name" => "Judge baseline",
+        "dataset_id" => dataset.id,
+        "output_column" => "actual_output"
+      })
+
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["name"]).to eq("Judge baseline")
+      expect(content["prompt_id"]).to be_nil
+      expect(content["output_column"]).to eq("actual_output")
+    end
+
     it "updates a run" do
       result = described_class.call("runs_update", {"id" => run.id, "name" => "Updated"})
       content = JSON.parse(result[:content].first[:text])

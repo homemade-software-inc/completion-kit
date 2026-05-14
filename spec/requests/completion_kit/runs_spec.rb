@@ -402,6 +402,33 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to redirect_to("/completion_kit/suggestions/#{suggestion.id}?from=run")
   end
 
+  it "suggest action redirects with an alert for a judge-only run" do
+    judge_only = create(:completion_kit_run,
+                        prompt: nil,
+                        dataset: create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n"),
+                        output_column: "actual_output")
+
+    expect { post "#{base_path}/#{judge_only.id}/suggest" }.not_to change(CompletionKit::Suggestion, :count)
+    expect(response).to redirect_to("/completion_kit/runs/#{judge_only.id}")
+    expect(flash[:alert]).to include("Judge-only runs")
+  end
+
+  it "rerun copies output_column when re-running a judge-only run" do
+    dataset = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+    source_run = create(:completion_kit_run,
+                        prompt: nil,
+                        dataset: dataset,
+                        output_column: "actual_output",
+                        status: "completed")
+    allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
+
+    post "#{base_path}/#{source_run.id}/rerun"
+
+    new_run = CompletionKit::Run.order(:id).last
+    expect(new_run.output_column).to eq("actual_output")
+    expect(new_run.prompt_id).to be_nil
+  end
+
   it "filters runs by tag" do
     marine_run = create(:completion_kit_run, prompt: prompt, name: "Shark classifier run")
     real_estate_run = create(:completion_kit_run, prompt: prompt, name: "Property listing run")
