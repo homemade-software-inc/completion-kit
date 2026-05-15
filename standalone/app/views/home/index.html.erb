@@ -22,7 +22,7 @@
     </div>
   </div>
 
-  <div class="ck-card ck-card--spaced">
+  <section class="ck-card--spaced">
     <div class="ck-split">
       <h2 class="ck-section-title">Recent runs</h2>
       <%= link_to "View all", completion_kit.runs_path, class: "ck-link" %>
@@ -33,7 +33,7 @@
     <% else %>
       <div class="ck-empty">No runs yet.&ensp;<%= link_to "Create your first run →", completion_kit.new_run_path, class: "ck-link" %></div>
     <% end %>
-  </div>
+  </section>
 
 <% else %>
   <section class="ck-page-header">

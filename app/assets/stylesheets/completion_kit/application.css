@@ -1080,10 +1080,13 @@ tr:hover .ck-chip--publish {
 
 .ck-model-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-family: var(--ck-mono);
   font-size: 0.8rem;
 }
+.ck-model-table th.ck-model-table__name,
+.ck-model-table td.ck-model-table__name { width: auto; }
 
 .ck-model-table thead th {
   position: sticky;
@@ -1998,6 +2001,7 @@ select.ck-input {
 
 .ck-results-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--ck-line);
@@ -3055,11 +3059,12 @@ select.ck-input {
   white-space: nowrap;
 }
 
-.ck-prompts-table th:nth-child(n+2),
-.ck-prompts-table td:nth-child(n+2) {
-  width: 1%;
-  white-space: nowrap;
-}
+.ck-prompts-table th:nth-child(1), .ck-prompts-table td:nth-child(1) { width: auto; }
+.ck-prompts-table th:nth-child(2), .ck-prompts-table td:nth-child(2) { width: 6rem; white-space: nowrap; }
+.ck-prompts-table th:nth-child(3), .ck-prompts-table td:nth-child(3) { width: 12rem; white-space: nowrap; }
+.ck-prompts-table th:nth-child(4), .ck-prompts-table td:nth-child(4) { width: 7.5rem; white-space: nowrap; }
+.ck-prompts-table th:nth-child(5), .ck-prompts-table td:nth-child(5) { width: 7.5rem; white-space: nowrap; }
+.ck-prompts-table th:nth-child(6), .ck-prompts-table td:nth-child(6) { width: 3rem; }
 
 .ck-prompts-table__runs {
   display: flex;
@@ -3113,14 +3118,9 @@ select.ck-input {
   overflow: hidden;
 }
 
-.ck-tags-table th:first-child,
-.ck-tags-table td:first-child {
-  width: 35%;
-}
-.ck-tags-table th:nth-child(2),
-.ck-tags-table td:nth-child(2) {
-  width: 60%;
-}
+.ck-tags-table th:nth-child(1), .ck-tags-table td:nth-child(1) { width: 14rem; }
+.ck-tags-table th:nth-child(2), .ck-tags-table td:nth-child(2) { width: auto; }
+.ck-tags-table th:nth-child(3), .ck-tags-table td:nth-child(3) { width: 3rem; }
 .tag-mark.tag-mark--lg {
   padding: 4px 10px;
   font-size: 0.8rem;
@@ -3172,6 +3172,33 @@ select.ck-input {
   cursor: pointer;
 }
 
+.ck-metrics-table th:nth-child(1), .ck-metrics-table td:nth-child(1) { width: 16rem; white-space: nowrap; }
+.ck-metrics-table th:nth-child(2), .ck-metrics-table td:nth-child(2) { width: auto; }
+.ck-metrics-table th:nth-child(3), .ck-metrics-table td:nth-child(3) { width: 16rem; }
+.ck-metrics-table th:nth-child(4), .ck-metrics-table td:nth-child(4) { width: 3rem; }
+
+.ck-datasets-table th:nth-child(1), .ck-datasets-table td:nth-child(1) { width: auto; }
+.ck-datasets-table th:nth-child(2), .ck-datasets-table td:nth-child(2) { width: 5rem; white-space: nowrap; }
+.ck-datasets-table th:nth-child(3), .ck-datasets-table td:nth-child(3) { width: 8rem; white-space: nowrap; }
+.ck-datasets-table th:nth-child(4), .ck-datasets-table td:nth-child(4) { width: 9rem; white-space: nowrap; }
+.ck-datasets-table th:nth-child(5), .ck-datasets-table td:nth-child(5) { width: 3rem; }
+
+.ck-metric-groups-table th:nth-child(1), .ck-metric-groups-table td:nth-child(1) { width: 16rem; white-space: nowrap; }
+.ck-metric-groups-table th:nth-child(2), .ck-metric-groups-table td:nth-child(2) { width: auto; }
+.ck-metric-groups-table th:nth-child(3), .ck-metric-groups-table td:nth-child(3) { width: 12rem; }
+.ck-metric-groups-table th:nth-child(4), .ck-metric-groups-table td:nth-child(4) { width: 3rem; }
+
+.ck-prompt-versions-table th:nth-child(1), .ck-prompt-versions-table td:nth-child(1) { width: 14rem; }
+.ck-prompt-versions-table th:nth-child(2), .ck-prompt-versions-table td:nth-child(2) { width: 16rem; white-space: nowrap; }
+.ck-prompt-versions-table th:nth-child(3), .ck-prompt-versions-table td:nth-child(3) { width: 8rem; white-space: nowrap; }
+.ck-prompt-versions-table th:nth-child(4), .ck-prompt-versions-table td:nth-child(4) { width: auto; }
+
+.ck-suggestions-table th:nth-child(1), .ck-suggestions-table td:nth-child(1) { width: 16rem; white-space: nowrap; }
+.ck-suggestions-table th:nth-child(2), .ck-suggestions-table td:nth-child(2) { width: auto; }
+.ck-suggestions-table th:nth-child(3), .ck-suggestions-table td:nth-child(3) { width: 6rem; white-space: nowrap; }
+.ck-suggestions-table th:nth-child(4), .ck-suggestions-table td:nth-child(4) { width: 9rem; white-space: nowrap; }
+.ck-suggestions-table th:nth-child(5), .ck-suggestions-table td:nth-child(5) { width: 3rem; }
+
 .ck-metrics-table__groups {
   display: flex;
   flex-wrap: wrap;
@@ -3195,12 +3222,18 @@ a.ck-metric-group-pill {
   padding-right: 0.85rem;
 }
 
-.ck-responses-table th:not(:nth-child(2)),
-.ck-responses-table td:not(:nth-child(2)) {
-  width: 1%;
-  white-space: nowrap;
-}
+.ck-responses-table th:nth-child(1), .ck-responses-table td:nth-child(1) { width: 3.5rem; white-space: nowrap; }
+.ck-responses-table th:nth-child(2), .ck-responses-table td:nth-child(2) { width: auto; }
+.ck-responses-table th:nth-child(3), .ck-responses-table td:nth-child(3) { width: 14rem; white-space: nowrap; }
+.ck-responses-table th:nth-child(4), .ck-responses-table td:nth-child(4) { width: 5.5rem; white-space: nowrap; }
+.ck-responses-table th:nth-child(5), .ck-responses-table td:nth-child(5) { width: 8rem; white-space: nowrap; }
+.ck-responses-table th:nth-child(6), .ck-responses-table td:nth-child(6) { width: 3rem; }
 
+
+table.ck-runs-table {
+  table-layout: fixed;
+  width: 100%;
+}
 
 .ck-runs-table th {
   vertical-align: middle;
@@ -3215,18 +3248,36 @@ a.ck-metric-group-pill {
 
 .ck-runs-table th:first-child,
 .ck-runs-table td:first-child {
-  width: 1%;
+  width: 27rem;
 }
 
-.ck-runs-table th:nth-child(n+2),
-.ck-runs-table td:nth-child(n+2) {
-  width: 1%;
+.ck-runs-table th:nth-child(2),
+.ck-runs-table td:nth-child(2) {
+  width: 6rem;
+  white-space: nowrap;
+}
+
+.ck-runs-table th:nth-child(3),
+.ck-runs-table td:nth-child(3) {
+  width: auto;
+  white-space: nowrap;
+}
+
+.ck-runs-table th:nth-child(4),
+.ck-runs-table td:nth-child(4) {
+  width: 5.5rem;
+  white-space: nowrap;
+}
+
+.ck-runs-table th:nth-child(5),
+.ck-runs-table td:nth-child(5) {
+  width: 9rem;
   white-space: nowrap;
 }
 
 .ck-runs-table th:last-child,
 .ck-runs-table td:last-child {
-  width: auto;
+  width: 3rem;
 }
 
 .ck-runs-table__identity {
@@ -3848,7 +3899,7 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
   letter-spacing: 0.02em;
   text-transform: lowercase;
   white-space: nowrap;
-  background: color-mix(in srgb, var(--mark-color) 24%, transparent);
+  background: color-mix(in srgb, var(--mark-color) 38%, transparent);
   color: color-mix(in srgb, var(--mark-color) 88%, var(--ck-text));
 }
 

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.16] - 2026-05-14
+
+### Changed
+
+- **Tables no longer overhang their containers.** Every `.ck-results-table` now uses `table-layout: fixed; width: 100%` with explicit per-table column widths so the table can never spread beyond its parent. Previously `table-layout: auto` would distribute slack based on content width, which let long run names or long descriptions push the table 30–50px past the page section's right edge. Covers `ck-runs-table` (runs index, dataset show, prompt show, dashboard recent runs), `ck-prompts-table`, `ck-metrics-table`, `ck-tags-table`, `ck-responses-table`, the previously-unclassed datasets-index, metric-groups-index, and prompt-versions/suggestions tables (now `ck-datasets-table`, `ck-metric-groups-table`, `ck-prompt-versions-table`, `ck-suggestions-table`), plus `ck-model-table` on the provider credentials page.
+- **Tag pill brightness**: `.tag-mark` background mix bumped from `color-mix(... 24%, transparent)` to `38%`. Bright-source colors (electric-cyan, mint, burnt-orange) and darker-source colors (deep-emerald, deep-indigo) now sit closer in visual weight so a row of multi-colored tags doesn't read as "some are washed out."
+- **Standalone home page Recent-runs section** is back to a plain section without an outer `.ck-card` wrap. The previous nested-card layout produced two competing rounded borders; the table's own border is now the only frame, matching how runs/index renders.
+
 ## [0.5.15] - 2026-05-14
 
 ### Fixed
