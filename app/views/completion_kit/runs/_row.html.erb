@@ -1,4 +1,4 @@
-<tr onclick="window.location='<%= run_path(run) %>'" style="cursor: pointer;">
+<tr onclick="window.location='<%= ck_run_path(run) %>'" style="cursor: pointer;">
   <td>
     <div class="ck-runs-table__identity">
       <span class="ck-run-name">
@@ -7,14 +7,14 @@
       </span>
       <div class="ck-runs-table__config">
         <% if run.prompt %>
-          <%= link_to run.prompt.name, prompt_path(run.prompt), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>
+          <%= link_to run.prompt.name, ck_prompt_path(run.prompt), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>
           <span class="ck-runs-table__version">v<%= run.prompt.version_number %></span>
         <% else %>
           <span class="ck-runs-table__version">Judge-only</span>
         <% end %>
         <% if run.dataset %>
           <span class="ck-runs-table__sep">·</span>
-          <%= link_to run.dataset.name, dataset_path(run.dataset), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>
+          <%= link_to run.dataset.name, ck_dataset_path(run.dataset), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>
         <% end %>
       </div>
       <% if run.tags.any? %>

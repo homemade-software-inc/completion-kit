@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.15] - 2026-05-14
+
+### Fixed
+
+- **Judge parse failures no longer silently become 1-star reviews** (issue #27). `JudgeService#parse_judge_response` now raises `CompletionKit::JudgeParseError` when the judge response can't be parsed instead of returning `{ score: 1, feedback: "Could not parse..." }`. `JudgeService#evaluate` likewise propagates LLM-client errors (`"Error:"`-prefixed responses) and configuration errors instead of swallowing them as score 1. `JudgeReviewJob`'s `rescue_from(StandardError)` already records terminal failures with `status: "failed"`, `ai_score: nil`, and `error_class`/`error_message` populated, so parse failures now show up as distinct failed reviews in the UI and are naturally excluded from averages. Combined with 0.5.14, the empty-content case (most volume) and the malformed-non-empty case (edge case) both surface as real failures instead of silent floors at 1.0.
+- **Standalone host app's home page** crashed on judge-only runs because `run.prompt.name` was unguarded. Now shows "Judge-only" inline.
+
+### Changed
+
+- **Standalone home page recent-runs table** now renders via the engine's shared `completion_kit/runs/table` partial — same look, pips, truncation, judge-only handling, and metadata layout as runs/index, dataset/show, and prompt/show.
+- **Engine shared partials** now reference engine routes through new `ck_run_path` / `ck_prompt_path` / `ck_dataset_path` helpers (resolved via `CompletionKit::Engine.routes.url_helpers`) so they render correctly from host-app view contexts, not just from inside the engine.
+- **Favicon**: added a `#64748b` grey halo around the tilted puzzle piece so it reads at small sizes against pale browser chrome.
+
 ## [0.5.14] - 2026-05-14
 
 ### Fixed

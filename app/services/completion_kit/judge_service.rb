@@ -1,6 +1,8 @@
 require "faraday"
 
 module CompletionKit
+  class JudgeParseError < StandardError; end
+
   class JudgeService
     def initialize(config = {})
       @config = config
@@ -9,7 +11,7 @@ module CompletionKit
     end
 
     def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, rubric_text: nil, human_examples: nil, input_data: nil, **_extras)
-      return { score: 1, feedback: "Judge not configured" } unless @judge_client.configured?
+      raise CompletionKit::ConfigurationError, "Judge not configured" unless @judge_client.configured?
 
       judge_prompt = build_judge_prompt(output, expected_output, prompt,
         criteria: criteria,
@@ -19,10 +21,6 @@ module CompletionKit
       response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
       raise StandardError, response if response.start_with?("Error:")
       parse_judge_response(response)
-    rescue Faraday::Error
-      raise
-    rescue => e
-      { score: 1, feedback: "Error during evaluation: #{e.message}" }
     end
 
     private
@@ -66,16 +64,13 @@ module CompletionKit
       score_match = response.match(/\*{0,2}Score:?\*{0,2}\s*(\d+(?:\.\d+)?)/i)
       feedback_match = response.match(/\*{0,2}Feedback:?\*{0,2}\s*(.+)/mi)
 
-      score = score_match ? score_match[1].to_f : 1
-      feedback = if feedback_match
-                   feedback_match[1].strip
-                 elsif score_match
-                   "No feedback provided"
-                 else
-                   "Could not parse judge response: #{response.truncate(500)}"
-                 end
+      unless score_match
+        raise CompletionKit::JudgeParseError,
+              "Could not parse judge response: #{response.truncate(500)}"
+      end
 
-      score = [[score, 1].max, 5].min
+      score = [[score_match[1].to_f, 1].max, 5].min
+      feedback = feedback_match ? feedback_match[1].strip : "No feedback provided"
 
       { score: score, feedback: feedback }
     end

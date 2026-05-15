@@ -179,6 +179,18 @@ module CompletionKit
       ["tag", "tag-#{tag.color}", ("tag-outline" if outline)].compact.join(" ")
     end
 
+    def ck_run_path(run)
+      CompletionKit::Engine.routes.url_helpers.run_path(run)
+    end
+
+    def ck_prompt_path(prompt)
+      CompletionKit::Engine.routes.url_helpers.prompt_path(prompt)
+    end
+
+    def ck_dataset_path(dataset)
+      CompletionKit::Engine.routes.url_helpers.dataset_path(dataset)
+    end
+
     def ck_format_maybe_json(text)
       s = text.to_s
       return s if s.strip.empty?

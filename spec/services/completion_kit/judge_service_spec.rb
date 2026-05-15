@@ -9,12 +9,12 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     CompletionKit.config.judge_model = original_model
   end
 
-  it "returns score 1 when the judge client is not configured" do
+  it "raises ConfigurationError when the judge client is not configured" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: false)
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
     service = described_class.new
-    expect(service.evaluate("output")).to eq(score: 1, feedback: "Judge not configured")
+    expect { service.evaluate("output") }.to raise_error(CompletionKit::ConfigurationError, /Judge not configured/)
   end
 
   it "parses score and feedback from judge response" do
@@ -47,35 +47,31 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     expect(service.evaluate("actual")).to eq(score: 3.0, feedback: "No feedback provided")
   end
 
-  it "returns parse error when response has no score or feedback" do
+  it "raises JudgeParseError when the response has no score" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).and_return("I cannot evaluate this")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
     service = described_class.new
-    result = service.evaluate("actual")
-    expect(result[:score]).to eq(1)
-    expect(result[:feedback]).to include("Could not parse judge response")
+    expect { service.evaluate("actual") }.to raise_error(CompletionKit::JudgeParseError, /Could not parse judge response/)
   end
 
-  it "raises when LLM returns an Error: prefixed response" do
+  it "raises when the LLM client returns an Error:-prefixed response" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).and_return("Error: 404 - model not found")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
     service = described_class.new
-    result = service.evaluate("actual")
-    expect(result[:score]).to eq(1)
-    expect(result[:feedback]).to include("Error: 404")
+    expect { service.evaluate("actual") }.to raise_error(StandardError, /Error: 404/)
   end
 
-  it "returns an error response when the judge client raises" do
+  it "re-raises any StandardError the judge client raises" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).and_raise(StandardError, "judge timeout")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
     service = described_class.new
-    expect(service.evaluate("actual")).to eq(score: 1, feedback: "Error during evaluation: judge timeout")
+    expect { service.evaluate("actual") }.to raise_error(StandardError, "judge timeout")
   end
 
   it "re-raises Faraday::Error from the judge client" do
