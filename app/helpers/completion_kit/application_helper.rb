@@ -180,15 +180,15 @@ module CompletionKit
     end
 
     def ck_run_path(run)
-      CompletionKit::Engine.routes.url_helpers.run_path(run)
+      CompletionKit::Engine.routes.url_helpers.run_path(run, **url_options.except(:host, :protocol, :script_name))
     end
 
     def ck_prompt_path(prompt)
-      CompletionKit::Engine.routes.url_helpers.prompt_path(prompt)
+      CompletionKit::Engine.routes.url_helpers.prompt_path(prompt, **url_options.except(:host, :protocol, :script_name))
     end
 
     def ck_dataset_path(dataset)
-      CompletionKit::Engine.routes.url_helpers.dataset_path(dataset)
+      CompletionKit::Engine.routes.url_helpers.dataset_path(dataset, **url_options.except(:host, :protocol, :script_name))
     end
 
     def ck_format_maybe_json(text)

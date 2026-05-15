@@ -28,7 +28,7 @@
     <% if @run.dataset %>
       <span class="ck-run-config__dataset">
         <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
-        <span class="ck-run-config__dataset-meta"><%= dataset_lines.count %> rows</span>
+        <span class="ck-run-config__dataset-meta"><%= @run.dataset.row_count %> rows</span>
         <button type="button" class="ck-run-config__dataset-preview" onclick="document.getElementById('dataset-preview-<%= @run.id %>').showModal()">Preview</button>
       </span>
     <% else %>
@@ -93,7 +93,7 @@
       <header class="ck-modal__header">
         <div class="ck-modal__heading">
           <h2 class="ck-modal__title"><%= @run.dataset.name %></h2>
-          <span class="ck-modal__meta"><%= dataset_lines.count %> rows</span>
+          <span class="ck-modal__meta"><%= @run.dataset.row_count %> rows</span>
         </div>
         <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">×</button>
       </header>

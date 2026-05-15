@@ -297,6 +297,26 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "engine path helpers" do
+    let(:run) { instance_double(CompletionKit::Run, to_param: "42") }
+    let(:prompt) { instance_double(CompletionKit::Prompt, to_param: "the-prompt") }
+    let(:dataset) { instance_double(CompletionKit::Dataset, to_param: "the-dataset") }
+
+    it "returns a plain engine path when url_options is empty" do
+      allow(helper).to receive(:url_options).and_return({})
+      expect(helper.ck_run_path(run)).to eq("/completion_kit/runs/42")
+      expect(helper.ck_prompt_path(prompt)).to eq("/completion_kit/prompts/the-prompt")
+      expect(helper.ck_dataset_path(dataset)).to eq("/completion_kit/datasets/the-dataset")
+    end
+
+    it "threads extra url_options through to the engine route (so dynamic mount scopes resolve)" do
+      allow(helper).to receive(:url_options).and_return(org_slug: "acme", host: "example.test")
+      engine_helpers = CompletionKit::Engine.routes.url_helpers
+      expect(engine_helpers).to receive(:run_path).with(run, org_slug: "acme").and_return("/orgs/acme/runs/42")
+      expect(helper.ck_run_path(run)).to eq("/orgs/acme/runs/42")
+    end
+  end
+
   describe "#ck_format_maybe_json" do
     it "returns the input unchanged when blank or whitespace-only" do
       expect(helper.ck_format_maybe_json("")).to eq("")

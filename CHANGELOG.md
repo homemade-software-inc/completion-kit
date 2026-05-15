@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.17] - 2026-05-15
+
+### Fixed
+
+- **`ck_run_path` / `ck_prompt_path` / `ck_dataset_path` ignored the host's `default_url_options`** (issue #30). When a host app mounts the engine under a dynamic scope (e.g. `scope "/orgs/:org_slug"`), the engine path needs `:org_slug` filled in, but the proxy call had no access to the controller's `default_url_options` and raised `ActionController::UrlGenerationError: missing required keys: [:org_slug]`. All three helpers now thread `url_options.except(:host, :protocol, :script_name)` through to the engine route helper, so any dynamic segment the host injects via `default_url_options` resolves automatically. Standalone keeps working unchanged.
+- **Run detail page row count** showed the literal line count of the CSV instead of the actual row count, which exploded to "213 rows" on a 10-row dataset whose `actual_output` column contains multi-line JSON. Now uses `Dataset#row_count` (which CSV-parses properly).
+
+### Changed
+
+- **Metrics index name column** drops `white-space: nowrap` so long names like "Vehicle Comparable Sales Relevance" wrap inside the 18rem column instead of bleeding into the instruction column.
+
 ## [0.5.16] - 2026-05-14
 
 ### Changed
