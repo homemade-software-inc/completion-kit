@@ -17,32 +17,85 @@ module CompletionKit
     end
 
     # The metric with the lowest average judge score across succeeded reviews
-    # in the window — the prompt-engineering target. Returns nil when there
-    # are no scored reviews. `response` is the single worst-scoring response
-    # for that metric, for a deep link.
+    # in the window — the prompt-engineering target. Dismissed metrics are
+    # skipped while their average holds at or above the score snapshotted when
+    # they were dismissed; a metric that regresses below that baseline
+    # resurfaces and its stale dismissal is cleared. Returns nil when nothing
+    # qualifies. `response` is the single worst-scoring response, for a deep
+    # link.
     def self.worst_metric(since:)
-      averages = scored_reviews_since(since).group(:metric_name).average(:ai_score)
+      averages = scored_reviews_since(since)
+                 .joins(:metric)
+                 .group("completion_kit_metrics.id")
+                 .average(:ai_score)
       return nil if averages.empty?
 
-      name, avg = averages.min_by { |_, value| value }
-      # averages is non-empty, so at least one review carries this
-      # metric_name — worst is always present here.
-      worst = scored_reviews_since(since)
-              .where(metric_name: name)
-              .order(:ai_score)
-              .first
-      {
-        name: name,
-        avg: avg.to_f.round(2),
-        response: worst.response,
-        score: worst.ai_score.to_f
-      }
+      dismissals = metric_dismissals
+      metrics = Metric.where(id: averages.keys).index_by(&:id)
+
+      averages.sort_by { |_id, avg| avg }.each do |metric_id, avg|
+        rounded = avg.to_f.round(2)
+        dismissal = dismissals[metric_id]
+        next if dismissal && rounded >= dismissal.baseline_score.to_f
+
+        dismissal&.destroy
+        worst = scored_reviews_since(since).where(metric_id: metric_id).order(:ai_score).first
+        metric = metrics[metric_id]
+        return {
+          metric: metric,
+          name: metric.name,
+          avg: rounded,
+          response: worst.response,
+          score: worst.ai_score.to_f
+        }
+      end
+      nil
     end
 
-    # Reviews that terminally failed in the window — parse failures, judge
-    # truncations, provider errors. Invisible on the dashboard otherwise.
-    def self.failed_review_count(since:)
-      Review.where(status: "failed").where("created_at >= ?", since).count
+    # The rounded average judge score for one metric across the window, or nil
+    # when it has no scored reviews. Used to snapshot a dismissal's baseline.
+    def self.metric_average(metric_id, since:)
+      scored_reviews_since(since).where(metric_id: metric_id).average(:ai_score)&.to_f&.round(2)
+    end
+
+    # Everything that terminally failed in the window across all three
+    # surfaces — failed runs, failed generations, failed judge reviews —
+    # excluding any the user has dismissed. Returns a count and an items list
+    # ordered most-recent-first; each item carries its surface, the failing
+    # record, the run it belongs to (for a deep link), and a cause string.
+    def self.failures(since:)
+      dismissed = failure_dismissal_keys
+      items = []
+
+      Run.where(status: "failed").where("created_at >= ?", since).find_each do |run|
+        next if dismissed.include?(["CompletionKit::Run", run.id])
+        items << {
+          surface: "run", record: run, run: run,
+          cause: run.failure_summary.presence || "Run failed", at: run.updated_at
+        }
+      end
+
+      Response.where(status: "failed").where("created_at >= ?", since)
+              .includes(:run).find_each do |response|
+        next if dismissed.include?(["CompletionKit::Response", response.id])
+        items << {
+          surface: "generation", record: response, run: response.run,
+          cause: failure_cause(response), at: response.updated_at
+        }
+      end
+
+      Review.where(status: "failed").where("completion_kit_reviews.created_at >= ?", since)
+            .includes(response: :run).find_each do |review|
+        next if dismissed.include?(["CompletionKit::Review", review.id])
+        items << {
+          surface: "judge", record: review, run: review.response.run,
+          cause: failure_cause(review), at: review.updated_at
+        }
+      end
+
+      items.sort_by! { |item| item[:at] }
+      items.reverse!
+      { count: items.size, items: items }
     end
 
     # The most recent measurable change per prompt family — gains and
@@ -95,5 +148,20 @@ module CompletionKit
             .where.not(ai_score: nil)
     end
     private_class_method :scored_reviews_since
+
+    def self.metric_dismissals
+      DashboardDismissal.where(dismissable_type: "CompletionKit::Metric").index_by(&:dismissable_id)
+    end
+    private_class_method :metric_dismissals
+
+    def self.failure_dismissal_keys
+      DashboardDismissal.failures.map { |d| [d.dismissable_type, d.dismissable_id] }.to_set
+    end
+    private_class_method :failure_dismissal_keys
+
+    def self.failure_cause(record)
+      record.error_class.presence || "Unknown error"
+    end
+    private_class_method :failure_cause
   end
 end

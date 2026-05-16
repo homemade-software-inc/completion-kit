@@ -45,39 +45,11 @@
         </p>
       </div>
 
-      <div class="ck-card ck-stat-card ck-rise" style="--rise-delay: 120ms;">
-        <p class="ck-kicker">Worst metric · last 7 days</p>
-        <% if @worst_metric %>
-          <div class="ck-stat-card__body">
-            <span class="ck-stat-card__metric"><%= @worst_metric[:name] %></span>
-            <span class="<%= ck_badge_classes(ck_score_kind(@worst_metric[:avg])) %> ck-stat-card__score"><%= @worst_metric[:avg] %></span>
-          </div>
-          <p class="ck-stat-card__foot">
-            <% if @worst_metric[:response] %>
-              <%= link_to "Worst-scoring response →", completion_kit.run_response_path(@worst_metric[:response].run, @worst_metric[:response]), class: "ck-link" %>
-            <% else %>
-              Lowest average judge score this week.
-            <% end %>
-          </p>
-        <% else %>
-          <div class="ck-stat-card__body"><span class="ck-stat-card__metric ck-stat-card__metric--empty">No scored reviews</span></div>
-          <p class="ck-stat-card__foot">Run a judge to populate this.</p>
-        <% end %>
-      </div>
+      <%= render "completion_kit/dashboard/worst_metric_card",
+                 worst_metric: @worst_metric, ignored_metrics: @ignored_metrics %>
 
-      <div class="ck-card ck-stat-card ck-rise" style="--rise-delay: 180ms;">
-        <p class="ck-kicker">Failed reviews · last 7 days</p>
-        <div class="ck-stat-card__body">
-          <span class="ck-stat-card__count<%= @failed_review_count.positive? ? ' is-danger' : ' is-clean' %>"><%= @failed_review_count %></span>
-        </div>
-        <p class="ck-stat-card__foot">
-          <% if @failed_review_count.positive? %>
-            Judge errors, parse failures, truncations.
-          <% else %>
-            All judge reviews completed cleanly.
-          <% end %>
-        </p>
-      </div>
+      <%= render "completion_kit/dashboard/failures_card",
+                 failures: @failures, ignored_failures: @ignored_failures %>
     </div>
 
     <div class="ck-card ck-card--spaced ck-rise" style="--rise-delay: 240ms;">

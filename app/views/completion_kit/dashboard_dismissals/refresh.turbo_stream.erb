@@ -1,0 +1,8 @@
+<%= turbo_stream.replace "ck-worst-metric-card" do %>
+  <%= render "completion_kit/dashboard/worst_metric_card",
+             worst_metric: @worst_metric, ignored_metrics: @ignored_metrics %>
+<% end %>
+<%= turbo_stream.replace "ck-failures-card" do %>
+  <%= render "completion_kit/dashboard/failures_card",
+             failures: @failures, ignored_failures: @ignored_failures %>
+<% end %>
