@@ -404,6 +404,15 @@ form.button_to {
   font-size: 0.78rem;
   color: var(--ck-muted);
 }
+.ck-stat-card__foot--split {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.ck-stat-card__foot--split > :first-child {
+  margin-right: auto;
+  min-width: 0;
+}
 .ck-stat-card__figure { color: var(--ck-text); }
 
 .ck-stat-card__body {
@@ -4631,34 +4640,29 @@ a.tag-mark {
   .ck-launch__step { animation: none; }
 }
 
-.ck-dismiss-btn {
+.ck-icon-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   flex: none;
-  white-space: nowrap;
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  font-family: var(--ck-sans);
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0;
   color: var(--ck-dim);
   background: transparent;
   border: 1px solid var(--ck-line-strong);
-  border-radius: 999px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
-.ck-dismiss-btn:hover {
+.ck-icon-btn:hover {
   color: var(--ck-text);
   border-color: var(--ck-dim);
 }
-.ck-dismiss-btn--icon {
-  margin-left: auto;
-  padding: 0 0.45rem;
-  line-height: 1.4;
-}
-.ck-dismiss-btn form,
+.ck-icon-btn svg { display: block; }
+.ck-icon-btn form,
 .ck-failure-list__item form,
-.ck-flyout__item form { display: inline; margin: 0; }
+.ck-flyout__item form { display: inline-flex; margin: 0; }
 
 .ck-failure-list {
   list-style: none;
@@ -4693,34 +4697,61 @@ a.tag-mark {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.ck-failure-list__item .ck-icon-btn { margin-left: auto; }
 
+/* Flyout: lives inline in the card's always-present footer row, so the
+   toggle appearing or disappearing never changes the card's height. The
+   panel is an absolute popover that opens upward over the card body. */
 .ck-flyout {
-  margin-top: 0.7rem;
-  border-top: 1px solid var(--ck-line);
-  padding-top: 0.5rem;
+  position: relative;
+  flex: none;
 }
 .ck-flyout__toggle {
-  font-size: 0.72rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--ck-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--ck-dim);
   cursor: pointer;
-}
-.ck-flyout__toggle:hover { color: var(--ck-text); }
-.ck-flyout__list {
   list-style: none;
-  margin: 0.5rem 0 0;
-  padding: 0;
+}
+.ck-flyout__toggle::-webkit-details-marker { display: none; }
+.ck-flyout__toggle::marker { content: ""; }
+.ck-flyout__toggle:hover { color: var(--ck-text); }
+.ck-flyout[open] .ck-flyout__toggle { color: var(--ck-text); }
+.ck-flyout__panel {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 30;
+  width: 16rem;
+  max-height: 13rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.45rem;
+  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.2rem;
+  background: var(--ck-bg-strong);
+  border: 1px solid var(--ck-line-strong);
+  border-radius: var(--ck-radius);
+  box-shadow: 0 -14px 30px rgba(0, 0, 0, 0.5);
 }
 .ck-flyout__item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  padding: 0.3rem 0.4rem;
   font-size: 0.78rem;
+  border-radius: 5px;
 }
+.ck-flyout__item:hover { background: var(--ck-surface-hover); }
+.ck-flyout__label { color: var(--ck-text); }
 .ck-flyout__meta {
   margin-left: 0.35rem;
   color: var(--ck-dim);

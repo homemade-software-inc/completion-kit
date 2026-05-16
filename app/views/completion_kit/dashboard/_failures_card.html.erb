@@ -14,32 +14,34 @@
           <% else %>
             <span class="ck-failure-list__cause"><%= item[:cause] %></span>
           <% end %>
-          <%= button_to "×",
-                completion_kit.dashboard_dismissals_path,
+          <%= button_to completion_kit.dashboard_dismissals_path,
                 params: { dashboard_dismissal: { dismissable_type: item[:record].class.name,
                                                  dismissable_id: item[:record].id } },
-                class: "ck-dismiss-btn ck-dismiss-btn--icon",
-                form: { "aria-label": "Dismiss failure" } %>
+                class: "ck-icon-btn", title: "Ignore this failure",
+                "aria-label": "Ignore #{item[:surface]} failure" do %><%= render "completion_kit/dashboard/eye_off_icon" %><% end %>
         </li>
       <% end %>
     </ul>
-  <% else %>
-    <p class="ck-stat-card__foot">All clear — nothing failed this week.</p>
   <% end %>
 
-  <% if ignored_failures.any? %>
-    <details class="ck-flyout">
-      <summary class="ck-flyout__toggle"><%= ignored_failures.size %> ignored</summary>
-      <ul class="ck-flyout__list">
-        <% ignored_failures.each do |dismissal| %>
-          <li class="ck-flyout__item">
-            <span class="ck-flyout__label"><%= dismissal.dismissable_type.demodulize %> #<%= dismissal.dismissable_id %></span>
-            <%= button_to "Un-ignore",
-                  completion_kit.dashboard_dismissal_path(dismissal),
-                  method: :delete, class: "ck-dismiss-btn" %>
-          </li>
-        <% end %>
-      </ul>
-    </details>
+  <% if failures[:items].empty? || ignored_failures.any? %>
+    <div class="ck-stat-card__foot ck-stat-card__foot--split">
+      <span><% if failures[:items].empty? %>All clear — nothing failed this week.<% end %></span>
+      <% if ignored_failures.any? %>
+        <details class="ck-flyout">
+          <summary class="ck-flyout__toggle"><%= ignored_failures.size %> ignored</summary>
+          <ul class="ck-flyout__panel">
+            <% ignored_failures.each do |dismissal| %>
+              <li class="ck-flyout__item">
+                <span class="ck-flyout__label"><%= dismissal.dismissable_type.demodulize %> #<%= dismissal.dismissable_id %></span>
+                <%= button_to completion_kit.dashboard_dismissal_path(dismissal),
+                      method: :delete, class: "ck-icon-btn", title: "Un-ignore",
+                      "aria-label": "Un-ignore #{dismissal.dismissable_type.demodulize} #{dismissal.dismissable_id}" do %><%= render "completion_kit/dashboard/eye_icon" %><% end %>
+              </li>
+            <% end %>
+          </ul>
+        </details>
+      <% end %>
+    </div>
   <% end %>
 </div>
