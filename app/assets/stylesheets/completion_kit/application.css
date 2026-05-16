@@ -4634,6 +4634,8 @@ a.tag-mark {
 .ck-dismiss-btn {
   display: inline-flex;
   align-items: center;
+  flex: none;
+  white-space: nowrap;
   margin-left: 0.5rem;
   padding: 0.1rem 0.55rem;
   font-size: 0.72rem;

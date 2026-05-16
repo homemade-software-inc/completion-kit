@@ -18,7 +18,9 @@ class HomeController < ActionController::Base
       if @run_count > 5
         @activity = CompletionKit::DashboardStats.activity
         @worst_metric = CompletionKit::DashboardStats.worst_metric(since: 7.days.ago)
-        @failed_review_count = CompletionKit::DashboardStats.failed_review_count(since: 7.days.ago)
+        @failures = CompletionKit::DashboardStats.failures(since: 7.days.ago)
+        @ignored_metrics = CompletionKit::DashboardDismissal.metrics
+        @ignored_failures = CompletionKit::DashboardDismissal.failures
         @prompt_changes = CompletionKit::DashboardStats.prompt_changes
       end
     end
