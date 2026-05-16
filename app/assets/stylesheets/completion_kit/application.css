@@ -118,6 +118,35 @@ form.button_to {
   padding: 0.75rem 0;
 }
 
+/* Mobile navigation — a <details> hamburger. On desktop the trigger is
+   hidden and the nav shows inline; at the mobile breakpoint the nav
+   collapses behind the trigger and opens as a dropdown panel. The two
+   always-show rules cover both the legacy and ::details-content models for
+   hiding closed <details> content. This block must precede the mobile media
+   query so the media query's rules win on source order. */
+.ck-nav-menu {
+  position: relative;
+  display: flex;
+}
+.ck-nav-menu > .ck-nav { display: flex; }
+.ck-nav-menu::details-content { content-visibility: visible; }
+.ck-nav-menu__trigger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  color: var(--ck-text);
+  background: var(--ck-surface);
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
+  cursor: pointer;
+  list-style: none;
+}
+.ck-nav-menu__trigger::-webkit-details-marker { display: none; }
+.ck-nav-menu__trigger::marker { content: ""; }
+.ck-nav-menu[open] .ck-nav-menu__trigger { border-color: var(--ck-dim); }
+
 .ck-brand {
   display: inline-flex;
   align-items: center;
@@ -2755,12 +2784,21 @@ select.ck-input {
   }
 
   .ck-actions,
-  .ck-toolbar,
-  .ck-nav {
+  .ck-toolbar {
     width: 100%;
   }
 
+  /* Page header stacks: title, then lead text full-width, then action. */
+  .ck-page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Result tables scroll horizontally within their own box instead of
+     stretching the page — fixed column widths overflow a phone otherwise. */
   .ck-results-table {
+    display: block;
+    overflow-x: auto;
     font-size: 0.85rem;
   }
 
@@ -2775,6 +2813,29 @@ select.ck-input {
 
   .ck-review-card {
     padding: 1rem;
+  }
+
+  /* Topbar nav collapses behind the hamburger trigger. */
+  .ck-nav-menu__trigger {
+    display: inline-flex;
+  }
+  .ck-nav-menu:not([open]) > .ck-nav {
+    display: none;
+  }
+  .ck-nav-menu[open] > .ck-nav {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.6rem);
+    flex-direction: column;
+    align-items: stretch;
+    width: 13rem;
+    padding: 0.5rem;
+    gap: 0.35rem;
+    background: var(--ck-surface);
+    border: 1px solid var(--ck-line);
+    border-radius: var(--ck-radius);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+    z-index: 50;
   }
 }
 
@@ -4728,6 +4789,7 @@ a.tag-mark {
   right: 0;
   z-index: 30;
   width: 22rem;
+  max-width: calc(100vw - 1.5rem);
   max-height: 19rem;
   overflow-y: auto;
   margin: 0;

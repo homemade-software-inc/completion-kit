@@ -15,15 +15,20 @@
     <div class="ck-wrap ck-topbar__inner">
       <%= link_to root_path, class: "ck-brand" do %><%= image_tag "completion_kit/logo.png", alt: "CompletionKit", style: "height: 64px; width: auto;" %><span class="ck-brand__name">Completion<span class="ck-brand__kit">Kit</span></span><% end %>
 
-      <nav class="ck-nav">
-        <%= link_to "Prompts", completion_kit.prompts_path, class: ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Metrics", completion_kit.metrics_path, class: ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Datasets", completion_kit.datasets_path, class: ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Runs", completion_kit.runs_path, class: ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "Settings", completion_kit.provider_credentials_path, class: ck_button_classes(:light, variant: :outline) %>
-        <%= link_to "API", completion_kit.api_reference_path, class: ck_button_classes(:light, variant: :outline) %>
-        <%= button_to "Log out", logout_path, method: :delete, class: "ck-button ck-button--ghost" %>
-      </nav>
+      <details class="ck-nav-menu">
+        <summary class="ck-nav-menu__trigger" aria-label="Menu">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </summary>
+        <nav class="ck-nav">
+          <%= link_to "Prompts", completion_kit.prompts_path, class: ck_button_classes(:light, variant: :outline) %>
+          <%= link_to "Metrics", completion_kit.metrics_path, class: ck_button_classes(:light, variant: :outline) %>
+          <%= link_to "Datasets", completion_kit.datasets_path, class: ck_button_classes(:light, variant: :outline) %>
+          <%= link_to "Runs", completion_kit.runs_path, class: ck_button_classes(:light, variant: :outline) %>
+          <%= link_to "Settings", completion_kit.provider_credentials_path, class: ck_button_classes(:light, variant: :outline) %>
+          <%= link_to "API", completion_kit.api_reference_path, class: ck_button_classes(:light, variant: :outline) %>
+          <%= button_to "Log out", logout_path, method: :delete, class: "ck-button ck-button--ghost" %>
+        </nav>
+      </details>
     </div>
   </header>
 
