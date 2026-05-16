@@ -1,6 +1,9 @@
 <main class="ck-login">
   <div class="ck-login__card">
-    <%= image_tag "logo.svg", alt: "CompletionKit", class: "ck-login__logo", style: "width: 260px; margin: 0 auto 1.5rem; display: block;" %>
+    <span class="ck-brand ck-login__brand">
+      <%= image_tag "completion_kit/logo.png", alt: "CompletionKit", style: "height: 72px; width: auto;" %>
+      <span class="ck-brand__name">Completion<span class="ck-brand__kit">Kit</span></span>
+    </span>
 
     <%= form_with url: login_path, method: :post, class: "ck-login__form" do |f| %>
       <div class="ck-field">

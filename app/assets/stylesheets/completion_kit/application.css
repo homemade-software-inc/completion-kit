@@ -345,6 +345,176 @@ form.button_to {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.ck-grid--cards-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* ── Dashboard: workspace stat ribbon ─────────────────────────────────
+   Replaces the old oversized count cards. One thin instrument strip,
+   four navigable segments split by hairline dividers. */
+.ck-statbar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 1.5rem;
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius-lg);
+  background: var(--ck-surface);
+  overflow: hidden;
+}
+.ck-statbar__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.95rem 1.3rem;
+  text-decoration: none;
+  border-left: 1px solid var(--ck-line);
+  transition: background 0.15s ease;
+}
+.ck-statbar__item:first-child { border-left: 0; }
+.ck-statbar__item:hover { background: var(--ck-surface-hover); }
+.ck-statbar__label {
+  font-family: var(--ck-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
+}
+.ck-statbar__value {
+  font-family: var(--ck-mono);
+  font-size: 1.65rem;
+  line-height: 1;
+  color: var(--ck-text);
+  transition: color 0.15s ease;
+}
+.ck-statbar__item:hover .ck-statbar__value { color: var(--ck-accent); }
+
+/* ── Dashboard: pulse cards (activity / worst metric / failed reviews) ── */
+.ck-pulse-grid { margin-top: 0.75rem; }
+
+.ck-stat-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 10.5rem;
+}
+.ck-stat-card .ck-kicker { margin-bottom: auto; }
+.ck-stat-card__foot {
+  margin-top: auto;
+  padding-top: 0.85rem;
+  font-family: var(--ck-mono);
+  font-size: 0.78rem;
+  color: var(--ck-muted);
+}
+.ck-stat-card__figure { color: var(--ck-text); }
+
+.ck-stat-card__body {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0.9rem 0 0.3rem;
+}
+.ck-stat-card__metric {
+  font-size: 1.2rem;
+  line-height: 1.25;
+  color: var(--ck-text);
+}
+.ck-stat-card__metric--empty { color: var(--ck-dim); }
+.ck-stat-card__score { align-self: center; }
+.ck-stat-card__count {
+  font-family: var(--ck-mono);
+  font-size: 2.6rem;
+  line-height: 1;
+}
+.ck-stat-card__count.is-clean { color: var(--ck-success, #4ade80); }
+.ck-stat-card__count.is-danger { color: var(--ck-danger, #f87171); }
+
+/* Dashboard activity sparkline — fixed-height row of bars, height set
+   inline per day. Bars hug the bottom; quiet days collapse to a sliver.
+   The busiest day(s) get the bright accent so the peak reads instantly. */
+.ck-sparkline {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 3.5rem;
+  margin: 0.9rem 0 0.3rem;
+  border-bottom: 1px solid var(--ck-line);
+  padding-bottom: 1px;
+}
+.ck-sparkline__bar {
+  flex: 1;
+  min-height: 2px;
+  background: var(--ck-line-strong);
+  border-radius: 2px 2px 0 0;
+  transition: background 0.15s ease;
+}
+.ck-sparkline__bar.is-peak { background: var(--ck-accent); }
+.ck-sparkline__bar:hover { background: var(--ck-accent-hover); }
+
+/* One orchestrated page-load reveal — the dashboard "boots up". */
+@keyframes ck-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ck-rise {
+  animation: ck-rise 0.32s ease both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck-rise { animation: none; }
+}
+
+/* ── Dashboard: prompt improvements list ──────────────────────────────
+   One row per family that improved version-over-version. Name takes the
+   slack; version transition, score transition, and delta sit to the right. */
+.ck-improvements {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+}
+.ck-improvement {
+  display: flex;
+  align-items: baseline;
+  gap: 1.1rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--ck-line);
+  font-family: var(--ck-mono);
+  font-size: 0.85rem;
+}
+.ck-improvement:first-child { border-top: 0; }
+.ck-improvement__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ck-improvement__versions {
+  color: var(--ck-dim);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.ck-improvement__scores {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  color: var(--ck-muted);
+  white-space: nowrap;
+}
+.ck-improvement__arrow { color: var(--ck-dim); }
+.ck-improvement__to { color: var(--ck-text); }
+.ck-improvement__delta {
+  min-width: 5rem;
+  text-align: right;
+}
+.ck-improvement__delta.is-gain { color: var(--ck-success); }
+.ck-improvement__delta.is-loss { color: var(--ck-danger); }
+.ck-improvements__empty {
+  margin: 0.85rem 0 0;
+  max-width: 46rem;
+  color: var(--ck-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
 .ck-grid--spaced,
 .ck-card--spaced,
 .ck-empty--spaced {
@@ -608,15 +778,18 @@ tr:hover .ck-chip--publish {
   max-width: 380px;
 }
 
+/* Login brand lockup — the standard puzzle logo + two-tone wordmark,
+   stacked and centred above the sign-in form. */
 .ck-login__brand {
-  font-family: var(--ck-mono);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--ck-accent);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  text-align: center;
-  margin: 0 0 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 auto 2rem;
+}
+.ck-login__brand .ck-brand__name {
+  padding-top: 0;
+  font-size: 1.4rem;
 }
 
 .ck-login__form {

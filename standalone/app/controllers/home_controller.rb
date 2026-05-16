@@ -11,7 +11,16 @@ class HomeController < ActionController::Base
     if @setup_complete
       @prompt_count = CompletionKit::Prompt.current_versions.count
       @run_count = CompletionKit::Run.count
+      @dataset_count = CompletionKit::Dataset.count
+      @metric_count = CompletionKit::Metric.count
       @recent_runs = CompletionKit::Run.order(created_at: :desc).limit(5)
+
+      if @run_count > 5
+        @activity = CompletionKit::DashboardStats.activity
+        @worst_metric = CompletionKit::DashboardStats.worst_metric(since: 7.days.ago)
+        @failed_review_count = CompletionKit::DashboardStats.failed_review_count(since: 7.days.ago)
+        @prompt_changes = CompletionKit::DashboardStats.prompt_changes
+      end
     end
   end
 

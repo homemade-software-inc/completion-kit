@@ -9,18 +9,102 @@
     </div>
   </section>
 
-  <div class="ck-grid ck-grid--cards">
-    <div class="ck-card">
-      <p class="ck-kicker">Prompts</p>
-      <p class="ck-title"><%= @prompt_count %></p>
-      <p class="ck-meta-copy"><%= link_to "View all prompts", completion_kit.prompts_path, class: "ck-link" %></p>
+  <nav class="ck-statbar ck-rise" aria-label="Workspace totals">
+    <%= link_to completion_kit.prompts_path, class: "ck-statbar__item" do %>
+      <span class="ck-statbar__label">Prompts</span>
+      <span class="ck-statbar__value"><%= @prompt_count %></span>
+    <% end %>
+    <%= link_to completion_kit.metrics_path, class: "ck-statbar__item" do %>
+      <span class="ck-statbar__label">Metrics</span>
+      <span class="ck-statbar__value"><%= @metric_count %></span>
+    <% end %>
+    <%= link_to completion_kit.datasets_path, class: "ck-statbar__item" do %>
+      <span class="ck-statbar__label">Datasets</span>
+      <span class="ck-statbar__value"><%= @dataset_count %></span>
+    <% end %>
+    <%= link_to completion_kit.runs_path, class: "ck-statbar__item" do %>
+      <span class="ck-statbar__label">Runs</span>
+      <span class="ck-statbar__value"><%= @run_count %></span>
+    <% end %>
+  </nav>
+
+  <% if @activity %>
+    <div class="ck-grid ck-grid--cards ck-grid--cards-3 ck-pulse-grid">
+      <div class="ck-card ck-stat-card ck-rise" style="--rise-delay: 60ms;">
+        <p class="ck-kicker">Activity · last 14 days</p>
+        <% activity_max = @activity.map { |d| d[:count] }.max %>
+        <div class="ck-sparkline" role="img" aria-label="<%= @activity.sum { |d| d[:count] } %> runs over the last 14 days">
+          <% @activity.each do |day| %>
+            <span class="ck-sparkline__bar<%= ' is-peak' if activity_max.to_i.positive? && day[:count] == activity_max %>"
+                  style="height: <%= activity_max.to_i.zero? ? 0 : (day[:count] * 100.0 / activity_max).round %>%"
+                  title="<%= day[:date].strftime('%b %-d') %>: <%= day[:count] %> run<%= 's' unless day[:count] == 1 %>"></span>
+          <% end %>
+        </div>
+        <p class="ck-stat-card__foot">
+          <span class="ck-stat-card__figure"><%= @activity.sum { |d| d[:count] } %></span> runs in the window
+        </p>
+      </div>
+
+      <div class="ck-card ck-stat-card ck-rise" style="--rise-delay: 120ms;">
+        <p class="ck-kicker">Worst metric · last 7 days</p>
+        <% if @worst_metric %>
+          <div class="ck-stat-card__body">
+            <span class="ck-stat-card__metric"><%= @worst_metric[:name] %></span>
+            <span class="<%= ck_badge_classes(ck_score_kind(@worst_metric[:avg])) %> ck-stat-card__score"><%= @worst_metric[:avg] %></span>
+          </div>
+          <p class="ck-stat-card__foot">
+            <% if @worst_metric[:response] %>
+              <%= link_to "Worst-scoring response →", completion_kit.run_response_path(@worst_metric[:response].run, @worst_metric[:response]), class: "ck-link" %>
+            <% else %>
+              Lowest average judge score this week.
+            <% end %>
+          </p>
+        <% else %>
+          <div class="ck-stat-card__body"><span class="ck-stat-card__metric ck-stat-card__metric--empty">No scored reviews</span></div>
+          <p class="ck-stat-card__foot">Run a judge to populate this.</p>
+        <% end %>
+      </div>
+
+      <div class="ck-card ck-stat-card ck-rise" style="--rise-delay: 180ms;">
+        <p class="ck-kicker">Failed reviews · last 7 days</p>
+        <div class="ck-stat-card__body">
+          <span class="ck-stat-card__count<%= @failed_review_count.positive? ? ' is-danger' : ' is-clean' %>"><%= @failed_review_count %></span>
+        </div>
+        <p class="ck-stat-card__foot">
+          <% if @failed_review_count.positive? %>
+            Judge errors, parse failures, truncations.
+          <% else %>
+            All judge reviews completed cleanly.
+          <% end %>
+        </p>
+      </div>
     </div>
-    <div class="ck-card">
-      <p class="ck-kicker">Runs</p>
-      <p class="ck-title"><%= @run_count %></p>
-      <p class="ck-meta-copy"><%= link_to "View all runs", completion_kit.runs_path, class: "ck-link" %></p>
+
+    <div class="ck-card ck-card--spaced ck-rise" style="--rise-delay: 240ms;">
+      <p class="ck-kicker">Prompt changes · version over version</p>
+      <% if @prompt_changes.any? %>
+        <ul class="ck-improvements">
+          <% @prompt_changes.each do |row| %>
+            <% gained = row[:delta].positive? %>
+            <li class="ck-improvement">
+              <%= link_to row[:prompt].name, completion_kit.prompt_path(row[:prompt]), class: "ck-improvement__name ck-link" %>
+              <span class="ck-improvement__versions">v<%= row[:from_version] %> &rarr; v<%= row[:to_version] %></span>
+              <span class="ck-improvement__scores">
+                <span class="ck-improvement__from"><%= row[:from_score] %></span>
+                <span class="ck-improvement__arrow">&rarr;</span>
+                <span class="ck-improvement__to"><%= row[:to_score] %></span>
+              </span>
+              <span class="ck-improvement__delta <%= gained ? 'is-gain' : 'is-loss' %>"><%= gained ? '▲' : '▼' %> <%= '%+.2f' % row[:delta] %></span>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="ck-improvements__empty">
+          No measured changes yet. Edit a prompt to create a new version, re-run it against the same dataset and metrics, and the score change — up or down — shows up here.
+        </p>
+      <% end %>
     </div>
-  </div>
+  <% end %>
 
   <section class="ck-card--spaced">
     <div class="ck-split">

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.19] - 2026-05-15
+
+### Added
+
+- **Dashboard analytics** (issue #29). The standalone dashboard now surfaces what's actually happening in the workspace via a new `CompletionKit::DashboardStats` service:
+  - **Activity** — a 14-day runs-per-day sparkline; the busiest day(s) get the bright accent.
+  - **Worst metric** — the lowest-average judge metric over the last 7 days, with a deep link to its worst-scoring response. The "what should I work on?" answer.
+  - **Failed reviews** — a 7-day count of terminally-failed reviews (parse failures, truncations, provider errors). Green when clean, red when not.
+  - **Prompt changes** — per prompt family, the most recent measurable version-over-version score change, gains *and* regressions. Compares the latest draft against the published version when a draft sits ahead, or the published version against its predecessor when the latest is published. `▲`/`▼` with green/red deltas. Has an instructive empty state so a fresh workspace never shows a blank panel.
+  - Analytics are gated behind `> 5` runs so brand-new workspaces just see the stat ribbon and recent runs.
+
+### Changed
+
+- **Dashboard redesign.** The two oversized prompt/run count cards are replaced by a slim four-segment stat ribbon (Prompts · Metrics · Datasets · Runs — matching the nav order), and the analytics cards become the visual hero with a consistent footer-pinned layout and a subtle staggered page-load reveal (`prefers-reduced-motion` respected).
+- **Standalone layouts now use the engine's standard brand.** The dashboard, login, and topbar were still rendering an old `logo-device.svg` / `logo.svg` and a plain wordmark. They now use the engine's puzzle-piece `logo.png` + two-tone "Completion**Kit**" wordmark and `favicon.ico`, consistent with every engine page. The two dead logo assets were removed.
+
 ## [0.5.18] - 2026-05-15
 
 ### Fixed
