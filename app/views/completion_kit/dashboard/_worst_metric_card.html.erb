@@ -29,7 +29,7 @@
           <% ignored_metrics.each do |dismissal| %>
             <li class="ck-flyout__item">
               <span class="ck-flyout__label">
-                <%= dismissal.dismissable.name %>
+                <span class="ck-flyout__name"><%= dismissal.dismissable.name %></span>
                 <% if dismissal.baseline_score %>
                   <span class="ck-flyout__meta">baseline <%= dismissal.baseline_score %></span>
                 <% end %>
