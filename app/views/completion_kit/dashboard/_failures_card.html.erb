@@ -33,7 +33,7 @@
           <ul class="ck-flyout__panel">
             <% ignored_failures.each do |dismissal| %>
               <li class="ck-flyout__item">
-                <span class="ck-flyout__label"><%= dismissal.dismissable_type.demodulize %> #<%= dismissal.dismissable_id %></span>
+                <span class="ck-flyout__label"><span class="ck-flyout__name"><%= dismissal.dismissable_type.demodulize %> #<%= dismissal.dismissable_id %></span></span>
                 <%= button_to completion_kit.dashboard_dismissal_path(dismissal),
                       method: :delete, class: "ck-icon-btn", title: "Un-ignore",
                       "aria-label": "Un-ignore #{dismissal.dismissable_type.demodulize} #{dismissal.dismissable_id}" do %><%= render "completion_kit/dashboard/eye_icon" %><% end %>
