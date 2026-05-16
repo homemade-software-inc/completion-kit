@@ -10,7 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_14_175345) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_16_201333) do
+  create_table "completion_kit_dashboard_dismissals", force: :cascade do |t|
+    t.decimal "baseline_score", precision: 4, scale: 1
+    t.datetime "created_at", null: false
+    t.bigint "dismissable_id", null: false
+    t.string "dismissable_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["dismissable_type", "dismissable_id"], name: "index_ck_dashboard_dismissals_on_dismissable", unique: true
+  end
+
   create_table "completion_kit_datasets", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "csv_data", null: false

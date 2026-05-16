@@ -150,11 +150,14 @@ RSpec.describe CompletionKit::DashboardStats, type: :service do
       expect(described_class.failures(since: 7.days.ago)[:count]).to eq(0)
     end
 
-    it "excludes dismissed failures" do
+    it "excludes dismissed failures across all three surfaces" do
       run = create(:completion_kit_run, status: "failed", failure_summary: "crash")
       response = create(:completion_kit_response, :failed)
+      review = create(:completion_kit_review, response: create(:completion_kit_response),
+                                              status: "failed", ai_score: nil)
       CompletionKit::DashboardDismissal.create!(dismissable: run)
       CompletionKit::DashboardDismissal.create!(dismissable: response)
+      CompletionKit::DashboardDismissal.create!(dismissable: review)
 
       result = described_class.failures(since: 7.days.ago)
       expect(result[:count]).to eq(0)
