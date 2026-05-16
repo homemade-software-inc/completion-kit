@@ -2,6 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Claude Code Usage
+
+Invoke Claude Code from the project root with:
+```bash
+claude --permission-mode bypassPermissions --print 'your prompt here'
+```
+
+Use `--print` for non-interactive mode (no PTY needed). The `--permission-mode bypassPermissions` flag allows Claude Code to make edits without manual approval.
+
+For longer tasks, use background mode:
+```bash
+claude --permission-mode bypassPermissions --print 'your task' &
+```
+
 ## Standalone App
 - Logs: `standalone/log/` (check `development.log` for runtime errors)
 - Rails runner: `cd standalone && bin/rails runner "..."`
