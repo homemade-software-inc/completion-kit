@@ -10,7 +10,8 @@
 .idea/
 spec/dummy/tmp/
 .superpowers/
-.claude/
+.claude/*
+!.claude/agents/
 **/master.key
 standalone/tmp/
 standalone/log/*.log
