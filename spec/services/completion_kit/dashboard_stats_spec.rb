@@ -27,43 +27,145 @@ RSpec.describe CompletionKit::DashboardStats, type: :service do
       expect(described_class.worst_metric(since: 7.days.ago)).to be_nil
     end
 
-    it "surfaces the lowest-average metric and its worst-scoring response" do
+    it "surfaces the lowest-average metric, its record, and its worst-scoring response" do
+      accuracy = create(:completion_kit_metric, name: "Accuracy")
+      brevity = create(:completion_kit_metric, name: "Brevity")
       strong = create(:completion_kit_response)
       weak_a = create(:completion_kit_response)
       weak_b = create(:completion_kit_response)
-      create(:completion_kit_review, response: strong, metric_name: "Accuracy", ai_score: 5.0)
-      create(:completion_kit_review, response: weak_a, metric_name: "Brevity", ai_score: 2.0)
-      create(:completion_kit_review, response: weak_b, metric_name: "Brevity", ai_score: 1.0)
+      create(:completion_kit_review, response: strong, metric: accuracy, ai_score: 5.0)
+      create(:completion_kit_review, response: weak_a, metric: brevity, ai_score: 2.0)
+      create(:completion_kit_review, response: weak_b, metric: brevity, ai_score: 1.0)
 
       result = described_class.worst_metric(since: 7.days.ago)
 
+      expect(result[:metric]).to eq(brevity)
       expect(result[:name]).to eq("Brevity")
       expect(result[:avg]).to eq(1.5)
       expect(result[:score]).to eq(1.0)
       expect(result[:response]).to eq(weak_b)
     end
 
-    it "ignores failed reviews and reviews outside the window" do
+    it "ignores failed reviews, out-of-window reviews, and reviews with no metric" do
+      accuracy = create(:completion_kit_metric, name: "Accuracy")
+      stale = create(:completion_kit_metric, name: "Stale")
       recent = create(:completion_kit_response)
       old = create(:completion_kit_response)
-      create(:completion_kit_review, response: recent, metric_name: "Accuracy", ai_score: 4.0)
-      create(:completion_kit_review, response: recent, metric_name: "Failed", status: "failed", ai_score: nil)
-      create(:completion_kit_review, response: old, metric_name: "Stale", ai_score: 1.0, created_at: 40.days.ago)
+      create(:completion_kit_review, response: recent, metric: accuracy, ai_score: 4.0)
+      create(:completion_kit_review, response: recent, metric: nil, metric_name: "Orphan",
+                                     status: "failed", ai_score: nil)
+      create(:completion_kit_review, response: old, metric: stale, ai_score: 1.0,
+                                     created_at: 40.days.ago)
+
+      expect(described_class.worst_metric(since: 7.days.ago)[:name]).to eq("Accuracy")
+    end
+
+    it "excludes a dismissed metric while its average holds at or above the baseline" do
+      good = create(:completion_kit_metric, name: "Tone")
+      bad = create(:completion_kit_metric, name: "Accuracy")
+      create(:completion_kit_review, response: create(:completion_kit_response), metric: good, ai_score: 4.0)
+      create(:completion_kit_review, response: create(:completion_kit_response), metric: bad, ai_score: 2.0)
+      CompletionKit::DashboardDismissal.create!(dismissable: bad, baseline_score: 2.0)
+
+      expect(described_class.worst_metric(since: 7.days.ago)[:name]).to eq("Tone")
+    end
+
+    it "resurfaces a dismissed metric that regressed below baseline and clears the stale dismissal" do
+      bad = create(:completion_kit_metric, name: "Accuracy")
+      create(:completion_kit_review, response: create(:completion_kit_response), metric: bad, ai_score: 1.0)
+      dismissal = CompletionKit::DashboardDismissal.create!(dismissable: bad, baseline_score: 3.0)
 
       result = described_class.worst_metric(since: 7.days.ago)
 
       expect(result[:name]).to eq("Accuracy")
+      expect(CompletionKit::DashboardDismissal.exists?(dismissal.id)).to be(false)
+    end
+
+    it "returns nil when every metric is dismissed and holding" do
+      metric = create(:completion_kit_metric, name: "Accuracy")
+      create(:completion_kit_review, response: create(:completion_kit_response), metric: metric, ai_score: 3.0)
+      CompletionKit::DashboardDismissal.create!(dismissable: metric, baseline_score: 3.0)
+
+      expect(described_class.worst_metric(since: 7.days.ago)).to be_nil
     end
   end
 
-  describe ".failed_review_count" do
-    it "counts only failed reviews inside the window" do
-      response = create(:completion_kit_response)
-      create(:completion_kit_review, response: response, status: "failed", ai_score: nil)
-      create(:completion_kit_review, response: response, status: "failed", ai_score: nil, created_at: 40.days.ago)
-      create(:completion_kit_review, response: response, status: "succeeded", ai_score: 4.0)
+  describe ".metric_average" do
+    it "returns the rounded window average for a metric" do
+      metric = create(:completion_kit_metric)
+      create(:completion_kit_review, response: create(:completion_kit_response), metric: metric, ai_score: 2.0)
+      create(:completion_kit_review, response: create(:completion_kit_response), metric: metric, ai_score: 3.0)
 
-      expect(described_class.failed_review_count(since: 7.days.ago)).to eq(1)
+      expect(described_class.metric_average(metric.id, since: 7.days.ago)).to eq(2.5)
+    end
+
+    it "returns nil when the metric has no scored reviews in the window" do
+      expect(described_class.metric_average(create(:completion_kit_metric).id, since: 7.days.ago)).to be_nil
+    end
+  end
+
+  describe ".failures" do
+    it "is empty when nothing failed in the window" do
+      result = described_class.failures(since: 7.days.ago)
+      expect(result[:count]).to eq(0)
+      expect(result[:items]).to eq([])
+    end
+
+    it "aggregates run, generation, and judge failures with cause and run link" do
+      run = create(:completion_kit_run, status: "failed", failure_summary: "Worker crashed")
+      bad_response = create(:completion_kit_response, :failed)
+      good_response = create(:completion_kit_response)
+      create(:completion_kit_review, response: good_response, status: "failed",
+                                     ai_score: nil, error_class: "CompletionKit::JudgeParseError",
+                                     error_provider: "openai")
+
+      result = described_class.failures(since: 7.days.ago)
+
+      expect(result[:count]).to eq(3)
+      surfaces = result[:items].map { |i| i[:surface] }
+      expect(surfaces).to contain_exactly("run", "generation", "judge")
+      run_item = result[:items].find { |i| i[:surface] == "run" }
+      expect(run_item[:cause]).to eq("Worker crashed")
+      expect(run_item[:run]).to eq(run)
+      gen_item = result[:items].find { |i| i[:surface] == "generation" }
+      expect(gen_item[:cause]).to eq("Faraday::TimeoutError")
+      expect(gen_item[:run]).to eq(bad_response.run)
+      judge_item = result[:items].find { |i| i[:surface] == "judge" }
+      expect(judge_item[:cause]).to eq("CompletionKit::JudgeParseError")
+      expect(judge_item[:run]).to eq(good_response.run)
+    end
+
+    it "falls back to default cause text when failure detail is missing" do
+      create(:completion_kit_run, status: "failed", failure_summary: nil)
+      response = create(:completion_kit_response, status: "failed", error_class: nil)
+      create(:completion_kit_review, response: response, status: "failed", ai_score: nil, error_class: nil)
+
+      causes = described_class.failures(since: 7.days.ago)[:items].map { |i| i[:cause] }
+      expect(causes).to contain_exactly("Run failed", "Unknown error", "Unknown error")
+    end
+
+    it "excludes failures outside the window" do
+      create(:completion_kit_run, status: "failed", created_at: 40.days.ago)
+      create(:completion_kit_response, :failed, created_at: 40.days.ago)
+      expect(described_class.failures(since: 7.days.ago)[:count]).to eq(0)
+    end
+
+    it "excludes dismissed failures" do
+      run = create(:completion_kit_run, status: "failed", failure_summary: "crash")
+      response = create(:completion_kit_response, :failed)
+      CompletionKit::DashboardDismissal.create!(dismissable: run)
+      CompletionKit::DashboardDismissal.create!(dismissable: response)
+
+      result = described_class.failures(since: 7.days.ago)
+      expect(result[:count]).to eq(0)
+    end
+
+    it "orders items most recent first" do
+      old = create(:completion_kit_run, status: "failed", updated_at: 5.days.ago)
+      recent = create(:completion_kit_run, status: "failed", updated_at: 1.hour.ago)
+
+      items = described_class.failures(since: 7.days.ago)[:items]
+      expect(items.map { |i| i[:record] }).to eq([recent, old])
     end
   end
 
