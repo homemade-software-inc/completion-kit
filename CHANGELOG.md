@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.20] - 2026-05-16
+
+### Added
+
+- **Dismissible dashboard alerts.** The worst-metric and failures cards can now be triaged:
+  - **Ignore a worst metric** once you've acted on it. The card surfaces the next-worst metric instead. The metric's window average is snapshotted at ignore time — it stays hidden while it holds at or above that baseline, and **resurfaces automatically if it regresses below it** (the stale dismissal is cleared so re-ignoring re-snapshots). A genuinely-worse other metric still appears on its own.
+  - **Ignore a failure.** Failures are finished events, so a failure dismissal is permanent until un-ignored.
+  - Each card has an **"N ignored" flyout** listing what's been dismissed, each with an un-ignore button. Ignore and un-ignore update the dashboard in place via Turbo Streams — no reload.
+- New polymorphic `CompletionKit::DashboardDismissal` model and `CompletionKit::DashboardDismissalsController`.
+
+### Changed
+
+- **The narrow "Failed reviews" card is now a unified "Failures" card.** It previously counted only failed judge reviews; it now covers all three failure surfaces over the 7-day window — failed runs, failed generations, and failed judge reviews — each with its cause and a deep link. `DashboardStats.failed_review_count` is replaced by `DashboardStats.failures`.
+- `DashboardStats.worst_metric` now groups by metric id (was metric name) so dismissals can be matched, and skips dismissed metrics.
+- The standalone dashboard layout now loads Turbo, so dashboard actions update in place.
+
 ## [0.5.19] - 2026-05-15
 
 ### Added
