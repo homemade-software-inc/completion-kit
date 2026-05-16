@@ -214,6 +214,19 @@ ActiveRecord::Schema.define do
   add_index :completion_kit_mcp_sessions, :session_id, unique: true
   add_index :completion_kit_mcp_sessions, :expires_at
 
+  create_table :completion_kit_calibrations, force: true do |t|
+    t.references :run, null: false
+    t.references :response, null: false
+    t.references :metric
+    t.string :anonymous_id, null: false
+    t.string :verdict, null: false
+    t.decimal :corrected_score, precision: 3, scale: 2
+    t.text :note
+    t.integer :judge_version_id
+    t.timestamps
+  end
+  add_index :completion_kit_calibrations, [:run_id, :response_id, :metric_id, :anonymous_id], unique: true, name: "index_calibrations_unique"
+
   create_table :completion_kit_dashboard_dismissals, force: true do |t|
     t.string :dismissable_type, null: false
     t.bigint :dismissable_id, null: false

@@ -158,3 +158,117 @@ document.addEventListener("turbo:before-stream-render", function(event) {
     if (status) { status.textContent = 'Models updated.'; setTimeout(function() { status.textContent = ' '; }, 3000); }
   }
 });
+
+// Verdict button handling
+document.addEventListener("click", function(e) {
+  var btn = e.target.closest(".ck-verdict-btn");
+  if (!btn) return;
+  
+  var container = btn.closest(".ck-verdict-buttons");
+  var detail = container.nextElementSibling;
+  var verdict = btn.getAttribute("data-verdict");
+  
+  if (verdict === "disagree") {
+    // Show the slider/note panel
+    if (detail && detail.classList.contains("ck-verdict-detail")) {
+      detail.style.display = detail.style.display === "none" ? "block" : "none";
+    }
+    return;
+  }
+  
+  // For agree/borderline, submit immediately
+  submitVerdict(container, verdict);
+});
+
+document.addEventListener("click", function(e) {
+  var submitBtn = e.target.closest(".ck-verdict-submit");
+  if (!submitBtn) return;
+  
+  var container = submitBtn.closest(".ck-verdict-buttons");
+  var detail = container.nextElementSibling;
+  var verdict = "disagree";
+  
+  submitVerdict(container, verdict, detail);
+});
+
+function submitVerdict(container, verdict, detail) {
+  var runId = container.getAttribute("data-run-id");
+  var responseId = container.getAttribute("data-response-id");
+  var metricId = container.getAttribute("data-metric-id");
+  var anonymousId = container.getAttribute("data-anonymous-id");
+
+  // Ensure anonymous_id is persisted in a cookie
+  if (!getCookie("verdict_anonymous_id")) {
+    setCookie("verdict_anonymous_id", anonymousId, 365);
+  }
+
+  var payload = {
+    calibration: {
+      run_id: runId,
+      response_id: responseId,
+      metric_id: metricId || null,
+      anonymous_id: anonymousId,
+      verdict: verdict
+    }
+  };
+  
+  // If disagree and detail panel is present, include corrected_score and note
+  if (verdict === "disagree" && detail) {
+    var slider = detail.querySelector(".ck-slider");
+    var textarea = detail.querySelector(".ck-textarea");
+    if (slider) payload.calibration.corrected_score = parseFloat(slider.value);
+    if (textarea && textarea.value.trim()) payload.calibration.note = textarea.value.trim();
+  }
+  
+  var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+  
+  fetch("/completion_kit/calibrations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": csrfToken,
+      "Accept": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(function(response) {
+    if (response.ok) {
+      // Update button states to show selected
+      container.querySelectorAll(".ck-verdict-btn").forEach(function(b) {
+        b.classList.remove("ck-verdict-btn--selected");
+      });
+      container.querySelector("[data-verdict='" + verdict + "']").classList.add("ck-verdict-btn--selected");
+      
+      // Hide detail panel after submit
+      if (detail) detail.style.display = "none";
+    }
+  });
+}
+
+// Slider value display
+document.addEventListener("input", function(e) {
+  if (!e.target.classList.contains("ck-slider")) return;
+  var valueDisplay = e.target.nextElementSibling;
+  if (valueDisplay && valueDisplay.classList.contains("ck-slider-value")) {
+    valueDisplay.textContent = e.target.value;
+  }
+});
+
+// Cookie helpers for anonymous ID persistence
+function getCookie(name) {
+  var match = document.cookie.match(new RegExp('(?:^|\\s)' + name + '=([^;]*)'));
+  return match ? match[1] : null;
+}
+
+function setCookie(name, value, days) {
+  var expires = new Date();
+  expires.setTime(expires.getTime() + days * 864e5);
+  document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + expires.toUTCString() + ';path=/';
+}
+
+// Ensure anonymous_id cookie exists
+(function() {
+  if (!getCookie('verdict_anonymous_id')) {
+    setCookie('verdict_anonymous_id', crypto.randomUUID(), 365);
+  }
+})();

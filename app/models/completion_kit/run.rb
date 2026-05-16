@@ -12,6 +12,7 @@ module CompletionKit
     has_many :metrics, through: :run_metrics
     has_many :suggestions, dependent: :destroy
     has_many :dashboard_dismissals, as: :dismissable, dependent: :destroy
+    has_many :calibrations, dependent: :destroy
 
     validates :name, presence: true
     validates :status, inclusion: { in: STATUSES }

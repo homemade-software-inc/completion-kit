@@ -98,7 +98,7 @@
 
     <div class="ck-review-list">
       <% @reviews.each do |review| %>
-        <div class="ck-review-card">
+        <div class="ck-review-card" data-review-id="<%= review.id %>">
           <div class="ck-review-card__header">
             <span class="ck-review-card__metric"><% if review.metric %><%= link_to review.metric_name, metric_path(review.metric), class: "ck-link" %><% else %><%= review.metric_name %><% end %></span>
             <div class="ck-inline">
@@ -116,6 +116,21 @@
               <div class="ck-note-box"><%= review.ai_feedback %></div>
             </div>
           <% end %>
+          <div class="ck-verdict-buttons" data-run-id="<%= @run.id %>" data-response-id="<%= @response.id %>" data-metric-id="<%= review.metric_id %>" data-review-id="<%= review.id %>" data-anonymous-id="<%= cookies[:verdict_anonymous_id] || SecureRandom.uuid %>">
+            <button type="button" class="ck-verdict-btn ck-verdict-btn--agree" data-verdict="agree">Agree</button>
+            <button type="button" class="ck-verdict-btn ck-verdict-btn--disagree" data-verdict="disagree">Disagree</button>
+            <button type="button" class="ck-verdict-btn ck-verdict-btn--borderline" data-verdict="borderline">Borderline</button>
+          </div>
+          <div class="ck-verdict-detail" style="display: none;">
+            <label class="ck-label">Corrected score:
+              <input type="range" class="ck-slider" min="1" max="5" step="0.25" value="3">
+              <span class="ck-slider-value">3</span>
+            </label>
+            <label class="ck-label">Note:
+              <textarea class="ck-textarea" placeholder="Explain your verdict..."></textarea>
+            </label>
+            <button type="button" class="ck-verdict-submit ck-button ck-button--primary">Submit</button>
+          </div>
         </div>
       <% end %>
     </div>

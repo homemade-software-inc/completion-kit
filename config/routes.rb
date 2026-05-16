@@ -16,6 +16,7 @@ CompletionKit::Engine.routes.draw do
   resources :metric_groups
   resources :tags
   resources :dashboard_dismissals, only: [:create, :destroy]
+  resources :calibrations, only: [:create]
 
   resources :runs do
     member do

@@ -6,6 +6,7 @@ module CompletionKit
     belongs_to :run
     has_many :reviews, dependent: :destroy
     has_many :dashboard_dismissals, as: :dismissable, dependent: :destroy
+    has_many :calibrations, dependent: :destroy
 
     delegate :prompt, to: :run
 
