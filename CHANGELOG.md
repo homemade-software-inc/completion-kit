@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.18] - 2026-05-15
+
+### Fixed
+
+- **Engine path helpers still raised `UrlGenerationError` under a dynamic mount scope** (issue #30, reopened). 0.5.17 passed `**url_options` whole, but `url_options` carries the host's dynamic segments nested inside `_recall` (`{controller:, action:, org_slug: "acme"}`). The engine's url_helpers won't pull a required segment out of the nested recall hash — it has to arrive as a direct kwarg. `ck_run_path` / `ck_prompt_path` / `ck_dataset_path` now go through `ck_engine_path_options`, which lifts `url_options[:_recall]` minus `:controller`/`:action` into explicit kwargs. A host mounting the engine under `scope "/orgs/:org_slug"` now resolves `org_slug` automatically; standalone (no recall segments) is unaffected.
+
 ## [0.5.17] - 2026-05-15
 
 ### Fixed

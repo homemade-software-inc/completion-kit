@@ -302,18 +302,24 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     let(:prompt) { instance_double(CompletionKit::Prompt, to_param: "the-prompt") }
     let(:dataset) { instance_double(CompletionKit::Dataset, to_param: "the-dataset") }
 
-    it "returns a plain engine path when url_options is empty" do
+    it "returns a plain engine path when there is no recall context" do
       allow(helper).to receive(:url_options).and_return({})
       expect(helper.ck_run_path(run)).to eq("/completion_kit/runs/42")
       expect(helper.ck_prompt_path(prompt)).to eq("/completion_kit/prompts/the-prompt")
       expect(helper.ck_dataset_path(dataset)).to eq("/completion_kit/datasets/the-dataset")
     end
 
-    it "threads extra url_options through to the engine route (so dynamic mount scopes resolve)" do
-      allow(helper).to receive(:url_options).and_return(org_slug: "acme", host: "example.test")
+    it "passes recall segments (minus controller/action) as explicit kwargs so dynamic mount scopes resolve" do
+      allow(helper).to receive(:url_options).and_return(
+        _recall: { controller: "completion_kit/runs", action: "index", org_slug: "acme" }
+      )
       engine_helpers = CompletionKit::Engine.routes.url_helpers
       expect(engine_helpers).to receive(:run_path).with(run, org_slug: "acme").and_return("/orgs/acme/runs/42")
+      expect(engine_helpers).to receive(:prompt_path).with(prompt, org_slug: "acme").and_return("/orgs/acme/prompts/the-prompt")
+      expect(engine_helpers).to receive(:dataset_path).with(dataset, org_slug: "acme").and_return("/orgs/acme/datasets/the-dataset")
       expect(helper.ck_run_path(run)).to eq("/orgs/acme/runs/42")
+      expect(helper.ck_prompt_path(prompt)).to eq("/orgs/acme/prompts/the-prompt")
+      expect(helper.ck_dataset_path(dataset)).to eq("/orgs/acme/datasets/the-dataset")
     end
   end
 

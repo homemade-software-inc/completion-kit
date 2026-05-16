@@ -180,15 +180,23 @@ module CompletionKit
     end
 
     def ck_run_path(run)
-      CompletionKit::Engine.routes.url_helpers.run_path(run, **url_options.except(:host, :protocol, :script_name))
+      CompletionKit::Engine.routes.url_helpers.run_path(run, **ck_engine_path_options)
     end
 
     def ck_prompt_path(prompt)
-      CompletionKit::Engine.routes.url_helpers.prompt_path(prompt, **url_options.except(:host, :protocol, :script_name))
+      CompletionKit::Engine.routes.url_helpers.prompt_path(prompt, **ck_engine_path_options)
     end
 
     def ck_dataset_path(dataset)
-      CompletionKit::Engine.routes.url_helpers.dataset_path(dataset, **url_options.except(:host, :protocol, :script_name))
+      CompletionKit::Engine.routes.url_helpers.dataset_path(dataset, **ck_engine_path_options)
+    end
+
+    # Dynamic route segments owned by the host's mount scope (e.g. an
+    # `org_slug` from `scope "/orgs/:org_slug"`) live in `url_options[:_recall]`.
+    # The engine's url_helpers won't read them out of the nested recall hash to
+    # satisfy a required segment — they have to arrive as explicit kwargs.
+    def ck_engine_path_options
+      (url_options[:_recall] || {}).except(:controller, :action)
     end
 
     def ck_format_maybe_json(text)
