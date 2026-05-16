@@ -11,6 +11,7 @@ module CompletionKit
     has_many :run_metrics, -> { order(:position) }, dependent: :destroy
     has_many :metrics, through: :run_metrics
     has_many :suggestions, dependent: :destroy
+    has_many :dashboard_dismissals, as: :dismissable, dependent: :destroy
 
     validates :name, presence: true
     validates :status, inclusion: { in: STATUSES }

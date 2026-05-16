@@ -5,6 +5,7 @@ module CompletionKit
 
     belongs_to :response
     belongs_to :metric, optional: true
+    has_many :dashboard_dismissals, as: :dismissable, dependent: :destroy
 
     validates :metric_name, presence: true
     validates :status, inclusion: { in: STATUSES }
