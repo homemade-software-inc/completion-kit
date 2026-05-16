@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.21] - 2026-05-16
+
+### Changed
+
+- The dashboard's ignored-items popover is larger and more spread out — each row stacks the metric name above its baseline score with more breathing room.
+
 ## [0.5.20] - 2026-05-16
 
 ### Added
