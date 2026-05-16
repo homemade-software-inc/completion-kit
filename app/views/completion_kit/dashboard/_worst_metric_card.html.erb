@@ -1,0 +1,49 @@
+<div class="ck-card ck-stat-card ck-rise" id="ck-worst-metric-card" style="--rise-delay: 120ms;">
+  <p class="ck-kicker">Worst metric · last 7 days</p>
+  <% if worst_metric %>
+    <div class="ck-stat-card__body">
+      <span class="ck-stat-card__metric"><%= worst_metric[:name] %></span>
+      <span class="<%= ck_badge_classes(ck_score_kind(worst_metric[:avg])) %> ck-stat-card__score"><%= worst_metric[:avg] %></span>
+    </div>
+    <p class="ck-stat-card__foot">
+      <% if worst_metric[:response] %>
+        <%= link_to "Worst-scoring response →",
+              completion_kit.run_response_path(worst_metric[:response].run, worst_metric[:response]),
+              class: "ck-link" %>
+      <% else %>
+        Lowest average judge score this week.
+      <% end %>
+      <%= button_to "Ignore",
+            completion_kit.dashboard_dismissals_path,
+            params: { dashboard_dismissal: { dismissable_type: "CompletionKit::Metric",
+                                             dismissable_id: worst_metric[:metric].id } },
+            class: "ck-dismiss-btn" %>
+    </p>
+  <% else %>
+    <div class="ck-stat-card__body">
+      <span class="ck-stat-card__metric ck-stat-card__metric--empty">No scored reviews</span>
+    </div>
+    <p class="ck-stat-card__foot">Run a judge to populate this.</p>
+  <% end %>
+
+  <% if ignored_metrics.any? %>
+    <details class="ck-flyout">
+      <summary class="ck-flyout__toggle"><%= ignored_metrics.size %> ignored</summary>
+      <ul class="ck-flyout__list">
+        <% ignored_metrics.each do |dismissal| %>
+          <li class="ck-flyout__item">
+            <span class="ck-flyout__label">
+              <%= dismissal.dismissable.name %>
+              <% if dismissal.baseline_score %>
+                <span class="ck-flyout__meta">baseline <%= dismissal.baseline_score %></span>
+              <% end %>
+            </span>
+            <%= button_to "Un-ignore",
+                  completion_kit.dashboard_dismissal_path(dismissal),
+                  method: :delete, class: "ck-dismiss-btn" %>
+          </li>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+</div>

@@ -4630,3 +4630,97 @@ a.tag-mark {
   .ck-launch__ready-panel,
   .ck-launch__step { animation: none; }
 }
+
+.ck-dismiss-btn {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--ck-sans);
+  color: var(--ck-dim);
+  background: transparent;
+  border: 1px solid var(--ck-line-strong);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.ck-dismiss-btn:hover {
+  color: var(--ck-text);
+  border-color: var(--ck-dim);
+}
+.ck-dismiss-btn--icon {
+  margin-left: auto;
+  padding: 0 0.45rem;
+  line-height: 1.4;
+}
+.ck-dismiss-btn form,
+.ck-failure-list__item form,
+.ck-flyout__item form { display: inline; margin: 0; }
+
+.ck-failure-list {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.ck-failure-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+.ck-failure-list__surface {
+  flex: none;
+  padding: 0.06rem 0.45rem;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  background: var(--ck-surface-soft);
+  color: var(--ck-dim);
+}
+.ck-failure-list__surface--run { color: var(--ck-warning); }
+.ck-failure-list__surface--generation { color: var(--ck-danger); }
+.ck-failure-list__surface--judge { color: var(--ck-info); }
+.ck-failure-list__cause {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ck-flyout {
+  margin-top: 0.7rem;
+  border-top: 1px solid var(--ck-line);
+  padding-top: 0.5rem;
+}
+.ck-flyout__toggle {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ck-dim);
+  cursor: pointer;
+}
+.ck-flyout__toggle:hover { color: var(--ck-text); }
+.ck-flyout__list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.ck-flyout__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+.ck-flyout__meta {
+  margin-left: 0.35rem;
+  color: var(--ck-dim);
+  font-size: 0.7rem;
+}

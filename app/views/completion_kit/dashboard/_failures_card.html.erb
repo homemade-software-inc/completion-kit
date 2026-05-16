@@ -1,0 +1,45 @@
+<div class="ck-card ck-stat-card ck-rise" id="ck-failures-card" style="--rise-delay: 180ms;">
+  <p class="ck-kicker">Failures · last 7 days</p>
+  <div class="ck-stat-card__body">
+    <span class="ck-stat-card__count<%= failures[:count].positive? ? ' is-danger' : ' is-clean' %>"><%= failures[:count] %></span>
+  </div>
+
+  <% if failures[:items].any? %>
+    <ul class="ck-failure-list">
+      <% failures[:items].each do |item| %>
+        <li class="ck-failure-list__item">
+          <span class="ck-failure-list__surface ck-failure-list__surface--<%= item[:surface] %>"><%= item[:surface] %></span>
+          <% if item[:run] %>
+            <%= link_to item[:cause], completion_kit.run_path(item[:run]), class: "ck-link ck-failure-list__cause" %>
+          <% else %>
+            <span class="ck-failure-list__cause"><%= item[:cause] %></span>
+          <% end %>
+          <%= button_to "×",
+                completion_kit.dashboard_dismissals_path,
+                params: { dashboard_dismissal: { dismissable_type: item[:record].class.name,
+                                                 dismissable_id: item[:record].id } },
+                class: "ck-dismiss-btn ck-dismiss-btn--icon",
+                form: { "aria-label": "Dismiss failure" } %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="ck-stat-card__foot">All clear — nothing failed this week.</p>
+  <% end %>
+
+  <% if ignored_failures.any? %>
+    <details class="ck-flyout">
+      <summary class="ck-flyout__toggle"><%= ignored_failures.size %> ignored</summary>
+      <ul class="ck-flyout__list">
+        <% ignored_failures.each do |dismissal| %>
+          <li class="ck-flyout__item">
+            <span class="ck-flyout__label"><%= dismissal.dismissable_type.demodulize %> #<%= dismissal.dismissable_id %></span>
+            <%= button_to "Un-ignore",
+                  completion_kit.dashboard_dismissal_path(dismissal),
+                  method: :delete, class: "ck-dismiss-btn" %>
+          </li>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+</div>
