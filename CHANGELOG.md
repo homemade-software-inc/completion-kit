@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.22] - 2026-05-16
+
+### Changed
+
+- **Responsive mobile layout.** Below 640px the topbar nav collapses to a hamburger menu (a no-JS `<details>` disclosure); result tables scroll horizontally within their card instead of forcing the whole page wider; and page headers stack the title, intro text, and action button instead of squeezing the intro into a sliver.
+
 ## [0.5.21] - 2026-05-16
 
 ### Changed
