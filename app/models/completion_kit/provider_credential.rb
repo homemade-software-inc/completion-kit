@@ -128,6 +128,7 @@ module CompletionKit
     end
 
     def render_partial(partial, locals)
+      CompletionKit::Engine.warm_routes!
       CompletionKit::ApplicationController.render(partial: partial, locals: locals)
     end
   end

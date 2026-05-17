@@ -7,6 +7,21 @@ module CompletionKit
 
     paths.add "app/services", eager_load: true
 
+    ROUTES_WARMUP_LOCK = Mutex.new
+    @routes_warmed = false
+
+    # Materialise the engine's lazy route set once, single-threaded. Background
+    # worker threads that render engine partials for Turbo broadcasts otherwise
+    # race the lazy first-load and raise "undefined method 'run_response_path'"
+    # (production survives only because eager_load finalises routes at boot).
+    def self.warm_routes!
+      ROUTES_WARMUP_LOCK.synchronize do
+        return if @routes_warmed
+        routes.url_helpers.root_path
+        @routes_warmed = true
+      end
+    end
+
     def self.register_assets(app)
       app.config.assets.precompile += %w(
         completion_kit/application.css

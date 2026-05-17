@@ -231,7 +231,7 @@ module CompletionKit
     end
 
     def render_engine_partial(partial, locals)
-      CompletionKit::Engine.routes.url_helpers
+      CompletionKit::Engine.warm_routes!
       CompletionKit::ApplicationController.render(
         partial: partial,
         locals: locals
