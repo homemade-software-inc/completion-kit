@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.24] - 2026-05-16
+
+### Changed
+
+- The dashboard's ignored-metrics flyout is now sorted by baseline score, highest first (metrics with no baseline last).
+- The ignored-items popover has a styled scrollbar — thin, rounded, on-brand — instead of the raw browser default.
+
 ## [0.5.23] - 2026-05-16
 
 ### Fixed
