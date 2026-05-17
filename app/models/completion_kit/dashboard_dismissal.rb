@@ -12,7 +12,11 @@ module CompletionKit
     validates :dismissable_type, inclusion: { in: DISMISSABLE_TYPES }
     validates :dismissable_id, uniqueness: { scope: :dismissable_type }
 
-    scope :metrics, -> { where(dismissable_type: "CompletionKit::Metric").includes(:dismissable) }
+    scope :metrics, lambda {
+      where(dismissable_type: "CompletionKit::Metric")
+        .includes(:dismissable)
+        .order(Arel.sql("baseline_score DESC NULLS LAST"))
+    }
     scope :failures, -> { where(dismissable_type: FAILURE_TYPES).includes(:dismissable) }
   end
 end
