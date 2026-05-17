@@ -32,6 +32,14 @@ RSpec.describe CompletionKit::DashboardDismissal, type: :model do
     expect(described_class.failures).to contain_exactly(run_d)
   end
 
+  it "orders metric dismissals by baseline score, highest first, nils last" do
+    low = described_class.create!(dismissable: create(:completion_kit_metric), baseline_score: 2.1)
+    high = described_class.create!(dismissable: create(:completion_kit_metric), baseline_score: 4.3)
+    unscored = described_class.create!(dismissable: create(:completion_kit_metric), baseline_score: nil)
+
+    expect(described_class.metrics.to_a).to eq([high, low, unscored])
+  end
+
   it "is destroyed when its dismissable is destroyed" do
     run = create(:completion_kit_run)
     described_class.create!(dismissable: run)
