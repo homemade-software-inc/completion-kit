@@ -4802,6 +4802,25 @@ a.tag-mark {
   border: 1px solid var(--ck-line-strong);
   border-radius: var(--ck-radius);
   box-shadow: 0 -16px 34px rgba(0, 0, 0, 0.5);
+  scrollbar-width: thin;
+  scrollbar-color: var(--ck-line-strong) transparent;
+}
+.ck-flyout__panel::-webkit-scrollbar {
+  width: 10px;
+}
+.ck-flyout__panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ck-flyout__panel::-webkit-scrollbar-thumb {
+  background: var(--ck-line-strong);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+.ck-flyout__panel::-webkit-scrollbar-thumb:hover {
+  background: var(--ck-dim);
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
 .ck-flyout__item {
   display: flex;
