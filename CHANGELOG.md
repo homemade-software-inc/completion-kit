@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.23] - 2026-05-16
+
+### Fixed
+
+- **Thread race in Turbo-broadcast renders from background jobs.** Worker threads rendering engine partials for Turbo broadcasts raced the engine's lazy route set during its first materialization and raised `undefined method 'run_response_path'` — failing judge reviews and prompt-run rows under a multi-threaded worker. `CompletionKit::Engine.warm_routes!` now materializes the route set once, single-threaded, before the concurrent renders. Production was unaffected (`eager_load` finalizes routes at boot); the bug surfaced on any worker running with lazy route loading.
+
 ## [0.5.22] - 2026-05-16
 
 ### Changed
