@@ -3629,6 +3629,44 @@ table.ck-runs-table {
   white-space: nowrap;
 }
 
+/* List tables on a phone. A 4–6 column table can't fit a phone width, so each
+   row becomes a stacked block — every cell on its own line, all content
+   visible, nothing scrolling sideways and getting clipped. Placed after the
+   base table rules so it wins on source order; the runs table overrides this
+   with a tailored layout in the block below. */
+@media (max-width: 640px) {
+  .ck-results-table,
+  .ck-results-table tbody,
+  .ck-results-table tr,
+  .ck-results-table td {
+    display: block;
+  }
+  .ck-results-table { overflow: hidden; }
+  .ck-results-table thead { display: none; }
+  .ck-results-table tr { padding: 0.85rem 0.3rem; }
+  .ck-results-table td {
+    width: auto !important;
+    max-width: 100%;
+    white-space: normal !important;
+    padding: 0.3rem 0.3rem 0;
+  }
+  .ck-results-table td:first-child { padding-top: 0; }
+  .ck-results-table td:empty { display: none; }
+  .ck-results-table td.ck-results-table__arrow { display: none; }
+  /* Each stacked cell carries the column name as a small label so a bare
+     value ("10", "May 14") still reads clearly. */
+  .ck-results-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.12rem;
+    font-family: var(--ck-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ck-dim);
+  }
+}
+
 /* Runs table on a phone. Placed after the base .ck-runs-table rules so these
    win on source order. A 6-column table can't fit a phone, so each run row
    becomes a stacked block: the run name + sub-line take the full width on

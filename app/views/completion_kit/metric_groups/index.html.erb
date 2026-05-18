@@ -39,8 +39,8 @@
               </div>
             <% end %>
           </td>
-          <td class="ck-meta-copy"><div class="ck-clamp-2"><%= metric_group.description.presence || "—" %></div></td>
-          <td>
+          <td data-label="Description" class="ck-meta-copy"><div class="ck-clamp-2"><%= metric_group.description.presence || "—" %></div></td>
+          <td data-label="Members">
             <% if metric_group.metrics.any? %>
               <div class="ck-mg-members">
                 <% metric_group.metrics.each do |m| %>

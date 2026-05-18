@@ -26,7 +26,7 @@
         <% breakdown = by_type.map { |(_, type), n| pluralize(n, type.demodulize.titleize.downcase) }.join(" · ") %>
         <tr onclick="window.location='<%= edit_tag_path(tag) %>'" style="cursor: pointer;">
           <td><span class="tag-mark tag-mark--lg" style="--mark-color: var(--tag-<%= tag.color %>);"><%= tag.name %></span></td>
-          <td class="ck-meta-copy">
+          <td data-label="Applied to" class="ck-meta-copy">
             <% if count.zero? %>
               <span class="ck-tags-table__unused">Not used yet</span>
             <% else %>

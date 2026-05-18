@@ -9,7 +9,7 @@
       <%= truncate(response.response_text.to_s, length: 160) %>
     <% end %>
   </td>
-  <td>
+  <td data-label="Metrics">
     <% scored_reviews = response.reviews.select { |r| r.ai_score.present? }.sort_by { |r| r.metric_name.to_s.downcase } %>
     <% if scored_reviews.any? %>
       <span class="ck-metric-bar ck-metric-bar--compact">
@@ -24,14 +24,14 @@
       <span class="ck-response-cell__dim">—</span>
     <% end %>
   </td>
-  <td>
+  <td data-label="Avg score">
     <% if response.reviewed? %>
       <span class="<%= ck_badge_classes(ck_score_kind(response.score.to_f)) %>"><%= response.score %></span>
     <% else %>
       <span class="ck-response-cell__dim">—</span>
     <% end %>
   </td>
-  <td>
+  <td data-label="Status">
     <% case response.status
        when "pending" %>
       <span class="ck-chip">Queued</span>
