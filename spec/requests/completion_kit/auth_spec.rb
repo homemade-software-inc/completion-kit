@@ -107,10 +107,10 @@ RSpec.describe "CompletionKit authentication", type: :request do
     end
   end
 
-  context "with no auth in production" do
+  context "with no auth in a deployed (non-local) env" do
     around do |example|
       original_env = Rails.env
-      Rails.env = ActiveSupport::EnvironmentInquirer.new("production")
+      Rails.env = ActiveSupport::EnvironmentInquirer.new("staging")
       example.run
     ensure
       Rails.env = original_env

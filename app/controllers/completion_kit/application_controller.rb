@@ -22,7 +22,7 @@ module CompletionKit
           ActiveSupport::SecurityUtils.secure_compare(u, cfg.username) &
             ActiveSupport::SecurityUtils.secure_compare(p, cfg.password)
         end
-      elsif Rails.env.production?
+      elsif !Rails.env.local?
         render plain: "CompletionKit authentication not configured. See README for setup instructions.",
                status: :forbidden
       end

@@ -183,7 +183,7 @@ RSpec.describe "MCP endpoint", type: :request do
       expect(body["error"]["message"]).to include("foreign key")
     end
 
-    it "returns JSON-RPC error for unexpected StandardError" do
+    it "returns a generic JSON-RPC error for an unexpected StandardError" do
       allow(CompletionKit::McpDispatcher).to receive(:dispatch)
         .and_raise(StandardError, "something broke")
       post mcp_path, params: {jsonrpc: "2.0", id: 12, method: "tools/call", params: {
@@ -191,7 +191,7 @@ RSpec.describe "MCP endpoint", type: :request do
       }}.to_json, headers: session_headers
       body = JSON.parse(response.body)
       expect(body["error"]["code"]).to eq(-32603)
-      expect(body["error"]["message"]).to eq("something broke")
+      expect(body["error"]["message"]).to eq("Internal error")
     end
   end
 end
