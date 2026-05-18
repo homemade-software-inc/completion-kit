@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.28] - 2026-05-18
+
+### Security
+
+- **MCP errors no longer leak internals.** An unexpected exception in the MCP endpoint returned its raw message to the client. The catch-all now returns a generic "Internal error" and reports the real exception server-side.
+- **Open access blocked in every deployed environment.** When no authentication is configured, the engine previously left routes open in any environment other than production. It now blocks every non-local environment; development and test stay open for convenience.
+
 ## [0.5.27] - 2026-05-18
 
 ### Security
