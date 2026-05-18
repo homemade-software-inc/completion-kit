@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.29] - 2026-05-18
+
+### Security
+
+- **Rate limiting across every request surface.** The REST API and the MCP endpoint (120 requests per minute per IP) and the web UI (300 per minute per IP) are now rate limited, closing the brute-force and abuse gap left after the login limit. The caps are tunable with `config.api_rate_limit` and `config.web_rate_limit`, and documented in the README and the generated initializer.
+
 ## [0.5.28] - 2026-05-18
 
 ### Security
