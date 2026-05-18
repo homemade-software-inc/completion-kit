@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.25] - 2026-05-18
+
+### Fixed
+
+- **Mobile layout, page-by-page audit at true phone width (390px).** Fixes for issues that overflowed the viewport or clipped text on a phone: the dashboard prompt-changes row stacks instead of truncating the prompt name to a couple of characters; the runs table becomes a stacked block layout (name + sub-line, then score / timestamp / arrow) instead of a six-column horizontal scroll; long API endpoint URLs and the API-reference auth-token chip wrap instead of forcing page overflow; the onboarding page's decorative field is clipped; and the API-reference tabs nav fits its column instead of being cut off.
+
 ## [0.5.24] - 2026-05-16
 
 ### Changed
