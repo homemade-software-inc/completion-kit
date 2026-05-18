@@ -2837,6 +2837,19 @@ select.ck-input {
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
     z-index: 50;
   }
+
+  /* Dashboard prompt-changes row stacks instead of cramming the name into
+     a few characters. */
+  .ck-improvement {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+  .ck-improvement__name { white-space: normal; }
+  .ck-improvement__delta { min-width: 0; text-align: left; }
+
+  /* Onboarding's decorative field bleeds ±3rem past the page — clip it. */
+  .ck-launch { overflow-x: clip; }
 }
 
 .ck-api-endpoint {
@@ -2911,6 +2924,10 @@ select.ck-input {
 
 .ck-token-toggle {
   transition: border-color 0.15s, color 0.15s;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
 }
 
 .ck-token-toggle:hover {
@@ -3008,6 +3025,13 @@ select.ck-input {
 @media (max-width: 700px) {
   .ck-api-tabs {
     grid-template-columns: 1fr;
+  }
+
+  /* Without this the nav and panels keep their min-content width and spill
+     past the single grid column — clipped by .ck-api-tabs' overflow:hidden. */
+  .ck-api-tabs__nav,
+  .ck-api-tabs__panels {
+    min-width: 0;
   }
 
   .ck-api-tabs__nav {
@@ -3605,6 +3629,46 @@ table.ck-runs-table {
   white-space: nowrap;
 }
 
+/* Runs table on a phone. Placed after the base .ck-runs-table rules so these
+   win on source order. A 6-column table can't fit a phone, so each run row
+   becomes a stacked block: the run name + sub-line take the full width on
+   top, and the score / timestamp / arrow flow in a row beneath. The two
+   secondary numeric columns (responses, metrics) are dropped — they live on
+   the run's own page. */
+@media (max-width: 640px) {
+  table.ck-runs-table { display: block; overflow-x: visible; }
+  .ck-runs-table thead { display: none; }
+  .ck-runs-table tbody { display: block; }
+  .ck-runs-table tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.9rem;
+    padding: 0.9rem 0;
+  }
+  .ck-runs-table td {
+    display: block;
+    padding: 0;
+  }
+  .ck-runs-table td:first-child { flex: 1 1 100%; }
+  .ck-runs-table td:nth-child(2),
+  .ck-runs-table td:nth-child(3) { display: none; }
+  /* width overrides need column-level specificity to beat the base rules
+     (the timestamp column otherwise keeps its desktop width: 1%). */
+  .ck-runs-table td:first-child,
+  .ck-runs-table td:nth-child(4),
+  .ck-runs-table td:nth-child(5),
+  .ck-runs-table td:last-child,
+  .ck-runs-table td:has(time[data-relative-time]) { width: auto; }
+  .ck-runs-table__identity { width: auto; }
+  .ck-runs-table .ck-run-name strong {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .ck-runs-table__config { white-space: normal; }
+}
+
 .ck-response-cell__index {
   font-family: var(--ck-mono);
   font-size: 0.78rem;
@@ -3681,6 +3745,8 @@ table.ck-runs-table {
   border-radius: var(--ck-radius);
   border: 1px solid var(--ck-line);
   user-select: all;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .ck-prompt-preview__text {
