@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.26] - 2026-05-18
+
+### Fixed
+
+- **Mobile list tables.** Every list table (metrics, metric groups, datasets, tags, run responses) scrolled horizontally on a phone and clipped content off the right edge. On mobile each row now becomes a stacked block with a small column label above each value, so a bare cell still reads clearly. Run tables keep their tailored mobile layout.
+- **Mobile ignored-items popover.** Anchored to a small mid-footer toggle, the popover spilled off the left edge and clipped the metric names. On mobile it is now a bottom sheet pinned to the viewport, where nothing can clip.
+
 ## [0.5.25] - 2026-05-18
 
 ### Fixed
