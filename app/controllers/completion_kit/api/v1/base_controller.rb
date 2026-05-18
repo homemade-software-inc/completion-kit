@@ -2,6 +2,8 @@ module CompletionKit
   module Api
     module V1
       class BaseController < ActionController::API
+        rate_limit to: CompletionKit.config.api_rate_limit, within: 1.minute,
+                   with: -> { render json: {error: "Rate limit exceeded"}, status: :too_many_requests }
         before_action :authenticate_api!
 
         private

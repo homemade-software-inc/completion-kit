@@ -10,6 +10,7 @@ module CompletionKit
     attr_accessor :username, :password, :auth_strategy, :api_token
     attr_accessor :tenant_scope, :tenant_scope_columns
     attr_accessor :api_reference_authentication_partial
+    attr_accessor :api_rate_limit, :web_rate_limit
 
     def initialize
       @openai_api_key = ENV['OPENAI_API_KEY']
@@ -20,6 +21,9 @@ module CompletionKit
       @judge_model = "gpt-4.1"
       @high_quality_threshold = 4
       @medium_quality_threshold = 3
+
+      @api_rate_limit = 120
+      @web_rate_limit = 300
 
       @api_reference_authentication_partial = "completion_kit/api_reference/authentication"
     end

@@ -22,6 +22,7 @@ class CompletionKitSpecApp < Rails::Application
   config.root = DUMMY_APP_ROOT
   config.eager_load = false
   config.hosts << "www.example.com"
+  config.cache_store = :memory_store
   config.logger = Logger.new(nil)
   config.secret_key_base = "completion-kit-test-key"
   config.active_support.cache_format_version = 7.1
@@ -237,4 +238,5 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   config.filter_rails_from_backtrace!
   config.include FactoryBot::Syntax::Methods
+  config.before { Rails.cache.clear }
 end

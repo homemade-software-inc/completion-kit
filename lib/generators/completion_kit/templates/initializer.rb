@@ -44,4 +44,10 @@ CompletionKit.configure do |config|
   # Web UI Authentication
   # config.username = "admin"
   # config.password = ENV['COMPLETION_KIT_PASSWORD']
+
+  # Rate limiting (requests per minute, per IP)
+  # The REST API and MCP endpoint share api_rate_limit; the web UI uses
+  # web_rate_limit. Both are enforced through Rails.cache.
+  # config.api_rate_limit = 120
+  # config.web_rate_limit = 300
 end

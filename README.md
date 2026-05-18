@@ -111,7 +111,7 @@ Or add them to `config/credentials.yml.enc` under `active_record_encryption`. In
 
 ## Authentication
 
-CompletionKit requires authentication in production. In development, routes are open by default (with a log warning).
+CompletionKit requires authentication in any deployed environment. In development and test, routes are open by default (with a log warning); every other environment returns 403 until auth is configured.
 
 ### Basic Auth (recommended for simple setups)
 
@@ -131,6 +131,19 @@ end
 ```
 
 Only one mode can be active.
+
+## Rate limiting
+
+The REST API, the MCP endpoint, and the web UI are rate limited per IP, per minute. The defaults are generous; tune them in the initializer:
+
+```ruby
+CompletionKit.configure do |c|
+  c.api_rate_limit = 120  # REST API + MCP, requests per minute (default 120)
+  c.web_rate_limit = 300  # web UI, requests per minute (default 300)
+end
+```
+
+Limiting uses `Rails.cache`. A shared cache store (Solid Cache, Redis) throttles accurately across multiple app instances; a per-process store still throttles each instance independently.
 
 ## How it works
 
