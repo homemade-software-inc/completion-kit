@@ -4909,3 +4909,17 @@ a.tag-mark {
   color: var(--ck-dim);
   font-size: 0.7rem;
 }
+
+/* On a phone the popover is anchored to a small mid-footer toggle, so a
+   near-full-width panel spills off the left edge and clips the metric
+   names. Pin it to the bottom of the viewport instead — a bottom sheet
+   that spans the screen and can never clip. */
+@media (max-width: 640px) {
+  .ck-flyout__panel {
+    position: fixed;
+    inset: auto 0.75rem 0.75rem 0.75rem;
+    width: auto;
+    max-width: none;
+    max-height: 60vh;
+  }
+}
