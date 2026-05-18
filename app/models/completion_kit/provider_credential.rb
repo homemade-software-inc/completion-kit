@@ -1,3 +1,6 @@
+require "ipaddr"
+require "resolv"
+
 module CompletionKit
   class ProviderCredential < ApplicationRecord
     include Turbo::Broadcastable
@@ -24,6 +27,7 @@ module CompletionKit
 
     validates :provider, presence: true, inclusion: { in: PROVIDERS }
     validates :provider, tenant_scoped_uniqueness: true
+    validate :api_endpoint_not_internal
 
     after_save :enqueue_discovery
 
@@ -130,6 +134,34 @@ module CompletionKit
     def render_partial(partial, locals)
       CompletionKit::Engine.warm_routes!
       CompletionKit::ApplicationController.render(partial: partial, locals: locals)
+    end
+
+    def api_endpoint_not_internal
+      return if api_endpoint.blank?
+
+      uri = safe_http_uri(api_endpoint)
+      unless uri
+        errors.add(:api_endpoint, "must be a valid http or https URL")
+        return
+      end
+
+      if endpoint_addresses(uri.host).any? { |ip| ip.private? || ip.link_local? }
+        errors.add(:api_endpoint, "must not point at a private or internal address")
+      end
+    end
+
+    def safe_http_uri(value)
+      uri = URI.parse(value.to_s.strip)
+      uri if uri.is_a?(URI::HTTP) && uri.host.present?
+    rescue URI::InvalidURIError
+      nil
+    end
+
+    def endpoint_addresses(host)
+      bare = host.delete_prefix("[").delete_suffix("]")
+      [IPAddr.new(bare)]
+    rescue IPAddr::InvalidAddressError
+      Resolv.getaddresses(host).map { |addr| IPAddr.new(addr) }
     end
   end
 end

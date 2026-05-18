@@ -171,4 +171,57 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
       credential.send(:broadcast_model_dropdowns)
     end
   end
+
+  describe "api_endpoint SSRF validation" do
+    def cred(endpoint)
+      build(:completion_kit_provider_credential, provider: "ollama", api_endpoint: endpoint)
+    end
+
+    it "allows a blank endpoint" do
+      expect(cred(nil)).to be_valid
+    end
+
+    it "allows a loopback endpoint — Ollama on localhost" do
+      expect(cred("http://127.0.0.1:11434")).to be_valid
+    end
+
+    it "allows a public endpoint" do
+      expect(cred("http://8.8.8.8:11434/v1")).to be_valid
+    end
+
+    it "rejects a link-local endpoint (cloud metadata)" do
+      c = cred("http://169.254.169.254/latest/meta-data")
+      expect(c).not_to be_valid
+      expect(c.errors[:api_endpoint]).to be_present
+    end
+
+    it "rejects private-range endpoints" do
+      expect(cred("http://10.0.0.5:11434")).not_to be_valid
+      expect(cred("http://192.168.1.10")).not_to be_valid
+    end
+
+    it "rejects a non-http scheme" do
+      c = cred("ftp://example.com")
+      expect(c).not_to be_valid
+      expect(c.errors[:api_endpoint].join).to match(/http/)
+    end
+
+    it "rejects a malformed URL" do
+      expect(cred("http://e xample.com")).not_to be_valid
+    end
+
+    it "rejects a URL with no host" do
+      expect(cred("http://")).not_to be_valid
+    end
+
+    it "rejects a hostname that resolves to a private address" do
+      allow(Resolv).to receive(:getaddresses).with("internal.example").and_return(["10.1.2.3"])
+      expect(cred("http://internal.example")).not_to be_valid
+    end
+
+    it "allows a hostname that resolves to a public address" do
+      allow(Resolv).to receive(:getaddresses).with("api.example").and_return(["93.184.216.34"])
+      expect(cred("http://api.example/v1")).to be_valid
+    end
+  end
 end
