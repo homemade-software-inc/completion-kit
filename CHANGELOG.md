@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.27] - 2026-05-18
+
+### Security
+
+- **SSRF guard on provider endpoints.** A `ProviderCredential`'s `api_endpoint` is now validated to resolve to a public or loopback address. Private ranges (10/8, 172.16/12, 192.168/16) and the link-local range (169.254/16, which covers cloud metadata) are rejected, as are non-http(s) URLs. Loopback stays allowed so Ollama on localhost keeps working.
+- **Login rate limiting.** The standalone app's sign-in action now allows 10 attempts per 3 minutes per IP, blunting password brute-force.
+
 ## [0.5.26] - 2026-05-18
 
 ### Fixed
