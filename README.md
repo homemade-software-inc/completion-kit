@@ -231,21 +231,28 @@ The standalone app ships a `Dockerfile`, so you can self-host it without a Ruby 
 docker build -f standalone/Dockerfile -t completion-kit .
 ```
 
-Run the web process and a job worker from the same image:
+CompletionKit needs a Rails secret (`SECRET_KEY_BASE`) and three Active Record encryption keys. With Docker there's no Rails toolchain on the host to run `bin/rails db:encryption:init`, so generate them with `openssl`. Generate them **once** and keep them stable — if the encryption keys change, provider credentials already stored in the database can no longer be decrypted. Write everything to an env file:
 
 ```bash
-docker run -d -p 3000:3000 \
-  -e DATABASE_URL=postgres://user:pass@host/completionkit \
-  -e SECRET_KEY_BASE=$(openssl rand -hex 64) \
-  -e COMPLETION_KIT_ENCRYPTION_PRIMARY_KEY=... \
-  -e COMPLETION_KIT_ENCRYPTION_DETERMINISTIC_KEY=... \
-  -e COMPLETION_KIT_ENCRYPTION_KEY_DERIVATION_SALT=... \
-  completion-kit
-
-docker run -d <same env vars> completion-kit ./bin/jobs
+cat > completion-kit.env <<EOF
+DATABASE_URL=postgres://user:pass@host/completionkit
+SECRET_KEY_BASE=$(openssl rand -hex 64)
+COMPLETION_KIT_ENCRYPTION_PRIMARY_KEY=$(openssl rand -hex 32)
+COMPLETION_KIT_ENCRYPTION_DETERMINISTIC_KEY=$(openssl rand -hex 32)
+COMPLETION_KIT_ENCRYPTION_KEY_DERIVATION_SALT=$(openssl rand -hex 32)
+EOF
 ```
 
-The web container runs `db:prepare` on boot, so migrations apply on first start and on every deploy.
+`openssl rand` runs as the file is written, so each line gets a real random value. Keep `completion-kit.env` out of version control and back it up somewhere safe.
+
+Run the web process and a job worker from the same image, both pointed at that file:
+
+```bash
+docker run -d -p 3000:3000 --env-file completion-kit.env completion-kit
+docker run -d --env-file completion-kit.env completion-kit ./bin/jobs
+```
+
+Both processes must share the same `SECRET_KEY_BASE` and encryption keys — the single env file guarantees that. The web container runs `db:prepare` on boot, so migrations apply on first start and on every deploy.
 
 ## Multi-tenant host apps (advanced)
 
