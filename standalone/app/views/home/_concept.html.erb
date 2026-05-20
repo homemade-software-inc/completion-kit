@@ -1,0 +1,6 @@
+<% concept = HomeHelper::CONCEPTS.fetch(key) -%>
+<span class="ck-concept"><%= term %><details class="ck-concept__tip"><summary class="ck-concept__toggle" aria-label="What is a <%= concept[:name] %>?"><%= heroicon_tag "information-circle", variant: :outline, size: 14, class: "ck-concept__icon", "aria-hidden": "true" %></summary>
+<div class="ck-concept__pop" role="tooltip">
+<p class="ck-concept__name"><%= concept[:name] %></p>
+<p class="ck-concept__body"><%= concept[:definition] %></p>
+</div></details></span>
