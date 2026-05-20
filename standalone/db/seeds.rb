@@ -112,10 +112,14 @@ brevity = CompletionKit::Metric.find_or_create_by!(name: "Brevity") do |m|
   ]
 end
 
+reply_metrics   = [tone, helpfulness, accuracy]
+triage_metrics  = [category_accuracy, urgency_calibration, confidence]
+summary_metrics = [clarity, completeness, brevity]
+
 reply_group = CompletionKit::MetricGroup.find_or_create_by!(name: "Reply Quality") do |c|
   c.description = "Quality assessment for outbound customer support replies"
 end
-[tone, helpfulness, accuracy].each_with_index do |metric, i|
+reply_metrics.each_with_index do |metric, i|
   CompletionKit::MetricGroupMembership.find_or_create_by!(metric_group: reply_group, metric: metric) do |cm|
     cm.position = i + 1
   end
@@ -124,7 +128,7 @@ end
 triage_group = CompletionKit::MetricGroup.find_or_create_by!(name: "Triage Quality") do |c|
   c.description = "Assessment criteria for ticket triage classifications"
 end
-[category_accuracy, urgency_calibration, confidence].each_with_index do |metric, i|
+triage_metrics.each_with_index do |metric, i|
   CompletionKit::MetricGroupMembership.find_or_create_by!(metric_group: triage_group, metric: metric) do |cm|
     cm.position = i + 1
   end
@@ -133,7 +137,7 @@ end
 summary_group = CompletionKit::MetricGroup.find_or_create_by!(name: "Summary Quality") do |c|
   c.description = "Assessment criteria for one-line ticket summaries in queue views"
 end
-[clarity, completeness, brevity].each_with_index do |metric, i|
+summary_metrics.each_with_index do |metric, i|
   CompletionKit::MetricGroupMembership.find_or_create_by!(metric_group: summary_group, metric: metric) do |cm|
     cm.position = i + 1
   end
@@ -148,6 +152,8 @@ csv_data = <<~CSV
   "I've been a Gold tier member since 2019. I just got the email about the program changes — moving Gold to a $99/year fee from free, with the 10% loyalty discount dropping to 5%. I spend roughly $4,000/year with you and have for the last 6 years. I understand business is business but this is a meaningful change. Is there grandfather pricing for long-term members, or should I be looking at competitors?"
 CSV
 
+ticket_inputs = csv_data.lines[1..5].map { |line| line.strip.tr('"', "") }
+
 dataset = CompletionKit::Dataset.find_or_create_by!(name: "Customer Tickets — sample") do |d|
   d.csv_data = csv_data
 end
@@ -158,198 +164,232 @@ reply_prompt = CompletionKit::Prompt.find_or_create_by!(name: "Support Reply Gen
   p.llm_model = "gpt-4.1-mini"
 end
 
-reply_run = CompletionKit::Run.find_or_create_by!(name: "Support Reply Generator — v1 #1") do |r|
-  r.prompt = reply_prompt
-  r.dataset = dataset
-  r.judge_model = "gpt-4.1-mini"
-  r.status = "completed"
-  r.progress_current = 5
-  r.progress_total = 5
-end
-
-[tone, helpfulness, accuracy].each_with_index do |metric, i|
-  CompletionKit::RunMetric.find_or_create_by!(run: reply_run, metric: metric) do |rm|
-    rm.position = i + 1
-  end
-end
-
-reply_responses = [
-  { input: csv_data.lines[1].strip.tr('"', ''),
-    text: "Hi — I'm so sorry this happened, especially given who the dryer was for. You did everything right: photos within the hour, then 11 days of silence on our end. That's on us, and the credit offer doesn't make it right.\n\nI've reviewed order #4827 and approved a full refund of $749 to your original payment method. You should see it within 3–5 business days. If you'd prefer a replacement instead, just reply to this email and I'll arrange a courier pickup of the damaged unit and a same-week dispatch of a new one.\n\nNo need to dispute with your bank — we'll handle this directly. I've also flagged the 11-day gap internally so we can figure out where the email got lost. Apologies again, and please pass our best wishes to your mom.",
-    scores: { "Tone" => [5, "Genuinely warm without being saccharine. Acknowledges the human stakes (Christmas, mom on dialysis) and the company failure. Reads like a senior person who actually cares."],
-              "Helpfulness" => [5, "Approves the refund outright, offers replacement as alternative, removes the bank dispute pressure, and commits to internal follow-up. Customer can act immediately."],
-              "Accuracy" => [5, "Order number, amount, and refund timeline all match the ticket. No invented policies."] } },
-  { input: csv_data.lines[2].strip.tr('"', ''),
-    text: "Thanks for the report. To investigate, can you confirm:\n\n1. The full delivery address on file\n2. The carrier the package shipped with\n3. Whether you have a signed delivery confirmation\n\nOnce I have those I can pull the tracking event log.",
-    scores: { "Tone" => [3, "Cold and procedural. The customer is under wedding-deadline pressure and the reply doesn't acknowledge any of that."],
-              "Helpfulness" => [2, "Asks for information already discoverable from the order — delivery address is on file, carrier is in the tracking the customer already cited. This will frustrate them and burn a round-trip with the wedding looming."],
-              "Accuracy" => [4, "What's stated is technically correct, but the questions treat the ticket as if half of it weren't read."] } },
-  { input: csv_data.lines[3].strip.tr('"', ''),
-    text: "Great question — the WELCOME20 code is for first-time customers only, which is why it's coming back invalid (we can see you've ordered with us before). The promo email goes to our broader newsletter list and the eligibility wasn't called out clearly enough — I've flagged that with marketing.\n\nFor the cart you've got open ($186), I've issued a one-time 15% off code: THANKS-LOYAL-186. Apply it at checkout. Same constraints as WELCOME20 (not stackable with other promos), valid for the next 7 days. Reply if it doesn't apply cleanly and I'll reissue.",
-    scores: { "Tone" => [4, "Friendly, owns the marketing copy gap, and lands the correction without being defensive."],
-              "Helpfulness" => [5, "Explains the rejection, offers a real alternative discount on the same cart amount, and pre-empts the 'doesn't stack' question. Customer can complete the purchase immediately."],
-              "Accuracy" => [5, "First-time-customer constraint matches our promo policy. Discount math is correct. No invented terms."] } },
-  { input: csv_data.lines[4].strip.tr('"', ''),
-    text: "Hi — sorry about the SMS issue. I've sent a one-time recovery code to the email on your account; please use it within the next 30 minutes to sign in.\n\nOnce you're back in, you can switch 2FA to an authenticator app under Security Settings — that path doesn't depend on SMS delivery, so this won't recur.\n\nGood news on the store credit: it doesn't actually expire on June 15. Store credits issued from returns are good for 24 months from issue. The June 15 date you saw was for a separate promotional credit balance. Happy to walk through both balances if helpful.",
-    scores: { "Tone" => [4, "Calm and reassuring. The 'good news' framing on the credit lands well."],
-              "Helpfulness" => [4, "Resolves the immediate sign-in problem and points at a permanent fix. The credit-policy detail is useful but slightly muddies the main thread."],
-              "Accuracy" => [3, "The '24 months from issue' return-credit policy isn't verified — agent should check before stating it as fact. Sending recovery code via email and pointing at authenticator-app 2FA are both correct."] } },
-  { input: csv_data.lines[5].strip.tr('"', ''),
-    text: "Hi — thank you for the long history with us, and for the candid feedback. Hearing this from a 2019 Gold member spending $4k a year carries real weight.\n\nThe Gold changes come from our cost structure — the free tier wasn't sustainable as the program grew — but I understand that doesn't change your math. For long-tenured members in your situation, I can offer a 12-month grandfather of the legacy benefits at no charge while we work out a longer-term path. You'd keep the 10% discount and free Gold status through next May.\n\nWould the grandfather year work as a stopgap? If so, I'll get it set up today.",
-    scores: { "Tone" => [5, "Acknowledges the customer's history specifically. Empathetic without being defensive about the program change. Honest about the rationale."],
-              "Helpfulness" => [4, "Offers a concrete stopgap (12-month grandfather) and frames the longer-term conversation. Doesn't address whether a paid tier might fit them better."],
-              "Accuracy" => [4, "Grandfather offer needs retention sign-off before being committed to in writing. Otherwise grounded in standard retention plays."] } }
-]
-
-reply_responses.each do |rd|
-  response = reply_run.responses.find_or_create_by!(input_data: rd[:input]) do |r|
-    r.response_text = rd[:text]
-    r.status = "succeeded"
-  end
-
-  rd[:scores].each do |metric_name, (score, feedback)|
-    metric = CompletionKit::Metric.find_by!(name: metric_name)
-    response.reviews.find_or_create_by!(metric: metric) do |review|
-      review.metric_name = metric_name
-      review.instruction = metric.instruction
-      review.status = "succeeded"
-      review.ai_score = score
-      review.ai_feedback = feedback
-    end
-  end
-end
-
 triage_prompt = CompletionKit::Prompt.find_or_create_by!(name: "Ticket Triage") do |p|
   p.description = "Categorizes incoming tickets by intent and urgency for routing"
   p.template = "Classify this support ticket. Output: category (one of refund, shipping, promo_code, account_access, loyalty, churn_risk, product_question, complaint), urgency (low, medium, high, critical), and a one-sentence rationale. Format as JSON.\n\n{{ticket}}"
   p.llm_model = "gpt-4.1-mini"
 end
 
-triage_run = CompletionKit::Run.find_or_create_by!(name: "Ticket Triage — v1 #1") do |r|
-  r.prompt = triage_prompt
-  r.dataset = dataset
-  r.judge_model = "gpt-4.1-mini"
-  r.status = "completed"
-  r.progress_current = 5
-  r.progress_total = 5
+summary_v1 = CompletionKit::Prompt.find_or_create_by!(name: "Ticket Summary", version_number: 1) do |p|
+  p.description = "Generates a 1-2 sentence queue-view summary of an incoming ticket"
+  p.template = "Write a 1-2 sentence summary of this ticket for a triage queue view. Capture intent, urgency hint, and the routing-relevant fact. No greeting or sign-off.\n\n{{ticket}}"
+  p.llm_model = "claude-sonnet-4-6"
+end
+summary_family = summary_v1.family_key
+
+summary_v2 = CompletionKit::Prompt.find_or_create_by!(family_key: summary_family, version_number: 2) do |p|
+  p.name = "Ticket Summary"
+  p.description = "Generates a 1-2 sentence queue-view summary of an incoming ticket"
+  p.template = "Summarize this support ticket in one short line for a triage queue. Be as brief as possible.\n\n{{ticket}}"
+  p.llm_model = "claude-sonnet-4-6"
+  p.current = false
 end
 
-[category_accuracy, urgency_calibration, confidence].each_with_index do |metric, i|
-  CompletionKit::RunMetric.find_or_create_by!(run: triage_run, metric: metric) do |rm|
-    rm.position = i + 1
-  end
+summary_v3 = CompletionKit::Prompt.find_or_create_by!(family_key: summary_family, version_number: 3) do |p|
+  p.name = "Ticket Summary"
+  p.description = "Generates a 1-2 sentence queue-view summary of an incoming ticket"
+  p.template = "Write a 1-2 sentence summary of this ticket for a triage queue view. Capture the customer's intent, any urgency signal, and the one fact a triage agent needs to route it. Keep concrete numbers and IDs. No greeting or sign-off.\n\n{{ticket}}"
+  p.llm_model = "claude-sonnet-4-6"
+  p.current = false
 end
+summary_v3.publish! unless summary_v3.current?
+
+reply_responses = [
+  { input: ticket_inputs[0],
+    text: "Hi — I'm so sorry this happened, especially given who the dryer was for. You did everything right: photos within the hour, then 11 days of silence on our end. That's on us, and the credit offer doesn't make it right.\n\nI've reviewed order #4827 and approved a full refund of $749 to your original payment method. You should see it within 3–5 business days. If you'd prefer a replacement instead, just reply to this email and I'll arrange a courier pickup of the damaged unit and a same-week dispatch of a new one.\n\nNo need to dispute with your bank — we'll handle this directly. I've also flagged the 11-day gap internally so we can figure out where the email got lost. Apologies again, and please pass our best wishes to your mom.",
+    scores: { "Tone" => [5, "Genuinely warm without being saccharine. Acknowledges the human stakes (Christmas, mom on dialysis) and the company failure. Reads like a senior person who actually cares."],
+              "Helpfulness" => [5, "Approves the refund outright, offers replacement as alternative, removes the bank dispute pressure, and commits to internal follow-up. Customer can act immediately."],
+              "Accuracy" => [5, "Order number, amount, and refund timeline all match the ticket. No invented policies."] } },
+  { input: ticket_inputs[1],
+    text: "Thanks for the report. To investigate, can you confirm:\n\n1. The full delivery address on file\n2. The carrier the package shipped with\n3. Whether you have a signed delivery confirmation\n\nOnce I have those I can pull the tracking event log.",
+    scores: { "Tone" => [3, "Cold and procedural. The customer is under wedding-deadline pressure and the reply doesn't acknowledge any of that."],
+              "Helpfulness" => [2, "Asks for information already discoverable from the order — delivery address is on file, carrier is in the tracking the customer already cited. This will frustrate them and burn a round-trip with the wedding looming."],
+              "Accuracy" => [4, "What's stated is technically correct, but the questions treat the ticket as if half of it weren't read."] } },
+  { input: ticket_inputs[2],
+    text: "Great question — the WELCOME20 code is for first-time customers only, which is why it's coming back invalid (we can see you've ordered with us before). The promo email goes to our broader newsletter list and the eligibility wasn't called out clearly enough — I've flagged that with marketing.\n\nFor the cart you've got open ($186), I've issued a one-time 15% off code: THANKS-LOYAL-186. Apply it at checkout. Same constraints as WELCOME20 (not stackable with other promos), valid for the next 7 days. Reply if it doesn't apply cleanly and I'll reissue.",
+    scores: { "Tone" => [4, "Friendly, owns the marketing copy gap, and lands the correction without being defensive."],
+              "Helpfulness" => [5, "Explains the rejection, offers a real alternative discount on the same cart amount, and pre-empts the 'doesn't stack' question. Customer can complete the purchase immediately."],
+              "Accuracy" => [5, "First-time-customer constraint matches our promo policy. Discount math is correct. No invented terms."] } },
+  { input: ticket_inputs[3],
+    text: "Hi — sorry about the SMS issue. I've sent a one-time recovery code to the email on your account; please use it within the next 30 minutes to sign in.\n\nOnce you're back in, you can switch 2FA to an authenticator app under Security Settings — that path doesn't depend on SMS delivery, so this won't recur.\n\nGood news on the store credit: it doesn't actually expire on June 15. Store credits issued from returns are good for 24 months from issue. The June 15 date you saw was for a separate promotional credit balance. Happy to walk through both balances if helpful.",
+    scores: { "Tone" => [4, "Calm and reassuring. The 'good news' framing on the credit lands well."],
+              "Helpfulness" => [4, "Resolves the immediate sign-in problem and points at a permanent fix. The credit-policy detail is useful but slightly muddies the main thread."],
+              "Accuracy" => [3, "The '24 months from issue' return-credit policy isn't verified — agent should check before stating it as fact. Sending recovery code via email and pointing at authenticator-app 2FA are both correct."] } },
+  { input: ticket_inputs[4],
+    text: "Hi — thank you for the long history with us, and for the candid feedback. Hearing this from a 2019 Gold member spending $4k a year carries real weight.\n\nThe Gold changes come from our cost structure — the free tier wasn't sustainable as the program grew — but I understand that doesn't change your math. For long-tenured members in your situation, I can offer a 12-month grandfather of the legacy benefits at no charge while we work out a longer-term path. You'd keep the 10% discount and free Gold status through next May.\n\nWould the grandfather year work as a stopgap? If so, I'll get it set up today.",
+    scores: { "Tone" => [5, "Acknowledges the customer's history specifically. Empathetic without being defensive about the program change. Honest about the rationale."],
+              "Helpfulness" => [4, "Offers a concrete stopgap (12-month grandfather) and frames the longer-term conversation. Doesn't address whether a paid tier might fit them better."],
+              "Accuracy" => [4, "Grandfather offer needs retention sign-off before being committed to in writing. Otherwise grounded in standard retention plays."] } }
+]
 
 triage_responses = [
-  { input: csv_data.lines[1].strip.tr('"', ''),
+  { input: ticket_inputs[0],
     text: "{ \"category\": \"refund\", \"secondary\": \"complaint\", \"urgency\": \"critical\", \"rationale\": \"Customer is threatening a bank dispute by Friday and the case has already escalated through one failed handling.\" }",
     scores: { "Category Accuracy" => [5, "Refund is the primary correct call; complaint as secondary captures the 11-day no-response handling failure."],
               "Urgency Calibration" => [5, "Bank dispute threat plus 11-day delay plus emotional weight (Christmas gift for elderly parent) justifies critical."],
               "Confidence" => [5, "Committed where the ticket is clear, didn't hedge unnecessarily."] } },
-  { input: csv_data.lines[2].strip.tr('"', ''),
+  { input: ticket_inputs[1],
     text: "{ \"category\": \"shipping\", \"urgency\": \"high\", \"rationale\": \"Missing-package report on a wedding-deadline order.\" }",
     scores: { "Category Accuracy" => [5, "Shipping is the right primary. The case is fundamentally about a package marked delivered but missing."],
-              "Urgency Calibration" => [4, "High is reasonable; some agents would call this critical given the Saturday wedding, but high is defensible if SLAs treat critical for things like personal-safety issues only."],
+              "Urgency Calibration" => [4, "High is reasonable; some agents would call this critical given the Saturday wedding, but high is defensible if SLAs reserve critical for personal-safety issues."],
               "Confidence" => [5, "Right level of commitment for a clear-cut shipping-investigation ticket."] } },
-  { input: csv_data.lines[3].strip.tr('"', ''),
+  { input: ticket_inputs[2],
     text: "{ \"category\": \"promo_code\", \"urgency\": \"low\", \"rationale\": \"Pre-purchase question about a promo code rejecting at checkout.\" }",
     scores: { "Category Accuracy" => [5, "Promo_code is the textbook bucket for this."],
               "Urgency Calibration" => [3, "Low is reasonable but medium would also be defensible — the cart is sitting and could lose the conversion. Missed that signal."],
               "Confidence" => [4, "Slight overconfidence on the urgency call given the active cart."] } },
-  { input: csv_data.lines[4].strip.tr('"', ''),
+  { input: ticket_inputs[3],
     text: "{ \"category\": \"account_access\", \"secondary\": \"loyalty\", \"urgency\": \"medium\", \"rationale\": \"Customer can't sign in due to SMS 2FA failure; has store credit they want to use before a quoted June 15 date.\" }",
     scores: { "Category Accuracy" => [5, "Account_access is the primary; loyalty as secondary captures the store-credit-expiry concern."],
               "Urgency Calibration" => [5, "Medium is right — they're locked out but have an email-recovery path, and the credit deadline gives a clock without making it critical."],
               "Confidence" => [5, "Well-calibrated. Clear primary, sensible secondary, no over-reach."] } },
-  { input: csv_data.lines[5].strip.tr('"', ''),
+  { input: ticket_inputs[4],
     text: "{ \"category\": \"churn_risk\", \"secondary\": \"loyalty\", \"urgency\": \"high\", \"rationale\": \"Long-tenure Gold member evaluating alternatives over loyalty program changes.\" }",
     scores: { "Category Accuracy" => [5, "Churn_risk primary is correct; loyalty secondary captures the trigger. Textbook churn-risk pattern."],
               "Urgency Calibration" => [5, "High is right. 6-year tenure + $4k/year + active alternative-evaluation is exactly when retention should engage fast."],
               "Confidence" => [4, "Slight room to push to critical given the spend, but high is well within range."] } }
 ]
 
-triage_responses.each do |rd|
-  response = triage_run.responses.find_or_create_by!(input_data: rd[:input]) do |r|
-    r.response_text = rd[:text]
-    r.status = "succeeded"
-  end
-  rd[:scores].each do |metric_name, (score, feedback)|
-    metric = CompletionKit::Metric.find_by!(name: metric_name)
-    response.reviews.find_or_create_by!(metric: metric) do |review|
-      review.metric_name = metric_name
-      review.instruction = metric.instruction
-      review.status = "succeeded"
-      review.ai_score = score
-      review.ai_feedback = feedback
-    end
-  end
-end
-
-summary_prompt = CompletionKit::Prompt.find_or_create_by!(name: "Ticket Summary") do |p|
-  p.description = "Generates a 1-2 sentence queue-view summary of an incoming ticket"
-  p.template = "Write a 1-2 sentence summary of this ticket for a triage queue view. Capture intent, urgency hint, and the routing-relevant fact. No greeting or sign-off.\n\n{{ticket}}"
-  p.llm_model = "claude-sonnet-4-6"
-end
-
-summary_run = CompletionKit::Run.find_or_create_by!(name: "Ticket Summary — v1 #1") do |r|
-  r.prompt = summary_prompt
-  r.dataset = dataset
-  r.judge_model = "gpt-4.1-mini"
-  r.status = "completed"
-  r.progress_current = 5
-  r.progress_total = 5
-end
-
-[clarity, completeness, brevity].each_with_index do |metric, i|
-  CompletionKit::RunMetric.find_or_create_by!(run: summary_run, metric: metric) do |rm|
-    rm.position = i + 1
-  end
-end
-
-summary_responses = [
-  { input: csv_data.lines[1].strip.tr('"', ''),
+summary_v1_responses = [
+  { input: ticket_inputs[0],
     text: "Refund demand on damaged $749 dryer (order #4827) — customer threatening Friday bank dispute after 11-day no-response.",
     scores: { "Clarity" => [5, "Crisp. Order number, amount, problem, and escalation path all parseable in one read."],
               "Completeness" => [5, "Intent (refund), urgency cue (Friday dispute), routing fact (order #4827, 11-day delay) all present."],
               "Brevity" => [5, "One sentence. Every word earns its place."] } },
-  { input: csv_data.lines[2].strip.tr('"', ''),
+  { input: ticket_inputs[1],
     text: "Missing-package report on order #5102 ($315 KitchenAid mixer for Saturday wedding) — tracking shows delivered, customer was home, neighbours' Ring cameras don't show the van.",
     scores: { "Clarity" => [5, "Specific and unambiguous. A shipping investigator can route this without opening the ticket."],
               "Completeness" => [5, "Intent (shipping), urgency cue (Saturday wedding), routing facts (order #, amount, evidence already gathered) all there."],
               "Brevity" => [5, "One sentence, packs everything that matters."] } },
-  { input: csv_data.lines[3].strip.tr('"', ''),
+  { input: ticket_inputs[2],
     text: "Pre-purchase question — WELCOME20 promo code rejecting at checkout; cart at $186 waiting on resolution.",
     scores: { "Clarity" => [5, "Plain language, no ambiguity."],
               "Completeness" => [4, "Intent and cart amount are there but the 'within email validity window' detail (which matters for the answer) isn't surfaced."],
               "Brevity" => [5, "One sentence, well-pitched."] } },
-  { input: csv_data.lines[4].strip.tr('"', ''),
+  { input: ticket_inputs[3],
     text: "Customer locked out of account: SMS 2FA codes not arriving; phone signal fine. Has $540 store credit they want to use before June 15.",
     scores: { "Clarity" => [5, "Clean and specific. The phone-signal-fine detail tells the agent which troubleshooting branches to skip."],
               "Completeness" => [5, "Intent, troubleshooting context, and the credit deadline (urgency cue) all there."],
               "Brevity" => [4, "Two short sentences. Could compress slightly but the second sentence carries necessary urgency context."] } },
-  { input: csv_data.lines[5].strip.tr('"', ''),
+  { input: ticket_inputs[4],
     text: "2019 Gold member (~$X/year spend) considering alternatives over the upcoming Gold program changes. Asking about grandfather pricing for long-tenure members.",
     scores: { "Clarity" => [3, "The placeholder '~$X/year' is a give-away that the model didn't have the spend figure and didn't commit. A triage agent would have to open the ticket to confirm."],
               "Completeness" => [4, "Intent (churn risk) and the trigger (program changes) are there but the placeholder weakens the routing-relevance."],
               "Brevity" => [4, "Two sentences, tight, but the placeholder costs a few words."] } }
 ]
 
-summary_responses.each do |rd|
-  response = summary_run.responses.find_or_create_by!(input_data: rd[:input]) do |r|
-    r.response_text = rd[:text]
-    r.status = "succeeded"
+summary_v2_responses = [
+  { input: ticket_inputs[0],
+    text: "Refund demand on a damaged dryer, order #4827.",
+    scores: { "Clarity" => [4, "Readable, but 'damaged dryer' alone undersells a case that is one step from a bank dispute."],
+              "Completeness" => [4, "Intent and order number are there; the Friday bank-dispute deadline — the reason this is urgent — got compressed away."],
+              "Brevity" => [5, "As short as it gets. One clean line."] } },
+  { input: ticket_inputs[1],
+    text: "Missing package on order #5102, customer needs it by Saturday.",
+    scores: { "Clarity" => [4, "Clear enough, though 'needs it by Saturday' hides that the deadline is a wedding."],
+              "Completeness" => [4, "Intent and the deadline are present; the delivered-but-not-received evidence the customer already gathered is dropped."],
+              "Brevity" => [5, "Tight single line."] } },
+  { input: ticket_inputs[2],
+    text: "WELCOME20 promo code rejecting at checkout.",
+    scores: { "Clarity" => [5, "Plain and unambiguous."],
+              "Completeness" => [4, "Captures the intent but loses the $186 cart-at-risk signal that makes this worth a fast reply."],
+              "Brevity" => [4, "Short, though it reads more like a log line than a summary."] } },
+  { input: ticket_inputs[3],
+    text: "Customer locked out, SMS 2FA codes not arriving.",
+    scores: { "Clarity" => [3, "States the symptom but a reader can't tell whether this is a quick reset or a stuck case."],
+              "Completeness" => [4, "Intent is clear; the $540 store credit and its June 15 deadline — both routing-relevant — are gone."],
+              "Brevity" => [5, "One short line."] } },
+  { input: ticket_inputs[4],
+    text: "Gold member unhappy about loyalty program changes.",
+    scores: { "Clarity" => [4, "Understandable, but 'unhappy' undersells an active churn risk."],
+              "Completeness" => [4, "Misses the tenure and spend that decide whether retention should engage."],
+              "Brevity" => [4, "Short, but vague enough that a reader still has to open the ticket."] } }
+]
+
+summary_v3_responses = [
+  { input: ticket_inputs[0],
+    text: "Refund demand on a damaged $749 dryer (order #4827) — customer is threatening a Friday bank dispute after an 11-day no-response.",
+    scores: { "Clarity" => [5, "Order number, amount, problem, and the escalation clock all land in one read."],
+              "Completeness" => [5, "Intent, the Friday-dispute urgency cue, and the routing facts are all present."],
+              "Brevity" => [5, "One sentence carrying everything that matters."] } },
+  { input: ticket_inputs[1],
+    text: "Missing-package report on order #5102 ($315 KitchenAid mixer, Saturday wedding gift) — tracking shows delivered, customer was home, neighbours' cameras show no delivery van.",
+    scores: { "Clarity" => [5, "A shipping investigator can route this without opening the ticket."],
+              "Completeness" => [5, "Intent, the wedding deadline, and the delivered-but-missing evidence are all kept."],
+              "Brevity" => [5, "One sentence, densely packed, still readable."] } },
+  { input: ticket_inputs[2],
+    text: "Pre-purchase question — WELCOME20 promo code rejecting at checkout; a $186 cart is waiting on the answer.",
+    scores: { "Clarity" => [5, "Plain language, no ambiguity."],
+              "Completeness" => [5, "Intent plus the at-risk cart value that tells triage this is time-sensitive."],
+              "Brevity" => [5, "One tight sentence."] } },
+  { input: ticket_inputs[3],
+    text: "Customer locked out of their account: SMS 2FA codes not arriving despite good signal. Has $540 in store credit they want to use before June 15.",
+    scores: { "Clarity" => [5, "The good-signal detail tells the agent which troubleshooting branches to skip."],
+              "Completeness" => [5, "Intent, troubleshooting context, and the credit deadline all present."],
+              "Brevity" => [4, "Two short sentences; the second carries the necessary urgency context."] } },
+  { input: ticket_inputs[4],
+    text: "2019 Gold member spending ~$4k/year is weighing alternatives after the loyalty program changes; asking whether grandfather pricing exists for long-tenure members.",
+    scores: { "Clarity" => [4, "Clear, with the tenure and spend a retention agent needs to act."],
+              "Completeness" => [4, "Intent, trigger, and the spend figure are all there."],
+              "Brevity" => [5, "Two sentences, no wasted words."] } }
+]
+
+seed_run = lambda do |name:, prompt:, dataset:, metrics:, days_ago:, responses:, tags:|
+  at = days_ago.days.ago
+  run = CompletionKit::Run.find_or_create_by!(name: name) do |r|
+    r.prompt = prompt
+    r.dataset = dataset
+    r.judge_model = "gpt-4.1-mini"
+    r.status = "completed"
+    r.progress_current = responses.size
+    r.progress_total = responses.size
+    r.created_at = at
+    r.updated_at = at
   end
-  rd[:scores].each do |metric_name, (score, feedback)|
-    metric = CompletionKit::Metric.find_by!(name: metric_name)
-    response.reviews.find_or_create_by!(metric: metric) do |review|
-      review.metric_name = metric_name
-      review.instruction = metric.instruction
-      review.status = "succeeded"
-      review.ai_score = score
-      review.ai_feedback = feedback
+
+  metrics.each_with_index do |metric, i|
+    CompletionKit::RunMetric.find_or_create_by!(run: run, metric: metric) { |rm| rm.position = i + 1 }
+  end
+
+  responses.each do |rd|
+    response = run.responses.find_or_create_by!(input_data: rd[:input]) do |r|
+      r.response_text = rd[:text]
+      r.status = "succeeded"
+      r.created_at = at
+      r.updated_at = at
+    end
+
+    rd[:scores].each do |metric_name, (score, feedback)|
+      metric = CompletionKit::Metric.find_by!(name: metric_name)
+      response.reviews.find_or_create_by!(metric: metric) do |review|
+        review.metric_name = metric_name
+        review.instruction = metric.instruction
+        review.status = "succeeded"
+        review.ai_score = score
+        review.ai_feedback = feedback
+        review.created_at = at
+        review.updated_at = at
+      end
     end
   end
+
+  run.update!(tag_names: tags) if tags.present? && run.tags.empty?
+  run
 end
+
+runs = [
+  { name: "Support Reply Generator — v1 #1", prompt: reply_prompt,  dataset: dataset, metrics: reply_metrics,   days_ago: 13, responses: reply_responses,     tags: %w[customer-support reply] },
+  { name: "Ticket Triage — v1 #1",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 13, responses: triage_responses,    tags: %w[customer-support triage] },
+  { name: "Ticket Summary — v1 #1",          prompt: summary_v1,    dataset: dataset, metrics: summary_metrics, days_ago: 11, responses: summary_v1_responses, tags: %w[customer-support summary] },
+  { name: "Ticket Summary — v1 #2",          prompt: summary_v1,    dataset: dataset, metrics: summary_metrics, days_ago: 11, responses: summary_v1_responses, tags: %w[customer-support summary] },
+  { name: "Ticket Summary — v2 #1",          prompt: summary_v2,    dataset: dataset, metrics: summary_metrics, days_ago: 6,  responses: summary_v2_responses, tags: %w[customer-support summary] },
+  { name: "Support Reply Generator — v1 #2", prompt: reply_prompt,  dataset: dataset, metrics: reply_metrics,   days_ago: 4,  responses: reply_responses,     tags: %w[customer-support reply] },
+  { name: "Ticket Triage — v1 #2",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 4,  responses: triage_responses,    tags: %w[customer-support triage] },
+  { name: "Ticket Summary — v3 #1",          prompt: summary_v3,    dataset: dataset, metrics: summary_metrics, days_ago: 2,  responses: summary_v3_responses, tags: %w[customer-support summary] },
+  { name: "Ticket Triage — v1 #3",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 1,  responses: triage_responses,    tags: %w[customer-support triage] }
+]
+
+runs.each { |attrs| seed_run.call(**attrs) }
 
 %w[customer-support reply triage summary].each do |tag_name|
   CompletionKit::Tag.find_or_create_by!(name: tag_name)
@@ -364,15 +404,6 @@ prompt_tags = {
 }
 prompt_tags.each do |prompt_name, names|
   CompletionKit::Prompt.where(name: prompt_name).each { |p| p.update!(tag_names: names) }
-end
-
-run_tags = {
-  "Support Reply Generator — v1 #1" => ["customer-support", "reply"],
-  "Ticket Triage — v1 #1"           => ["customer-support", "triage"],
-  "Ticket Summary — v1 #1"          => ["customer-support", "summary"]
-}
-run_tags.each do |run_name, names|
-  CompletionKit::Run.find_by(name: run_name)&.update!(tag_names: names)
 end
 
 metric_tags = {

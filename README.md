@@ -18,7 +18,7 @@ It's the difference between "this prompt seems to work" and "this prompt scores 
 
 > **Just want to use it?** [CompletionKit Cloud](https://completionkit.com) is the same engine, fully hosted — zero install, no Rails ops, plans at [completionkit.com/pricing](https://completionkit.com/pricing).
 
-![Test run with scored results](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/test-run.png)
+![The CompletionKit dashboard — workspace totals, run activity over the last 14 days, the worst-scoring metric, version-over-version score changes, and recent runs](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/dashboard.png)
 
 ## Three ways to run it
 
@@ -146,6 +146,12 @@ end
 Limiting uses `Rails.cache`. A shared cache store (Solid Cache, Redis) throttles accurately across multiple app instances; a per-process store still throttles each instance independently.
 
 ## How it works
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/diagrams/workflow.svg" alt="CompletionKit workflow: a prompt and a dataset feed a run against a model, an LLM judge scores each output on your rubric, low scores drive an AI-suggested rewrite, and the new prompt version re-runs so you can compare" width="820" />
+</p>
+
+It's a loop. Each pass leaves you with a score you can compare against the last one.
 
 1. **Create a prompt** with `{{variable}}` placeholders
 2. **Upload a dataset.** A CSV where column headers match the variable names.

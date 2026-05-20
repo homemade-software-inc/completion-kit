@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace">
+  <defs>
+    <marker id="ck-arrow" viewBox="0 0 12 12" refX="12" refY="6"
+            markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12"
+            orient="auto-start-reverse">
+      <path d="M0,0 L12,6 L0,12 z" fill="#06b6d4"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="999" height="379" rx="16" fill="#080b14" stroke="#1e293b"/>
+
+  <!-- dataset feeder -->
+  <rect x="215" y="14" width="160" height="40" rx="8" fill="#0d1117" stroke="#1e293b"/>
+  <text x="295" y="38" text-anchor="middle" font-size="11" font-weight="600" fill="#8b9ab5">Dataset · CSV of inputs</text>
+  <line x1="295" y1="54" x2="295" y2="86"
+        stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round"
+        marker-end="url(#ck-arrow)"/>
+
+  <!-- forward arrows: line endpoints sit exactly at box edges; marker tip lands on the edge -->
+  <line x1="191" y1="120" x2="227" y2="120" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" marker-end="url(#ck-arrow)"/>
+  <line x1="361" y1="120" x2="397" y2="120" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" marker-end="url(#ck-arrow)"/>
+  <line x1="561" y1="120" x2="597" y2="120" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" marker-end="url(#ck-arrow)"/>
+  <line x1="741" y1="120" x2="777" y2="120" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" marker-end="url(#ck-arrow)"/>
+
+  <!-- feedback loop: dashed return arrow from Suggest back to Prompt -->
+  <path d="M870,154 L870,276 Q870,300 846,300 L139,300 Q115,300 115,276 L115,154"
+        fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round"
+        stroke-dasharray="6 5" opacity="0.7"
+        marker-end="url(#ck-arrow)"/>
+  <rect x="338" y="290" width="324" height="20" fill="#080b14"/>
+  <text x="500" y="305" text-anchor="middle" font-size="11" fill="#8b9ab5">apply as a new version  ·  re-run  ·  compare</text>
+
+  <!-- node: prompt -->
+  <rect x="40" y="86" width="151" height="68" rx="10" fill="#111827" stroke="#1e293b"/>
+  <text x="115" y="118" text-anchor="middle" font-size="17" font-weight="700" fill="#e2e8f0">Prompt</text>
+  <text x="115" y="136" text-anchor="middle" font-size="10.5" fill="#8b9ab5">{{variable}} template</text>
+
+  <!-- node: run -->
+  <rect x="227" y="86" width="134" height="68" rx="10" fill="#111827" stroke="#1e293b"/>
+  <text x="294" y="118" text-anchor="middle" font-size="17" font-weight="700" fill="#e2e8f0">Run</text>
+  <text x="294" y="136" text-anchor="middle" font-size="10.5" fill="#8b9ab5">against a model</text>
+
+  <!-- node: judge -->
+  <rect x="397" y="86" width="164" height="68" rx="10" fill="#111827" stroke="#1e293b"/>
+  <text x="479" y="118" text-anchor="middle" font-size="17" font-weight="700" fill="#e2e8f0">LLM judge</text>
+  <text x="479" y="136" text-anchor="middle" font-size="10.5" fill="#8b9ab5">scores on your rubric</text>
+
+  <!-- node: scores -->
+  <rect x="597" y="86" width="144" height="68" rx="10" fill="#111827" stroke="#1e293b"/>
+  <text x="669" y="118" text-anchor="middle" font-size="17" font-weight="700" fill="#e2e8f0">Scores</text>
+  <text x="669" y="136" text-anchor="middle" font-size="10.5"><tspan fill="#2dd4a8" font-weight="700">4.3 / 5</tspan><tspan fill="#8b9ab5"> · what broke</tspan></text>
+
+  <!-- node: suggest -->
+  <rect x="777" y="86" width="183" height="68" rx="10" fill="#111827" stroke="#1e293b"/>
+  <text x="868" y="118" text-anchor="middle" font-size="17" font-weight="700" fill="#e2e8f0">Suggest a fix</text>
+  <text x="868" y="136" text-anchor="middle" font-size="10.5" fill="#8b9ab5">AI rewrite from feedback</text>
+</svg>
