@@ -22,15 +22,15 @@ It's the difference between "this prompt seems to work" and "this prompt scores 
 
 ## Three ways to run it
 
-Same engine, same UI, same REST API and MCP server — pick the deployment that fits.
+Same engine, same UI, same REST API and MCP server — pick the deployment that fits. The first two are stack-agnostic: you run CompletionKit as a product and talk to it over HTTP and MCP, whatever language your own app is written in. The third is for teams already building on Rails.
 
 ### 1. Hosted — [completionkit.com](https://completionkit.com) (recommended)
 
 The fastest path. Sign up and you're running on the same engine you'd self-host, without touching a Rails app. No `db:migrate`, no Puma, no Solid Queue, no provider key management — multi-tenant workspaces, your team logs in, you go. Plans at [completionkit.com/pricing](https://completionkit.com/pricing).
 
-### 2. Self-hosted — the bundled standalone Rails app
+### 2. Self-hosted — the bundled standalone app
 
-Run it on your own infra. No existing Rails app required; Postgres + any Rails-friendly host (Fly, Render, Heroku, Docker, …).
+Run it on your own infra as a self-contained product. There's nothing to integrate and no Ruby to write — once it's up, you drive everything through the web UI, the REST API, and the MCP server, from whatever stack your own app is built in. It needs Postgres and a host that can run the app (Fly, Render, Heroku, Docker, …).
 
 ```bash
 git clone https://github.com/homemade-software-inc/completion-kit.git
