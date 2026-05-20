@@ -148,7 +148,7 @@ Limiting uses `Rails.cache`. A shared cache store (Solid Cache, Redis) throttles
 ## How it works
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/diagrams/workflow.svg" alt="CompletionKit workflow: a prompt and a dataset feed a run against a model, an LLM judge scores each output on your rubric, low scores drive an AI-suggested rewrite, and the new prompt version re-runs so you can compare" width="820" />
+  <img src="https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/diagrams/workflow.png" alt="CompletionKit workflow: a prompt and a dataset feed a run against a model, an LLM judge scores each output on your rubric, low scores drive an AI-suggested rewrite, and the new prompt version re-runs so you can compare" width="820" />
 </p>
 
 It's a loop. Each pass leaves you with a score you can compare against the last one.
