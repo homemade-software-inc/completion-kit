@@ -4966,26 +4966,27 @@ a.tag-mark {
   position: relative;
   display: inline;
 }
-.ck-concept__tip {
-  display: inline;
-}
 .ck-concept__toggle {
-  display: inline;
-  margin-left: 0.15rem;
+  margin: 0 0 0 0.15rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  line-height: 0;
   color: var(--ck-dim);
   cursor: pointer;
-  list-style: none;
 }
-.ck-concept__toggle::-webkit-details-marker { display: none; }
-.ck-concept__toggle::marker { content: ""; }
-.ck-concept__toggle:hover { color: var(--ck-accent); }
-.ck-concept__tip[open] .ck-concept__toggle { color: var(--ck-accent); }
+.ck-concept__toggle:hover,
+.ck-concept__toggle:focus {
+  color: var(--ck-accent);
+}
 .ck-concept__icon {
   width: 0.92em;
   height: 0.92em;
   vertical-align: -0.12em;
 }
 .ck-concept__pop {
+  display: none;
   position: absolute;
   top: calc(100% + 0.4rem);
   left: 0;
@@ -4998,10 +4999,15 @@ a.tag-mark {
   border-radius: var(--ck-radius);
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5);
   white-space: normal;
-  cursor: auto;
+}
+.ck-concept__toggle:hover + .ck-concept__pop,
+.ck-concept__toggle:focus + .ck-concept__pop,
+.ck-concept__pop:hover {
+  display: block;
 }
 .ck-concept__name {
-  margin: 0 0 0.3rem;
+  display: block;
+  margin-bottom: 0.3rem;
   font-family: var(--ck-mono);
   font-size: 0.72rem;
   font-weight: 700;
@@ -5010,7 +5016,7 @@ a.tag-mark {
   color: var(--ck-text);
 }
 .ck-concept__body {
-  margin: 0;
+  display: block;
   font-size: 0.8rem;
   line-height: 1.5;
   color: var(--ck-muted);
