@@ -223,6 +223,30 @@ bin/rails db:migrate
 git add db/migrate/ && git commit -m "install new engine migration"
 ```
 
+### Docker
+
+The standalone app ships a `Dockerfile`, so you can self-host it without a Ruby toolchain on the host. Build with the **repository root** as the context — the app depends on the engine source alongside it:
+
+```bash
+docker build -f standalone/Dockerfile -t completion-kit .
+```
+
+Run the web process and a job worker from the same image:
+
+```bash
+docker run -d -p 3000:3000 \
+  -e DATABASE_URL=postgres://user:pass@host/completionkit \
+  -e SECRET_KEY_BASE=$(openssl rand -hex 64) \
+  -e COMPLETION_KIT_ENCRYPTION_PRIMARY_KEY=... \
+  -e COMPLETION_KIT_ENCRYPTION_DETERMINISTIC_KEY=... \
+  -e COMPLETION_KIT_ENCRYPTION_KEY_DERIVATION_SALT=... \
+  completion-kit
+
+docker run -d <same env vars> completion-kit ./bin/jobs
+```
+
+The web container runs `db:prepare` on boot, so migrations apply on first start and on every deploy.
+
 ## Multi-tenant host apps (advanced)
 
 For hosts that mount CompletionKit in a multi-tenant app, two optional hooks scope engine records per tenant without forking the engine:
