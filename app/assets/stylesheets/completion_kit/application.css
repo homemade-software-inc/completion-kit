@@ -118,13 +118,6 @@ form.button_to {
   padding: 0.75rem 0;
 }
 
-@media (min-width: 641px) {
-  .ck-topbar__inner .ck-nav {
-    position: relative;
-    top: 8px;
-  }
-}
-
 /* Mobile navigation — a <details> hamburger. On desktop the trigger is
    hidden and the nav shows inline; at the mobile breakpoint the nav
    collapses behind the trigger and opens as a dropdown panel. The two
