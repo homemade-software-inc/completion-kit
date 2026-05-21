@@ -38,7 +38,7 @@
             <%= link_to "Providers", provider_credentials_path, class: "ck-settings-menu__item" %>
             <%= link_to "Tags", tags_path, class: "ck-settings-menu__item" %>
             <% if main_app.respond_to?(:logout_path) %>
-              <%= button_to "Log out", main_app.logout_path, method: :delete, class: "ck-settings-menu__item" %>
+              <%= button_to "Sign out", main_app.logout_path, method: :delete, class: "ck-settings-menu__item" %>
             <% end %>
           </div>
         </details>
