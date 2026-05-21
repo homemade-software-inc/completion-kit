@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.31] - 2026-05-21
+
+### Added
+
+- **The dashboard is a first-class engine page.** `CompletionKit::DashboardController#show` (route: `dashboard`) renders the assembled dashboard — workspace totals, run activity, the worst-metric and failures cards, version-over-version prompt changes, and recent runs. Any host that mounts the engine gets it; the page previously existed only in the bundled standalone app.
+- **Concept tips on the onboarding checklist.** Each setup step shows an info popover defining its concept (provider credential, dataset, prompt, run).
+
+### Changed
+
+- **A configured workspace lands on the dashboard.** The engine onboarding page redirects a set-up or onboarding-dismissed workspace to the dashboard instead of the flat prompts list.
+
 ## [0.5.30] - 2026-05-20
 
 ### Added
