@@ -77,6 +77,14 @@ RSpec.describe "CompletionKit onboarding", type: :request do
       expect(response.body).to include("all set up")
       expect(response.body).to include("ck-launch__quicklink")
     end
+
+    it "shows a concept tip on each checklist step" do
+      get "/completion_kit/onboarding?reset=1"
+
+      expect(response.body).to include('id="concept-credential-pop"')
+      expect(response.body).to include("Provider Credential")
+      expect(response.body).to include('id="concept-run-pop"')
+    end
   end
 
   describe "POST /onboarding/dismiss" do

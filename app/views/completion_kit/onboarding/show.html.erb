@@ -57,6 +57,7 @@
                   <% else %>
                     <%= link_to step.title, step_path %>
                   <% end %>
+                  <%= render "concept", key: step.key %>
                 </h3>
                 <% if state == "next" %><span class="ck-launch__step-tag">Next up</span><% end %>
               </div>
