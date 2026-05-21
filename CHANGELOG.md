@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.30] - 2026-05-20
+
+### Added
+
+- **Onboarding concept tips.** The setup checklist's step cards now carry inline info popovers explaining the core concepts as they are mentioned (provider credential, prompt, dataset, run, response, metric). Click the icon next to a term for a short definition.
+- **Dockerfile for the standalone app.** The bundled standalone app ships a `Dockerfile`, so it can be self-hosted with no Ruby toolchain on the host. The README's Docker section covers building, the required environment variables, and generating the encryption keys with `openssl`.
+
+### Changed
+
+- **Settings is a cog-icon menu.** The topbar Settings control is now a cog icon that opens a dropdown holding Getting started, API, Providers, Tags, and Sign out. API and Sign out moved off the top-level nav into this menu, which closes when you click outside it. "Log out" is now "Sign out", to match the "Sign in" wording on the login screen.
+
 ## [0.5.29] - 2026-05-18
 
 ### Security
