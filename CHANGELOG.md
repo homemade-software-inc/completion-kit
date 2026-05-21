@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.32] - 2026-05-21
+
+### Fixed
+
+- **Topbar nav offset.** 0.5.31 shifted the topbar navigation with a `position` offset that applied at every viewport width, including the mobile hamburger menu. The nav is now a plain flex item with a small top padding, so it stays correctly placed and fully responsive.
+
 ## [0.5.31] - 2026-05-21
 
 ### Added
