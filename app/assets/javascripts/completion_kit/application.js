@@ -158,3 +158,9 @@ document.addEventListener("turbo:before-stream-render", function(event) {
     if (status) { status.textContent = 'Models updated.'; setTimeout(function() { status.textContent = ' '; }, 3000); }
   }
 });
+
+document.addEventListener("click", function(e) {
+  document.querySelectorAll("details.ck-nav-menu[open], details.ck-settings-menu[open], details.ck-flyout[open]").forEach(function(menu) {
+    if (!menu.contains(e.target)) menu.removeAttribute("open");
+  });
+});

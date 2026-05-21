@@ -4345,6 +4345,11 @@ a.tag-mark {
 .ck-settings-menu__trigger::-webkit-details-marker {
   display: none;
 }
+.ck-settings-menu__trigger svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
 .ck-settings-menu__panel {
   position: absolute;
   right: 0;
