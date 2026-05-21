@@ -1,0 +1,91 @@
+<section class="ck-page-header">
+  <div>
+    <p class="ck-kicker">Dashboard</p>
+    <h1 class="ck-title">Prompt Testing Lab</h1>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "New run →", new_run_path, class: "ck-button ck-button--secondary" %>
+  </div>
+</section>
+
+<nav class="ck-statbar ck-rise" aria-label="Workspace totals">
+  <%= link_to prompts_path, class: "ck-statbar__item" do %>
+    <span class="ck-statbar__label">Prompts</span>
+    <span class="ck-statbar__value"><%= @prompt_count %></span>
+  <% end %>
+  <%= link_to metrics_path, class: "ck-statbar__item" do %>
+    <span class="ck-statbar__label">Metrics</span>
+    <span class="ck-statbar__value"><%= @metric_count %></span>
+  <% end %>
+  <%= link_to datasets_path, class: "ck-statbar__item" do %>
+    <span class="ck-statbar__label">Datasets</span>
+    <span class="ck-statbar__value"><%= @dataset_count %></span>
+  <% end %>
+  <%= link_to runs_path, class: "ck-statbar__item" do %>
+    <span class="ck-statbar__label">Runs</span>
+    <span class="ck-statbar__value"><%= @run_count %></span>
+  <% end %>
+</nav>
+
+<% if @activity %>
+  <div class="ck-grid ck-grid--cards ck-grid--cards-3 ck-pulse-grid">
+    <div class="ck-card ck-stat-card ck-rise" style="--rise-delay: 60ms;">
+      <p class="ck-kicker">Activity · last 14 days</p>
+      <% activity_max = @activity.map { |d| d[:count] }.max %>
+      <div class="ck-sparkline" role="img" aria-label="<%= @activity.sum { |d| d[:count] } %> runs over the last 14 days">
+        <% @activity.each do |day| %>
+          <span class="ck-sparkline__bar<%= ' is-peak' if activity_max.to_i.positive? && day[:count] == activity_max %>"
+                style="height: <%= activity_max.to_i.zero? ? 0 : (day[:count] * 100.0 / activity_max).round %>%"
+                title="<%= day[:date].strftime('%b %-d') %>: <%= day[:count] %> run<%= 's' unless day[:count] == 1 %>"></span>
+        <% end %>
+      </div>
+      <p class="ck-stat-card__foot">
+        <span class="ck-stat-card__figure"><%= @activity.sum { |d| d[:count] } %></span> runs in the window
+      </p>
+    </div>
+
+    <%= render "completion_kit/dashboard/worst_metric_card",
+               worst_metric: @worst_metric, ignored_metrics: @ignored_metrics %>
+
+    <%= render "completion_kit/dashboard/failures_card",
+               failures: @failures, ignored_failures: @ignored_failures %>
+  </div>
+
+  <div class="ck-card ck-card--spaced ck-rise" style="--rise-delay: 240ms;">
+    <p class="ck-kicker">Prompt changes · version over version</p>
+    <% if @prompt_changes.any? %>
+      <ul class="ck-improvements">
+        <% @prompt_changes.each do |row| %>
+          <% gained = row[:delta].positive? %>
+          <li class="ck-improvement">
+            <%= link_to row[:prompt].name, prompt_path(row[:prompt]), class: "ck-improvement__name ck-link" %>
+            <span class="ck-improvement__versions">v<%= row[:from_version] %> &rarr; v<%= row[:to_version] %></span>
+            <span class="ck-improvement__scores">
+              <span class="ck-improvement__from"><%= row[:from_score] %></span>
+              <span class="ck-improvement__arrow">&rarr;</span>
+              <span class="ck-improvement__to"><%= row[:to_score] %></span>
+            </span>
+            <span class="ck-improvement__delta <%= gained ? 'is-gain' : 'is-loss' %>"><%= gained ? '▲' : '▼' %> <%= '%+.2f' % row[:delta] %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="ck-improvements__empty">
+        No measured changes yet. Edit a prompt to create a new version, re-run it against the same dataset and metrics, and the score change, up or down, shows up here.
+      </p>
+    <% end %>
+  </div>
+<% end %>
+
+<section class="ck-card--spaced">
+  <div class="ck-split">
+    <h2 class="ck-section-title">Recent runs</h2>
+    <%= link_to "View all", runs_path, class: "ck-link" %>
+  </div>
+
+  <% if @recent_runs.any? %>
+    <%= render "completion_kit/runs/table", runs: @recent_runs %>
+  <% else %>
+    <div class="ck-empty">No runs yet.&ensp;<%= link_to "Create your first run →", new_run_path, class: "ck-link" %></div>
+  <% end %>
+</section>

@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "CompletionKit onboarding", type: :request do
-  let(:prompts_path) { "/completion_kit/prompts" }
+  let(:dashboard_path) { "/completion_kit/dashboard" }
 
   def complete_setup!
     create(:completion_kit_provider_credential)
@@ -30,18 +30,18 @@ RSpec.describe "CompletionKit onboarding", type: :request do
       expect(response.body).not_to include("Load sample data")
     end
 
-    it "redirects to prompts once every setup step is complete" do
+    it "redirects to the dashboard once every setup step is complete" do
       complete_setup!
 
       get "/completion_kit/"
-      expect(response).to redirect_to(prompts_path)
+      expect(response).to redirect_to(dashboard_path)
     end
 
-    it "redirects to prompts when onboarding has been dismissed" do
+    it "redirects to the dashboard when onboarding has been dismissed" do
       cookies[:ck_onboarding_dismissed] = "1"
 
       get "/completion_kit/"
-      expect(response).to redirect_to(prompts_path)
+      expect(response).to redirect_to(dashboard_path)
     end
   end
 
@@ -80,17 +80,17 @@ RSpec.describe "CompletionKit onboarding", type: :request do
   end
 
   describe "POST /onboarding/dismiss" do
-    it "sets the dismiss cookie, redirects to prompts with a notice, and stays dismissed" do
+    it "sets the dismiss cookie, redirects to the dashboard with a notice, and stays dismissed" do
       post "/completion_kit/onboarding/dismiss"
 
-      expect(response).to redirect_to(prompts_path)
+      expect(response).to redirect_to(dashboard_path)
       expect(response.cookies["ck_onboarding_dismissed"]).to eq("1")
 
       follow_redirect!
       expect(response.body).to include("Setup skipped")
 
       get "/completion_kit/"
-      expect(response).to redirect_to(prompts_path)
+      expect(response).to redirect_to(dashboard_path)
     end
   end
 
