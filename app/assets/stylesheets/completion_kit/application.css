@@ -4350,6 +4350,11 @@ a.tag-mark {
   width: 18px;
   height: 18px;
 }
+.ck-settings-menu__trigger:focus-visible {
+  outline: none;
+  border-color: var(--ck-accent);
+  color: var(--ck-accent);
+}
 .ck-settings-menu__panel {
   position: absolute;
   right: 0;
@@ -4378,6 +4383,16 @@ a.tag-mark {
 }
 .ck-settings-menu__item:hover {
   background: var(--ck-surface-hover);
+}
+.ck-settings-menu__panel form {
+  margin: 0;
+}
+.ck-settings-menu__panel button.ck-settings-menu__item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
 }
 
 /* Settings page kicker — small label above the page title on settings pages */

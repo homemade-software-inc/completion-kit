@@ -37,11 +37,11 @@
             <%= link_to "API", api_reference_path, class: "ck-settings-menu__item" %>
             <%= link_to "Providers", provider_credentials_path, class: "ck-settings-menu__item" %>
             <%= link_to "Tags", tags_path, class: "ck-settings-menu__item" %>
+            <% if main_app.respond_to?(:logout_path) %>
+              <%= button_to "Log out", main_app.logout_path, method: :delete, class: "ck-settings-menu__item" %>
+            <% end %>
           </div>
         </details>
-        <% if main_app.respond_to?(:logout_path) %>
-          <%= button_to "Log out", main_app.logout_path, method: :delete, class: ck_button_classes(:light, variant: :outline) %>
-        <% end %>
       </nav>
       </details>
     </div>
