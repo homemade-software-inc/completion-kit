@@ -1,5 +1,5 @@
 <% snap = run.progress_snapshot %>
-<div id="run_status_panel">
+<div id="run_status_panel" aria-live="polite" aria-atomic="true">
   <% if run.status.in?(%w[running completed]) && snap[:generated_total] > 0 %>
     <% failed_count = snap[:generated_failed] + snap[:judged_failed] %>
     <% has_judge = snap[:judged_total] > 0 || run.judge_configured? %>

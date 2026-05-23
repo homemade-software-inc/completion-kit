@@ -1,6 +1,6 @@
 <% clickable = response.succeeded? %>
 <tr id="response_<%= response.id %>"<% if clickable %> onclick="window.location='<%= run_response_path(run, response, sort: params[:sort]) %>'" style="cursor: pointer;"<% end %>>
-  <td class="ck-response-cell__index"><%= index %></td>
+  <td class="ck-response-cell__index"><% if clickable %><%= link_to index, run_response_path(run, response, sort: params[:sort]), class: "ck-record-name" %><% else %><%= index %><% end %></td>
   <td class="ck-response-cell__text">
     <% if response.status == "failed" %>
       <% err = response.error_payload %>

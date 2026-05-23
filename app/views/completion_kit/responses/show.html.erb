@@ -1,4 +1,4 @@
-<ol class="ck-breadcrumb">
+<ol class="ck-breadcrumb" aria-label="Breadcrumb">
   <% if @run.prompt %>
     <li><%= link_to "Prompts", prompts_path %></li>
     <li><%= link_to @run.prompt.name, prompt_path(@run.prompt) %></li>

@@ -1,6 +1,6 @@
-<div id="run_status_header">
+<div id="run_status_header" aria-live="polite">
   <% if run.status == "failed" %>
-    <div class="ck-flash ck-flash--alert">
+    <div class="ck-flash ck-flash--alert" role="alert">
       <%= run.failure_summary.presence || run.error_message.presence || "Run failed." %>
     </div>
   <% end %>

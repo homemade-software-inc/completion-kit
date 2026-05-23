@@ -7,8 +7,8 @@
     <% all_tags.each do |tag| %>
       <% checked = selected_ids.include?(tag.id) %>
       <label class="tag-mark" style="--mark-color: var(--tag-<%= tag.color %>);">
-        <%= check_box_tag "#{param_namespace}[tag_names][]", tag.name, checked, hidden: true %>
-        <%= tag.name %>
+        <%= check_box_tag "#{param_namespace}[tag_names][]", tag.name, checked, class: "ck-visually-hidden", "aria-label": "Tag: #{tag.name}" %>
+        <span aria-hidden="true"><%= tag.name %></span>
       </label>
     <% end %>
     <%= text_field_tag "#{param_namespace}[tag_names][]", "",
