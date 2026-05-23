@@ -1,7 +1,7 @@
 module CompletionKit
   class MetricsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot]
+    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot, :publish_draft]
 
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
@@ -12,6 +12,7 @@ module CompletionKit
                                   .includes(response: [:reviews, :run])
                                   .order(created_at: :desc)
                                   .limit(50)
+      @latest_draft = JudgeVersion.drafts.where(metric_id: @metric.id).order(created_at: :desc).first
     end
 
     def new
@@ -42,6 +43,21 @@ module CompletionKit
     def destroy
       @metric.destroy
       redirect_to metrics_path, notice: "Metric was successfully destroyed."
+    end
+
+    def publish_draft
+      draft = JudgeVersion.drafts.where(metric_id: @metric.id).order(created_at: :desc).first
+      if draft.nil?
+        redirect_to metric_path(@metric), alert: "No draft to publish."
+        return
+      end
+
+      JudgeVersion.transaction do
+        JudgeVersion.where(metric_id: @metric.id, state: "published").update_all(current: false)
+        draft.update!(state: "published", current: true)
+      end
+
+      redirect_to metric_path(@metric), notice: "Draft published as the current judge version."
     end
 
     def add_few_shot

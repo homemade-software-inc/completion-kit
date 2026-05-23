@@ -42,6 +42,17 @@ RSpec.describe CompletionKit::JudgeVersion, type: :model do
     end
   end
 
+  describe "state predicates" do
+    it "exposes draft? and published?" do
+      published = create(:completion_kit_judge_version, state: "published")
+      draft = create(:completion_kit_judge_version, state: "draft", current: false)
+      expect(published.published?).to be(true)
+      expect(published.draft?).to be(false)
+      expect(draft.draft?).to be(true)
+      expect(draft.published?).to be(false)
+    end
+  end
+
   describe ".current scope" do
     it "returns only versions flagged as current" do
       metric = create(:completion_kit_metric)

@@ -15,6 +15,7 @@ CompletionKit::Engine.routes.draw do
   resources :metrics do
     member do
       post :add_few_shot
+      post :publish_draft
     end
   end
   resources :metric_groups

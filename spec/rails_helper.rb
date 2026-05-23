@@ -232,9 +232,12 @@ ActiveRecord::Schema.define do
     t.text :instruction
     t.text :rubric_bands
     t.boolean :current, null: false, default: true
+    t.string :state, null: false, default: "published"
+    t.string :source
     t.timestamps
   end
   add_index :completion_kit_judge_versions, [:metric_id, :current], name: "index_ck_judge_versions_on_metric_current"
+  add_index :completion_kit_judge_versions, [:metric_id, :state], name: "index_ck_judge_versions_on_metric_state"
 
   create_table :completion_kit_calibrations, force: true do |t|
     t.references :run, null: false

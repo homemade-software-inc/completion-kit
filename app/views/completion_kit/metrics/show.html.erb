@@ -9,6 +9,15 @@
     <% if CompletionKit.config.judge_calibration_enabled %>
       <%= render "completion_kit/calibrations/trust_panel",
             stats: CompletionKit::MetricCalibrationStats.for(@metric) %>
+      <% if @latest_draft %>
+        <div class="ck-draft-banner">
+          <span class="ck-chip ck-chip--soft">Draft pending</span>
+          <span class="ck-meta-copy">An edit forked a draft judge version. Publish it to make this the current judge.</span>
+          <%= button_to "Publish draft", publish_draft_metric_path(@metric),
+                method: :post, form_class: "inline-block",
+                class: ck_button_classes(:dark) %>
+        </div>
+      <% end %>
     <% end %>
   </div>
   <div class="ck-actions">

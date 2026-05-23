@@ -20,7 +20,7 @@ RSpec.describe CompletionKit::McpDispatcher do
     it "returns tool definitions for tools/list" do
       result = described_class.dispatch("tools/list", nil)
       expect(result[:tools]).to be_an(Array)
-      expect(result[:tools].length).to eq(41)
+      expect(result[:tools].length).to eq(43)
       expect(result[:tools].first).to have_key(:name)
       expect(result[:tools].first).to have_key(:description)
       expect(result[:tools].first).to have_key(:inputSchema)
@@ -97,6 +97,15 @@ RSpec.describe CompletionKit::McpDispatcher do
       result = described_class.dispatch("tools/call", {"name" => "calibrations_list", "arguments" => {}})
       content = JSON.parse(result[:content].first[:text])
       expect(content).to eq([])
+    end
+
+    it "calls a judges tool through dispatcher" do
+      metric = create(:completion_kit_metric)
+      a = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      b = CompletionKit::JudgeVersion.create!(metric: metric, instruction: "draft", current: false, state: "draft", source: "edit")
+      result = described_class.dispatch("tools/call", {"name" => "judges_compare", "arguments" => {"metric_id" => metric.id, "judge_version_a_id" => a.id, "judge_version_b_id" => b.id}})
+      payload = JSON.parse(result[:content].first[:text])
+      expect(payload["metric_id"]).to eq(metric.id)
     end
   end
 end
