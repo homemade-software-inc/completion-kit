@@ -2751,6 +2751,11 @@ select.ck-input {
   gap: 1rem;
 }
 
+.ck-review-card__header .ck-inline {
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
 .ck-review-card__metric {
   font-family: var(--ck-mono);
   font-size: 0.95rem;
@@ -2825,6 +2830,12 @@ select.ck-input {
 
   .ck-review-card {
     padding: 1rem;
+  }
+
+  .ck-review-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
   /* Topbar nav collapses behind the hamburger trigger. */
