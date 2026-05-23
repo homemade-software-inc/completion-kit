@@ -14,8 +14,8 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
       expect(CompletionKit::ProviderCredential::PROVIDER_LABELS["openrouter"]).to eq("OpenRouter")
     end
 
-    it "labels ollama as 'Ollama / local endpoint'" do
-      expect(CompletionKit::ProviderCredential::PROVIDER_LABELS["ollama"]).to eq("Ollama / local endpoint")
+    it "labels ollama as an OpenAI-compatible endpoint" do
+      expect(CompletionKit::ProviderCredential::PROVIDER_LABELS["ollama"]).to eq("Ollama / OpenAI-compatible endpoint")
     end
 
     it "validates that provider is in the PROVIDERS list" do

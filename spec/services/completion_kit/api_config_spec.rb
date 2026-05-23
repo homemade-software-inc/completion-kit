@@ -35,6 +35,20 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
     expect(described_class.for_provider("openrouter")).to eq(api_key: "or-env-key", provider: "openrouter")
   end
 
+  it "does not bleed deployment-level ENV or config into tenants when tenant_scope is set" do
+    CompletionKit.config.openai_api_key = "deployment-key"
+    original = CompletionKit.config.tenant_scope
+    CompletionKit.config.tenant_scope = -> { all }
+
+    expect(described_class.for_provider("openai")).to eq(provider: "openai")
+    expect(described_class.for_provider("unknown")).to eq({})
+
+    create(:completion_kit_provider_credential, provider: "openai", api_key: "tenant-key")
+    expect(described_class.for_provider("openai")).to eq(provider: "openai", api_key: "tenant-key")
+  ensure
+    CompletionKit.config.tenant_scope = original
+  end
+
   it "delegates validity and errors to the model-specific client" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true, configuration_errors: ["none"])
 

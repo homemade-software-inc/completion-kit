@@ -1,6 +1,3 @@
-require "ipaddr"
-require "resolv"
-
 module CompletionKit
   class ProviderCredential < ApplicationRecord
     include Turbo::Broadcastable
@@ -8,7 +5,7 @@ module CompletionKit
     PROVIDER_LABELS = {
       "openai" => "OpenAI",
       "anthropic" => "Anthropic",
-      "ollama" => "Ollama / local endpoint",
+      "ollama" => "Ollama / OpenAI-compatible endpoint",
       "openrouter" => "OpenRouter"
     }.freeze
 
@@ -139,29 +136,12 @@ module CompletionKit
     def api_endpoint_not_internal
       return if api_endpoint.blank?
 
-      uri = safe_http_uri(api_endpoint)
-      unless uri
+      issues = ProviderEndpoint.validate(api_endpoint)
+      if issues.include?(:invalid_url)
         errors.add(:api_endpoint, "must be a valid http or https URL")
-        return
-      end
-
-      if endpoint_addresses(uri.host).any? { |ip| ip.private? || ip.link_local? }
+      elsif issues.include?(:unsafe_host)
         errors.add(:api_endpoint, "must not point at a private or internal address")
       end
-    end
-
-    def safe_http_uri(value)
-      uri = URI.parse(value.to_s.strip)
-      uri if uri.is_a?(URI::HTTP) && uri.host.present?
-    rescue URI::InvalidURIError
-      nil
-    end
-
-    def endpoint_addresses(host)
-      bare = host.delete_prefix("[").delete_suffix("]")
-      [IPAddr.new(bare)]
-    rescue IPAddr::InvalidAddressError
-      Resolv.getaddresses(host).map { |addr| IPAddr.new(addr) }
     end
   end
 end

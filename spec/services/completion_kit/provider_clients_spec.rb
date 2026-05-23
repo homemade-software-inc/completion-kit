@@ -291,6 +291,22 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(missing_endpoint.available_models).to eq([])
   end
 
+  it "refuses to call out when the configured endpoint resolves to a private address" do
+    client = CompletionKit::OllamaClient.new(api_endpoint: "http://10.0.0.5:11434")
+    expect(client.generate_completion("prompt")).to eq("Error: API endpoint resolves to a private address")
+    expect(client.available_models).to eq([])
+  end
+
+  it "treats a blank endpoint as not configured when allow_loopback_endpoints is false" do
+    original = CompletionKit.config.allow_loopback_endpoints
+    CompletionKit.config.allow_loopback_endpoints = false
+    client = CompletionKit::OllamaClient.new
+    expect(client.configured?).to eq(false)
+    expect(client.generate_completion("prompt")).to eq("Error: API endpoint not configured")
+  ensure
+    CompletionKit.config.allow_loopback_endpoints = original
+  end
+
   it "covers Ollama dynamic model listing branches" do
     client = CompletionKit::OllamaClient.new(api_key: "ollama-key", api_endpoint: "https://ollama.example.test")
 

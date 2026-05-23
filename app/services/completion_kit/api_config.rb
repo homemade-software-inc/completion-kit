@@ -1,5 +1,7 @@
 module CompletionKit
   class ApiConfig
+    PROVIDERS = %w[openai anthropic ollama openrouter].freeze
+
     def self.for_model(model_name)
       provider = provider_for_model(model_name)
       provider ? for_provider(provider) : {}
@@ -9,21 +11,25 @@ module CompletionKit
       provider = provider_name.to_s
       stored = ProviderCredential.find_by(provider: provider)&.config_hash || {}
 
-      defaults = case provider
-                 when "openai"
-                   { provider: "openai", api_key: CompletionKit.config.openai_api_key || ENV["OPENAI_API_KEY"] }
-                 when "anthropic"
-                   { provider: "anthropic", api_key: CompletionKit.config.anthropic_api_key || ENV["ANTHROPIC_API_KEY"] }
-                 when "ollama"
-                   {
-                     provider: "ollama",
-                     api_key: CompletionKit.config.ollama_api_key || ENV["OLLAMA_API_KEY"],
-                     api_endpoint: CompletionKit.config.ollama_api_endpoint || ENV["OLLAMA_API_ENDPOINT"]
-                   }
-                 when "openrouter"
-                   { provider: "openrouter", api_key: ENV["OPENROUTER_API_KEY"] }
+      defaults = if CompletionKit.config.tenant_scope
+                   PROVIDERS.include?(provider) ? { provider: provider } : {}
                  else
-                   {}
+                   case provider
+                   when "openai"
+                     { provider: "openai", api_key: CompletionKit.config.openai_api_key || ENV["OPENAI_API_KEY"] }
+                   when "anthropic"
+                     { provider: "anthropic", api_key: CompletionKit.config.anthropic_api_key || ENV["ANTHROPIC_API_KEY"] }
+                   when "ollama"
+                     {
+                       provider: "ollama",
+                       api_key: CompletionKit.config.ollama_api_key || ENV["OLLAMA_API_KEY"],
+                       api_endpoint: CompletionKit.config.ollama_api_endpoint || ENV["OLLAMA_API_ENDPOINT"]
+                     }
+                   when "openrouter"
+                     { provider: "openrouter", api_key: ENV["OPENROUTER_API_KEY"] }
+                   else
+                     {}
+                   end
                  end
 
       defaults.merge(stored.compact)
