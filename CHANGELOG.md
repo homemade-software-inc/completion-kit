@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.37] - 2026-05-23
+
+### Added
+
+- **Judge calibration · Phase 2 — Trust score.** Trust panel on the metric show page. Under 10 verdicts it's a counter (`7 / 10 verdicts · 3 more to score`); from 10 verdicts on it's a provisional rate with the Wilson 95% interval (`~80% ±18 pt · provisional`), flipping to `settled` at 30+. Pure-Ruby `CalibrationMath` module (Wilson, MAE, Pearson, quadratic weighted Cohen's kappa) backed by a `MetricCalibrationStats` service — no new gem dependency. (#33)
+- **Judge calibration · Phase 3 — Disagreements & few-shots.** "Disagreements" section on the metric show page lists every disagree verdict with judge vs. human scores and notes; one-click "Add as judge few-shot" promotes a row to the metric's `few_shot_examples` jsonb-style column. Borderline-rate badge on the trust panel now picks its color band (`ok` ≤15%, `warning` >15%, `danger` >30%) with the "Rubric ambiguous" tooltip. (#34)
+- **Judge calibration · Phase 4 — Version state + compare.** `JudgeVersion` gained `state` (draft/published) and `source` columns. Editing a metric's instruction or rubric forks a non-current `draft` snapshot via an `after_update` callback; the show page renders a "Draft pending" banner with a Publish button that flips the latest draft to current+published in a transaction. New MCP tools `judges_replay` (thin wrapper that creates a judge-only run with the supplied metric / dataset / judge_model) and `judges_compare` (side-by-side stats, delta, and a recommendation: `need_more_data` / `recommend` / `hold` / `no_change`). (#35)
+- **Judge calibration · Phase 5 — Auto-suggest rubrics.** `JudgeVariantGenerator` builds a meta-prompt from the metric's instruction, rubric, and recent disagreements, asks the configured judge model for 1–5 rewritten instructions, and persists each as a draft `JudgeVersion` with `source: "suggestion"`. New MCP tool `judges_suggest`, a "Suggest improvements" button on the metric show page, and an `ActiveSupport::Notifications` event `completion_kit.judge_suggestion.generated` so Stripe metering can pick it up downstream. (#36)
+
 ## [0.5.36] - 2026-05-23
 
 ### Fixed
