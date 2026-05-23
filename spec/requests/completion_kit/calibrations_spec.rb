@@ -13,10 +13,10 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
 
   it "renders verdict buttons under each scored review on the response page" do
     get "/completion_kit/runs/#{run.id}/responses/#{response_row.id}"
-    expect(response.body).to include("How does this score feel?")
-    expect(response.body).to include("Agree")
-    expect(response.body).to include("Disagree")
-    expect(response.body).to include("Borderline")
+    expect(response.body).to include("Your verdict")
+    expect(response.body).to include("agree")
+    expect(response.body).to include("disagree")
+    expect(response.body).to include("borderline")
   end
 
   it "creates an agree calibration via the web endpoint" do
@@ -53,7 +53,7 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     post base_path, params: { metric_id: metric.id, verdict: "agree" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     get "/completion_kit/runs/#{run.id}/responses/#{response_row.id}"
     expect(response.body).to include("1 verdict")
-    expect(response.body).to include("collected")
+    expect(response.body).to include("on this score")
   end
 
   it "honors a remote-user header so different operators get their own row" do
@@ -86,7 +86,7 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     original = CompletionKit.config.judge_calibration_enabled
     CompletionKit.config.judge_calibration_enabled = false
     get "/completion_kit/runs/#{run.id}/responses/#{response_row.id}"
-    expect(response.body).not_to include("How does this score feel?")
+    expect(response.body).not_to include("Your verdict")
   ensure
     CompletionKit.config.judge_calibration_enabled = original
   end

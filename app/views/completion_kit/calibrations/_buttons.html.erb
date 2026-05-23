@@ -2,20 +2,21 @@
   <% current_verdict = calibration&.verdict %>
   <% verdict_count = CompletionKit::Calibration.where(response_id: response_row.id, metric_id: metric.id).count %>
   <p class="ck-calibration__prompt">
-    How does this score feel?
+    Your verdict
     <% if verdict_count > 0 %>
-      <span class="ck-calibration__count"><%= pluralize(verdict_count, "verdict") %> collected</span>
+      <span class="ck-calibration__count"><%= pluralize(verdict_count, "verdict") %> on this score</span>
     <% end %>
   </p>
   <div class="ck-calibration__buttons">
+    <% verdict_icons = { "agree" => "hand-thumb-up", "disagree" => "hand-thumb-down", "borderline" => "scale" } %>
     <% CompletionKit::Calibration::VERDICTS.each do |verdict| %>
       <%= button_to run_response_calibrations_path(run, response_row, metric_id: metric.id, verdict: verdict),
               method: :post,
               form: { data: { turbo: "true" } },
               class: "ck-calibration__pill ck-calibration__pill--#{verdict}#{' is-active' if verdict == current_verdict}",
               "aria-pressed": (verdict == current_verdict).to_s do %>
-        <% case verdict
-           when "agree" %>👍 Agree<% when "disagree" %>👎 Disagree<% else %>🤔 Borderline<% end %>
+        <%= heroicon_tag verdict_icons[verdict], variant: :outline, size: 14, "aria-hidden": "true" %>
+        <span><%= verdict %></span>
       <% end %>
     <% end %>
   </div>
