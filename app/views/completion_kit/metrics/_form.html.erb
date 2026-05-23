@@ -1,6 +1,6 @@
 <%= form_with(model: metric, local: true) do |form| %>
   <% if metric.errors.any? %>
-    <div class="ck-flash ck-flash--alert">
+    <div class="ck-flash ck-flash--alert" role="alert">
       <p class="ck-flash__title"><%= pluralize(metric.errors.count, "problem") %> prevented this metric from being saved.</p>
       <ul class="ck-error-list">
         <% metric.errors.full_messages.each do |message| %>
@@ -13,13 +13,15 @@
   <div class="ck-card ck-form-card">
     <div class="ck-field">
       <%= form.label :name, "Metric name", class: "ck-label" %>
-      <%= form.text_field :name, class: "ck-input", placeholder: "Helpfulness" %>
+      <%= form.text_field :name, class: "ck-input", placeholder: "Helpfulness", **ck_field_aria(form, :name) %>
+      <%= ck_field_error(form, :name) %>
     </div>
 
     <div class="ck-field ck-field--spacious">
       <p class="ck-section-title">Instruction</p>
       <p class="ck-hint">What should the judge assess? This instruction is sent to the LLM judge when scoring outputs.</p>
-      <%= form.text_area :instruction, rows: 8, class: "ck-input ck-input--area", placeholder: "Evaluate whether the output..." %>
+      <%= form.text_area :instruction, rows: 8, class: "ck-input ck-input--area", placeholder: "Evaluate whether the output...", **ck_field_aria(form, :instruction) %>
+      <%= ck_field_error(form, :instruction) %>
     </div>
 
     <div class="ck-field ck-field--spacious">

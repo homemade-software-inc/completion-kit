@@ -1,6 +1,6 @@
 <%= form_with(model: run, local: true) do |form| %>
   <% if run.errors.any? %>
-    <div class="ck-flash ck-flash--alert">
+    <div class="ck-flash ck-flash--alert" role="alert">
       <p class="ck-flash__title"><%= pluralize(run.errors.count, "problem") %> prevented this run from being saved.</p>
       <ul class="ck-error-list">
         <% run.errors.full_messages.each do |message| %>
@@ -13,7 +13,8 @@
   <div class="ck-card ck-form-card">
     <div class="ck-field">
       <%= form.label :name, "Name (auto-generated if blank)", class: "ck-label" %>
-      <%= form.text_field :name, class: "ck-input", placeholder: run.name.presence || "Auto-generated from prompt + version + timestamp" %>
+      <%= form.text_field :name, class: "ck-input", placeholder: run.name.presence || "Auto-generated from prompt + version + timestamp", **ck_field_aria(form, :name) %>
+      <%= ck_field_error(form, :name) %>
     </div>
 
     <div class="ck-field">
@@ -56,7 +57,8 @@
 
     <div class="ck-field" id="output-column-field" hidden>
       <%= form.label :output_column, "Output column", class: "ck-label" %>
-      <%= form.text_field :output_column, value: run.output_column.presence || "actual_output", class: "ck-input", id: "run_output_column", placeholder: "actual_output" %>
+      <%= form.text_field :output_column, value: run.output_column.presence || "actual_output", class: "ck-input", id: "run_output_column", placeholder: "actual_output", **ck_field_aria(form, :output_column) %>
+      <%= ck_field_error(form, :output_column) %>
       <p class="ck-field-hint">Name of the dataset column whose value will be graded as the response. Defaults to <code>actual_output</code>.</p>
     </div>
 

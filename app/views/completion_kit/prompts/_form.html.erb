@@ -1,6 +1,6 @@
 <%= form_with(model: prompt, local: true) do |form| %>
   <% if prompt.errors.any? %>
-    <div class="ck-flash ck-flash--alert">
+    <div class="ck-flash ck-flash--alert" role="alert">
       <p class="ck-flash__title"><%= pluralize(prompt.errors.count, "problem") %> prevented this prompt from being saved.</p>
       <ul class="ck-error-list">
         <% prompt.errors.full_messages.each do |message| %>
@@ -17,17 +17,20 @@
   <div class="ck-card ck-form-card">
     <div class="ck-field">
       <%= form.label :name, "Name", class: "ck-label" %>
-      <%= form.text_field :name, class: "ck-input", placeholder: "Support summary", autocomplete: "off", data: { "1p-ignore": "" } %>
+      <%= form.text_field :name, class: "ck-input", placeholder: "Support summary", autocomplete: "off", data: { "1p-ignore": "" }, **ck_field_aria(form, :name) %>
+      <%= ck_field_error(form, :name) %>
     </div>
 
     <div class="ck-field">
       <%= form.label :description, class: "ck-label" %>
-      <%= form.text_area :description, rows: 3, class: "ck-input ck-input--area", placeholder: "Short note about this prompt." %>
+      <%= form.text_area :description, rows: 3, class: "ck-input ck-input--area", placeholder: "Short note about this prompt.", **ck_field_aria(form, :description) %>
+      <%= ck_field_error(form, :description) %>
     </div>
 
     <div class="ck-field">
       <%= form.label :template, "Prompt text", class: "ck-label" %>
-      <%= form.text_area :template, rows: 12, class: "ck-input ck-input--area ck-input--code", placeholder: "Summarize {{content}} for {{audience}}" %>
+      <%= form.text_area :template, rows: 12, class: "ck-input ck-input--area ck-input--code", placeholder: "Summarize {{content}} for {{audience}}", **ck_field_aria(form, :template) %>
+      <%= ck_field_error(form, :template) %>
       <p class="ck-hint">Use <code>{{variable}}</code>. Match your dataset column names.</p>
     </div>
 

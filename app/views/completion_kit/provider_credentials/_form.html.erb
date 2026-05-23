@@ -1,6 +1,6 @@
 <%= form_with(model: provider_credential, local: true) do |form| %>
   <% if provider_credential.errors.any? %>
-    <div class="ck-flash ck-flash--alert">
+    <div class="ck-flash ck-flash--alert" role="alert">
       <p class="ck-flash__title"><%= pluralize(provider_credential.errors.count, "problem") %> prevented this provider credential from being saved.</p>
       <ul class="ck-error-list">
         <% provider_credential.errors.full_messages.each do |message| %>
@@ -18,12 +18,14 @@
 
     <div class="ck-field">
       <%= form.label :api_key, "API key", class: "ck-label" %>
-      <%= form.text_area :api_key, rows: 3, class: "ck-input ck-input--area ck-input--code", placeholder: "Paste the provider API key" %>
+      <%= form.text_area :api_key, rows: 3, class: "ck-input ck-input--area ck-input--code", placeholder: "Paste the provider API key", **ck_field_aria(form, :api_key) %>
+      <%= ck_field_error(form, :api_key) %>
     </div>
 
     <div class="ck-field">
       <%= form.label :api_endpoint, "API endpoint", class: "ck-label" %>
-      <%= form.text_field :api_endpoint, class: "ck-input", placeholder: "Only needed for Ollama or custom OpenAI-compatible endpoints" %>
+      <%= form.text_field :api_endpoint, class: "ck-input", placeholder: "Only needed for Ollama or custom OpenAI-compatible endpoints", **ck_field_aria(form, :api_endpoint) %>
+      <%= ck_field_error(form, :api_endpoint) %>
     </div>
 
     <div class="ck-actions">

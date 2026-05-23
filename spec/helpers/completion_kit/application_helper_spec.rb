@@ -347,4 +347,24 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_format_maybe_json(malformed)).to eq(malformed)
     end
   end
+
+  describe "#ck_field_aria and #ck_field_error" do
+    let(:prompt) { build(:completion_kit_prompt, name: "", template: "x") }
+    let(:form) { instance_double("ActionView::Helpers::FormBuilder", object: prompt) }
+
+    it "returns an empty hash and nil when the field has no errors" do
+      prompt.errors.clear
+      expect(helper.ck_field_aria(form, :name)).to eq({})
+      expect(helper.ck_field_error(form, :name)).to be_nil
+    end
+
+    it "returns aria-invalid + aria-describedby and an error paragraph when the field has errors" do
+      prompt.errors.add(:name, "can't be blank")
+      aria = helper.ck_field_aria(form, :name)
+      expect(aria).to eq("aria-invalid" => "true", "aria-describedby" => "prompt_name_error")
+      err = helper.ck_field_error(form, :name)
+      expect(err).to include('id="prompt_name_error"', 'class="ck-field-error"')
+      expect(err).to include("can&#39;t be blank")
+    end
+  end
 end

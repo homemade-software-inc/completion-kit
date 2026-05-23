@@ -218,6 +218,20 @@ module CompletionKit
       "#{base_path}?#{{ tag: next_set.map(&:name) }.to_query}"
     end
 
+    def ck_field_aria(form, field)
+      return {} unless form.object.errors[field].any?
+      { "aria-invalid" => "true", "aria-describedby" => ck_field_error_id(form, field) }
+    end
+
+    def ck_field_error(form, field)
+      return nil unless form.object.errors[field].any?
+      content_tag(:p, form.object.errors[field].first, class: "ck-field-error", id: ck_field_error_id(form, field))
+    end
+
+    def ck_field_error_id(form, field)
+      "#{form.object.model_name.param_key}_#{field}_error"
+    end
+
     private
 
     def diff_tokens(old_text, new_text, side)
