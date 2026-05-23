@@ -9,7 +9,13 @@ module CompletionKit
     end
 
     def dismiss
-      cookies[ONBOARDING_DISMISS_COOKIE] = { value: "1", expires: 1.year.from_now, httponly: true }
+      cookies[ONBOARDING_DISMISS_COOKIE] = {
+        value: "1",
+        expires: 1.year.from_now,
+        httponly: true,
+        secure: Rails.env.production?,
+        same_site: :lax
+      }
       redirect_to dashboard_path, notice: "Setup skipped. Pick it back up from Settings → Getting started any time."
     end
 
