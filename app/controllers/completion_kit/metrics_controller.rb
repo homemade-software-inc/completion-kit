@@ -54,12 +54,14 @@ module CompletionKit
         return
       end
       generator.persist!(variants)
-      label = variants.length == 1 ? "judge variant" : "judge variants"
-      redirect_to metric_path(@metric), notice: "Generated #{variants.length} #{label} as drafts. Pick one to publish."
+      label = variants.length == 1 ? "alternative" : "alternatives"
+      redirect_to metric_path(@metric), notice: "Wrote #{variants.length} #{label} for the judge instruction. Pick one to make it live."
     end
 
     def publish_draft
-      draft = JudgeVersion.drafts.where(metric_id: @metric.id).order(created_at: :desc).first
+      scope = JudgeVersion.drafts.where(metric_id: @metric.id)
+      draft = params[:draft_id].present? ? scope.find_by(id: params[:draft_id]) : scope.order(created_at: :desc).first
+
       if draft.nil?
         redirect_to metric_path(@metric), alert: "No draft to publish."
         return
@@ -68,9 +70,13 @@ module CompletionKit
       JudgeVersion.transaction do
         JudgeVersion.where(metric_id: @metric.id, state: "published").update_all(current: false)
         draft.update!(state: "published", current: true)
+        @metric.update_columns(
+          instruction: draft.instruction,
+          rubric_bands: Array(draft.rubric_bands).to_json
+        )
       end
 
-      redirect_to metric_path(@metric), notice: "Draft published as the current judge version."
+      redirect_to metric_path(@metric), notice: "This judge version is now live."
     end
 
     def add_few_shot
@@ -88,7 +94,7 @@ module CompletionKit
         "added_at" => Time.current.utc.iso8601
       }
       @metric.update!(few_shot_examples: examples)
-      redirect_to metric_path(@metric), notice: "Added as a judge few-shot."
+      redirect_to metric_path(@metric), notice: "Saved as a teaching example. The judge will see it next time it grades."
     end
 
     private

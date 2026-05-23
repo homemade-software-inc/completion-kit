@@ -12,8 +12,8 @@
       <% if @latest_draft %>
         <div class="ck-draft-banner">
           <span class="ck-chip ck-chip--soft">Draft pending</span>
-          <span class="ck-meta-copy">An edit forked a draft judge version. Publish it to make this the current judge.</span>
-          <%= button_to "Publish draft", publish_draft_metric_path(@metric),
+          <span class="ck-meta-copy">A draft version of this judge is saved. Publishing it replaces the live instruction and rubric.</span>
+          <%= button_to "Publish this version", publish_draft_metric_path(@metric, draft_id: @latest_draft.id),
                 method: :post, form_class: "inline-block",
                 class: ck_button_classes(:dark) %>
         </div>
@@ -22,10 +22,11 @@
   </div>
   <div class="ck-actions">
     <% if CompletionKit.config.judge_calibration_enabled %>
-      <%= button_to "Suggest improvements", suggest_variants_metric_path(@metric),
+      <%= button_to "Suggest rewrites", suggest_variants_metric_path(@metric),
             method: :post, form_class: "inline-block",
             class: ck_button_classes(:light, variant: :outline),
-            data: { turbo_confirm: "Ask the model to propose new judge instructions based on the disagreements collected so far?" } %>
+            title: "Ask the model to rewrite this judge instruction based on the disagreements collected so far.",
+            data: { turbo_confirm: "Ask the model to rewrite this judge instruction based on the disagreements collected so far?" } %>
     <% end %>
     <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
   </div>
@@ -65,14 +66,15 @@
 <% if CompletionKit.config.judge_calibration_enabled %>
   <section class="ck-card ck-card--spaced">
     <div class="ck-prompt-preview__header">
-      <p class="ck-kicker">Disagreements</p>
+      <p class="ck-kicker">Where the judge got it wrong</p>
       <% if @disagreements.any? %>
         <span class="ck-chip"><%= pluralize(@disagreements.size, "row") %></span>
       <% end %>
     </div>
     <% if @disagreements.empty? %>
-      <p class="ck-meta-copy">No disagreements yet. As humans give the verdict "disagree" on individual rows, the judge's misses will show up here for review.</p>
+      <p class="ck-meta-copy">Nothing here yet. As people give a "disagree" verdict on response rows, those rows show up below so you can review the judge's misses and turn them into teaching examples.</p>
     <% else %>
+      <p class="ck-meta-copy">Rows where a reviewer said the judge got it wrong. Save the best ones as teaching examples — the judge will see them next time it grades.</p>
       <table class="ck-results-table ck-disagreements-table">
         <thead>
           <tr>
@@ -112,13 +114,14 @@
               <td class="ck-meta-copy"><%= cal.note.to_s.truncate(120) %></td>
               <td>
                 <% if already %>
-                  <span class="ck-chip ck-chip--done">Added</span>
+                  <span class="ck-chip ck-chip--done">Saved as example</span>
                 <% else %>
-                  <%= button_to "Add as judge few-shot",
+                  <%= button_to "Teach the judge",
                         add_few_shot_metric_path(@metric, calibration_id: cal.id),
                         method: :post,
                         form_class: "inline-block",
-                        class: ck_button_classes(:light, variant: :outline) %>
+                        class: ck_button_classes(:light, variant: :outline),
+                        title: "Save this row as a teaching example. The judge will see it next time it grades." %>
                 <% end %>
               </td>
             </tr>
@@ -131,20 +134,20 @@
   <% if @suggestion_drafts.any? %>
     <section class="ck-card ck-card--spaced">
       <div class="ck-prompt-preview__header">
-        <p class="ck-kicker">Suggested judge variants</p>
-        <span class="ck-chip"><%= @suggestion_drafts.size %> draft<%= @suggestion_drafts.size == 1 ? "" : "s" %></span>
+        <p class="ck-kicker">Suggested rewrites</p>
+        <span class="ck-chip"><%= @suggestion_drafts.size %> option<%= @suggestion_drafts.size == 1 ? "" : "s" %></span>
       </div>
-      <p class="ck-meta-copy">Pick one and publish it to make it the current judge. The previous published version stays in history.</p>
+      <p class="ck-meta-copy">The model wrote these alternate instructions based on the disagreements above. Pick one to make it the live judge — the previous version is kept in history.</p>
       <div class="ck-suggestion-list">
         <% @suggestion_drafts.each do |draft| %>
           <article class="ck-suggestion-card">
             <header class="ck-suggestion-card__header">
-              <span class="ck-chip ck-chip--soft">Draft #<%= draft.id %></span>
+              <span class="ck-chip ck-chip--soft">Option #<%= draft.id %></span>
               <time class="ck-meta-copy" data-relative-time datetime="<%= draft.created_at.utc.iso8601 %>"><%= time_ago_in_words(draft.created_at) %> ago</time>
             </header>
             <pre class="ck-code ck-suggestion-card__instruction"><%= draft.instruction %></pre>
             <div class="ck-actions">
-              <%= button_to "Publish this draft", publish_draft_metric_path(@metric),
+              <%= button_to "Use this version", publish_draft_metric_path(@metric, draft_id: draft.id),
                     method: :post, form_class: "inline-block",
                     class: ck_button_classes(:dark) %>
             </div>
@@ -157,10 +160,10 @@
   <% if Array(@metric.few_shot_examples).any? %>
     <section class="ck-card ck-card--spaced">
       <div class="ck-prompt-preview__header">
-        <p class="ck-kicker">Judge few-shot examples</p>
+        <p class="ck-kicker">Teaching examples</p>
         <span class="ck-chip"><%= pluralize(Array(@metric.few_shot_examples).size, "example") %></span>
       </div>
-      <p class="ck-meta-copy">Disagreements added here will be injected as worked examples when the judge runs on this metric. Used by Phase 4 / 5 to retrain the judge.</p>
+      <p class="ck-meta-copy">The judge sees these worked examples whenever it grades for this metric. Each shows what the judge gave and what a human said it should have been.</p>
       <ol class="ck-few-shot-list">
         <% Array(@metric.few_shot_examples).each do |fs| %>
           <li class="ck-few-shot-item">

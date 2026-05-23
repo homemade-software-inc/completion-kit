@@ -19,6 +19,7 @@
       <tr>
         <th scope="col">Name</th>
         <th scope="col">Instruction</th>
+        <th scope="col" title="How often the judge agrees with the humans who reviewed its scores.">Judge trust</th>
         <th scope="col">In groups</th>
         <th scope="col"></th>
       </tr>
@@ -35,6 +36,23 @@
             <% end %>
           </td>
           <td data-label="Instruction" class="ck-meta-copy"><div class="ck-clamp-2"><%= metric.instruction.presence || "—" %></div></td>
+          <td data-label="Judge trust" class="ck-metrics-table__trust">
+            <% if CompletionKit.config.judge_calibration_enabled %>
+              <% s = CompletionKit::MetricCalibrationStats.for(metric) %>
+              <% if s.counter_only? %>
+                <% if s.sample_size.zero? %>
+                  <span class="ck-meta-copy">No verdicts yet</span>
+                <% else %>
+                  <span class="ck-meta-copy"><%= s.sample_size %> / <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> verdicts</span>
+                <% end %>
+              <% else %>
+                <span class="ck-metrics-table__trust-rate" title="<%= s.firm? ? 'Settled read.' : 'Early read — keep giving verdicts.' %>">~<%= (s.agreement_point * 100).round %>%</span>
+                <span class="ck-meta-copy">±<%= (s.margin * 100).round %> pt · <%= s.firm? ? "settled" : "early" %></span>
+              <% end %>
+            <% else %>
+              <span class="ck-meta-copy">—</span>
+            <% end %>
+          </td>
           <td data-label="In groups">
             <% groups = metric.metric_groups %>
             <% if groups.any? %>

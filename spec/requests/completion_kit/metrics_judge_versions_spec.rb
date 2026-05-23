@@ -21,7 +21,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     metric.update!(instruction: "score it carefully")
     get "/completion_kit/metrics/#{metric.id}"
     expect(response.body).to include("Draft pending")
-    expect(response.body).to include("Publish draft")
+    expect(response.body).to include("Publish this version")
   end
 
   it "publishes the latest draft, demoting the previous published version" do
@@ -32,11 +32,32 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     post "/completion_kit/metrics/#{metric.id}/publish_draft"
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
     follow_redirect!
-    expect(response.body).to include("Draft published")
+    expect(response.body).to include("This judge version is now live")
 
     versions = CompletionKit::JudgeVersion.where(metric_id: metric.id).order(:created_at).to_a
     expect(versions.map(&:state)).to eq(%w[published published])
     expect(versions.map(&:current)).to eq([false, true])
+  end
+
+  it "copies a published draft's instruction back into the metric so the judge actually uses it" do
+    metric.update!(instruction: "v2 instruction")
+    draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).order(:created_at).last
+    draft.update!(instruction: "the version we actually want")
+
+    post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: draft.id }
+    expect(metric.reload.instruction).to eq("the version we actually want")
+  end
+
+  it "publishes the specific draft passed in draft_id, not just the newest" do
+    metric.update!(instruction: "first edit")
+    older = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).order(:created_at).last
+    metric.update!(instruction: "second edit")
+    newer = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).order(:created_at).last
+    expect(newer.id).not_to eq(older.id)
+
+    post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: older.id }
+    expect(older.reload.state).to eq("published")
+    expect(newer.reload.state).to eq("draft")
   end
 
   it "flashes an alert when there is no draft to publish" do

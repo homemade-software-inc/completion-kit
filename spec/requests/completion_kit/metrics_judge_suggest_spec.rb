@@ -14,8 +14,8 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
     follow_redirect!
-    expect(response.body).to include("Generated 2 judge variants as drafts")
-    expect(response.body).to include("Suggested judge variants")
+    expect(response.body).to include("Wrote 2 alternatives for the judge instruction")
+    expect(response.body).to include("Suggested rewrites")
     expect(response.body).to include("be sharper")
   end
 
@@ -23,7 +23,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     stub_llm("VARIANT:\nREASONING: only\nINSTRUCTION:\nlonely\nEND_VARIANT")
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
     follow_redirect!
-    expect(response.body).to include("Generated 1 judge variant as drafts")
+    expect(response.body).to include("Wrote 1 alternative for the judge instruction")
   end
 
   it "redirects with an alert when the model returns nothing usable" do

@@ -5,16 +5,24 @@
     Your verdict
     <% if verdict_count > 0 %>
       <span class="ck-calibration__count"><%= pluralize(verdict_count, "verdict") %> on this score</span>
+    <% else %>
+      <span class="ck-calibration__count">Tell us what you think — was the score right?</span>
     <% end %>
   </p>
   <div class="ck-calibration__buttons">
     <% verdict_icons = { "agree" => "hand-thumb-up", "disagree" => "hand-thumb-down", "borderline" => "scale" } %>
+    <% verdict_hints = {
+         "agree" => "The score looks right.",
+         "disagree" => "The score is wrong — you'll pick the right one.",
+         "borderline" => "The rubric is unclear here; either score could be defensible."
+       } %>
     <% CompletionKit::Calibration::VERDICTS.each do |verdict| %>
       <%= button_to run_response_calibrations_path(run, response_row, metric_id: metric.id, verdict: verdict),
               method: :post,
               form: { data: { turbo: "true" } },
               class: "ck-calibration__pill ck-calibration__pill--#{verdict}#{' is-active' if verdict == current_verdict}",
-              "aria-pressed": (verdict == current_verdict).to_s do %>
+              "aria-pressed": (verdict == current_verdict).to_s,
+              title: verdict_hints[verdict] do %>
         <%= heroicon_tag verdict_icons[verdict], variant: :outline, size: 14, "aria-hidden": "true" %>
         <span><%= verdict %></span>
       <% end %>
@@ -28,7 +36,7 @@
       <%= hidden_field_tag :metric_id, metric.id %>
       <%= hidden_field_tag :verdict, "disagree" %>
       <label class="ck-label">
-        Your score
+        What should the score have been?
         <span class="ck-calibration__value" data-calibration-value><%= calibration.corrected_score || review&.ai_score || 3 %></span>
       </label>
       <input type="range" name="corrected_score" min="1" max="5" step="0.5"
