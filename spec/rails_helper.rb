@@ -225,6 +225,31 @@ ActiveRecord::Schema.define do
             [:dismissable_type, :dismissable_id],
             unique: true,
             name: "index_ck_dashboard_dismissals_on_dismissable"
+
+  create_table :completion_kit_judge_versions, force: true do |t|
+    t.references :metric, null: false
+    t.text :instruction
+    t.text :rubric_bands
+    t.boolean :current, null: false, default: true
+    t.timestamps
+  end
+  add_index :completion_kit_judge_versions, [:metric_id, :current], name: "index_ck_judge_versions_on_metric_current"
+
+  create_table :completion_kit_calibrations, force: true do |t|
+    t.references :run, null: false
+    t.references :response, null: false
+    t.references :metric, null: false
+    t.references :judge_version, null: false
+    t.string :verdict, null: false
+    t.string :created_by
+    t.decimal :corrected_score, precision: 4, scale: 1
+    t.text :note
+    t.timestamps
+  end
+  add_index :completion_kit_calibrations,
+            [:response_id, :metric_id, :created_by],
+            unique: true,
+            name: "index_ck_calibrations_on_response_metric_user"
 end
 
 FactoryBot.definition_file_paths = [File.expand_path("factories", __dir__)]
