@@ -1,5 +1,8 @@
 <div id="calibration_<%= response_row.id %>_<%= metric.id %>" class="ck-calibration">
   <% current_verdict = calibration&.verdict %>
+  <% pending_verdict = local_assigns[:pending_verdict] %>
+  <% active_verdict = pending_verdict || current_verdict %>
+  <% error = local_assigns[:error] %>
   <% verdict_count = CompletionKit::Calibration.where(response_id: response_row.id, metric_id: metric.id).count %>
   <p class="ck-calibration__prompt">
     Your verdict
@@ -20,8 +23,8 @@
       <%= button_to run_response_calibrations_path(run, response_row, metric_id: metric.id, verdict: verdict),
               method: :post,
               form: { data: { turbo: "true" } },
-              class: "ck-calibration__pill ck-calibration__pill--#{verdict}#{' is-active' if verdict == current_verdict}",
-              "aria-pressed": (verdict == current_verdict).to_s,
+              class: "ck-calibration__pill ck-calibration__pill--#{verdict}#{' is-active' if verdict == active_verdict}",
+              "aria-pressed": (verdict == active_verdict).to_s,
               title: verdict_hints[verdict] do %>
         <%= heroicon_tag verdict_icons[verdict], variant: :outline, size: 14, "aria-hidden": "true" %>
         <span><%= verdict %></span>
@@ -29,7 +32,11 @@
     <% end %>
   </div>
 
-  <% if current_verdict == "disagree" %>
+  <% if error.present? %>
+    <p class="ck-calibration__error" role="alert"><%= error %></p>
+  <% end %>
+
+  <% if active_verdict == "disagree" %>
     <%= form_with url: run_response_calibrations_path(run, response_row),
                   method: :post, local: false,
                   class: "ck-calibration__detail" do |f| %>
@@ -37,23 +44,24 @@
       <%= hidden_field_tag :verdict, "disagree" %>
       <label class="ck-label">
         What should the score have been?
-        <span class="ck-calibration__value" data-calibration-value><%= calibration.corrected_score || review&.ai_score || 3 %></span>
+        <span class="ck-calibration__value" data-calibration-value><%= calibration&.corrected_score || review&.ai_score || 3 %></span>
       </label>
       <input type="range" name="corrected_score" min="1" max="5" step="0.5"
-             value="<%= calibration.corrected_score || review&.ai_score || 3 %>"
+             value="<%= calibration&.corrected_score || review&.ai_score || 3 %>"
              oninput="this.closest('.ck-calibration__detail').querySelector('[data-calibration-value]').textContent = this.value"
-             class="ck-slider">
-      <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="Why? (optional)"><%= calibration.note %></textarea>
-      <%= f.submit "Save", class: ck_button_classes(:dark) %>
+             class="ck-slider"
+             required>
+      <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="Why? (optional)"><%= calibration&.note %></textarea>
+      <%= f.submit (current_verdict == "disagree" ? "Update" : "Save disagree"), class: ck_button_classes(:dark) %>
     <% end %>
-  <% elsif current_verdict == "borderline" %>
+  <% elsif active_verdict == "borderline" %>
     <%= form_with url: run_response_calibrations_path(run, response_row),
                   method: :post, local: false,
                   class: "ck-calibration__detail" do |f| %>
       <%= hidden_field_tag :metric_id, metric.id %>
       <%= hidden_field_tag :verdict, "borderline" %>
-      <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="What made this borderline? (optional)"><%= calibration.note %></textarea>
-      <%= f.submit "Save", class: ck_button_classes(:dark) %>
+      <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="What made this borderline? (optional)"><%= calibration&.note %></textarea>
+      <%= f.submit (current_verdict == "borderline" ? "Update" : "Save"), class: ck_button_classes(:dark) %>
     <% end %>
   <% end %>
 </div>

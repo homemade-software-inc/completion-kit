@@ -5,8 +5,17 @@ module CompletionKit
 
     def create
       created_by = calibration_creator
-      calibration = Calibration.find_or_initialize_by(
+      existing = Calibration.find_by(
         run_id: @run.id, response_id: @response.id, metric_id: @metric.id, created_by: created_by
+      )
+
+      if params[:verdict] == "disagree" && params[:corrected_score].blank?
+        render_calibration(calibration: existing, pending_verdict: "disagree")
+        return
+      end
+
+      calibration = existing || Calibration.new(
+        run: @run, response: @response, metric: @metric, created_by: created_by
       )
       calibration.assign_attributes(
         judge_version: JudgeVersion.ensure_current_for(@metric),
@@ -16,18 +25,35 @@ module CompletionKit
       )
 
       if calibration.save
-        render turbo_stream: turbo_stream.replace(
-          "calibration_#{@response.id}_#{@metric.id}",
-          partial: "completion_kit/calibrations/buttons",
-          locals: { review: review_for_metric, calibration: calibration, run: @run, response_row: @response, metric: @metric }
-        )
+        render_calibration(calibration: calibration)
       else
-        flash[:alert] = calibration.errors.full_messages.to_sentence
-        redirect_to run_response_path(@run, @response)
+        render_calibration(
+          calibration: existing,
+          pending_verdict: params[:verdict],
+          error: calibration.errors.full_messages.to_sentence,
+          status: :unprocessable_entity
+        )
       end
     end
 
     private
+
+    def render_calibration(calibration:, pending_verdict: nil, error: nil, status: :ok)
+      locals = {
+        review: review_for_metric,
+        calibration: calibration,
+        run: @run,
+        response_row: @response,
+        metric: @metric,
+        pending_verdict: pending_verdict,
+        error: error
+      }
+      render turbo_stream: turbo_stream.replace(
+        "calibration_#{@response.id}_#{@metric.id}",
+        partial: "completion_kit/calibrations/buttons",
+        locals: locals
+      ), status: status
+    end
 
     def ensure_calibration_enabled
       head :not_found unless CompletionKit.config.judge_calibration_enabled

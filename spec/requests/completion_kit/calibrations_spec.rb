@@ -65,11 +65,24 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     expect(CompletionKit::Calibration.pluck(:created_by)).to contain_exactly("alice", "bob")
   end
 
-  it "redirects with a flash on validation failure (disagree without a score)" do
-    post base_path, params: { metric_id: metric.id, verdict: "disagree" }
-    expect(response).to redirect_to("/completion_kit/runs/#{run.id}/responses/#{response_row.id}")
-    follow_redirect!
-    expect(response.body).to include("must be set when disagreeing")
+  it "reveals the score form inline (no save, no flash) when disagree is clicked without a corrected_score" do
+    post base_path, params: { metric_id: metric.id, verdict: "disagree" },
+                     headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    expect(response).to have_http_status(:ok)
+    expect(CompletionKit::Calibration.count).to eq(0)
+    expect(response.body).to include("What should the score have been?")
+    expect(response.body).to include('type="range"')
+    expect(response.body).to include('name="corrected_score"')
+    expect(response.body).to include('aria-pressed="true"')
+  end
+
+  it "renders the inline error inside the calibration block when a save genuinely fails" do
+    post base_path, params: { metric_id: metric.id, verdict: "disagree", corrected_score: 9.0 },
+                     headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include("must be between 1 and 5")
+    expect(response.body).to include('class="ck-calibration__error"')
+    expect(CompletionKit::Calibration.count).to eq(0)
   end
 
   it "returns 404 when the judge_calibration_enabled flag is off" do
