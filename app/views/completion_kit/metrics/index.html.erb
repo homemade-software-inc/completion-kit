@@ -17,17 +17,17 @@
   <table class="ck-results-table ck-metrics-table">
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Instruction</th>
-        <th>In groups</th>
-        <th></th>
+        <th scope="col">Name</th>
+        <th scope="col">Instruction</th>
+        <th scope="col">In groups</th>
+        <th scope="col"></th>
       </tr>
     </thead>
     <tbody>
       <% @metrics.each do |metric| %>
         <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
           <td>
-            <strong><%= metric.name %></strong>
+            <%= link_to metric_path(metric), class: "ck-record-name" do %><strong><%= metric.name %></strong><% end %>
             <% if metric.tags.any? %>
               <div class="tag-marks-row">
                 <%= render "completion_kit/tags/marks", tags: metric.tags %>

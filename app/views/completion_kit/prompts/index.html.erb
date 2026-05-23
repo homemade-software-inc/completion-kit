@@ -17,19 +17,19 @@
   <table class="ck-results-table ck-prompts-table">
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Version</th>
-        <th>Model</th>
-        <th>Best score</th>
-        <th>Runs</th>
-        <th></th>
+        <th scope="col">Name</th>
+        <th scope="col">Version</th>
+        <th scope="col">Model</th>
+        <th scope="col">Best score</th>
+        <th scope="col">Runs</th>
+        <th scope="col"></th>
       </tr>
     </thead>
     <tbody>
       <% @prompts.each do |prompt| %>
         <tr onclick="window.location='<%= prompt_path(prompt) %>'" style="cursor: pointer;">
           <td>
-            <strong><%= prompt.name %></strong>
+            <%= link_to prompt_path(prompt), class: "ck-record-name" do %><strong><%= prompt.name %></strong><% end %>
             <% if prompt.description.present? %>
               <p class="ck-prompts-table__desc"><%= truncate(prompt.description, length: 120) %></p>
             <% end %>

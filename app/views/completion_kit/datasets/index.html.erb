@@ -17,18 +17,18 @@
   <table class="ck-results-table ck-datasets-table">
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Rows</th>
-        <th>Used in</th>
-        <th>Created</th>
-        <th></th>
+        <th scope="col">Name</th>
+        <th scope="col">Rows</th>
+        <th scope="col">Used in</th>
+        <th scope="col">Created</th>
+        <th scope="col"></th>
       </tr>
     </thead>
     <tbody>
       <% @datasets.each do |dataset| %>
         <tr onclick="window.location='<%= dataset_path(dataset) %>'" style="cursor: pointer;">
           <td>
-            <strong><%= dataset.name %></strong>
+            <%= link_to dataset_path(dataset), class: "ck-record-name" do %><strong><%= dataset.name %></strong><% end %>
             <% if dataset.tags.any? %>
               <div class="tag-marks-row">
                 <%= render "completion_kit/tags/marks", tags: dataset.tags %>

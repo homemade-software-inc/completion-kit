@@ -14,9 +14,9 @@
   <table class="ck-results-table ck-tags-table">
     <thead>
       <tr>
-        <th>Tag</th>
-        <th>Applied to</th>
-        <th></th>
+        <th scope="col">Tag</th>
+        <th scope="col">Applied to</th>
+        <th scope="col"></th>
       </tr>
     </thead>
     <tbody>
@@ -25,7 +25,7 @@
         <% by_type = @tagging_by_type.select { |(tid, _), _| tid == tag.id } %>
         <% breakdown = by_type.map { |(_, type), n| pluralize(n, type.demodulize.titleize.downcase) }.join(" · ") %>
         <tr onclick="window.location='<%= edit_tag_path(tag) %>'" style="cursor: pointer;">
-          <td><span class="tag-mark tag-mark--lg" style="--mark-color: var(--tag-<%= tag.color %>);"><%= tag.name %></span></td>
+          <td><%= link_to edit_tag_path(tag), class: "ck-record-name" do %><span class="tag-mark tag-mark--lg" style="--mark-color: var(--tag-<%= tag.color %>);"><%= tag.name %></span><% end %></td>
           <td data-label="Applied to" class="ck-meta-copy">
             <% if count.zero? %>
               <span class="ck-tags-table__unused">Not used yet</span>

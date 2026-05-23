@@ -22,17 +22,17 @@
   <table class="ck-results-table ck-metric-groups-table">
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Members</th>
-        <th></th>
+        <th scope="col">Name</th>
+        <th scope="col">Description</th>
+        <th scope="col">Members</th>
+        <th scope="col"></th>
       </tr>
     </thead>
     <tbody>
       <% @metric_groups.each do |metric_group| %>
         <tr onclick="window.location='<%= metric_group_path(metric_group) %>'" style="cursor: pointer;">
           <td>
-            <strong><%= metric_group.name %></strong>
+            <%= link_to metric_group_path(metric_group), class: "ck-record-name" do %><strong><%= metric_group.name %></strong><% end %>
             <% if metric_group.tags.any? %>
               <div class="tag-marks-row">
                 <%= render "completion_kit/tags/marks", tags: metric_group.tags %>
