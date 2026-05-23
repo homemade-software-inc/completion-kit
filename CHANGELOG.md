@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.35] - 2026-05-22
+
+### Added
+
+- **Judge calibration · Phase 1.** Three pill buttons (agree / disagree / borderline) on every scored row in the per-row review. Choosing "Disagree" surfaces a slider preset to the judge's score plus a note field; "Borderline" surfaces a note-only form. A small "X verdicts collected" counter renders next to the metric once at least one verdict lands. New tables `completion_kit_judge_versions` and `completion_kit_calibrations`, REST endpoints under `/api/v1/runs/:run_id/responses/:response_id/metrics/:metric_id/calibrations`, MCP tools `calibrations_create` and `calibrations_list`, and the `CompletionKit.config.judge_calibration_enabled` feature flag (default on). (#32)
+
 ## [0.5.34] - 2026-05-22
 
 ### Security
