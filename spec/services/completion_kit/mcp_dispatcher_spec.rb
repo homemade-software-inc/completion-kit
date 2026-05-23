@@ -20,7 +20,7 @@ RSpec.describe CompletionKit::McpDispatcher do
     it "returns tool definitions for tools/list" do
       result = described_class.dispatch("tools/list", nil)
       expect(result[:tools]).to be_an(Array)
-      expect(result[:tools].length).to eq(39)
+      expect(result[:tools].length).to eq(41)
       expect(result[:tools].first).to have_key(:name)
       expect(result[:tools].first).to have_key(:description)
       expect(result[:tools].first).to have_key(:inputSchema)
@@ -91,6 +91,12 @@ RSpec.describe CompletionKit::McpDispatcher do
       result = described_class.dispatch("tools/call", {"name" => "provider_credentials_list", "arguments" => {}})
       content = JSON.parse(result[:content].first[:text])
       expect(content.first["provider"]).to eq("openai")
+    end
+
+    it "calls a calibrations tool through dispatcher" do
+      result = described_class.dispatch("tools/call", {"name" => "calibrations_list", "arguments" => {}})
+      content = JSON.parse(result[:content].first[:text])
+      expect(content).to eq([])
     end
   end
 end

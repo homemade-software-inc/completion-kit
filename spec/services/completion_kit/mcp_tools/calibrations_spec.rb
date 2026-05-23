@@ -1,0 +1,78 @@
+require "rails_helper"
+
+RSpec.describe CompletionKit::McpTools::Calibrations do
+  let(:metric) { create(:completion_kit_metric) }
+  let(:run) { create(:completion_kit_run) }
+  let(:response_row) { create(:completion_kit_response, run: run) }
+
+  describe "calibrations_create" do
+    it "creates a new calibration and returns its payload" do
+      result = described_class.call("calibrations_create", {
+        "run_id" => run.id, "response_id" => response_row.id, "metric_id" => metric.id,
+        "verdict" => "agree", "created_by" => "alice"
+      })
+      expect(result[:content].first[:text]).to include("agree", "alice")
+      expect(CompletionKit::Calibration.count).to eq(1)
+    end
+
+    it "upserts on a repeat call with the same identity triple" do
+      described_class.call("calibrations_create", {
+        "run_id" => run.id, "response_id" => response_row.id, "metric_id" => metric.id,
+        "verdict" => "agree", "created_by" => "alice"
+      })
+      described_class.call("calibrations_create", {
+        "run_id" => run.id, "response_id" => response_row.id, "metric_id" => metric.id,
+        "verdict" => "disagree", "corrected_score" => 3.0, "note" => "off by a star",
+        "created_by" => "alice"
+      })
+      expect(CompletionKit::Calibration.count).to eq(1)
+      expect(CompletionKit::Calibration.first.verdict).to eq("disagree")
+    end
+
+    it "defaults created_by to 'mcp'" do
+      described_class.call("calibrations_create", {
+        "run_id" => run.id, "response_id" => response_row.id, "metric_id" => metric.id,
+        "verdict" => "borderline"
+      })
+      expect(CompletionKit::Calibration.first.created_by).to eq("mcp")
+    end
+
+    it "returns isError on validation failure" do
+      result = described_class.call("calibrations_create", {
+        "run_id" => run.id, "response_id" => response_row.id, "metric_id" => metric.id,
+        "verdict" => "disagree", "created_by" => "alice"
+      })
+      expect(result[:isError]).to be(true)
+    end
+  end
+
+  describe "calibrations_list" do
+    it "filters by run_id, response_id, metric_id, and created_by" do
+      other_response = create(:completion_kit_response, run: run)
+      jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      create(:completion_kit_calibration,
+             run: run, response: response_row, metric: metric, judge_version: jv,
+             created_by: "alice", verdict: "agree")
+      create(:completion_kit_calibration,
+             run: run, response: other_response, metric: metric, judge_version: jv,
+             created_by: "alice", verdict: "disagree", corrected_score: 2.0)
+      create(:completion_kit_calibration,
+             run: run, response: response_row, metric: metric, judge_version: jv,
+             created_by: "bob", verdict: "borderline")
+
+      filtered = described_class.call("calibrations_list", {
+        "run_id" => run.id, "response_id" => response_row.id, "created_by" => "alice"
+      })
+      expect(filtered[:content].first[:text]).to include("agree")
+      expect(filtered[:content].first[:text]).not_to include("disagree")
+
+      by_metric = described_class.call("calibrations_list", { "metric_id" => metric.id })
+      expect(by_metric[:content].first[:text].scan("verdict").size).to eq(3)
+    end
+  end
+
+  it "exposes tool definitions" do
+    names = described_class.definitions.map { |t| t[:name] }
+    expect(names).to match_array(%w[calibrations_list calibrations_create])
+  end
+end

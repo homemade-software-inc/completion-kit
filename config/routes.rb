@@ -54,7 +54,11 @@ CompletionKit::Engine.routes.draw do
           post :generate
           post :retry_failures
         end
-        resources :responses, only: [:index, :show]
+        resources :responses, only: [:index, :show] do
+          resources :metrics, only: [] do
+            resources :calibrations, only: [:index, :create]
+          end
+        end
       end
       resources :datasets
       resources :metrics
