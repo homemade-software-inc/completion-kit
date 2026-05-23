@@ -4,9 +4,9 @@
   <p class="ck-calibration__prompt">
     Your verdict
     <% if verdict_count > 0 %>
-      <span class="ck-calibration__count"><%= pluralize(verdict_count, "verdict") %> on this score</span>
+      <span class="ck-calibration__count"><%= pluralize(verdict_count, "verdict") %> on this score · <%= link_to "judge trust →", metric_path(metric), class: "ck-link" %></span>
     <% else %>
-      <span class="ck-calibration__count">Tell us what you think — was the score right?</span>
+      <span class="ck-calibration__count">Tell us what you think — was the score right? Verdicts roll up into <%= link_to "judge trust", metric_path(metric), class: "ck-link" %>.</span>
     <% end %>
   </p>
   <div class="ck-calibration__buttons">
