@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.36] - 2026-05-23
+
+### Fixed
+
+- **Ollama model discovery 404.** `ModelDiscoveryService` was sending GET requests with leading-slash paths (`/models`, `/chat/completions`), which Faraday treats as absolute paths from the host root. With an endpoint configured as `http://localhost:11434/v1`, that lopped off the `/v1` and hit `http://localhost:11434/models`, which Ollama doesn't expose — discovery failed with `404 page not found`. Now the service strips a trailing `/v1` from the configured endpoint and requests `/v1/models` and `/v1/chat/completions` explicitly, so it works whether you configure the endpoint with or without the `/v1` suffix.
+
 ## [0.5.35] - 2026-05-22
 
 ### Added
