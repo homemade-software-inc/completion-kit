@@ -16,6 +16,7 @@ CompletionKit::Engine.routes.draw do
     member do
       post :add_few_shot
       post :publish_draft
+      post :suggest_variants
     end
   end
   resources :metric_groups

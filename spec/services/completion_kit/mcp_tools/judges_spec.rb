@@ -121,8 +121,8 @@ RSpec.describe CompletionKit::McpTools::Judges do
     end
   end
 
-  it "exposes both tool definitions" do
+  it "exposes the judges tool definitions" do
     names = described_class.definitions.map { |t| t[:name] }
-    expect(names).to match_array(%w[judges_replay judges_compare])
+    expect(names).to match_array(%w[judges_replay judges_compare judges_suggest])
   end
 end

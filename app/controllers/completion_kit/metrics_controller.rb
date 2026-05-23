@@ -1,7 +1,7 @@
 module CompletionKit
   class MetricsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot, :publish_draft]
+    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot, :publish_draft, :suggest_variants]
 
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
@@ -13,6 +13,7 @@ module CompletionKit
                                   .order(created_at: :desc)
                                   .limit(50)
       @latest_draft = JudgeVersion.drafts.where(metric_id: @metric.id).order(created_at: :desc).first
+      @suggestion_drafts = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc)
     end
 
     def new
@@ -43,6 +44,18 @@ module CompletionKit
     def destroy
       @metric.destroy
       redirect_to metrics_path, notice: "Metric was successfully destroyed."
+    end
+
+    def suggest_variants
+      generator = JudgeVariantGenerator.new(@metric)
+      variants = generator.call
+      if variants.empty?
+        redirect_to metric_path(@metric), alert: "The model returned no usable variants. Try again with a different model."
+        return
+      end
+      generator.persist!(variants)
+      label = variants.length == 1 ? "judge variant" : "judge variants"
+      redirect_to metric_path(@metric), notice: "Generated #{variants.length} #{label} as drafts. Pick one to publish."
     end
 
     def publish_draft

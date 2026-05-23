@@ -21,6 +21,12 @@
     <% end %>
   </div>
   <div class="ck-actions">
+    <% if CompletionKit.config.judge_calibration_enabled %>
+      <%= button_to "Suggest improvements", suggest_variants_metric_path(@metric),
+            method: :post, form_class: "inline-block",
+            class: ck_button_classes(:light, variant: :outline),
+            data: { turbo_confirm: "Ask the model to propose new judge instructions based on the disagreements collected so far?" } %>
+    <% end %>
     <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
@@ -121,6 +127,32 @@
       </table>
     <% end %>
   </section>
+
+  <% if @suggestion_drafts.any? %>
+    <section class="ck-card ck-card--spaced">
+      <div class="ck-prompt-preview__header">
+        <p class="ck-kicker">Suggested judge variants</p>
+        <span class="ck-chip"><%= @suggestion_drafts.size %> draft<%= @suggestion_drafts.size == 1 ? "" : "s" %></span>
+      </div>
+      <p class="ck-meta-copy">Pick one and publish it to make it the current judge. The previous published version stays in history.</p>
+      <div class="ck-suggestion-list">
+        <% @suggestion_drafts.each do |draft| %>
+          <article class="ck-suggestion-card">
+            <header class="ck-suggestion-card__header">
+              <span class="ck-chip ck-chip--soft">Draft #<%= draft.id %></span>
+              <time class="ck-meta-copy" data-relative-time datetime="<%= draft.created_at.utc.iso8601 %>"><%= time_ago_in_words(draft.created_at) %> ago</time>
+            </header>
+            <pre class="ck-code ck-suggestion-card__instruction"><%= draft.instruction %></pre>
+            <div class="ck-actions">
+              <%= button_to "Publish this draft", publish_draft_metric_path(@metric),
+                    method: :post, form_class: "inline-block",
+                    class: ck_button_classes(:dark) %>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
 
   <% if Array(@metric.few_shot_examples).any? %>
     <section class="ck-card ck-card--spaced">
