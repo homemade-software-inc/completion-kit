@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.38] - 2026-05-23
+
+### Fixed
+
+- **Publishing a judge draft now actually swaps the live judge text.** The publish action used to flip the version's `state` column but never copy the draft's instruction/rubric back to the metric, so publishing a suggested rewrite changed nothing the judge actually saw. Now the publish transaction copies the draft's text onto the metric.
+- **Per-variant Publish buttons now publish the variant they sit next to.** They were all hitting the same endpoint, which always grabbed the newest draft. The action now takes a `draft_id` and each button passes its own.
+
+### Changed
+
+- **Non-expert copy across the calibration UI.** "few-shot" reads as "teaching example" everywhere it was user-facing. "variants" became "alternatives" / "rewrites". "provisional" became "early read". The borderline statistic now reads `X% said "unclear"` with a tooltip explaining what to do about it. Each verdict pill gained a per-button tooltip describing what it means. `MAE` and `κ` were removed from the visible trust panel; they're still computed and available via MCP / API.
+- **Judge trust column on the metric index.** At-a-glance state per metric — "No verdicts yet", "N / 10 verdicts", or "~82% ±12 pt · early / settled" — so a user can scan which judges need attention without clicking in.
+- **Verdict count links to the metric's trust panel.** On the response detail page, the "N verdicts on this score" line now links to the metric show page, so users know where their input rolls up.
+
 ## [0.5.37] - 2026-05-23
 
 ### Added
