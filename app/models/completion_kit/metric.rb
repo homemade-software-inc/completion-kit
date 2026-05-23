@@ -16,6 +16,7 @@ module CompletionKit
     has_many :dashboard_dismissals, as: :dismissable, dependent: :destroy
 
     serialize :rubric_bands, coder: JSON
+    serialize :few_shot_examples, coder: JSON, type: Array
 
     validates :name, presence: true
     validates :key, tenant_scoped_uniqueness: { allow_nil: true }

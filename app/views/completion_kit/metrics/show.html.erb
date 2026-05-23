@@ -46,3 +46,99 @@
     <% end %>
   </div>
 </section>
+
+<% if CompletionKit.config.judge_calibration_enabled %>
+  <section class="ck-card ck-card--spaced">
+    <div class="ck-prompt-preview__header">
+      <p class="ck-kicker">Disagreements</p>
+      <% if @disagreements.any? %>
+        <span class="ck-chip"><%= pluralize(@disagreements.size, "row") %></span>
+      <% end %>
+    </div>
+    <% if @disagreements.empty? %>
+      <p class="ck-meta-copy">No disagreements yet. As humans give the verdict "disagree" on individual rows, the judge's misses will show up here for review.</p>
+    <% else %>
+      <table class="ck-results-table ck-disagreements-table">
+        <thead>
+          <tr>
+            <th scope="col">Run · row</th>
+            <th scope="col">Judge</th>
+            <th scope="col">Human</th>
+            <th scope="col">Note</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% existing_ids = Array(@metric.few_shot_examples).map { |fs| fs["calibration_id"] } %>
+          <% @disagreements.each do |cal| %>
+            <% review = cal.response.reviews.find { |r| r.metric_id == @metric.id } %>
+            <% already = existing_ids.include?(cal.id) %>
+            <tr>
+              <td>
+                <%= link_to ck_run_path(cal.response.run), class: "ck-record-name" do %>
+                  <strong><%= cal.response.run.name.to_s.truncate(40) %></strong>
+                <% end %>
+                <span class="ck-meta-copy">· <%= link_to "row ##{cal.response.id}", run_response_path(cal.response.run, cal.response), class: "ck-link" %></span>
+              </td>
+              <td>
+                <% if review&.ai_score %>
+                  <span class="<%= ck_badge_classes(ck_score_kind(review.ai_score.to_f)) %>"><%= review.ai_score %></span>
+                <% else %>
+                  <span class="ck-meta-copy">—</span>
+                <% end %>
+              </td>
+              <td>
+                <% if cal.corrected_score %>
+                  <span class="<%= ck_badge_classes(ck_score_kind(cal.corrected_score.to_f)) %>"><%= cal.corrected_score %></span>
+                <% else %>
+                  <span class="ck-meta-copy">—</span>
+                <% end %>
+              </td>
+              <td class="ck-meta-copy"><%= cal.note.to_s.truncate(120) %></td>
+              <td>
+                <% if already %>
+                  <span class="ck-chip ck-chip--done">Added</span>
+                <% else %>
+                  <%= button_to "Add as judge few-shot",
+                        add_few_shot_metric_path(@metric, calibration_id: cal.id),
+                        method: :post,
+                        form_class: "inline-block",
+                        class: ck_button_classes(:light, variant: :outline) %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </section>
+
+  <% if Array(@metric.few_shot_examples).any? %>
+    <section class="ck-card ck-card--spaced">
+      <div class="ck-prompt-preview__header">
+        <p class="ck-kicker">Judge few-shot examples</p>
+        <span class="ck-chip"><%= pluralize(Array(@metric.few_shot_examples).size, "example") %></span>
+      </div>
+      <p class="ck-meta-copy">Disagreements added here will be injected as worked examples when the judge runs on this metric. Used by Phase 4 / 5 to retrain the judge.</p>
+      <ol class="ck-few-shot-list">
+        <% Array(@metric.few_shot_examples).each do |fs| %>
+          <li class="ck-few-shot-item">
+            <div class="ck-few-shot-item__scores">
+              <span class="ck-meta-copy">judge said</span>
+              <% if fs["judge_score"] %>
+                <span class="<%= ck_badge_classes(ck_score_kind(fs["judge_score"].to_f)) %>"><%= fs["judge_score"] %></span>
+              <% end %>
+              <span class="ck-meta-copy">human said</span>
+              <% if fs["human_score"] %>
+                <span class="<%= ck_badge_classes(ck_score_kind(fs["human_score"].to_f)) %>"><%= fs["human_score"] %></span>
+              <% end %>
+            </div>
+            <% if fs["human_note"].to_s.present? %>
+              <p class="ck-copy"><%= fs["human_note"] %></p>
+            <% end %>
+          </li>
+        <% end %>
+      </ol>
+    </section>
+  <% end %>
+<% end %>

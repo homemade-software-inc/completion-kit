@@ -12,7 +12,11 @@ CompletionKit::Engine.routes.draw do
   end
 
   resources :datasets
-  resources :metrics
+  resources :metrics do
+    member do
+      post :add_few_shot
+    end
+  end
   resources :metric_groups
   resources :tags
   resources :dashboard_dismissals, only: [:create, :destroy]

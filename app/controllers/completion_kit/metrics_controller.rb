@@ -1,13 +1,17 @@
 module CompletionKit
   class MetricsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_metric, only: [:show, :edit, :update, :destroy]
+    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot]
 
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
     end
 
     def show
+      @disagreements = Calibration.where(metric_id: @metric.id, verdict: "disagree")
+                                  .includes(response: [:reviews, :run])
+                                  .order(created_at: :desc)
+                                  .limit(50)
     end
 
     def new
@@ -38,6 +42,24 @@ module CompletionKit
     def destroy
       @metric.destroy
       redirect_to metrics_path, notice: "Metric was successfully destroyed."
+    end
+
+    def add_few_shot
+      calibration = Calibration.where(metric_id: @metric.id, verdict: "disagree").find(params[:calibration_id])
+      review = calibration.response.reviews.find_by(metric_id: @metric.id)
+      examples = Array(@metric.few_shot_examples)
+      examples << {
+        "input" => calibration.response.input_data.to_s.truncate(2000),
+        "response" => calibration.response.response_text.to_s.truncate(2000),
+        "judge_score" => review&.ai_score&.to_f,
+        "judge_feedback" => review&.ai_feedback.to_s.truncate(1000),
+        "human_score" => calibration.corrected_score&.to_f,
+        "human_note" => calibration.note.to_s.truncate(1000),
+        "calibration_id" => calibration.id,
+        "added_at" => Time.current.utc.iso8601
+      }
+      @metric.update!(few_shot_examples: examples)
+      redirect_to metric_path(@metric), notice: "Added as a judge few-shot."
     end
 
     private

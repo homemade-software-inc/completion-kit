@@ -15,7 +15,13 @@
     <div class="ck-trust-panel__details">
       <span><%= stats.sample_size %> verdicts</span>
       <% if stats.borderline_rate && stats.borderline_rate > 0 %>
-        <span class="ck-trust-panel__borderline"><%= (stats.borderline_rate * 100).round %>% borderline</span>
+        <% level = if stats.borderline_rate > 0.30 then "danger"
+                   elsif stats.borderline_rate > 0.15 then "warning"
+                   else "ok" end %>
+        <span class="ck-trust-panel__borderline ck-trust-panel__borderline--<%= level %>"
+              title="<%= level == 'ok' ? '' : 'Rubric ambiguous. Consider splitting the metric or clarifying the rubric.' %>">
+          <%= (stats.borderline_rate * 100).round %>% borderline
+        </span>
       <% end %>
       <% if stats.mae %>
         <span>MAE <%= stats.mae.round(2) %></span>

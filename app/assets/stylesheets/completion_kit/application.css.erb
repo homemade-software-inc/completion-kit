@@ -5290,3 +5290,34 @@ a.tag-mark {
 .ck-trust-panel__borderline {
   color: var(--ck-warning);
 }
+
+.ck-trust-panel__borderline--ok { color: var(--ck-dim); }
+.ck-trust-panel__borderline--warning { color: var(--ck-warning); }
+.ck-trust-panel__borderline--danger { color: var(--ck-danger); }
+
+.ck-disagreements-table td .ck-meta-copy {
+  font-size: 0.78rem;
+}
+.ck-few-shot-list {
+  list-style: decimal;
+  padding-left: 1.4rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ck-few-shot-item {
+  padding: 10px 12px;
+  background: var(--ck-surface-soft);
+  border: 1px solid var(--ck-line);
+  border-radius: 6px;
+}
+.ck-few-shot-item__scores {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--ck-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
