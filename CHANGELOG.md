@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.34] - 2026-05-22
+
+### Security
+
+- **Provider endpoint hardening.** Stored endpoints are re-validated against the SSRF ruleset every request, not only at write time, so a host that flips `allow_loopback_endpoints` to false later cannot still reach a previously-saved `127.0.0.1` endpoint. The Ollama default localhost fallback is gated on that same flag, and `for_provider` no longer leaks deployment-level ENV defaults to tenants when `tenant_scope` is set. (#52)
+
+### Accessibility
+
+- **Index-table rows are keyboard-accessible.** The primary record name in every index table (prompts, runs, datasets, metrics, metric groups, tags) is now a real `<a>` link, so tab + Enter activates the row. Header cells gained `scope="col"`. (#49)
+- **Form errors announce.** Every form's error-summary div now carries `role="alert"`, and text inputs gain `aria-invalid` plus `aria-describedby` pointing at a sibling error paragraph when the field has errors. Helpers `ck_field_aria` and `ck_field_error` keep it terse at the call site. (#50)
+- **Live regions on async surfaces.** `#run_status_panel` and `#run_status_header` are `aria-live="polite"` so Turbo Stream updates get announced; the failed-run flash gets `role="alert"`. The response row first cell wraps in a focusable link, breadcrumbs carry `aria-label="Breadcrumb"`, and the tag picker checkbox is keyboard-focusable with a CSS visually-hidden class instead of the `hidden` attribute (which removed it from the a11y tree). (#51)
+
 ## [0.5.33] - 2026-05-22
 
 ### Added
