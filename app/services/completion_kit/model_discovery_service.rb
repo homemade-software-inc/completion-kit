@@ -106,12 +106,16 @@ module CompletionKit
 
     def fetch_ollama_models
       raise DiscoveryError, "Ollama endpoint URL is required" if @api_endpoint.blank?
-      base_url = @api_endpoint.to_s.delete_suffix("/")
-      response = fetch_connection(base_url).get("/models") do |req|
+      base_url = ollama_root_url
+      response = fetch_connection(base_url).get("/v1/models") do |req|
         req.headers["Authorization"] = "Bearer #{@api_key}" if @api_key.present?
       end
       raise_fetch_error!(response) unless response.success?
       JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
+    end
+
+    def ollama_root_url
+      @api_endpoint.to_s.strip.delete_suffix("/").delete_suffix("/v1")
     end
 
     def reconcile(discovered)
@@ -336,15 +340,14 @@ module CompletionKit
     end
 
     def ollama_probe(model_id, input, max_tokens)
-      base_url = @api_endpoint.to_s.delete_suffix("/")
-      conn = Faraday.new(url: base_url) do |f|
+      conn = Faraday.new(url: ollama_root_url) do |f|
         f.options.timeout = 60
         f.options.open_timeout = 5
         f.request :retry, max: 1, interval: 0.5
         f.adapter Faraday.default_adapter
       end
       conn.post do |req|
-        req.url "/chat/completions"
+        req.url "/v1/chat/completions"
         req.headers["Content-Type"] = "application/json"
         req.headers["Authorization"] = "Bearer #{@api_key}" if @api_key.present?
         req.body = { model: model_id, messages: [{ role: "user", content: input }], max_tokens: max_tokens }.to_json

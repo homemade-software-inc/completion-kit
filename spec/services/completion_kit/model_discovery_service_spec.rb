@@ -682,14 +682,25 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       service.refresh!
     end
 
-    it "sends ollama judge probes to the configured endpoint at /chat/completions" do
+    it "sends ollama judge probes to the configured endpoint at /v1/chat/completions" do
       stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
       probe_request = stub_faraday_post(ollama_judge_response)
 
       described_class.new(config: { provider: "ollama", api_key: "secret", api_endpoint: "http://localhost:11434/v1" }).refresh!
 
-      expect(probe_request.path).to eq("/chat/completions")
+      expect(probe_request.path).to eq("/v1/chat/completions")
       expect(probe_request.headers["Authorization"]).to eq("Bearer secret")
+    end
+
+    it "lists ollama models at /v1/models, stripping a trailing /v1 from the configured endpoint so Ollama doesn't 404" do
+      stub_faraday_post(ollama_judge_response)
+      conn = faraday_connection_stub
+      request = Struct.new(:headers).new({})
+      allow(conn).to receive(:get).and_yield(request).and_return(faraday_response(success: true, body: ollama_response_body))
+
+      described_class.new(config: { provider: "ollama", api_key: nil, api_endpoint: "http://localhost:11434/v1" }).refresh!
+
+      expect(conn).to have_received(:get).with("/v1/models")
     end
 
     it "omits Authorization header on ollama probe when api_key is missing" do
