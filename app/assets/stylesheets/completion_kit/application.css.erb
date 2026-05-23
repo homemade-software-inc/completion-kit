@@ -5061,3 +5061,30 @@ a.tag-mark {
     max-width: none;
   }
 }
+
+.ck-skip-link {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.ck-skip-link:focus {
+  position: fixed;
+  left: 0.75rem;
+  top: 0.75rem;
+  width: auto;
+  height: auto;
+  z-index: 1000;
+  padding: 0.6rem 1rem;
+  background: var(--ck-accent);
+  color: var(--ck-bg);
+  border-radius: var(--ck-radius);
+  text-decoration: none;
+  font-family: var(--ck-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

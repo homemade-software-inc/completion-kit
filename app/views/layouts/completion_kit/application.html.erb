@@ -13,6 +13,7 @@
   <%= action_cable_meta_tag %>
 </head>
 <body class="ck-app">
+  <a class="ck-skip-link" href="#ck-main-content">Skip to content</a>
   <header class="ck-topbar">
     <div class="ck-wrap ck-topbar__inner">
       <%= link_to dashboard_path, class: "ck-brand" do %><%= image_tag "completion_kit/logo.png", alt: "CompletionKit", style: "height: 64px; width: auto;" %><span class="ck-brand__name">Completion<span class="ck-brand__kit">Kit</span></span><% end %>
@@ -21,7 +22,7 @@
         <summary class="ck-nav-menu__trigger" aria-label="Menu">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </summary>
-      <nav class="ck-nav">
+      <nav class="ck-nav" aria-label="Primary">
         <% active = ->(path) { request.path.start_with?(path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) } %>
         <%= link_to "Prompts", prompts_path, class: active.(prompts_path) %>
         <%= link_to "Metrics", metrics_path, class: request.path.start_with?(metrics_path) || request.path.start_with?(metric_groups_path) ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %>
@@ -32,7 +33,7 @@
           <summary class="<%= settings_active ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline) %> ck-settings-menu__trigger" aria-label="Settings">
             <%= heroicon_tag "cog-6-tooth", variant: :outline, size: 18, "aria-hidden": "true" %>
           </summary>
-          <div class="ck-settings-menu__panel" role="menu">
+          <div class="ck-settings-menu__panel">
             <%= link_to "Getting started", onboarding_path(reset: 1), class: "ck-settings-menu__item" %>
             <%= link_to "API", api_reference_path, class: "ck-settings-menu__item" %>
             <%= link_to "Providers", provider_credentials_path, class: "ck-settings-menu__item" %>
@@ -47,7 +48,7 @@
     </div>
   </header>
 
-  <main class="ck-main">
+  <main class="ck-main" id="ck-main-content" tabindex="-1">
     <div class="ck-wrap">
     <% flash.each do |type, message| %>
       <% notice = type.to_s == "notice" %>
