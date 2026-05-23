@@ -2,6 +2,7 @@ module CompletionKit
   module Api
     module V1
       class CalibrationsController < BaseController
+        before_action :ensure_calibration_enabled
         before_action :set_scope
 
         def index
@@ -26,6 +27,10 @@ module CompletionKit
         end
 
         private
+
+        def ensure_calibration_enabled
+          render(json: { error: "Calibration disabled" }, status: :not_found) unless CompletionKit.config.judge_calibration_enabled
+        end
 
         def set_scope
           @run = Run.find(params[:run_id])

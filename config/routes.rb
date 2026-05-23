@@ -26,7 +26,9 @@ CompletionKit::Engine.routes.draw do
       post :rerun
       get :refresh_status
     end
-    resources :responses, only: [:show]
+    resources :responses, only: [:show] do
+      resources :calibrations, only: [:create]
+    end
   end
 
   resources :suggestions, only: [:show] do

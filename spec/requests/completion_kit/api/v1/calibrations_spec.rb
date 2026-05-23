@@ -58,6 +58,15 @@ RSpec.describe "API V1 Calibrations", type: :request do
            params: { verdict: "agree" }.to_json
       expect(response).to have_http_status(:not_found)
     end
+
+    it "returns 404 when the calibration feature flag is off" do
+      original = CompletionKit.config.judge_calibration_enabled
+      CompletionKit.config.judge_calibration_enabled = false
+      post base_path, headers: headers, params: { verdict: "agree" }.to_json
+      expect(response).to have_http_status(:not_found)
+    ensure
+      CompletionKit.config.judge_calibration_enabled = original
+    end
   end
 
   describe "GET" do

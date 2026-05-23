@@ -116,6 +116,15 @@
               <div class="ck-note-box"><%= review.ai_feedback %></div>
             </div>
           <% end %>
+          <% if CompletionKit.config.judge_calibration_enabled && review.metric && review.ai_score %>
+            <% existing = CompletionKit::Calibration.find_by(
+                 response_id: @response.id, metric_id: review.metric_id,
+                 created_by: CompletionKit.config.username.presence || "operator"
+               ) %>
+            <%= render "completion_kit/calibrations/buttons",
+                  review: review, calibration: existing, run: @run,
+                  response_row: @response, metric: review.metric %>
+          <% end %>
         </div>
       <% end %>
     </div>
