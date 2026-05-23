@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.33] - 2026-05-22
+
+### Added
+
+- **Self-hosted JetBrains Mono.** The engine bundles the JetBrains Mono webfont (regular, medium, bold) as engine assets and loads it through a local `@font-face`. The previous remote `@import` from Google Fonts is gone, so visitors' IPs no longer reach Google before any consent. (#43)
+- **Skip-to-content link and primary-nav landmark** in the engine layout, so keyboard and screen-reader users can bypass the topbar (WCAG 2.4.1). (#48)
+- **Live region for the provider-models refresh status** so screen readers announce progress and completion. (#48)
+- **Privacy docs.** `docs/privacy/pii-inventory.md` and `docs/privacy/data-flow.md`: a host-actionable inventory of personal data in engine tables and what the engine sends to and persists from model providers. (#45, #46)
+- **Accessibility audit doc.** `docs/accessibility/audit-2026-05-22.md`: a pattern-level audit of the authenticated engine pages. (#48)
+
+### Changed
+
+- **`--ck-dim` raised to `#7a8aa3`** (about 5.4:1 on `#080b14`), so the dim text token clears WCAG AA contrast. (#47)
+- **Onboarding-dismiss cookie** is now written with explicit `secure: Rails.env.production?, same_site: :lax`, so the flags do not depend on host middleware. (#44)
+- **Settings dropdown panel** no longer carries `role="menu"`. The panel is a list of links, not an ARIA menu widget, so the role mismatch is gone. (#48)
+
 ## [0.5.32] - 2026-05-21
 
 ### Fixed
