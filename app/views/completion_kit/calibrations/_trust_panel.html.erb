@@ -1,0 +1,28 @@
+<% stats = local_assigns[:stats] %>
+<div class="ck-trust-panel ck-trust-panel--<%= stats.gate %>">
+  <p class="ck-trust-panel__label">Judge trust</p>
+  <% if stats.counter_only? %>
+    <div class="ck-trust-panel__body">
+      <span class="ck-trust-panel__counter"><%= stats.sample_size %><span class="ck-trust-panel__counter-of">/ <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %></span></span>
+      <span class="ck-trust-panel__hint">verdicts<% if stats.short_to_target > 0 %> · <%= pluralize(stats.short_to_target, "more") %> to score<% end %></span>
+    </div>
+  <% else %>
+    <div class="ck-trust-panel__body">
+      <span class="ck-trust-panel__score">~<%= (stats.agreement_point * 100).round %><span class="ck-trust-panel__score-pct">%</span></span>
+      <span class="ck-trust-panel__margin">±<%= (stats.margin * 100).round %> pt</span>
+      <span class="ck-trust-panel__gate"><%= stats.firm? ? "settled" : "provisional" %></span>
+    </div>
+    <div class="ck-trust-panel__details">
+      <span><%= stats.sample_size %> verdicts</span>
+      <% if stats.borderline_rate && stats.borderline_rate > 0 %>
+        <span class="ck-trust-panel__borderline"><%= (stats.borderline_rate * 100).round %>% borderline</span>
+      <% end %>
+      <% if stats.mae %>
+        <span>MAE <%= stats.mae.round(2) %></span>
+      <% end %>
+      <% if stats.kappa %>
+        <span>κ <%= stats.kappa.round(2) %></span>
+      <% end %>
+    </div>
+  <% end %>
+</div>
