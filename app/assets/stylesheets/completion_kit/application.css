@@ -5385,29 +5385,27 @@ a.tag-mark {
 
 .ck-trust-line {
   margin: 10px 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
   font-family: var(--ck-mono);
   font-size: 0.82rem;
   color: var(--ck-dim);
-  line-height: 1.5;
+  line-height: 1.55;
+}
+.ck-trust-line > * + * {
+  margin-left: 6px;
 }
 .ck-trust-line__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ck-muted);
-  line-height: 1;
+  white-space: nowrap;
 }
 .ck-trust-line__label svg {
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  vertical-align: -3px;
+  margin-right: 4px;
 }
 .ck-trust-line__state {
   color: var(--ck-text);
