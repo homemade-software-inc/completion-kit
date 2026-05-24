@@ -62,7 +62,11 @@
   </div>
   <div class="ck-actions">
     <% if CompletionKit.config.judge_calibration_enabled %>
-      <% if @improve_disagreement_count.positive? %>
+      <% if @suggestion_draft %>
+        <%= link_to "Review suggestion →", edit_metric_path(@metric),
+              class: ck_button_classes(:dark),
+              title: "A model rewrite is waiting. Review and apply pieces inline." %>
+      <% elsif @improve_disagreement_count.positive? %>
         <%= button_to "Improve the metric", suggest_variants_metric_path(@metric),
               method: :post, form_class: "inline-block",
               class: ck_button_classes(:light, variant: :outline),
@@ -102,15 +106,6 @@
   </div>
 </section>
 
-<% if CompletionKit.config.judge_calibration_enabled && @suggestion_draft %>
-  <section class="ck-suggestion-cta">
-    <div class="ck-suggestion-cta__body">
-      <p class="ck-kicker">Model suggestion ready</p>
-      <p class="ck-meta-copy">A rewrite is waiting based on your disagreements. Review each change side-by-side and apply what you want.</p>
-    </div>
-    <%= link_to "Review suggestion →", edit_metric_path(@metric), class: ck_button_classes(:dark) %>
-  </section>
-<% end %>
 
 <% if CompletionKit.config.judge_calibration_enabled && @disagreements.any? %>
   <section class="ck-card ck-card--spaced">
