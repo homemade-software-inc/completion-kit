@@ -4503,8 +4503,8 @@ a.tag-mark {
 .ck-settings-kicker__link:hover { color: var(--ck-text); }
 
 .tag-marks-row--header {
-  margin-top: -0.5rem;
-  margin-bottom: 1.25rem;
+  margin-top: 0.4rem;
+  margin-bottom: 0;
 }
 
 
@@ -5383,20 +5383,72 @@ a.tag-mark {
 .ck-trust-panel__borderline--warning { color: var(--ck-warning); }
 .ck-trust-panel__borderline--danger { color: var(--ck-danger); }
 
-.ck-trust-empty {
-  margin: 12px 0 0;
+.ck-trust-line {
+  margin: 10px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
   font-family: var(--ck-mono);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: var(--ck-dim);
-  line-height: 1.5;
+  line-height: 1.4;
 }
-.ck-trust-empty__label {
+.ck-trust-line__label {
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ck-muted);
-  margin-right: 8px;
 }
+.ck-trust-line__state {
+  color: var(--ck-text);
+}
+.ck-trust-line__sep {
+  color: var(--ck-line-strong);
+}
+.ck-trust-line__counter {
+  font-weight: 600;
+  color: var(--ck-accent);
+}
+.ck-trust-line__score {
+  font-weight: 600;
+  color: var(--ck-success);
+}
+.ck-trust-line--early .ck-trust-line__score,
+.ck-trust-line--provisional .ck-trust-line__score {
+  color: var(--ck-accent);
+}
+.ck-trust-line__margin {
+  color: var(--ck-dim);
+}
+.ck-trust-line__gate {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--ck-line);
+  color: var(--ck-dim);
+}
+.ck-trust-line--firm .ck-trust-line__gate {
+  color: var(--ck-success);
+  border-color: rgba(45, 212, 168, 0.35);
+}
+.ck-trust-line__hint {
+  color: var(--ck-dim);
+}
+.ck-trust-line__link {
+  color: var(--ck-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.ck-trust-line__link:hover,
+.ck-trust-line__link:focus-visible {
+  color: var(--ck-accent-hover);
+}
+.ck-trust-line__borderline--ok { color: var(--ck-dim); }
+.ck-trust-line__borderline--warning { color: var(--ck-warning); }
+.ck-trust-line__borderline--danger { color: var(--ck-danger); }
 
 @media (max-width: 640px) {
   .ck-trust-panel {
