@@ -121,11 +121,11 @@
         <% confirm = parts.empty? ? "Delete \"#{metric.name}\"? It's not in use." : "Delete \"#{metric.name}\"? It's #{parts.to_sentence}." %>
         <%= button_to metric_path(metric), method: :delete,
               form_class: "inline-block",
-              class: "ck-icon-btn",
+              class: "ck-icon-btn ck-icon-btn--form",
               title: "Delete metric",
               "aria-label": "Delete metric",
               data: { turbo_confirm: confirm } do %>
-          <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
+          <%= heroicon_tag "trash", variant: :outline, size: 24, "aria-hidden": "true" %>
         <% end %>
       <% end %>
       <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
