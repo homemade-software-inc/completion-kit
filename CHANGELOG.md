@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.40] - 2026-05-24
+
+### Changed
+
+- **"Improve the metric" is now one inline suggestion, not a queue.** The dedicated `/improvements` page is gone; the alternatives-waiting banner is gone; the multi-option list is gone. Clicking Improve generates a single rewrite (max 3 via MCP), wipes any prior suggestion draft, and renders one card on the metric page with the current-vs-proposed diff plus Use / Discard. The model may also rewrite the rubric bands when the disagreement signal points at rubric ambiguity. (#55)
+- **Improve button is gated on signal.** Disabled until at least one row has a Disagree verdict; tooltip explains why. Stops the model from confidently producing reworded noise against zero calibration data.
+- **Calibration save feedback is the button itself.** The separate "Saved ✓" badge is gone; the Save button briefly flashes green (background animates from `--ck-success` to default cyan over 1.4s) on success. No layout shift, no mobile wrap.
+- **Response detail review card is flatter.** One bordered card per metric. The note-box around feedback and the bordered well around the calibration form are gone — the inputs themselves carry the structure. (#calibration UI)
+- **Response JSON output gets a light syntax highlight and no longer wraps.** `ck_format_maybe_json` now tokenises the pretty-printed string and wraps keys (lavender), strings (sky blue), numbers (amber), and `true` / `false` / `null` (pink) in spans. The scroll-wrapper switched from `pre-wrap` to `pre` so long lines scroll horizontally instead of bricking the page. `\`\`\`json` fenced model responses are now unwrapped before highlighting.
+- **Seed data no longer reads like an LLM wrote it.** Stripped 34 em-dashes and 2 en-dashes from `standalone/db/seeds.rb` and `app/services/completion_kit/onboarding/sample_data.rb`; paired em-dash asides became parens, single em-dashes became `. Capitalised next` sentence breaks, run-name em-dashes were dropped.
+
+### Fixed
+
+- **Propshaft hosts can load the engine stylesheet.** `application.css.erb` is now a plain `application.css` with three explicit `@font-face` rules pointing at the woff2 assets. Propshaft's CssAssetUrls rewrites the digests automatically. (#53)
+- **Onboarding progress bar no longer carries a redundant hairline under it.** (#54)
+- **Disagree click without a score no longer hits a top-page flash.** The score form is revealed inline; real validation failures render inline in the calibration block. (#55 follow-up)
+- **Mobile**: 5-star review row no longer wraps; action-bar `button_to` forms go block on mobile so they line up with link buttons; verdict prompt stacks vertically; the Saved feedback no longer wraps "✓" onto its own line.
+
 ## [0.5.39] - 2026-05-23
 
 ### Fixed
