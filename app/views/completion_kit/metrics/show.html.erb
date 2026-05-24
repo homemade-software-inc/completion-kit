@@ -6,15 +6,17 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title"><%= @metric.name %></h1>
+    <% if CompletionKit.config.judge_calibration_enabled %>
+      <%= render "completion_kit/calibrations/trust_panel",
+            stats: CompletionKit::MetricCalibrationStats.for(@metric),
+            metric: @metric %>
+    <% end %>
     <% if @metric.tags.any? %>
       <div class="tag-marks-row tag-marks-row--header">
         <%= render "completion_kit/tags/marks", tags: @metric.tags %>
       </div>
     <% end %>
     <% if CompletionKit.config.judge_calibration_enabled %>
-      <%= render "completion_kit/calibrations/trust_panel",
-            stats: CompletionKit::MetricCalibrationStats.for(@metric),
-            metric: @metric %>
       <% if @edit_draft %>
         <% pub_instr = @published_judge_version&.instruction.to_s %>
         <% draft_instr = @edit_draft.instruction.to_s %>
