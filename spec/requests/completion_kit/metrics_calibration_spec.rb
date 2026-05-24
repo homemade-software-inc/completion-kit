@@ -127,21 +127,21 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       add_agree_calibrations(8)
       add_borderline_calibrations(2)
       get "/completion_kit/metrics/#{metric.id}"
-      expect(response.body).to include("ck-trust-panel__borderline--warning")
+      expect(response.body).to include("ck-trust-line__borderline--warning")
     end
 
     it "uses the danger level class when borderline rate exceeds 30%" do
       add_agree_calibrations(5)
       add_borderline_calibrations(5)
       get "/completion_kit/metrics/#{metric.id}"
-      expect(response.body).to include("ck-trust-panel__borderline--danger")
+      expect(response.body).to include("ck-trust-line__borderline--danger")
     end
 
     it "stays at the ok level when borderline rate is at or below 15%" do
       add_agree_calibrations(14)
       add_borderline_calibrations(1)
       get "/completion_kit/metrics/#{metric.id}"
-      expect(response.body).to include("ck-trust-panel__borderline--ok")
+      expect(response.body).to include("ck-trust-line__borderline--ok")
     end
   end
 end
