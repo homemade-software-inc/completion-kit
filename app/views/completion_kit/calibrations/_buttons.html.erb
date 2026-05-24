@@ -5,11 +5,11 @@
   <% error = local_assigns[:error] %>
   <% verdict_count = CompletionKit::Calibration.where(response_id: response_row.id, metric_id: metric.id).count %>
   <p class="ck-calibration__prompt">
-    Your verdict
+    <span class="ck-calibration__label">Your verdict</span>
     <% if verdict_count > 0 %>
       <span class="ck-calibration__count"><%= pluralize(verdict_count, "verdict") %> on this score · <%= link_to "trust score →", metric_path(metric), class: "ck-link" %></span>
     <% else %>
-      <span class="ck-calibration__count">Tell us what you think — was the score right? Verdicts roll up into the metric's <%= link_to "trust score", metric_path(metric), class: "ck-link" %>.</span>
+      <span class="ck-calibration__hint">Tell us what you think — was the score right? Verdicts roll up into the metric's <%= link_to "trust score", metric_path(metric), class: "ck-link" %>.</span>
     <% end %>
   </p>
   <div class="ck-calibration__buttons">

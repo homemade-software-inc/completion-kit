@@ -2819,10 +2819,10 @@ select.ck-input {
     width: 100%;
   }
 
-  .ck-actions form,
-  .ck-actions form.inline-block,
-  .ck-toolbar form,
-  .ck-toolbar form.inline-block {
+  /* button_to renders a form.inline-block wrapping the button. When the inner
+     button is a full .ck-button (not an icon-button or chip), the form should
+     stretch with it. */
+  form.inline-block:has(> .ck-button) {
     width: 100%;
     display: block;
   }
@@ -5159,22 +5159,37 @@ a.tag-mark {
   border-top: 1px dashed var(--ck-line);
 }
 .ck-calibration__prompt {
+  margin: 0 0 10px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.ck-calibration__label {
   font-family: var(--ck-mono);
   font-size: 0.72rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ck-dim);
-  margin: 0 0 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-shrink: 0;
 }
 .ck-calibration__count {
   font-family: var(--ck-mono);
   font-size: 0.72rem;
   letter-spacing: 0.03em;
   color: var(--ck-accent);
-  text-transform: none;
+}
+.ck-calibration__hint {
+  font-size: 0.82rem;
+  color: var(--ck-dim);
+  line-height: 1.4;
+}
+@media (max-width: 640px) {
+  .ck-calibration__prompt {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
 }
 .ck-calibration__buttons {
   display: flex;
