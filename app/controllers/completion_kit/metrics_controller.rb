@@ -1,7 +1,7 @@
 module CompletionKit
   class MetricsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot, :publish_draft, :suggest_variants]
+    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot, :publish_draft, :suggest_variants, :improvements, :dismiss_suggestion]
 
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
@@ -55,8 +55,18 @@ module CompletionKit
         return
       end
       generator.persist!(variants)
-      label = variants.length == 1 ? "alternative" : "alternatives"
-      redirect_to metric_path(@metric), notice: "Wrote #{variants.length} #{label} for this metric. Pick one to make it live."
+      redirect_to improvements_metric_path(@metric)
+    end
+
+    def improvements
+      @suggestion_drafts = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc)
+      @published_judge_version = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
+    end
+
+    def dismiss_suggestion
+      draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").find_by(id: params[:draft_id])
+      draft&.destroy
+      redirect_to improvements_metric_path(@metric), notice: "Dismissed."
     end
 
     def publish_draft

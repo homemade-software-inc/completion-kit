@@ -9,6 +9,12 @@
     <% if CompletionKit.config.judge_calibration_enabled %>
       <%= render "completion_kit/calibrations/trust_panel",
             stats: CompletionKit::MetricCalibrationStats.for(@metric) %>
+      <% if @suggestion_drafts.any? %>
+        <%= link_to improvements_metric_path(@metric), class: "ck-suggestion-banner" do %>
+          <span class="ck-chip ck-chip--soft"><%= pluralize(@suggestion_drafts.size, "alternative") %> waiting</span>
+          <span>Review and pick one to make live →</span>
+        <% end %>
+      <% end %>
       <% if @edit_draft %>
         <% pub_instr = @published_judge_version&.instruction.to_s %>
         <% draft_instr = @edit_draft.instruction.to_s %>
@@ -160,31 +166,6 @@
     <% end %>
   </section>
 
-  <% if @suggestion_drafts.any? %>
-    <section class="ck-card ck-card--spaced">
-      <div class="ck-prompt-preview__header">
-        <p class="ck-kicker">Suggested improvements</p>
-        <span class="ck-chip"><%= @suggestion_drafts.size %> option<%= @suggestion_drafts.size == 1 ? "" : "s" %></span>
-      </div>
-      <p class="ck-meta-copy">Based on your verdicts, the model proposed these alternative instructions for this metric. Pick one to make it live — the previous version stays in history.</p>
-      <div class="ck-suggestion-list">
-        <% @suggestion_drafts.each do |draft| %>
-          <article class="ck-suggestion-card">
-            <header class="ck-suggestion-card__header">
-              <span class="ck-chip ck-chip--soft">Option #<%= draft.id %></span>
-              <time class="ck-meta-copy" data-relative-time datetime="<%= draft.created_at.utc.iso8601 %>"><%= time_ago_in_words(draft.created_at) %> ago</time>
-            </header>
-            <pre class="ck-code ck-suggestion-card__instruction"><%= draft.instruction %></pre>
-            <div class="ck-actions">
-              <%= button_to "Use this version", publish_draft_metric_path(@metric, draft_id: draft.id),
-                    method: :post, form_class: "inline-block",
-                    class: ck_button_classes(:dark) %>
-            </div>
-          </article>
-        <% end %>
-      </div>
-    </section>
-  <% end %>
 
   <% if Array(@metric.few_shot_examples).any? %>
     <section class="ck-card ck-card--spaced">
