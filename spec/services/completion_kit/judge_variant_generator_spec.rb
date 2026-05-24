@@ -92,6 +92,71 @@ RSpec.describe CompletionKit::JudgeVariantGenerator, type: :service do
     end
   end
 
+  describe "rubric rewrites" do
+    it "parses a RUBRIC block when the model returns one and persists it on the draft" do
+      stub_llm(<<~OUT)
+        VARIANT:
+        REASONING: tighten bands
+        INSTRUCTION:
+        new instruction
+        RUBRIC:
+        5: top tier description
+        4: very good description
+        3: middling description
+        2: poor description
+        1: awful description
+        END_VARIANT
+      OUT
+      gen = described_class.new(metric, count: 1)
+      variants = gen.call
+      expect(variants.length).to eq(1)
+      expect(variants.first.rubric_bands).to be_an(Array)
+      expect(variants.first.rubric_bands.length).to eq(5)
+      expect(variants.first.rubric_bands.first).to eq({"stars" => 5, "description" => "top tier description"})
+
+      version = gen.persist!(variants).first
+      expect(version.rubric_bands.first["description"]).to eq("top tier description")
+    end
+
+    it "falls back to the metric's current rubric when the RUBRIC block is missing" do
+      stub_llm("VARIANT:\nREASONING: no rubric\nINSTRUCTION:\nfresh instruction\nEND_VARIANT")
+      gen = described_class.new(metric, count: 1)
+      variants = gen.call
+      expect(variants.first.rubric_bands).to be_nil
+      version = gen.persist!(variants).first
+      expect(version.rubric_bands).to eq(metric.rubric_bands)
+    end
+
+    it "ignores a malformed RUBRIC block (not 5 bands) and keeps the metric's rubric" do
+      stub_llm(<<~OUT)
+        VARIANT:
+        REASONING: half-rubric
+        INSTRUCTION:
+        new instruction
+        RUBRIC:
+        5: only one band
+        END_VARIANT
+      OUT
+      gen = described_class.new(metric, count: 1)
+      variants = gen.call
+      expect(variants.first.rubric_bands).to be_nil
+    end
+  end
+
+  describe "count clamping" do
+    it "clamps a request for 99 down to MAX_VARIANT_COUNT" do
+      gen = described_class.new(metric, count: 99)
+      expect(gen.instance_variable_get(:@count)).to eq(described_class::MAX_VARIANT_COUNT)
+    end
+
+    it "uses the default when count is 0 or negative" do
+      [0, -1].each do |bad|
+        gen = described_class.new(metric, count: bad)
+        expect(gen.instance_variable_get(:@count)).to eq(described_class::DEFAULT_VARIANT_COUNT)
+      end
+    end
+  end
+
   describe "meta-prompt build with disagreements present" do
     it "includes recent disagreement context in the model input" do
       run = create(:completion_kit_run)

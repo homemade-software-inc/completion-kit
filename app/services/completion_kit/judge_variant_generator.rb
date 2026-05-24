@@ -1,13 +1,15 @@
 module CompletionKit
   class JudgeVariantGenerator
-    DEFAULT_VARIANT_COUNT = 3
+    DEFAULT_VARIANT_COUNT = 1
+    MAX_VARIANT_COUNT = 3
     DEFAULT_TEMPERATURE = 0.4
 
-    Variant = Struct.new(:reasoning, :instruction, keyword_init: true)
+    Variant = Struct.new(:reasoning, :instruction, :rubric_bands, keyword_init: true)
 
     def initialize(metric, count: DEFAULT_VARIANT_COUNT, model: nil)
       @metric = metric
-      @count = count
+      n = count.to_i
+      @count = n < 1 ? DEFAULT_VARIANT_COUNT : [n, MAX_VARIANT_COUNT].min
       @model = model || CompletionKit.config.judge_model
     end
 
@@ -23,7 +25,7 @@ module CompletionKit
         JudgeVersion.create!(
           metric: @metric,
           instruction: variant.instruction,
-          rubric_bands: @metric.rubric_bands,
+          rubric_bands: variant.rubric_bands.presence || @metric.rubric_bands,
           state: "draft",
           source: "suggestion",
           current: false
@@ -42,14 +44,14 @@ module CompletionKit
       disagreements = JudgeCalibrationExamples.disagreements_for(@metric)
       borderlines = JudgeCalibrationExamples.borderlines_for(@metric)
       sections = []
-      sections << "You are an expert evaluator. Rewrite a judge's grading instruction so it agrees better with humans on the cases below."
+      sections << "You are an expert evaluator. The judge below is misaligned with humans. Propose #{@count == 1 ? "a single" : "#{@count}"} concrete rewrite that closes the gap."
       sections << ""
       sections << "## Current instruction"
       sections << "```"
       sections << @metric.instruction.to_s
       sections << "```"
       sections << ""
-      sections << "## Rubric (unchanged across variants — only rewrite the instruction)"
+      sections << "## Current rubric (5 to 1)"
       sections << @metric.display_rubric_text
       sections << ""
       if disagreements.any?
@@ -65,7 +67,7 @@ module CompletionKit
       end
       if borderlines.any?
         sections << "## Rubric-ambiguous cases (humans marked these borderline)"
-        sections << "Each case below is one where a human said the rubric was unclear. Use these to sharpen language, split overlapping bands, or call out edge cases explicitly."
+        sections << "These are cases where a human said the rubric itself was unclear. If the rubric needs sharpening, rewrite it."
         borderlines.each_with_index do |ex, i|
           sections << "### Borderline #{i + 1}"
           sections << "Input: #{ex[:input].to_s.truncate(200)}"
@@ -76,14 +78,20 @@ module CompletionKit
         end
       end
       sections << "## Task"
-      sections << "Propose #{@count} alternative instructions. Each should be a focused rewrite — not a wholesale rewrite of the rubric. Close the disagreement gap and disambiguate the borderline cases."
+      sections << "Make one substantive change. Don't just reword. If the disagreements look like instruction problems, rewrite the instruction. If they look like rubric problems (overlapping bands, undefined edge cases), rewrite the rubric. Rewrite both if both are wrong."
       sections << ""
-      sections << "Respond in EXACTLY this format, repeated #{@count} times:"
+      sections << "Respond in EXACTLY this format, repeated #{@count} time#{@count == 1 ? "" : "s"}:"
       sections << ""
       sections << "VARIANT:"
-      sections << "REASONING: <one sentence explaining what this variant changes>"
+      sections << "REASONING: <one short sentence: what changes and why>"
       sections << "INSTRUCTION:"
       sections << "<the rewritten instruction>"
+      sections << "RUBRIC:                  # optional — omit this block if the rubric is unchanged"
+      sections << "5: <description for 5 stars>"
+      sections << "4: <description for 4 stars>"
+      sections << "3: <description for 3 stars>"
+      sections << "2: <description for 2 stars>"
+      sections << "1: <description for 1 star>"
       sections << "END_VARIANT"
       sections.join("\n")
     end
@@ -92,10 +100,20 @@ module CompletionKit
       blocks = text.to_s.scan(/VARIANT:(.*?)END_VARIANT/m).flatten
       blocks.filter_map do |raw|
         reasoning = raw[/REASONING:\s*(.*?)(?=INSTRUCTION:|\z)/m, 1].to_s.strip
-        instruction = raw[/INSTRUCTION:\s*(.*)/m, 1].to_s.strip
+        instruction = raw[/INSTRUCTION:\s*(.*?)(?=RUBRIC:|\z)/m, 1].to_s.strip
         next if instruction.empty?
-        Variant.new(reasoning: reasoning, instruction: instruction)
+        rubric_block = raw[/RUBRIC:\s*(.*)/m, 1].to_s
+        Variant.new(reasoning: reasoning, instruction: instruction, rubric_bands: parse_rubric(rubric_block))
       end
+    end
+
+    def parse_rubric(block)
+      return nil if block.strip.empty?
+      bands = block.scan(/^\s*([1-5])\s*[:\-]\s*(.+?)\s*$/).map do |stars, description|
+        { "stars" => stars.to_i, "description" => description.strip }
+      end
+      return nil if bands.length != 5
+      bands.sort_by { |b| -b["stars"] }
     end
   end
 

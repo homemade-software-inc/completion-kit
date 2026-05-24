@@ -268,4 +268,5 @@ RSpec.configure do |config|
   config.filter_rails_from_backtrace!
   config.include FactoryBot::Syntax::Methods
   config.before { Rails.cache.clear }
+  config.before { CompletionKit.config.judge_calibration_enabled = true }
 end

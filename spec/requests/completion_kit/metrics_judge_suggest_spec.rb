@@ -2,6 +2,8 @@ require "rails_helper"
 
 RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
   let(:metric) { create(:completion_kit_metric) }
+  let(:run) { create(:completion_kit_run) }
+  let(:response_row) { create(:completion_kit_response, run: run) }
 
   def stub_llm(text)
     client = instance_double("CompletionKit::OpenAiClient")
@@ -9,53 +11,79 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
   end
 
-  it "redirects from suggest_variants straight to the dedicated improvements page" do
-    stub_llm("VARIANT:\nREASONING: tighter\nINSTRUCTION:\nbe sharper\nEND_VARIANT\nVARIANT:\nREASONING: kinder\nINSTRUCTION:\nbe kinder\nEND_VARIANT")
+  def add_disagree(corrected: 3, note: "off")
+    jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+    create(:completion_kit_calibration,
+           run: run, response: response_row, metric: metric,
+           judge_version: jv, verdict: "disagree",
+           corrected_score: corrected, note: note, created_by: SecureRandom.uuid)
+  end
+
+  it "drafts a single new suggestion and redirects back to the metric page" do
+    add_disagree
+    stub_llm("VARIANT:\nREASONING: tighter\nINSTRUCTION:\nbe sharper\nEND_VARIANT")
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/improvements")
+    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
     follow_redirect!
-    expect(response.body).to include("Suggested improvements")
-    expect(response.body).to include("sharper")
-    expect(response.body).to include("kinder")
-    expect(response.body).to include("Option 1 of 2")
+    expect(response.body).to include("Drafted a new version")
+    expect(response.body).to include("Suggested change")
     expect(response.body).to include("Use this version")
-    expect(response.body).to include("Dismiss")
+    expect(response.body).to include("Discard")
+    expect(CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "suggestion").count).to eq(1)
+  end
+
+  it "replaces an existing suggestion draft instead of stacking new ones" do
+    add_disagree
+    stub_llm("VARIANT:\nREASONING: a\nINSTRUCTION:\nfirst\nEND_VARIANT")
+    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
+    stub_llm("VARIANT:\nREASONING: b\nINSTRUCTION:\nsecond\nEND_VARIANT")
+    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
+    drafts = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "suggestion")
+    expect(drafts.count).to eq(1)
+    expect(drafts.first.instruction).to eq("second")
+  end
+
+  it "refuses to call the model when no disagreements exist yet" do
+    expect(CompletionKit::LlmClient).not_to receive(:for_model)
+    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
+    follow_redirect!
+    expect(response.body).to include("Mark at least one row as Disagree")
   end
 
   it "redirects with an alert when the model returns nothing usable" do
+    add_disagree
     stub_llm("nothing parseable")
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
     follow_redirect!
     expect(response.body).to include("no usable variants")
   end
 
-  it "shows the pending-suggestions banner on the metric show page when drafts exist" do
-    stub_llm("VARIANT:\nREASONING: r\nINSTRUCTION:\nrewrite\nEND_VARIANT")
-    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-
+  it "hides the Improve button (disabled) when no disagreements exist" do
     get "/completion_kit/metrics/#{metric.id}"
-    expect(response.body).to include("alternative")
-    expect(response.body).to include("waiting")
-    expect(response.body).to include("/completion_kit/metrics/#{metric.id}/improvements")
+    expect(response.body).to include("Improve the metric")
+    expect(response.body).to include("disabled")
   end
 
-  it "renders the empty state on the improvements page when no drafts exist" do
-    get "/completion_kit/metrics/#{metric.id}/improvements"
-    expect(response.body).to include("No pending suggestions")
+  it "enables the Improve button as soon as a disagreement is collected" do
+    add_disagree
+    get "/completion_kit/metrics/#{metric.id}"
+    expect(response.body).to include("Improve the metric")
+    expect(response.body).to match(%r{<form[^>]*action="/completion_kit/metrics/#{metric.id}/suggest_variants"})
   end
 
-  it "dismisses a suggestion draft via the dedicated route" do
+  it "dismisses the inline suggestion via the dedicated route" do
+    add_disagree
     stub_llm("VARIANT:\nREASONING: r\nINSTRUCTION:\ndoomed\nEND_VARIANT")
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
     draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "suggestion").first
 
     delete "/completion_kit/metrics/#{metric.id}/dismiss_suggestion", params: { draft_id: draft.id }
-    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/improvements")
+    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
     expect(CompletionKit::JudgeVersion.where(id: draft.id)).to be_empty
   end
 
   it "tolerates a dismiss request for a missing draft (no-op)" do
     delete "/completion_kit/metrics/#{metric.id}/dismiss_suggestion", params: { draft_id: 999_999 }
-    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/improvements")
+    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
   end
 end

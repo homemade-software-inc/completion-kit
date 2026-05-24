@@ -10,7 +10,7 @@ module CompletionKit
             type: "object",
             properties: {
               metric_id: { type: "integer" },
-              count: { type: "integer", description: "How many variants to request (default 3, max 5)." },
+              count: { type: "integer", description: "How many variants to request (default 1, max 3). One focused rewrite beats five reworded copies." },
               model: { type: "string", description: "Override the model used to generate variants. Defaults to CompletionKit.config.judge_model." }
             },
             required: ["metric_id"]
@@ -49,9 +49,7 @@ module CompletionKit
 
       def self.suggest(args)
         metric = CompletionKit::Metric.find(args["metric_id"])
-        count = [args["count"].to_i, 5].min
-        count = CompletionKit::JudgeVariantGenerator::DEFAULT_VARIANT_COUNT if count <= 0
-        generator = CompletionKit::JudgeVariantGenerator.new(metric, count: count, model: args["model"])
+        generator = CompletionKit::JudgeVariantGenerator.new(metric, count: args["count"].to_i, model: args["model"])
         variants = generator.call
         return error_result("Variant generator returned no parseable variants. Try again or change the model.") if variants.empty?
         versions = generator.persist!(variants)

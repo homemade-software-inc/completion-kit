@@ -9,12 +9,6 @@
     <% if CompletionKit.config.judge_calibration_enabled %>
       <%= render "completion_kit/calibrations/trust_panel",
             stats: CompletionKit::MetricCalibrationStats.for(@metric) %>
-      <% if @suggestion_drafts.any? %>
-        <%= link_to improvements_metric_path(@metric), class: "ck-suggestion-banner" do %>
-          <span class="ck-chip ck-chip--soft"><%= pluralize(@suggestion_drafts.size, "alternative") %> waiting</span>
-          <span>Review and pick one to make live →</span>
-        <% end %>
-      <% end %>
       <% if @edit_draft %>
         <% pub_instr = @published_judge_version&.instruction.to_s %>
         <% draft_instr = @edit_draft.instruction.to_s %>
@@ -57,11 +51,16 @@
   </div>
   <div class="ck-actions">
     <% if CompletionKit.config.judge_calibration_enabled %>
-      <%= button_to "Improve the metric", suggest_variants_metric_path(@metric),
-            method: :post, form_class: "inline-block",
-            class: ck_button_classes(:light, variant: :outline),
-            title: "Ask the model to rewrite this metric's instruction based on the disagreements and rubric-ambiguous cases collected so far.",
-            data: { turbo_confirm: "Ask the model to rewrite this metric's instruction based on the disagreements and rubric-ambiguous cases collected so far?" } %>
+      <% if @improve_disagreement_count.positive? %>
+        <%= button_to "Improve the metric", suggest_variants_metric_path(@metric),
+              method: :post, form_class: "inline-block",
+              class: ck_button_classes(:light, variant: :outline),
+              title: "Rewrite this metric based on the disagreements collected so far.",
+              data: { turbo_confirm: "Rewrite this metric based on the disagreements collected so far?" } %>
+      <% else %>
+        <button type="button" class="<%= ck_button_classes(:light, variant: :outline) %>" disabled
+                title="Mark at least one row as Disagree before the model can suggest a change.">Improve the metric</button>
+      <% end %>
     <% end %>
     <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
   </div>
@@ -97,6 +96,49 @@
     <% end %>
   </div>
 </section>
+
+<% if CompletionKit.config.judge_calibration_enabled && @suggestion_draft %>
+  <% sd_current_instr = @published_judge_version&.instruction.to_s %>
+  <% sd_draft_instr = @suggestion_draft.instruction.to_s %>
+  <% sd_current_rubric = @published_judge_version&.rubric_bands || [] %>
+  <% sd_rubric_changed = @suggestion_draft.rubric_bands != sd_current_rubric %>
+  <section class="ck-card ck-card--spaced ck-draft-pending">
+    <div class="ck-prompt-preview__header">
+      <p class="ck-kicker">Suggested change</p>
+      <time class="ck-meta-copy" data-relative-time datetime="<%= @suggestion_draft.created_at.utc.iso8601 %>"><%= time_ago_in_words(@suggestion_draft.created_at) %> ago</time>
+    </div>
+    <p class="ck-meta-copy">Based on your disagreements, the model proposed this rewrite. Use it to replace the live version, or discard.</p>
+
+    <div class="ck-suggest-diff">
+      <div class="ck-suggest-diff__pane">
+        <div class="ck-suggest-diff__header">
+          <span class="ck-suggest-diff__label ck-suggest-diff__label--before">Currently live</span>
+        </div>
+        <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(sd_current_instr, sd_draft_instr) %></pre>
+      </div>
+      <div class="ck-suggest-diff__pane">
+        <div class="ck-suggest-diff__header">
+          <span class="ck-suggest-diff__label ck-suggest-diff__label--after">Proposed</span>
+        </div>
+        <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(sd_current_instr, sd_draft_instr) %></pre>
+      </div>
+    </div>
+
+    <% if sd_rubric_changed %>
+      <p class="ck-meta-copy"><strong>Rubric also changed.</strong> Publishing applies the new rubric too.</p>
+    <% end %>
+
+    <div class="ck-actions">
+      <%= button_to "Discard", dismiss_suggestion_metric_path(@metric, draft_id: @suggestion_draft.id),
+            method: :delete, form_class: "inline-block",
+            class: ck_button_classes(:light, variant: :outline),
+            data: { turbo_confirm: "Drop this suggestion?" } %>
+      <%= button_to "Use this version", publish_draft_metric_path(@metric, draft_id: @suggestion_draft.id),
+            method: :post, form_class: "inline-block",
+            class: ck_button_classes(:dark) %>
+    </div>
+  </section>
+<% end %>
 
 <% if CompletionKit.config.judge_calibration_enabled %>
   <section class="ck-card ck-card--spaced">

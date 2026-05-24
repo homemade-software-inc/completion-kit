@@ -1,7 +1,7 @@
 module CompletionKit
   class MetricsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot, :publish_draft, :suggest_variants, :improvements, :dismiss_suggestion]
+    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot, :publish_draft, :suggest_variants, :dismiss_suggestion]
 
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
@@ -14,7 +14,8 @@ module CompletionKit
                                   .limit(50)
       @edit_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @published_judge_version = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
-      @suggestion_drafts = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc)
+      @suggestion_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
+      @improve_disagreement_count = @disagreements.size
     end
 
     def new
@@ -48,27 +49,28 @@ module CompletionKit
     end
 
     def suggest_variants
-      generator = JudgeVariantGenerator.new(@metric)
+      disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
+      if disagreement_count.zero?
+        redirect_to metric_path(@metric), alert: "Mark at least one row as Disagree before asking the model to suggest a change."
+        return
+      end
+
+      JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").destroy_all
+
+      generator = JudgeVariantGenerator.new(@metric, count: 1)
       variants = generator.call
       if variants.empty?
         redirect_to metric_path(@metric), alert: "The model returned no usable variants. Try again with a different model."
         return
       end
       generator.persist!(variants)
-      label = variants.length == 1 ? "alternative" : "alternatives"
-      redirect_to improvements_metric_path(@metric),
-                  notice: "Wrote #{variants.length} #{label}. Pick one to make it live."
-    end
-
-    def improvements
-      @suggestion_drafts = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc)
-      @published_judge_version = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
+      redirect_to metric_path(@metric), notice: "Drafted a new version. Review it below."
     end
 
     def dismiss_suggestion
       draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").find_by(id: params[:draft_id])
       draft&.destroy
-      redirect_to improvements_metric_path(@metric), notice: "Dismissed."
+      redirect_to metric_path(@metric), notice: "Dismissed."
     end
 
     def publish_draft
