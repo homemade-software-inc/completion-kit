@@ -5558,6 +5558,15 @@ a.tag-mark {
   letter-spacing: 0.03em;
   color: var(--ck-dim);
 }
+.ck-metrics-table__trust-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ck-muted);
+  margin-right: 4px;
+}
+.ck-metrics-table__trust-state {
+  color: var(--ck-text);
+}
 .ck-metrics-table__trust-rate {
   font-weight: 600;
   color: var(--ck-success);
