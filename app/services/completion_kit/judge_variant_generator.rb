@@ -133,11 +133,13 @@ module CompletionKit
     end
 
     def calibrations_for(metric, verdict:, limit:)
-      Calibration.where(metric_id: metric.id, verdict: verdict)
-                 .includes(response: :reviews)
-                 .order(created_at: :desc)
-                 .limit(limit)
-                 .map do |cal|
+      scope = Calibration.where(metric_id: metric.id, verdict: verdict)
+      current_version = JudgeVersion.current.find_by(metric_id: metric.id)
+      scope = scope.where(judge_version_id: current_version.id) if current_version
+      scope.includes(response: :reviews)
+           .order(created_at: :desc)
+           .limit(limit)
+           .map do |cal|
         review = cal.response.reviews.find { |r| r.metric_id == metric.id }
         {
           input: cal.response.input_data,
