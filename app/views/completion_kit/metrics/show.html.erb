@@ -63,14 +63,14 @@
   <div class="ck-actions">
     <% if CompletionKit.config.judge_calibration_enabled %>
       <% if @suggestion_draft %>
-        <%= link_to "Review suggestion →", edit_metric_path(@metric),
+        <%= link_to "Review improvements →", edit_metric_path(@metric),
               class: ck_button_classes(:dark),
-              title: "A model rewrite is waiting. Review and apply pieces inline." %>
+              title: "The model proposed improvements based on your disagreements. Review and apply what you want." %>
       <% elsif @improve_disagreement_count.positive? %>
         <%= button_to "Improve the metric", suggest_variants_metric_path(@metric),
               method: :post, form_class: "inline-block",
               class: ck_button_classes(:light, variant: :outline),
-              title: "Rewrite this metric based on the disagreements collected so far.",
+              title: "Have the model rewrite this metric's instruction and rubric based on the disagreements collected so far.",
               data: { turbo_confirm: "Rewrite this metric based on the disagreements collected so far?" } %>
       <% else %>
         <button type="button" class="<%= ck_button_classes(:light, variant: :outline) %>" disabled

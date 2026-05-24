@@ -18,20 +18,20 @@
   <% if suggestion %>
     <div class="ck-suggestion-banner" role="status">
       <div class="ck-suggestion-banner__body">
-        <p class="ck-kicker">Model suggestion</p>
-        <p class="ck-meta-copy">Based on your disagreements, the model proposed a rewrite. Apply pieces inline below, use everything at once, regenerate, or discard.</p>
+        <p class="ck-kicker">Proposed improvements</p>
+        <p class="ck-meta-copy">Based on your disagreements, the model proposed these changes to the instruction and rubric. Apply pieces inline below, take everything at once, try again, or discard.</p>
       </div>
       <div class="ck-suggestion-banner__actions">
-        <%= button_to "Regenerate", suggest_variants_metric_path(metric),
+        <%= button_to "Try again", suggest_variants_metric_path(metric),
               method: :post, form_class: "inline-block",
               class: ck_button_classes(:light, variant: :outline),
-              title: "Throw out this suggestion and ask the model for a fresh one.",
-              data: { turbo_confirm: "Replace this suggestion with a fresh one from the model?" } %>
-        <%= button_to "Discard suggestion", dismiss_suggestion_metric_path(metric, draft_id: suggestion.id),
+              title: "Discard these improvements and ask the model for fresh ones.",
+              data: { turbo_confirm: "Replace these improvements with fresh ones from the model?" } %>
+        <%= button_to "Discard", dismiss_suggestion_metric_path(metric, draft_id: suggestion.id),
               method: :delete, form_class: "inline-block",
               class: ck_button_classes(:light, variant: :outline),
-              data: { turbo_confirm: "Drop this suggestion?" } %>
-        <%= button_to "Use everything", publish_draft_metric_path(metric, draft_id: suggestion.id),
+              data: { turbo_confirm: "Drop these improvements?" } %>
+        <%= button_to "Take everything", publish_draft_metric_path(metric, draft_id: suggestion.id),
               method: :post, form_class: "inline-block",
               class: ck_button_classes(:dark) %>
       </div>

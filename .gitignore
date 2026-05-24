@@ -26,3 +26,4 @@ standalone/.envrc
 settings.local.json
 .playwright-mcp/
 completion-kit-*.gem
+/*.png
