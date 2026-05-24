@@ -164,3 +164,20 @@ document.addEventListener("click", function(e) {
     if (!menu.contains(e.target)) menu.removeAttribute("open");
   });
 });
+
+document.addEventListener("click", function(e) {
+  var btn = e.target.closest("[data-ck-apply]");
+  if (!btn) return;
+  e.preventDefault();
+  var targetName = btn.getAttribute("data-target");
+  var value = btn.getAttribute("data-value");
+  if (!targetName) return;
+  var field = document.querySelector('[name="' + targetName.replace(/"/g, '\\"') + '"]');
+  if (!field) return;
+  field.value = value;
+  field.dispatchEvent(new Event("input", { bubbles: true }));
+  field.dispatchEvent(new Event("change", { bubbles: true }));
+  btn.classList.add("is-applied");
+  btn.textContent = "Applied ✓";
+  field.focus({ preventScroll: true });
+});

@@ -5718,6 +5718,81 @@ a.tag-mark {
   border-color: rgba(45, 212, 168, 0.35);
   background: rgba(45, 212, 168, 0.04);
 }
+
+.ck-suggestion-banner {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.05);
+  border-radius: var(--ck-radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.ck-suggestion-banner__body { min-width: 0; flex: 1 1 320px; }
+.ck-suggestion-banner__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ck-suggestion-cta {
+  margin: 1.25rem 0 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.05);
+  border-radius: var(--ck-radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.ck-suggestion-cta__body { min-width: 0; flex: 1 1 320px; }
+
+.ck-inline-suggestion {
+  margin: 0.6rem 0 0;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.04);
+  border-radius: var(--ck-radius);
+  overflow: hidden;
+}
+.ck-inline-suggestion--band { margin-top: 0.45rem; }
+.ck-inline-suggestion__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(56, 189, 248, 0.06);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.18);
+}
+.ck-inline-suggestion__head .ck-kicker { color: var(--ck-accent); }
+.ck-inline-suggestion__diff {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--ck-line);
+}
+.ck-inline-suggestion__pane {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  background: var(--ck-surface);
+  font-family: var(--ck-mono);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--ck-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-width: 0;
+}
+.ck-inline-suggestion__apply.is-applied {
+  color: var(--ck-success);
+  border-color: rgba(45, 212, 168, 0.45);
+}
 .ck-disagreement__action {
   display: inline-flex;
   align-items: center;

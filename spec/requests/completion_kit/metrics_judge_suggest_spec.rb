@@ -26,10 +26,16 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
     follow_redirect!
     expect(response.body).to include("Drafted a new version")
-    expect(response.body).to include("Suggested change")
-    expect(response.body).to include("Use this version")
-    expect(response.body).to include("Discard")
+    expect(response.body).to include("Model suggestion ready")
+    expect(response.body).to include("Review suggestion")
     expect(CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "suggestion").count).to eq(1)
+
+    get "/completion_kit/metrics/#{metric.id}/edit"
+    expect(response.body).to include("Model suggestion")
+    expect(response.body).to include("Use everything")
+    expect(response.body).to include("Discard suggestion")
+    expect(response.body).to include("Suggested wording")
+    expect(response.body).to include("Use this wording")
   end
 
   it "replaces an existing suggestion draft instead of stacking new ones" do

@@ -50,6 +50,8 @@ module CompletionKit
     end
 
     def edit
+      @suggestion_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
+      @published_judge_version = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
     end
 
     def create

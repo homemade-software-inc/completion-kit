@@ -1,3 +1,8 @@
+<% suggestion = local_assigns[:suggestion_draft] %>
+<% suggestion_bands = suggestion ? Array(suggestion.rubric_bands).each_with_object({}) { |b, h| h[b["stars"].to_i] = b["description"].to_s } : {} %>
+<% suggested_instruction = suggestion&.instruction.to_s %>
+<% instruction_changed = suggestion && suggested_instruction.present? && suggested_instruction != metric.instruction.to_s %>
+
 <%= form_with(model: metric, local: true) do |form| %>
   <% if metric.errors.any? %>
     <div class="ck-flash ck-flash--alert" role="alert">
@@ -7,6 +12,24 @@
           <li><%= message %></li>
         <% end %>
       </ul>
+    </div>
+  <% end %>
+
+  <% if suggestion %>
+    <div class="ck-suggestion-banner" role="status">
+      <div class="ck-suggestion-banner__body">
+        <p class="ck-kicker">Model suggestion</p>
+        <p class="ck-meta-copy">Based on your disagreements, the model proposed a rewrite. Apply pieces inline below, use everything at once, or discard.</p>
+      </div>
+      <div class="ck-suggestion-banner__actions">
+        <%= button_to "Discard suggestion", dismiss_suggestion_metric_path(metric, draft_id: suggestion.id),
+              method: :delete, form_class: "inline-block",
+              class: ck_button_classes(:light, variant: :outline),
+              data: { turbo_confirm: "Drop this suggestion?" } %>
+        <%= button_to "Use everything", publish_draft_metric_path(metric, draft_id: suggestion.id),
+              method: :post, form_class: "inline-block",
+              class: ck_button_classes(:dark) %>
+      </div>
     </div>
   <% end %>
 
@@ -22,6 +45,23 @@
       <p class="ck-hint">What should the judge assess? This instruction is sent to the LLM judge when scoring outputs.</p>
       <%= form.text_area :instruction, rows: 8, class: "ck-input ck-input--area", placeholder: "Evaluate whether the output...", **ck_field_aria(form, :instruction) %>
       <%= ck_field_error(form, :instruction) %>
+
+      <% if instruction_changed %>
+        <div class="ck-inline-suggestion">
+          <div class="ck-inline-suggestion__head">
+            <p class="ck-kicker">Suggested wording</p>
+            <button type="button"
+                    class="<%= ck_button_classes(:light, variant: :outline) %> ck-inline-suggestion__apply"
+                    data-ck-apply
+                    data-target="metric[instruction]"
+                    data-value="<%= h(suggested_instruction) %>">Use this wording</button>
+          </div>
+          <div class="ck-inline-suggestion__diff">
+            <pre class="ck-inline-suggestion__pane ck-inline-suggestion__pane--before"><%= ck_word_diff_old(metric.instruction.to_s, suggested_instruction) %></pre>
+            <pre class="ck-inline-suggestion__pane ck-inline-suggestion__pane--after"><%= ck_word_diff_new(metric.instruction.to_s, suggested_instruction) %></pre>
+          </div>
+        </div>
+      <% end %>
     </div>
 
     <div class="ck-field ck-field--spacious">
@@ -30,6 +70,9 @@
 
       <div class="ck-rubric-builder">
         <% metric.rubric_bands_for_form.each_with_index do |band, index| %>
+          <% suggested_band = suggestion_bands[band["stars"].to_i].to_s %>
+          <% band_changed = suggestion && suggested_band.present? && suggested_band != band["description"].to_s %>
+          <% target_name = "metric[rubric_bands][#{index}][description]" %>
           <div class="ck-rubric-row">
             <div class="ck-rubric-row__stars">
               <% 5.times do |i| %>
@@ -38,7 +81,23 @@
               <input type="hidden" name="metric[rubric_bands][<%= index %>][stars]" value="<%= band["stars"] %>">
             </div>
             <div class="ck-rubric-row__fields">
-              <textarea name="metric[rubric_bands][<%= index %>][description]" rows="2" class="ck-input ck-input--area"><%= band["description"] %></textarea>
+              <textarea name="<%= target_name %>" rows="2" class="ck-input ck-input--area"><%= band["description"] %></textarea>
+              <% if band_changed %>
+                <div class="ck-inline-suggestion ck-inline-suggestion--band">
+                  <div class="ck-inline-suggestion__head">
+                    <p class="ck-kicker">Suggested band</p>
+                    <button type="button"
+                            class="<%= ck_button_classes(:light, variant: :outline) %> ck-inline-suggestion__apply"
+                            data-ck-apply
+                            data-target="<%= target_name %>"
+                            data-value="<%= h(suggested_band) %>">Use this band</button>
+                  </div>
+                  <div class="ck-inline-suggestion__diff">
+                    <pre class="ck-inline-suggestion__pane ck-inline-suggestion__pane--before"><%= ck_word_diff_old(band["description"].to_s, suggested_band) %></pre>
+                    <pre class="ck-inline-suggestion__pane ck-inline-suggestion__pane--after"><%= ck_word_diff_new(band["description"].to_s, suggested_band) %></pre>
+                  </div>
+                </div>
+              <% end %>
             </div>
           </div>
         <% end %>
