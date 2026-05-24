@@ -6,7 +6,7 @@
    end %>
 
 <p class="ck-trust-line ck-trust-line--<%= stats.gate %>">
-  <span class="ck-trust-line__label">Trust</span>
+  <span class="ck-trust-line__label"><%= heroicon_tag "shield-check", variant: :outline, "aria-hidden": "true" %>Trust</span>
   <% if stats.sample_size.zero? %>
     <span class="ck-trust-line__state">No score yet</span>
     <% if target_response %>
