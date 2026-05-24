@@ -1,7 +1,7 @@
 <% stats = local_assigns[:stats] %>
 <% metric = local_assigns[:metric] %>
 <% anchor = metric&.name&.parameterize %>
-<% target_response = if stats.sample_size.zero? && metric
+<% target_response = if (stats.sample_size.zero? || stats.counter_only?) && metric
      CompletionKit::Response.joins(:reviews).where(reviews: { metric_id: metric.id }).where.not(reviews: { ai_score: nil }).order(created_at: :desc).first
    end %>
 
@@ -14,7 +14,7 @@
     <% else %> Run this metric on a dataset, then give a verdict.<% end %></span>
   <% elsif stats.counter_only? %>
     <span class="ck-trust-line__counter"><%= stats.sample_size %>/<%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %></span>
-    <span class="ck-trust-line__hint"><%= pluralize(stats.sample_size, "verdict") %><% if stats.short_to_target > 0 %> · needs <%= pluralize(stats.short_to_target, "more") %> to call it<% end %></span>
+    <span class="ck-trust-line__hint"><%= pluralize(stats.sample_size, "verdict") %><% if stats.short_to_target > 0 %> · <%= stats.short_to_target %> more to go before we can call it<% end %><% if target_response %> · <%= link_to "Give another verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %><% end %></span>
   <% else %>
     <span class="ck-trust-line__score" title="Roughly how often the judge and the humans agreed.">~<%= (stats.agreement_point * 100).round %>%</span>
     <span class="ck-trust-line__margin" title="The range we're confident the true rate sits in.">±<%= (stats.margin * 100).round %> pt</span>

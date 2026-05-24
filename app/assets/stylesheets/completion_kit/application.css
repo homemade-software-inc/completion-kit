@@ -5404,8 +5404,10 @@ a.tag-mark {
   display: inline-block;
   width: 14px;
   height: 14px;
-  vertical-align: -3px;
-  margin-right: 4px;
+  vertical-align: middle;
+  margin-right: 2px;
+  position: relative;
+  top: -1px;
 }
 .ck-trust-line__state {
   color: var(--ck-text);
