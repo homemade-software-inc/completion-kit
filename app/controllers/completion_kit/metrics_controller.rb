@@ -55,7 +55,9 @@ module CompletionKit
         return
       end
       generator.persist!(variants)
-      redirect_to improvements_metric_path(@metric)
+      label = variants.length == 1 ? "alternative" : "alternatives"
+      redirect_to improvements_metric_path(@metric),
+                  notice: "Wrote #{variants.length} #{label}. Pick one to make it live."
     end
 
     def improvements
