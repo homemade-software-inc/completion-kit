@@ -5221,6 +5221,8 @@ a.tag-mark {
   color: var(--ck-accent);
   text-decoration: none;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 .ck-calibration__meta-link svg {
   display: inline-block;

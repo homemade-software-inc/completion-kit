@@ -10,7 +10,7 @@
       <span class="ck-calibration__meta"><%= pluralize(verdict_count, "verdict") %> on this score</span>
       <span class="ck-calibration__sep">·</span>
     <% end %>
-    <%= link_to metric_path(metric), class: "ck-calibration__meta-link" do %><%= heroicon_tag "shield-check", variant: :outline, "aria-hidden": "true" %>trust level →<% end %>
+    <%= link_to metric_path(metric), class: "ck-calibration__meta-link" do %><%= heroicon_tag "shield-check", variant: :outline, "aria-hidden": "true" %>Trust level →<% end %>
   </p>
   <div class="ck-calibration__buttons">
     <% verdict_icons = { "agree" => "hand-thumb-up", "disagree" => "hand-thumb-down", "borderline" => "scale" } %>

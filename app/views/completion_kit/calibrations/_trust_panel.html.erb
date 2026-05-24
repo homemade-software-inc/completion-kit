@@ -12,7 +12,7 @@
    end %>
 
 <p class="ck-trust-line ck-trust-line--<%= stats.gate %>">
-  <span class="ck-trust-line__label"><%= heroicon_tag "shield-check", variant: :outline, "aria-hidden": "true" %>Trust</span>
+  <span class="ck-trust-line__label"><%= heroicon_tag "shield-check", variant: :outline, "aria-hidden": "true" %>Trust level</span>
   <% if stats.sample_size.zero? %>
     <span class="ck-trust-line__state">Not measured yet.</span>
     <span class="ck-trust-line__hint">We need <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> verdicts from you on how this metric is performing before we can measure how trustworthy it is.<% if target_response %>
