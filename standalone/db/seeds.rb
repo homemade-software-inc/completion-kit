@@ -104,9 +104,9 @@ completeness = CompletionKit::Metric.find_or_create_by!(name: "Completeness") do
 end
 
 brevity = CompletionKit::Metric.find_or_create_by!(name: "Brevity") do |m|
-  m.instruction = "Is the summary 1–2 sentences and tightly written? It should fit a single line in a queue view without truncation."
+  m.instruction = "Is the summary 1-2 sentences and tightly written? It should fit a single line in a queue view without truncation."
   m.rubric_bands = [
-    { "stars" => 5, "description" => "1–2 sentences. Every word earns its place. Reads as one unit." },
+    { "stars" => 5, "description" => "1-2 sentences. Every word earns its place. Reads as one unit." },
     { "stars" => 3, "description" => "Slightly over-length or includes a stock phrase that adds nothing." },
     { "stars" => 1, "description" => "Way too long, way too short, or compresses so hard it loses meaning." }
   ]
@@ -145,16 +145,16 @@ end
 
 csv_data = <<~CSV
   ticket
-  "Order #4827 was a Christmas gift for my mom — she's 78 and on dialysis. The dryer arrived with a dent on the front panel. I called within an hour, was told to email photos, did so, then heard nothing for 11 days. Today your support agent told me the return window has 'closed' and offered $40 in credit. I paid $749. I want a full refund or a replacement, not credit toward a future purchase. I'm planning to dispute with my bank by Friday if this isn't resolved."
-  "Tracking on order #5102 says delivered to my front porch Tuesday at 3:47pm. I was home all day; nothing was delivered. Two of my neighbours have Ring cameras and neither shows a delivery van on our street. I've already filed a missing-package report on your site and got an automated reply. The order was a $315 KitchenAid stand mixer — wedding gift — and the wedding is Saturday. Can someone actually look at this today?"
+  "Order #4827 was a Christmas gift for my mom. She's 78 and on dialysis. The dryer arrived with a dent on the front panel. I called within an hour, was told to email photos, did so, then heard nothing for 11 days. Today your support agent told me the return window has 'closed' and offered $40 in credit. I paid $749. I want a full refund or a replacement, not credit toward a future purchase. I'm planning to dispute with my bank by Friday if this isn't resolved."
+  "Tracking on order #5102 says delivered to my front porch Tuesday at 3:47pm. I was home all day; nothing was delivered. Two of my neighbours have Ring cameras and neither shows a delivery van on our street. I've already filed a missing-package report on your site and got an automated reply. The order was a $315 KitchenAid stand mixer (wedding gift) and the wedding is Saturday. Can someone actually look at this today?"
   "I tried to use the WELCOME20 code at checkout and it says 'invalid'. The promo email says it's good through May 31. I've used the same email I'm signed in with. Cleared cookies, tried Chrome and Safari, same result. Did the code expire early, or am I missing something? Cart is sitting at $186 (kettle and a coffee grinder) waiting on you."
-  "I can't sign into my account. The 2FA code text isn't arriving anymore — I've requested 4 codes in the last hour, my phone shows full bars, no SMS. Phone number on file is correct (I receive other texts fine). I have around $540 in store credit on the account from a return last month and I'd like to use it before it expires on June 15. Can you send a recovery code via email instead?"
-  "I've been a Gold tier member since 2019. I just got the email about the program changes — moving Gold to a $99/year fee from free, with the 10% loyalty discount dropping to 5%. I spend roughly $4,000/year with you and have for the last 6 years. I understand business is business but this is a meaningful change. Is there grandfather pricing for long-term members, or should I be looking at competitors?"
+  "I can't sign into my account. The 2FA code text isn't arriving anymore. I've requested 4 codes in the last hour, my phone shows full bars, no SMS. Phone number on file is correct (I receive other texts fine). I have around $540 in store credit on the account from a return last month and I'd like to use it before it expires on June 15. Can you send a recovery code via email instead?"
+  "I've been a Gold tier member since 2019. I just got the email about the program changes. Moving Gold to a $99/year fee from free, with the 10% loyalty discount dropping to 5%. I spend roughly $4,000/year with you and have for the last 6 years. I understand business is business but this is a meaningful change. Is there grandfather pricing for long-term members, or should I be looking at competitors?"
 CSV
 
 ticket_inputs = csv_data.lines[1..5].map { |line| line.strip.tr('"', "") }
 
-dataset = CompletionKit::Dataset.find_or_create_by!(name: "Customer Tickets — sample") do |d|
+dataset = CompletionKit::Dataset.find_or_create_by!(name: "Customer Tickets (sample)") do |d|
   d.csv_data = csv_data
 end
 
@@ -196,27 +196,27 @@ summary_v3.publish! unless summary_v3.current?
 
 reply_responses = [
   { input: ticket_inputs[0],
-    text: "Hi — I'm so sorry this happened, especially given who the dryer was for. You did everything right: photos within the hour, then 11 days of silence on our end. That's on us, and the credit offer doesn't make it right.\n\nI've reviewed order #4827 and approved a full refund of $749 to your original payment method. You should see it within 3–5 business days. If you'd prefer a replacement instead, just reply to this email and I'll arrange a courier pickup of the damaged unit and a same-week dispatch of a new one.\n\nNo need to dispute with your bank — we'll handle this directly. I've also flagged the 11-day gap internally so we can figure out where the email got lost. Apologies again, and please pass our best wishes to your mom.",
+    text: "Hi. I'm so sorry this happened, especially given who the dryer was for. You did everything right: photos within the hour, then 11 days of silence on our end. That's on us, and the credit offer doesn't make it right.\n\nI've reviewed order #4827 and approved a full refund of $749 to your original payment method. You should see it within 3-5 business days. If you'd prefer a replacement instead, just reply to this email and I'll arrange a courier pickup of the damaged unit and a same-week dispatch of a new one.\n\nNo need to dispute with your bank. We'll handle this directly. I've also flagged the 11-day gap internally so we can figure out where the email got lost. Apologies again, and please pass our best wishes to your mom.",
     scores: { "Tone" => [5, "Genuinely warm without being saccharine. Acknowledges the human stakes (Christmas, mom on dialysis) and the company failure. Reads like a senior person who actually cares."],
               "Helpfulness" => [5, "Approves the refund outright, offers replacement as alternative, removes the bank dispute pressure, and commits to internal follow-up. Customer can act immediately."],
               "Accuracy" => [5, "Order number, amount, and refund timeline all match the ticket. No invented policies."] } },
   { input: ticket_inputs[1],
     text: "Thanks for the report. To investigate, can you confirm:\n\n1. The full delivery address on file\n2. The carrier the package shipped with\n3. Whether you have a signed delivery confirmation\n\nOnce I have those I can pull the tracking event log.",
     scores: { "Tone" => [3, "Cold and procedural. The customer is under wedding-deadline pressure and the reply doesn't acknowledge any of that."],
-              "Helpfulness" => [2, "Asks for information already discoverable from the order — delivery address is on file, carrier is in the tracking the customer already cited. This will frustrate them and burn a round-trip with the wedding looming."],
+              "Helpfulness" => [2, "Asks for information already discoverable from the order. Delivery address is on file, carrier is in the tracking the customer already cited. This will frustrate them and burn a round-trip with the wedding looming."],
               "Accuracy" => [4, "What's stated is technically correct, but the questions treat the ticket as if half of it weren't read."] } },
   { input: ticket_inputs[2],
-    text: "Great question — the WELCOME20 code is for first-time customers only, which is why it's coming back invalid (we can see you've ordered with us before). The promo email goes to our broader newsletter list and the eligibility wasn't called out clearly enough — I've flagged that with marketing.\n\nFor the cart you've got open ($186), I've issued a one-time 15% off code: THANKS-LOYAL-186. Apply it at checkout. Same constraints as WELCOME20 (not stackable with other promos), valid for the next 7 days. Reply if it doesn't apply cleanly and I'll reissue.",
+    text: "Great question. The WELCOME20 code is for first-time customers only, which is why it's coming back invalid (we can see you've ordered with us before). The promo email goes to our broader newsletter list and the eligibility wasn't called out clearly enough. I've flagged that with marketing.\n\nFor the cart you've got open ($186), I've issued a one-time 15% off code: THANKS-LOYAL-186. Apply it at checkout. Same constraints as WELCOME20 (not stackable with other promos), valid for the next 7 days. Reply if it doesn't apply cleanly and I'll reissue.",
     scores: { "Tone" => [4, "Friendly, owns the marketing copy gap, and lands the correction without being defensive."],
               "Helpfulness" => [5, "Explains the rejection, offers a real alternative discount on the same cart amount, and pre-empts the 'doesn't stack' question. Customer can complete the purchase immediately."],
               "Accuracy" => [5, "First-time-customer constraint matches our promo policy. Discount math is correct. No invented terms."] } },
   { input: ticket_inputs[3],
-    text: "Hi — sorry about the SMS issue. I've sent a one-time recovery code to the email on your account; please use it within the next 30 minutes to sign in.\n\nOnce you're back in, you can switch 2FA to an authenticator app under Security Settings — that path doesn't depend on SMS delivery, so this won't recur.\n\nGood news on the store credit: it doesn't actually expire on June 15. Store credits issued from returns are good for 24 months from issue. The June 15 date you saw was for a separate promotional credit balance. Happy to walk through both balances if helpful.",
+    text: "Hi. Sorry about the SMS issue. I've sent a one-time recovery code to the email on your account; please use it within the next 30 minutes to sign in.\n\nOnce you're back in, you can switch 2FA to an authenticator app under Security Settings. That path doesn't depend on SMS delivery, so this won't recur.\n\nGood news on the store credit: it doesn't actually expire on June 15. Store credits issued from returns are good for 24 months from issue. The June 15 date you saw was for a separate promotional credit balance. Happy to walk through both balances if helpful.",
     scores: { "Tone" => [4, "Calm and reassuring. The 'good news' framing on the credit lands well."],
               "Helpfulness" => [4, "Resolves the immediate sign-in problem and points at a permanent fix. The credit-policy detail is useful but slightly muddies the main thread."],
-              "Accuracy" => [3, "The '24 months from issue' return-credit policy isn't verified — agent should check before stating it as fact. Sending recovery code via email and pointing at authenticator-app 2FA are both correct."] } },
+              "Accuracy" => [3, "The '24 months from issue' return-credit policy isn't verified. Agent should check before stating it as fact. Sending recovery code via email and pointing at authenticator-app 2FA are both correct."] } },
   { input: ticket_inputs[4],
-    text: "Hi — thank you for the long history with us, and for the candid feedback. Hearing this from a 2019 Gold member spending $4k a year carries real weight.\n\nThe Gold changes come from our cost structure — the free tier wasn't sustainable as the program grew — but I understand that doesn't change your math. For long-tenured members in your situation, I can offer a 12-month grandfather of the legacy benefits at no charge while we work out a longer-term path. You'd keep the 10% discount and free Gold status through next May.\n\nWould the grandfather year work as a stopgap? If so, I'll get it set up today.",
+    text: "Hi. Thank you for the long history with us, and for the candid feedback. Hearing this from a 2019 Gold member spending $4k a year carries real weight.\n\nThe Gold changes come from our cost structure (the free tier wasn't sustainable as the program grew) but I understand that doesn't change your math. For long-tenured members in your situation, I can offer a 12-month grandfather of the legacy benefits at no charge while we work out a longer-term path. You'd keep the 10% discount and free Gold status through next May.\n\nWould the grandfather year work as a stopgap? If so, I'll get it set up today.",
     scores: { "Tone" => [5, "Acknowledges the customer's history specifically. Empathetic without being defensive about the program change. Honest about the rationale."],
               "Helpfulness" => [4, "Offers a concrete stopgap (12-month grandfather) and frames the longer-term conversation. Doesn't address whether a paid tier might fit them better."],
               "Accuracy" => [4, "Grandfather offer needs retention sign-off before being committed to in writing. Otherwise grounded in standard retention plays."] } }
@@ -236,12 +236,12 @@ triage_responses = [
   { input: ticket_inputs[2],
     text: "{ \"category\": \"promo_code\", \"urgency\": \"low\", \"rationale\": \"Pre-purchase question about a promo code rejecting at checkout.\" }",
     scores: { "Category Accuracy" => [5, "Promo_code is the textbook bucket for this."],
-              "Urgency Calibration" => [3, "Low is reasonable but medium would also be defensible — the cart is sitting and could lose the conversion. Missed that signal."],
+              "Urgency Calibration" => [3, "Low is reasonable but medium would also be defensible. The cart is sitting and could lose the conversion. Missed that signal."],
               "Confidence" => [4, "Slight overconfidence on the urgency call given the active cart."] } },
   { input: ticket_inputs[3],
     text: "{ \"category\": \"account_access\", \"secondary\": \"loyalty\", \"urgency\": \"medium\", \"rationale\": \"Customer can't sign in due to SMS 2FA failure; has store credit they want to use before a quoted June 15 date.\" }",
     scores: { "Category Accuracy" => [5, "Account_access is the primary; loyalty as secondary captures the store-credit-expiry concern."],
-              "Urgency Calibration" => [5, "Medium is right — they're locked out but have an email-recovery path, and the credit deadline gives a clock without making it critical."],
+              "Urgency Calibration" => [5, "Medium is right. They're locked out but have an email-recovery path, and the credit deadline gives a clock without making it critical."],
               "Confidence" => [5, "Well-calibrated. Clear primary, sensible secondary, no over-reach."] } },
   { input: ticket_inputs[4],
     text: "{ \"category\": \"churn_risk\", \"secondary\": \"loyalty\", \"urgency\": \"high\", \"rationale\": \"Long-tenure Gold member evaluating alternatives over loyalty program changes.\" }",
@@ -252,17 +252,17 @@ triage_responses = [
 
 summary_v1_responses = [
   { input: ticket_inputs[0],
-    text: "Refund demand on damaged $749 dryer (order #4827) — customer threatening Friday bank dispute after 11-day no-response.",
+    text: "Refund demand on damaged $749 dryer (order #4827). Customer threatening Friday bank dispute after 11-day no-response.",
     scores: { "Clarity" => [5, "Crisp. Order number, amount, problem, and escalation path all parseable in one read."],
               "Completeness" => [5, "Intent (refund), urgency cue (Friday dispute), routing fact (order #4827, 11-day delay) all present."],
               "Brevity" => [5, "One sentence. Every word earns its place."] } },
   { input: ticket_inputs[1],
-    text: "Missing-package report on order #5102 ($315 KitchenAid mixer for Saturday wedding) — tracking shows delivered, customer was home, neighbours' Ring cameras don't show the van.",
+    text: "Missing-package report on order #5102 ($315 KitchenAid mixer for Saturday wedding). Tracking shows delivered, customer was home, neighbours' Ring cameras don't show the van.",
     scores: { "Clarity" => [5, "Specific and unambiguous. A shipping investigator can route this without opening the ticket."],
               "Completeness" => [5, "Intent (shipping), urgency cue (Saturday wedding), routing facts (order #, amount, evidence already gathered) all there."],
               "Brevity" => [5, "One sentence, packs everything that matters."] } },
   { input: ticket_inputs[2],
-    text: "Pre-purchase question — WELCOME20 promo code rejecting at checkout; cart at $186 waiting on resolution.",
+    text: "Pre-purchase question. WELCOME20 promo code rejecting at checkout; cart at $186 waiting on resolution.",
     scores: { "Clarity" => [5, "Plain language, no ambiguity."],
               "Completeness" => [4, "Intent and cart amount are there but the 'within email validity window' detail (which matters for the answer) isn't surfaced."],
               "Brevity" => [5, "One sentence, well-pitched."] } },
@@ -282,7 +282,7 @@ summary_v2_responses = [
   { input: ticket_inputs[0],
     text: "Refund demand on a damaged dryer, order #4827.",
     scores: { "Clarity" => [4, "Readable, but 'damaged dryer' alone undersells a case that is one step from a bank dispute."],
-              "Completeness" => [4, "Intent and order number are there; the Friday bank-dispute deadline — the reason this is urgent — got compressed away."],
+              "Completeness" => [4, "Intent and order number are there; the Friday bank-dispute deadline (the reason this is urgent) got compressed away."],
               "Brevity" => [5, "As short as it gets. One clean line."] } },
   { input: ticket_inputs[1],
     text: "Missing package on order #5102, customer needs it by Saturday.",
@@ -297,7 +297,7 @@ summary_v2_responses = [
   { input: ticket_inputs[3],
     text: "Customer locked out, SMS 2FA codes not arriving.",
     scores: { "Clarity" => [3, "States the symptom but a reader can't tell whether this is a quick reset or a stuck case."],
-              "Completeness" => [4, "Intent is clear; the $540 store credit and its June 15 deadline — both routing-relevant — are gone."],
+              "Completeness" => [4, "Intent is clear; the $540 store credit and its June 15 deadline (both routing-relevant) are gone."],
               "Brevity" => [5, "One short line."] } },
   { input: ticket_inputs[4],
     text: "Gold member unhappy about loyalty program changes.",
@@ -308,17 +308,17 @@ summary_v2_responses = [
 
 summary_v3_responses = [
   { input: ticket_inputs[0],
-    text: "Refund demand on a damaged $749 dryer (order #4827) — customer is threatening a Friday bank dispute after an 11-day no-response.",
+    text: "Refund demand on a damaged $749 dryer (order #4827). Customer is threatening a Friday bank dispute after an 11-day no-response.",
     scores: { "Clarity" => [5, "Order number, amount, problem, and the escalation clock all land in one read."],
               "Completeness" => [5, "Intent, the Friday-dispute urgency cue, and the routing facts are all present."],
               "Brevity" => [5, "One sentence carrying everything that matters."] } },
   { input: ticket_inputs[1],
-    text: "Missing-package report on order #5102 ($315 KitchenAid mixer, Saturday wedding gift) — tracking shows delivered, customer was home, neighbours' cameras show no delivery van.",
+    text: "Missing-package report on order #5102 ($315 KitchenAid mixer, Saturday wedding gift). Tracking shows delivered, customer was home, neighbours' cameras show no delivery van.",
     scores: { "Clarity" => [5, "A shipping investigator can route this without opening the ticket."],
               "Completeness" => [5, "Intent, the wedding deadline, and the delivered-but-missing evidence are all kept."],
               "Brevity" => [5, "One sentence, densely packed, still readable."] } },
   { input: ticket_inputs[2],
-    text: "Pre-purchase question — WELCOME20 promo code rejecting at checkout; a $186 cart is waiting on the answer.",
+    text: "Pre-purchase question. WELCOME20 promo code rejecting at checkout; a $186 cart is waiting on the answer.",
     scores: { "Clarity" => [5, "Plain language, no ambiguity."],
               "Completeness" => [5, "Intent plus the at-risk cart value that tells triage this is time-sensitive."],
               "Brevity" => [5, "One tight sentence."] } },
@@ -378,15 +378,15 @@ seed_run = lambda do |name:, prompt:, dataset:, metrics:, days_ago:, responses:,
 end
 
 runs = [
-  { name: "Support Reply Generator — v1 #1", prompt: reply_prompt,  dataset: dataset, metrics: reply_metrics,   days_ago: 13, responses: reply_responses,     tags: %w[customer-support reply] },
-  { name: "Ticket Triage — v1 #1",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 13, responses: triage_responses,    tags: %w[customer-support triage] },
-  { name: "Ticket Summary — v1 #1",          prompt: summary_v1,    dataset: dataset, metrics: summary_metrics, days_ago: 11, responses: summary_v1_responses, tags: %w[customer-support summary] },
-  { name: "Ticket Summary — v1 #2",          prompt: summary_v1,    dataset: dataset, metrics: summary_metrics, days_ago: 11, responses: summary_v1_responses, tags: %w[customer-support summary] },
-  { name: "Ticket Summary — v2 #1",          prompt: summary_v2,    dataset: dataset, metrics: summary_metrics, days_ago: 6,  responses: summary_v2_responses, tags: %w[customer-support summary] },
-  { name: "Support Reply Generator — v1 #2", prompt: reply_prompt,  dataset: dataset, metrics: reply_metrics,   days_ago: 4,  responses: reply_responses,     tags: %w[customer-support reply] },
-  { name: "Ticket Triage — v1 #2",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 4,  responses: triage_responses,    tags: %w[customer-support triage] },
-  { name: "Ticket Summary — v3 #1",          prompt: summary_v3,    dataset: dataset, metrics: summary_metrics, days_ago: 2,  responses: summary_v3_responses, tags: %w[customer-support summary] },
-  { name: "Ticket Triage — v1 #3",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 1,  responses: triage_responses,    tags: %w[customer-support triage] }
+  { name: "Support Reply Generator v1 #1", prompt: reply_prompt,  dataset: dataset, metrics: reply_metrics,   days_ago: 13, responses: reply_responses,     tags: %w[customer-support reply] },
+  { name: "Ticket Triage v1 #1",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 13, responses: triage_responses,    tags: %w[customer-support triage] },
+  { name: "Ticket Summary v1 #1",          prompt: summary_v1,    dataset: dataset, metrics: summary_metrics, days_ago: 11, responses: summary_v1_responses, tags: %w[customer-support summary] },
+  { name: "Ticket Summary v1 #2",          prompt: summary_v1,    dataset: dataset, metrics: summary_metrics, days_ago: 11, responses: summary_v1_responses, tags: %w[customer-support summary] },
+  { name: "Ticket Summary v2 #1",          prompt: summary_v2,    dataset: dataset, metrics: summary_metrics, days_ago: 6,  responses: summary_v2_responses, tags: %w[customer-support summary] },
+  { name: "Support Reply Generator v1 #2", prompt: reply_prompt,  dataset: dataset, metrics: reply_metrics,   days_ago: 4,  responses: reply_responses,     tags: %w[customer-support reply] },
+  { name: "Ticket Triage v1 #2",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 4,  responses: triage_responses,    tags: %w[customer-support triage] },
+  { name: "Ticket Summary v3 #1",          prompt: summary_v3,    dataset: dataset, metrics: summary_metrics, days_ago: 2,  responses: summary_v3_responses, tags: %w[customer-support summary] },
+  { name: "Ticket Triage v1 #3",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 1,  responses: triage_responses,    tags: %w[customer-support triage] }
 ]
 
 runs.each { |attrs| seed_run.call(**attrs) }
@@ -395,7 +395,7 @@ runs.each { |attrs| seed_run.call(**attrs) }
   CompletionKit::Tag.find_or_create_by!(name: tag_name)
 end
 
-CompletionKit::Dataset.find_by(name: "Customer Tickets — sample")&.update!(tag_names: ["customer-support"])
+CompletionKit::Dataset.find_by(name: "Customer Tickets (sample)")&.update!(tag_names: ["customer-support"])
 
 prompt_tags = {
   "Support Reply Generator" => ["customer-support", "reply"],
