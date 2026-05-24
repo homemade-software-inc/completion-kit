@@ -5383,16 +5383,26 @@ a.tag-mark {
 .ck-trust-panel__borderline--warning { color: var(--ck-warning); }
 .ck-trust-panel__borderline--danger { color: var(--ck-danger); }
 
-.ck-trust-panel__unknown {
+.ck-trust-empty {
+  margin: 12px 0 0;
   font-family: var(--ck-mono);
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ck-dim);
-}
-.ck-trust-panel--unknown .ck-trust-panel__hint {
   font-size: 0.78rem;
+  color: var(--ck-dim);
+  line-height: 1.5;
+}
+.ck-trust-empty__line {
+  margin: 0;
+}
+.ck-trust-empty__label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ck-muted);
+  margin-right: 8px;
+}
+.ck-trust-empty__runs {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 640px) {

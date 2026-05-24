@@ -1,36 +1,50 @@
 <% stats = local_assigns[:stats] %>
-<div class="ck-trust-panel ck-trust-panel--<%= stats.gate %><%= ' ck-trust-panel--unknown' if stats.sample_size.zero? %>">
-  <p class="ck-trust-panel__label" title="How often this metric's scores match the humans who reviewed them.">Trust level</p>
-  <% if stats.sample_size.zero? %>
-    <div class="ck-trust-panel__body">
-      <span class="ck-trust-panel__unknown">Unknown</span>
-      <span class="ck-trust-panel__hint">Give a verdict on any scored row to start scoring this judge.</span>
-    </div>
-  <% elsif stats.counter_only? %>
-    <div class="ck-trust-panel__body">
-      <span class="ck-trust-panel__counter"><%= stats.sample_size %><span class="ck-trust-panel__counter-of">/ <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %></span></span>
-      <span class="ck-trust-panel__hint"><%= pluralize(stats.sample_size, "verdict") %> so far<% if stats.short_to_target > 0 %> · <%= stats.short_to_target %> more before we can score the judge<% end %></span>
-    </div>
-  <% else %>
-    <div class="ck-trust-panel__body">
-      <span class="ck-trust-panel__score"
-            title="Roughly how often the judge and the humans agreed.">~<%= (stats.agreement_point * 100).round %><span class="ck-trust-panel__score-pct">%</span></span>
-      <span class="ck-trust-panel__margin"
-            title="The range we're confident the true rate sits in, given how few verdicts we have so far.">±<%= (stats.margin * 100).round %> pt</span>
-      <span class="ck-trust-panel__gate"
-            title="<%= stats.firm? ? 'Enough verdicts for a reliable read.' : 'Early read. Keep giving verdicts to tighten the margin.' %>"><%= stats.firm? ? "settled" : "early read" %></span>
-    </div>
-    <div class="ck-trust-panel__details">
-      <span><%= pluralize(stats.sample_size, "verdict") %></span>
-      <% if stats.borderline_rate && stats.borderline_rate > 0 %>
-        <% level = if stats.borderline_rate > 0.30 then "danger"
-                   elsif stats.borderline_rate > 0.15 then "warning"
-                   else "ok" end %>
-        <span class="ck-trust-panel__borderline ck-trust-panel__borderline--<%= level %>"
-              title="<%= level == 'ok' ? 'Some reviewers said the rubric was unclear here.' : 'A lot of reviewers say the rubric is unclear here. Consider splitting the metric or rewriting the rubric.' %>">
-          <%= (stats.borderline_rate * 100).round %>% said "unclear"
-        </span>
-      <% end %>
-    </div>
-  <% end %>
-</div>
+<% metric = local_assigns[:metric] %>
+<% if stats.sample_size.zero? %>
+  <% recent_runs = metric ? CompletionKit::Run.joins(responses: :reviews).where(reviews: { metric_id: metric.id }).where.not(reviews: { ai_score: nil }).distinct.order(created_at: :desc).limit(3) : [] %>
+  <div class="ck-trust-empty">
+    <p class="ck-trust-empty__line">
+      <span class="ck-trust-empty__label">Trust level</span>
+      No score yet. Give a verdict on any scored row to start.
+    </p>
+    <% if recent_runs.any? %>
+      <p class="ck-trust-empty__runs">
+        Jump to a recent run:
+        <% recent_runs.each_with_index do |run, idx| %>
+          <%= link_to run.name.to_s.truncate(40), ck_run_path(run), class: "ck-link" %><%= idx < recent_runs.length - 1 ? " · " : "" %>
+        <% end %>
+      </p>
+    <% end %>
+  </div>
+<% else %>
+  <div class="ck-trust-panel ck-trust-panel--<%= stats.gate %>">
+    <p class="ck-trust-panel__label" title="How often this metric's scores match the humans who reviewed them.">Trust level</p>
+    <% if stats.counter_only? %>
+      <div class="ck-trust-panel__body">
+        <span class="ck-trust-panel__counter"><%= stats.sample_size %><span class="ck-trust-panel__counter-of">/ <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %></span></span>
+        <span class="ck-trust-panel__hint"><%= pluralize(stats.sample_size, "verdict") %> so far<% if stats.short_to_target > 0 %> · <%= stats.short_to_target %> more before we can score the judge<% end %></span>
+      </div>
+    <% else %>
+      <div class="ck-trust-panel__body">
+        <span class="ck-trust-panel__score"
+              title="Roughly how often the judge and the humans agreed.">~<%= (stats.agreement_point * 100).round %><span class="ck-trust-panel__score-pct">%</span></span>
+        <span class="ck-trust-panel__margin"
+              title="The range we're confident the true rate sits in, given how few verdicts we have so far.">±<%= (stats.margin * 100).round %> pt</span>
+        <span class="ck-trust-panel__gate"
+              title="<%= stats.firm? ? 'Enough verdicts for a reliable read.' : 'Early read. Keep giving verdicts to tighten the margin.' %>"><%= stats.firm? ? "settled" : "early read" %></span>
+      </div>
+      <div class="ck-trust-panel__details">
+        <span><%= pluralize(stats.sample_size, "verdict") %></span>
+        <% if stats.borderline_rate && stats.borderline_rate > 0 %>
+          <% level = if stats.borderline_rate > 0.30 then "danger"
+                     elsif stats.borderline_rate > 0.15 then "warning"
+                     else "ok" end %>
+          <span class="ck-trust-panel__borderline ck-trust-panel__borderline--<%= level %>"
+                title="<%= level == 'ok' ? 'Some reviewers said the rubric was unclear here.' : 'A lot of reviewers say the rubric is unclear here. Consider splitting the metric or rewriting the rubric.' %>">
+            <%= (stats.borderline_rate * 100).round %>% said "unclear"
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
