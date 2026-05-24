@@ -26,6 +26,25 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     expect(CompletionKit::Calibration.first.verdict).to eq("agree")
   end
 
+  it "renders a 'Saved ✓' confirmation in the Turbo Stream after a successful disagree save" do
+    post base_path, params: { metric_id: metric.id, verdict: "disagree", corrected_score: 2, note: "off" },
+                     headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    expect(response.body).to include("Saved ✓")
+    expect(response.body).to include('class="ck-calibration__saved"')
+  end
+
+  it "does not show 'Saved ✓' on the pending-verdict render (no save happened)" do
+    post base_path, params: { metric_id: metric.id, verdict: "disagree" },
+                     headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    expect(response.body).not_to include("Saved ✓")
+  end
+
+  it "does not show 'Saved ✓' when validation fails" do
+    post base_path, params: { metric_id: metric.id, verdict: "disagree", corrected_score: 9 },
+                     headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    expect(response.body).not_to include("Saved ✓")
+  end
+
   it "upserts the same user's verdict on a repeat POST" do
     post base_path, params: { metric_id: metric.id, verdict: "agree" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     post base_path, params: { metric_id: metric.id, verdict: "borderline", note: "rubric ambiguous" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }

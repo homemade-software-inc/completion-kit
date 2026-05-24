@@ -25,7 +25,7 @@ module CompletionKit
       )
 
       if calibration.save
-        render_calibration(calibration: calibration)
+        render_calibration(calibration: calibration, just_saved: true)
       else
         render_calibration(
           calibration: existing,
@@ -38,7 +38,7 @@ module CompletionKit
 
     private
 
-    def render_calibration(calibration:, pending_verdict: nil, error: nil, status: :ok)
+    def render_calibration(calibration:, pending_verdict: nil, error: nil, just_saved: false, status: :ok)
       locals = {
         review: review_for_metric,
         calibration: calibration,
@@ -46,7 +46,8 @@ module CompletionKit
         response_row: @response,
         metric: @metric,
         pending_verdict: pending_verdict,
-        error: error
+        error: error,
+        just_saved: just_saved
       }
       render turbo_stream: turbo_stream.replace(
         "calibration_#{@response.id}_#{@metric.id}",
