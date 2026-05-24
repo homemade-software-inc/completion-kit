@@ -5303,6 +5303,9 @@ a.tag-mark {
   font-size: 0.78rem;
 }
 .ck-calibration__others-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--ck-accent);
   font-weight: 500;
   cursor: pointer;
@@ -5314,12 +5317,12 @@ a.tag-mark {
   color: var(--ck-accent-hover);
 }
 .ck-calibration__others-summary::-webkit-details-marker { display: none; }
-.ck-calibration__others-summary::before {
-  content: "▸ ";
-  display: inline-block;
+.ck-calibration__others-summary svg {
+  width: 12px;
+  height: 12px;
   transition: transform 0.15s;
 }
-.ck-calibration__others[open] .ck-calibration__others-summary::before {
+.ck-calibration__others[open] .ck-calibration__others-summary svg {
   transform: rotate(90deg);
 }
 .ck-calibration__others-list {
@@ -5331,11 +5334,7 @@ a.tag-mark {
   gap: 6px;
 }
 .ck-calibration__others-item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
-  padding: 6px 10px;
+  padding: 8px 10px;
   background: var(--ck-surface-soft);
   border: 1px solid var(--ck-line);
   border-radius: 4px;
@@ -5344,6 +5343,13 @@ a.tag-mark {
 .ck-calibration__others-item--agree { border-left: 2px solid var(--ck-success); }
 .ck-calibration__others-item--disagree { border-left: 2px solid var(--ck-danger); }
 .ck-calibration__others-item--borderline { border-left: 2px solid var(--ck-warning); }
+.ck-calibration__others-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  line-height: 1;
+}
 .ck-calibration__others-verdict {
   display: inline-flex;
   align-items: center;
@@ -5359,13 +5365,16 @@ a.tag-mark {
 .ck-calibration__others-by {
   color: var(--ck-muted);
 }
-.ck-calibration__others-score {
-  color: var(--ck-text);
-  font-weight: 500;
+.ck-calibration__others-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
+.ck-calibration__others-stars svg { display: block; }
 .ck-calibration__others-note {
-  flex: 1 1 100%;
+  margin: 6px 0 0;
   color: var(--ck-dim);
+  line-height: 1.5;
 }
 .ck-calibration__meta-link svg {
   display: inline-block;

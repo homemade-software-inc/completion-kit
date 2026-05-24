@@ -43,20 +43,29 @@
 
   <% if other_calibrations.any? %>
     <details class="ck-calibration__others">
-      <summary class="ck-calibration__others-summary">What others said (<%= other_calibrations.size %>)</summary>
+      <summary class="ck-calibration__others-summary">
+        <%= heroicon_tag "chevron-right", variant: :outline, size: 14, "aria-hidden": "true" %>
+        <span>What others said (<%= other_calibrations.size %>)</span>
+      </summary>
       <ul class="ck-calibration__others-list">
         <% other_calibrations.each do |other| %>
           <li class="ck-calibration__others-item ck-calibration__others-item--<%= other.verdict %>">
-            <span class="ck-calibration__others-verdict">
-              <%= heroicon_tag verdict_icons[other.verdict], variant: :outline, size: 14, "aria-hidden": "true" %>
-              <%= other.verdict %>
-            </span>
-            <span class="ck-calibration__others-by"><%= other.created_by %></span>
-            <% if other.corrected_score %>
-              <span class="ck-calibration__others-score">scored <%= other.corrected_score.to_i %></span>
-            <% end %>
+            <div class="ck-calibration__others-row">
+              <span class="ck-calibration__others-verdict">
+                <%= heroicon_tag verdict_icons[other.verdict], variant: :outline, size: 14, "aria-hidden": "true" %>
+                <%= other.verdict %>
+              </span>
+              <span class="ck-calibration__others-by"><%= other.created_by %></span>
+              <% if other.corrected_score %>
+                <span class="ck-calibration__others-stars" aria-label="<%= pluralize(other.corrected_score.to_i, 'star') %>" title="<%= pluralize(other.corrected_score.to_i, 'star') %>">
+                  <% 5.times do |i| %>
+                    <svg viewBox="0 0 24 24" width="12" height="12" stroke-width="1.75" class="ck-star <%= i < other.corrected_score.to_i ? "ck-star--filled" : "ck-star--empty" %>" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <% end %>
+                </span>
+              <% end %>
+            </div>
             <% if other.note.to_s.present? %>
-              <span class="ck-calibration__others-note">"<%= other.note.to_s.truncate(140) %>"</span>
+              <p class="ck-calibration__others-note">"<%= other.note.to_s.truncate(140) %>"</p>
             <% end %>
           </li>
         <% end %>
