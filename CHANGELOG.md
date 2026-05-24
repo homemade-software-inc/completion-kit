@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.42] - 2026-05-24
+
+### Added
+
+- **Starter metrics**. (#56) Five preconfigured rubrics — Correctness, Instruction following, Format compliance, Tone, Conciseness — surfaced as cards on the metrics index. Empty-state `/metrics` leads with the starter grid; populated `/metrics` gets an "Add a starter metric" row at the bottom showing whichever starters aren't already adopted or dismissed. Click a card to land on a preview page (name, what-this-catches, judge instruction, full 1–5 rubric); one click adopts it and redirects to the new metric's show page. Per-deployment dismissals via a new `completion_kit_starter_metric_dismissals` table (unique on `starter_key`, tenant-scoped automatically).
+
 ## [0.5.41] - 2026-05-24
 
 ### Changed
