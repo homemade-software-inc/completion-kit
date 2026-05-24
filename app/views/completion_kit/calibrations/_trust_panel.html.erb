@@ -1,10 +1,15 @@
 <% stats = local_assigns[:stats] %>
-<div class="ck-trust-panel ck-trust-panel--<%= stats.gate %>">
+<div class="ck-trust-panel ck-trust-panel--<%= stats.gate %><%= ' ck-trust-panel--unknown' if stats.sample_size.zero? %>">
   <p class="ck-trust-panel__label" title="How often this metric's scores match the humans who reviewed them.">Trust level</p>
-  <% if stats.counter_only? %>
+  <% if stats.sample_size.zero? %>
+    <div class="ck-trust-panel__body">
+      <span class="ck-trust-panel__unknown">Unknown</span>
+      <span class="ck-trust-panel__hint">Give a verdict on any scored row to start scoring this judge.</span>
+    </div>
+  <% elsif stats.counter_only? %>
     <div class="ck-trust-panel__body">
       <span class="ck-trust-panel__counter"><%= stats.sample_size %><span class="ck-trust-panel__counter-of">/ <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %></span></span>
-      <span class="ck-trust-panel__hint">verdicts so far<% if stats.short_to_target > 0 %> · <%= stats.short_to_target %> more before we can score the judge<% end %></span>
+      <span class="ck-trust-panel__hint"><%= pluralize(stats.sample_size, "verdict") %> so far<% if stats.short_to_target > 0 %> · <%= stats.short_to_target %> more before we can score the judge<% end %></span>
     </div>
   <% else %>
     <div class="ck-trust-panel__body">

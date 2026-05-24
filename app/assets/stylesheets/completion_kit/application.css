@@ -3967,6 +3967,28 @@ table.ck-runs-table {
   transform: none;
 }
 
+.ck-info-hint {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+  color: var(--ck-dim);
+  cursor: help;
+}
+.ck-info-hint:hover,
+.ck-info-hint:focus-visible {
+  color: var(--ck-text);
+}
+.ck-info-hint:hover .ck-info-popup,
+.ck-info-hint:focus-within .ck-info-popup {
+  display: block;
+}
+.ck-info-hint svg {
+  width: 14px;
+  height: 14px;
+}
+
 .ck-suggest-reasoning {
   margin: 1.5rem 0;
   padding: 1.25rem 1.5rem;
@@ -5360,6 +5382,35 @@ a.tag-mark {
 .ck-trust-panel__borderline--ok { color: var(--ck-dim); }
 .ck-trust-panel__borderline--warning { color: var(--ck-warning); }
 .ck-trust-panel__borderline--danger { color: var(--ck-danger); }
+
+.ck-trust-panel__unknown {
+  font-family: var(--ck-mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
+}
+.ck-trust-panel--unknown .ck-trust-panel__hint {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 640px) {
+  .ck-trust-panel {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .ck-trust-panel__body {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .ck-trust-panel__hint {
+    line-height: 1.4;
+    white-space: normal;
+  }
+}
 
 .ck-disagreements-table td .ck-meta-copy {
   font-size: 0.78rem;

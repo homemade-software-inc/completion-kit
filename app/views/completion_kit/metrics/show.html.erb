@@ -80,7 +80,7 @@
 <% end %>
 
 <section class="ck-card ck-card--spaced">
-  <p class="ck-kicker">Rubric</p>
+  <p class="ck-kicker">Rubric<%= render "completion_kit/metrics/rubric_hint" %></p>
   <div class="ck-rubric-display">
     <% @metric.rubric_bands_for_form.each do |band| %>
       <div class="ck-rubric-row ck-rubric-row--display">
