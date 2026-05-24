@@ -35,18 +35,18 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     expect(cal.note).to eq("rubric ambiguous")
   end
 
-  it "renders the slider + note inputs after a disagree verdict is saved" do
-    post base_path, params: { metric_id: metric.id, verdict: "disagree", corrected_score: 2.5, note: "off" },
+  it "renders the star picker + note inputs after a disagree verdict is saved" do
+    post base_path, params: { metric_id: metric.id, verdict: "disagree", corrected_score: 2, note: "off" },
                      headers: { "Accept" => "text/vnd.turbo-stream.html" }
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include('type="range"')
+    expect(response.body).to include('class="ck-star-picker"')
     expect(response.body).to include('name="corrected_score"')
   end
 
   it "renders just the note field after a borderline verdict is saved" do
     post base_path, params: { metric_id: metric.id, verdict: "borderline" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     expect(response.body).to include('placeholder="What made this borderline?')
-    expect(response.body).not_to include('type="range"')
+    expect(response.body).not_to include('class="ck-star-picker"')
   end
 
   it "shows the verdict counter after at least one verdict is collected" do
@@ -71,7 +71,7 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     expect(response).to have_http_status(:ok)
     expect(CompletionKit::Calibration.count).to eq(0)
     expect(response.body).to include("What should the score have been?")
-    expect(response.body).to include('type="range"')
+    expect(response.body).to include('class="ck-star-picker"')
     expect(response.body).to include('name="corrected_score"')
     expect(response.body).to include('aria-pressed="true"')
   end

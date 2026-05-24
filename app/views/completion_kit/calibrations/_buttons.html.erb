@@ -37,22 +37,27 @@
   <% end %>
 
   <% if active_verdict == "disagree" %>
+    <% existing_score = (calibration&.corrected_score || review&.ai_score)&.round %>
     <%= form_with url: run_response_calibrations_path(run, response_row),
                   method: :post, local: false,
                   class: "ck-calibration__detail" do |f| %>
       <%= hidden_field_tag :metric_id, metric.id %>
       <%= hidden_field_tag :verdict, "disagree" %>
-      <label class="ck-label">
-        What should the score have been?
-        <span class="ck-calibration__value" data-calibration-value><%= calibration&.corrected_score || review&.ai_score || 3 %></span>
-      </label>
-      <input type="range" name="corrected_score" min="1" max="5" step="0.5"
-             value="<%= calibration&.corrected_score || review&.ai_score || 3 %>"
-             oninput="this.closest('.ck-calibration__detail').querySelector('[data-calibration-value]').textContent = this.value"
-             class="ck-slider"
-             required>
+      <p class="ck-label">What should the score have been?</p>
+      <fieldset class="ck-star-picker">
+        <legend class="ck-visually-hidden">Pick a score from 1 to 5 stars</legend>
+        <div class="ck-star-picker__row">
+          <% [5, 4, 3, 2, 1].each do |n| %>
+            <% radio_id = "ck-star-#{response_row.id}-#{metric.id}-#{n}" %>
+            <input type="radio" name="corrected_score" id="<%= radio_id %>" value="<%= n %>" <%= "checked" if existing_score == n %> required>
+            <label for="<%= radio_id %>" title="<%= pluralize(n, 'star') %>" aria-label="<%= pluralize(n, 'star') %>">
+              <svg viewBox="0 0 24 24" width="28" height="28" stroke-width="1.5" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </label>
+          <% end %>
+        </div>
+      </fieldset>
       <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="Why? (optional)"><%= calibration&.note %></textarea>
-      <%= f.submit (current_verdict == "disagree" ? "Update" : "Save disagree"), class: ck_button_classes(:dark) %>
+      <%= f.submit "Save", class: ck_button_classes(:dark) %>
     <% end %>
   <% elsif active_verdict == "borderline" %>
     <%= form_with url: run_response_calibrations_path(run, response_row),
@@ -61,7 +66,7 @@
       <%= hidden_field_tag :metric_id, metric.id %>
       <%= hidden_field_tag :verdict, "borderline" %>
       <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="What made this borderline? (optional)"><%= calibration&.note %></textarea>
-      <%= f.submit (current_verdict == "borderline" ? "Update" : "Save"), class: ck_button_classes(:dark) %>
+      <%= f.submit "Save", class: ck_button_classes(:dark) %>
     <% end %>
   <% end %>
 </div>

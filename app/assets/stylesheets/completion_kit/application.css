@@ -5241,14 +5241,20 @@ a.tag-mark {
 .ck-calibration__pill--disagree:hover { border-color: rgba(248, 113, 113, 0.45); color: var(--ck-danger); }
 .ck-calibration__pill--borderline:hover { border-color: rgba(224, 164, 88, 0.45); color: var(--ck-warning); }
 .ck-calibration__detail {
-  margin-top: 12px;
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
+  gap: 14px;
+  padding: 16px;
   background: var(--ck-surface-soft);
   border: 1px solid var(--ck-line);
   border-radius: 6px;
+}
+.ck-calibration__detail > * {
+  margin: 0;
+}
+.ck-calibration__detail .ck-button {
+  align-self: flex-start;
 }
 .ck-calibration__value {
   color: var(--ck-accent);
@@ -5429,4 +5435,50 @@ a.tag-mark {
   border-radius: 4px;
   color: var(--ck-danger);
   font-size: 0.82rem;
+}
+
+.ck-star-picker {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.ck-star-picker__row {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  gap: 2px;
+}
+.ck-star-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.ck-star-picker label {
+  cursor: pointer;
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 4px;
+}
+.ck-star-picker label svg {
+  fill: transparent;
+  stroke: var(--ck-line-strong);
+  transition: fill 0.08s, stroke 0.08s;
+}
+.ck-star-picker input:checked ~ label svg {
+  fill: var(--ck-warning);
+  stroke: var(--ck-warning);
+}
+.ck-star-picker__row:hover label svg {
+  fill: transparent;
+  stroke: var(--ck-line-strong);
+}
+.ck-star-picker__row:hover label:hover svg,
+.ck-star-picker__row:hover label:hover ~ label svg {
+  fill: var(--ck-warning);
+  stroke: var(--ck-warning);
+}
+.ck-star-picker input:focus-visible + label {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 2px;
 }
