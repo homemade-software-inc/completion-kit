@@ -2,7 +2,6 @@
   <div>
     <p class="ck-kicker">Starter metric</p>
     <h1 class="ck-title"><%= @starter.name %></h1>
-    <p class="ck-lead"><%= @starter.description %></p>
   </div>
   <div class="ck-actions">
     <%= link_to "← Back to metrics", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
@@ -10,12 +9,13 @@
 </section>
 
 <section class="ck-card ck-card--spaced">
-  <p class="ck-kicker">What this catches</p>
+  <p class="ck-kicker">Why use this</p>
+  <p class="ck-copy"><strong><%= @starter.description %></strong></p>
   <p class="ck-copy"><%= @starter.catches %></p>
 </section>
 
 <section class="ck-card ck-card--spaced">
-  <p class="ck-kicker">Instruction the judge will see</p>
+  <p class="ck-kicker">Judge instruction</p>
   <p class="ck-copy"><%= @starter.instruction %></p>
 </section>
 
@@ -37,9 +37,9 @@
   </div>
 </section>
 
-<div class="ck-actions ck-actions--right">
+<div class="ck-starter-actions">
   <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline) %>
-  <%= button_to "Add this metric", adopt_starter_metrics_path(key: @starter.key),
+  <%= button_to "Add #{@starter.name} to my metrics", adopt_starter_metrics_path(key: @starter.key),
         method: :post, form_class: "inline-block",
         class: ck_button_classes(:dark) %>
 </div>

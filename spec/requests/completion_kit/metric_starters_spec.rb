@@ -42,14 +42,14 @@ RSpec.describe "CompletionKit starter metrics", type: :request do
   end
 
   describe "GET /metrics/starters/:key" do
-    it "renders the preview with name, what-this-catches, instruction, and rubric bands" do
+    it "renders the preview with name, why-use-this, judge instruction, and rubric bands" do
       get "/completion_kit/metrics/starters/correctness"
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Correctness")
-      expect(response.body).to include("What this catches")
-      expect(response.body).to include("Instruction the judge will see")
+      expect(response.body).to include("Why use this")
+      expect(response.body).to include("Judge instruction")
       expect(response.body).to include("Every fact in the output checks out.")
-      expect(response.body).to include("Add this metric")
+      expect(response.body).to include("Add Correctness to my metrics")
       expect(response.body).to include("Cancel")
     end
 

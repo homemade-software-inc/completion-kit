@@ -5559,45 +5559,73 @@ a.tag-mark {
 }
 .ck-starter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
 }
 .ck-starter-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 14px;
-  background: var(--ck-surface);
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--ck-surface-soft);
   border: 1px solid var(--ck-line);
-  border-radius: var(--ck-radius-lg);
-  transition: border-color 0.12s, background 0.12s;
+  border-radius: 6px;
+  color: var(--ck-text);
+  text-decoration: none;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
 }
-.ck-starter-card:hover {
-  border-color: rgba(6, 182, 212, 0.35);
+.ck-starter-card:hover,
+.ck-starter-card:focus-visible {
+  border-color: rgba(6, 182, 212, 0.45);
   background: var(--ck-surface-hover);
+}
+.ck-starter-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .ck-starter-card__name {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: var(--ck-mono);
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
 }
 .ck-starter-card__desc {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: var(--ck-muted);
   line-height: 1.45;
-  flex: 1;
 }
-.ck-starter-card__actions {
+.ck-starter-card__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 4px;
+}
+.ck-starter-card__cta {
+  font-family: var(--ck-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ck-accent);
+}
+.ck-starter-card:hover .ck-starter-card__cta {
+  color: var(--ck-accent-hover);
+}
+.ck-starter-card__dismiss-form {
+  margin: 0;
 }
 .ck-starter-card__dismiss {
-  font-size: 0.75rem;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-family: var(--ck-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--ck-dim);
+  cursor: pointer;
 }
 .ck-starter-card__dismiss:hover,
 .ck-starter-card__dismiss:focus-visible {
@@ -5605,4 +5633,18 @@ a.tag-mark {
 }
 .ck-actions--right {
   justify-content: flex-end;
+}
+
+.ck-starter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 1.5rem;
+}
+.ck-starter-actions form.inline-block {
+  margin: 0;
+}
+.ck-starter-actions .ck-button {
+  line-height: 1;
 }

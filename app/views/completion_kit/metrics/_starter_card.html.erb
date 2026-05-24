@@ -1,11 +1,15 @@
-<article class="ck-starter-card">
-  <h3 class="ck-starter-card__name"><%= link_to starter.name, starter_preview_metrics_path(key: starter.key), class: "ck-link" %></h3>
-  <p class="ck-starter-card__desc"><%= starter.description %></p>
-  <div class="ck-starter-card__actions">
-    <%= link_to "Preview", starter_preview_metrics_path(key: starter.key), class: ck_button_classes(:dark) + " ck-button--sm" %>
-    <%= button_to "Don't show this one", dismiss_starter_metrics_path(key: starter.key),
-          method: :post, form_class: "inline-block",
-          class: "ck-link ck-starter-card__dismiss",
+<%= link_to starter_preview_metrics_path(key: starter.key), class: "ck-starter-card" do %>
+  <div class="ck-starter-card__body">
+    <p class="ck-starter-card__name"><strong><%= starter.name %></strong></p>
+    <p class="ck-starter-card__desc"><%= starter.description %></p>
+  </div>
+  <div class="ck-starter-card__foot">
+    <span class="ck-starter-card__cta">Preview →</span>
+    <%= button_to "dismiss", dismiss_starter_metrics_path(key: starter.key),
+          method: :post,
+          form: { onclick: "event.stopPropagation();" },
+          form_class: "inline-block ck-starter-card__dismiss-form",
+          class: "ck-starter-card__dismiss",
           data: { turbo_confirm: "Hide \"#{starter.name}\" from this list?" } %>
   </div>
-</article>
+<% end %>
