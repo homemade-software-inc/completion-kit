@@ -421,4 +421,92 @@ metric_tags.each do |metric_name, names|
   CompletionKit::Metric.find_by(name: metric_name)&.update!(tag_names: names)
 end
 
-puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews, #{CompletionKit::Tag.count} tags"
+seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
+  metric = CompletionKit::Metric.find_by!(name: metric_name)
+  jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+  reviewed_responses = CompletionKit::Response.joins(:reviews)
+    .where(reviews: { metric_id: metric.id })
+    .where.not(reviews: { ai_score: nil })
+    .distinct.to_a
+  next if reviewed_responses.empty?
+
+  total = agree + disagree + borderline
+  total.times do |i|
+    resp = reviewed_responses[i % reviewed_responses.size]
+    operator = "operator_#{(i / reviewed_responses.size) + 1}"
+    verdict = if i < agree
+                "agree"
+              elsif i < agree + disagree
+                "disagree"
+              else
+                "borderline"
+              end
+
+    next if CompletionKit::Calibration.exists?(response_id: resp.id, metric_id: metric.id, created_by: operator)
+
+    attrs = { run: resp.run, response: resp, metric: metric, judge_version: jv, verdict: verdict, created_by: operator }
+    if verdict == "disagree"
+      live = resp.reviews.find_by(metric_id: metric.id)
+      attrs[:corrected_score] = ((live&.ai_score || 3.0) - 1).clamp(1, 5)
+      attrs[:note] = "Judge was a star too generous here."
+    elsif verdict == "borderline"
+      attrs[:note] = "Rubric was ambiguous between two bands."
+    end
+    CompletionKit::Calibration.create!(attrs)
+  end
+end
+
+seed_calibrations.call(metric_name: "Tone",                agree: 3,  disagree: 1,  borderline: 0)
+seed_calibrations.call(metric_name: "Accuracy",            agree: 11, disagree: 3,  borderline: 4)
+seed_calibrations.call(metric_name: "Confidence",          agree: 28, disagree: 3,  borderline: 1)
+seed_calibrations.call(metric_name: "Urgency Calibration", agree: 5,  disagree: 2,  borderline: 5)
+
+accuracy_metric = CompletionKit::Metric.find_by!(name: "Accuracy")
+pinned = CompletionKit::Calibration.where(metric_id: accuracy_metric.id, verdict: "disagree").first
+if pinned && Array(accuracy_metric.few_shot_examples).none? { |fs| fs["calibration_id"] == pinned.id }
+  resp = pinned.response
+  review = resp.reviews.find_by(metric_id: accuracy_metric.id)
+  examples = Array(accuracy_metric.few_shot_examples)
+  examples << {
+    "input" => resp.input_data.to_s.truncate(2000),
+    "response" => resp.response_text.to_s.truncate(2000),
+    "judge_score" => review&.ai_score&.to_f,
+    "judge_feedback" => review&.ai_feedback.to_s.truncate(1000),
+    "human_score" => pinned.corrected_score&.to_f,
+    "human_note" => pinned.note.to_s.truncate(1000),
+    "calibration_id" => pinned.id,
+    "added_at" => Time.current.utc.iso8601
+  }
+  accuracy_metric.update!(few_shot_examples: examples)
+end
+
+if CompletionKit::JudgeVersion.drafts.where(metric_id: accuracy_metric.id, source: "suggestion").none?
+  CompletionKit::JudgeVersion.create!(
+    metric: accuracy_metric,
+    instruction: "Are the factual claims and policy statements in the reply correct, and grounded in the ticket plus known company facts? Flag any invented policy, price, deadline, or product feature. Soft claims that could mislead also count against the score.",
+    rubric_bands: [
+      { "stars" => 5, "description" => "Every factual claim is verifiable and explicitly grounded in the ticket. Policies and numbers cited are real and exact." },
+      { "stars" => 4, "description" => "One minor embellishment or slightly soft claim, but nothing that would mislead the customer." },
+      { "stars" => 3, "description" => "Mostly accurate but includes one detail that's questionable (e.g. cites a feature with the wrong limit, references a policy loosely)." },
+      { "stars" => 2, "description" => "Multiple inaccuracies or invented details that could cause material confusion or future complaints." },
+      { "stars" => 1, "description" => "Contradicts ticket facts, invents policies that don't exist, or commits the company to something it can't deliver." }
+    ],
+    state: "draft",
+    source: "suggestion",
+    current: false
+  )
+end
+
+helpfulness_metric = CompletionKit::Metric.find_by!(name: "Helpfulness")
+if CompletionKit::JudgeVersion.drafts.where(metric_id: helpfulness_metric.id, source: "edit").none?
+  CompletionKit::JudgeVersion.create!(
+    metric: helpfulness_metric,
+    instruction: "Does the reply move the case forward in one round-trip? It should resolve the question, propose a concrete next step the customer can act on, or both. Replies that defer, ask for information already in the ticket, or commit to nothing don't count as helpful.",
+    rubric_bands: helpfulness_metric.rubric_bands,
+    state: "draft",
+    source: "edit",
+    current: false
+  )
+end
+
+puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews, #{CompletionKit::Tag.count} tags, #{CompletionKit::Calibration.count} calibrations, #{CompletionKit::JudgeVersion.drafts.count} draft judge versions"
