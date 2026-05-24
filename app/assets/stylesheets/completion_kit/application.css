@@ -2819,6 +2819,14 @@ select.ck-input {
     width: 100%;
   }
 
+  .ck-actions form,
+  .ck-actions form.inline-block,
+  .ck-toolbar form,
+  .ck-toolbar form.inline-block {
+    width: 100%;
+    display: block;
+  }
+
   /* Page header stacks: title, then lead text full-width, then action. */
   .ck-page-header {
     flex-direction: column;
