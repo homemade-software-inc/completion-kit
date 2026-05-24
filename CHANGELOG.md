@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.41] - 2026-05-24
+
+### Changed
+
+- **Disagreements list, not a table.** The "Where the judge got it wrong" table was overflowing across columns at common viewport widths (run name pushing into the judge score, arrow column crashing into group pills on the metric index). Replaced with a list of cards: one card per disagreement, `Judge [N] → Human [N]` row, note paragraph, small "run · row #N" link footer. No more column squeeze.
+- **Softer copy across the calibration surfaces.** Section renamed to **Cases to learn from**. "Teach the judge" button → **Remember this**. Pinned-state chip → **Remembered**. "Teaching examples" section → **What the judge remembers**. Save-flash → "Got it. The judge will remember this next time it grades."
+- **Empty disagreements section disappears.** No more "nothing here yet" card; the whole section is hidden until there's at least one disagreement to look at.
+- **Metric index folds Trust level into the Name column.** Was a 5th column that broke the table at common widths (In Groups header wrapping, row arrow overlapping group pills). Trust line now reads as a small dim mono line under the metric name. Table is back to Name / Instruction / In groups / arrow.
+
 ## [0.5.40] - 2026-05-24
 
 ### Changed
