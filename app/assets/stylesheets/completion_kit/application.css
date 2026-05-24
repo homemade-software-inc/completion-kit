@@ -4592,9 +4592,8 @@ a.tag-mark {
 }
 
 .ck-launch__progress {
-  padding-bottom: 1.5rem;
-  margin-bottom: 0.5rem;
-  border-bottom: 1px solid var(--ck-line);
+  padding-bottom: 0;
+  margin-bottom: 1.25rem;
 }
 .ck-launch__progress-head {
   display: flex;
