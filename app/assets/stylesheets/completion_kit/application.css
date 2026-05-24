@@ -2732,6 +2732,9 @@ select.ck-input {
   height: 16px;
 }
 
+.ck-metric-pip__sub {
+  color: var(--ck-dim);
+}
 .ck-metric-pip__label strong {
   font-weight: 700;
 }
@@ -3469,7 +3472,6 @@ select.ck-input {
 }
 .ck-tags-table__unused {
   color: var(--ck-dim);
-  font-style: italic;
 }
 
 .ck-mg-members {
@@ -5293,6 +5295,77 @@ a.tag-mark {
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+.ck-calibration__others {
+  margin: 10px 0 0;
+  font-family: var(--ck-mono);
+  font-size: 0.78rem;
+}
+.ck-calibration__others-summary {
+  color: var(--ck-accent);
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+.ck-calibration__others-summary:hover,
+.ck-calibration__others-summary:focus-visible {
+  color: var(--ck-accent-hover);
+}
+.ck-calibration__others-summary::-webkit-details-marker { display: none; }
+.ck-calibration__others-summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s;
+}
+.ck-calibration__others[open] .ck-calibration__others-summary::before {
+  transform: rotate(90deg);
+}
+.ck-calibration__others-list {
+  list-style: none;
+  padding: 8px 0 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ck-calibration__others-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--ck-surface-soft);
+  border: 1px solid var(--ck-line);
+  border-radius: 4px;
+  color: var(--ck-dim);
+}
+.ck-calibration__others-item--agree { border-left: 2px solid var(--ck-success); }
+.ck-calibration__others-item--disagree { border-left: 2px solid var(--ck-danger); }
+.ck-calibration__others-item--borderline { border-left: 2px solid var(--ck-warning); }
+.ck-calibration__others-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  color: var(--ck-text);
+}
+.ck-calibration__others-item--agree .ck-calibration__others-verdict { color: var(--ck-success); }
+.ck-calibration__others-item--disagree .ck-calibration__others-verdict { color: var(--ck-danger); }
+.ck-calibration__others-item--borderline .ck-calibration__others-verdict { color: var(--ck-warning); }
+.ck-calibration__others-by {
+  color: var(--ck-muted);
+}
+.ck-calibration__others-score {
+  color: var(--ck-text);
+  font-weight: 500;
+}
+.ck-calibration__others-note {
+  flex: 1 1 100%;
+  color: var(--ck-dim);
 }
 .ck-calibration__meta-link svg {
   display: inline-block;

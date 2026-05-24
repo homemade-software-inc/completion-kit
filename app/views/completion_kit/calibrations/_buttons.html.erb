@@ -3,11 +3,16 @@
   <% pending_verdict = local_assigns[:pending_verdict] %>
   <% active_verdict = pending_verdict || current_verdict %>
   <% error = local_assigns[:error] %>
-  <% verdict_count = CompletionKit::Calibration.where(response_id: response_row.id, metric_id: metric.id).count %>
+  <% me = CompletionKit.config.username.presence || "operator" %>
+  <% other_calibrations = CompletionKit::Calibration
+        .where(response_id: response_row.id, metric_id: metric.id)
+        .where.not(created_by: me)
+        .order(created_at: :asc).to_a %>
+  <% verdict_icons = { "agree" => "hand-thumb-up", "disagree" => "hand-thumb-down", "borderline" => "scale" } %>
   <p class="ck-calibration__prompt">
     <span class="ck-calibration__label">Your verdict</span>
-    <% if verdict_count > 0 %>
-      <span class="ck-calibration__meta"><%= pluralize(verdict_count, "verdict") %> on this score</span>
+    <% if other_calibrations.any? %>
+      <span class="ck-calibration__meta"><%= pluralize(other_calibrations.size, "other verdict") %> on this score</span>
       <span class="ck-calibration__sep">·</span>
     <% end %>
     <%= link_to metric_path(metric), class: "ck-calibration__meta-link" do %><%= heroicon_tag "shield-check", variant: :outline, "aria-hidden": "true" %>Trust level →<% end %>
@@ -34,6 +39,29 @@
 
   <% if error.present? %>
     <p class="ck-calibration__error" role="alert"><%= error %></p>
+  <% end %>
+
+  <% if other_calibrations.any? %>
+    <details class="ck-calibration__others">
+      <summary class="ck-calibration__others-summary">What others said (<%= other_calibrations.size %>)</summary>
+      <ul class="ck-calibration__others-list">
+        <% other_calibrations.each do |other| %>
+          <li class="ck-calibration__others-item ck-calibration__others-item--<%= other.verdict %>">
+            <span class="ck-calibration__others-verdict">
+              <%= heroicon_tag verdict_icons[other.verdict], variant: :outline, size: 14, "aria-hidden": "true" %>
+              <%= other.verdict %>
+            </span>
+            <span class="ck-calibration__others-by"><%= other.created_by %></span>
+            <% if other.corrected_score %>
+              <span class="ck-calibration__others-score">scored <%= other.corrected_score.to_i %></span>
+            <% end %>
+            <% if other.note.to_s.present? %>
+              <span class="ck-calibration__others-note">"<%= other.note.to_s.truncate(140) %>"</span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </details>
   <% end %>
 
   <% if active_verdict == "disagree" %>

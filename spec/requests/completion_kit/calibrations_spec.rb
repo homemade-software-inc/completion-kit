@@ -67,11 +67,22 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     expect(response.body).not_to include('class="ck-star-picker"')
   end
 
-  it "shows the verdict counter after at least one verdict is collected" do
+  it "shows the others' verdict counter and a 'What others said' disclosure when a different operator has verdicted this row" do
+    post base_path, params: { metric_id: metric.id, verdict: "disagree", corrected_score: 2.0, note: "off by one" },
+                     headers: { "Accept" => "text/vnd.turbo-stream.html", "HTTP_X_REMOTE_USER" => "alice" }
+    get "/completion_kit/runs/#{run.id}/responses/#{response_row.id}"
+    expect(response.body).to include("1 other verdict")
+    expect(response.body).to include("on this score")
+    expect(response.body).to include("What others said")
+    expect(response.body).to include("alice")
+    expect(response.body).to include("off by one")
+  end
+
+  it "does not show an others-counter when the only verdict on this row is the current operator's own" do
     post base_path, params: { metric_id: metric.id, verdict: "agree" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     get "/completion_kit/runs/#{run.id}/responses/#{response_row.id}"
-    expect(response.body).to include("1 verdict")
-    expect(response.body).to include("on this score")
+    expect(response.body).not_to include("other verdict")
+    expect(response.body).not_to include("What others said")
   end
 
   it "honors a remote-user header so different operators get their own row" do
