@@ -22,11 +22,11 @@
   </div>
   <div class="ck-actions">
     <% if CompletionKit.config.judge_calibration_enabled %>
-      <%= button_to "Suggest rewrites", suggest_variants_metric_path(@metric),
+      <%= button_to "Improve the metric", suggest_variants_metric_path(@metric),
             method: :post, form_class: "inline-block",
             class: ck_button_classes(:light, variant: :outline),
-            title: "Ask the model to rewrite this judge instruction based on the disagreements collected so far.",
-            data: { turbo_confirm: "Ask the model to rewrite this judge instruction based on the disagreements collected so far?" } %>
+            title: "Ask the model to rewrite this metric's instruction based on the disagreements collected so far.",
+            data: { turbo_confirm: "Ask the model to rewrite this metric's instruction based on the disagreements collected so far?" } %>
     <% end %>
     <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
   </div>
@@ -134,10 +134,10 @@
   <% if @suggestion_drafts.any? %>
     <section class="ck-card ck-card--spaced">
       <div class="ck-prompt-preview__header">
-        <p class="ck-kicker">Suggested rewrites</p>
+        <p class="ck-kicker">Suggested improvements</p>
         <span class="ck-chip"><%= @suggestion_drafts.size %> option<%= @suggestion_drafts.size == 1 ? "" : "s" %></span>
       </div>
-      <p class="ck-meta-copy">The model wrote these alternate instructions based on the disagreements above. Pick one to make it the live judge — the previous version is kept in history.</p>
+      <p class="ck-meta-copy">Based on your verdicts, the model proposed these alternative instructions for this metric. Pick one to make it live — the previous version stays in history.</p>
       <div class="ck-suggestion-list">
         <% @suggestion_drafts.each do |draft| %>
           <article class="ck-suggestion-card">
