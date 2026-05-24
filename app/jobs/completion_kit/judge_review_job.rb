@@ -57,6 +57,7 @@ module CompletionKit
         run.prompt&.template,
         criteria: metric.instruction.to_s,
         rubric_text: metric.display_rubric_text,
+        human_examples: few_shot_payload(metric),
         input_data: response.input_data
       )
 
@@ -118,6 +119,16 @@ module CompletionKit
       response_id = @response_id || arguments.first
       response = Response.find_by(id: response_id)
       RunCompletionCheckJob.perform_later(response.run_id) if response
+    end
+
+    def few_shot_payload(metric)
+      Array(metric.few_shot_examples).map do |fs|
+        {
+          human_score: fs["human_score"],
+          response_text: fs["response"].to_s,
+          human_note: fs["human_note"].to_s
+        }
+      end
     end
   end
 end

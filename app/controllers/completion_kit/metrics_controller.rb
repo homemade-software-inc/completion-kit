@@ -1,7 +1,7 @@
 module CompletionKit
   class MetricsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot, :publish_draft, :suggest_variants, :dismiss_suggestion]
+    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot, :remove_few_shot, :publish_draft, :suggest_variants, :dismiss_suggestion]
 
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
@@ -137,6 +137,13 @@ module CompletionKit
       }
       @metric.update!(few_shot_examples: examples)
       redirect_to metric_path(@metric), notice: "Got it. The judge will remember this next time it grades."
+    end
+
+    def remove_few_shot
+      cal_id = params[:calibration_id].to_i
+      remaining = Array(@metric.few_shot_examples).reject { |fs| fs["calibration_id"].to_i == cal_id }
+      @metric.update!(few_shot_examples: remaining)
+      redirect_to metric_path(@metric), notice: "Forgotten. The judge won't see this case next time."
     end
 
     private

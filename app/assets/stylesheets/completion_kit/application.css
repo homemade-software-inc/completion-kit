@@ -5714,6 +5714,16 @@ a.tag-mark {
   flex-direction: column;
   gap: 8px;
 }
+.ck-disagreement--remembered {
+  border-color: rgba(45, 212, 168, 0.35);
+  background: rgba(45, 212, 168, 0.04);
+}
+.ck-disagreement__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 .ck-disagreement__head {
   display: flex;
   align-items: center;

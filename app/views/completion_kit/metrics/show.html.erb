@@ -154,13 +154,13 @@
       <p class="ck-kicker">Cases to learn from</p>
       <span class="ck-chip"><%= pluralize(@disagreements.size, "row") %></span>
     </div>
-    <p class="ck-meta-copy">Rows where a reviewer's score didn't match the judge's. Pin useful ones with <strong>Remember this</strong> — the judge sees them next time it grades.</p>
+    <p class="ck-meta-copy">Rows where a reviewer's score didn't match the judge's. Pin useful ones with <strong>Remember this</strong> so the judge sees them next time it grades.</p>
     <% existing_ids = Array(@metric.few_shot_examples).map { |fs| fs["calibration_id"] } %>
     <ul class="ck-disagreement-list">
       <% @disagreements.each do |cal| %>
         <% review = cal.response.reviews.find { |r| r.metric_id == @metric.id } %>
         <% already = existing_ids.include?(cal.id) %>
-        <li class="ck-disagreement">
+        <li class="ck-disagreement<%= " ck-disagreement--remembered" if already %>">
           <div class="ck-disagreement__head">
             <div class="ck-disagreement__scores">
               <span class="ck-disagreement__scores-label">Judge</span>
@@ -179,7 +179,14 @@
             </div>
             <div class="ck-disagreement__action">
               <% if already %>
-                <span class="ck-chip ck-chip--done">Remembered</span>
+                <span class="ck-chip ck-chip--done" title="The judge sees this row when it grades for this metric.">Remembered</span>
+                <%= button_to "Forget",
+                      remove_few_shot_metric_path(@metric, calibration_id: cal.id),
+                      method: :delete,
+                      form_class: "inline-block",
+                      class: ck_button_classes(:light, variant: :outline),
+                      title: "Stop showing this row to the judge.",
+                      data: { turbo_confirm: "Stop showing this row to the judge?" } %>
               <% else %>
                 <%= button_to "Remember this",
                       add_few_shot_metric_path(@metric, calibration_id: cal.id),
@@ -202,34 +209,4 @@
       <% end %>
     </ul>
   </section>
-
-
-  <% if Array(@metric.few_shot_examples).any? %>
-    <section class="ck-card ck-card--spaced">
-      <div class="ck-prompt-preview__header">
-        <p class="ck-kicker">What the judge remembers</p>
-        <span class="ck-chip"><%= pluralize(Array(@metric.few_shot_examples).size, "case") %></span>
-      </div>
-      <p class="ck-meta-copy">Rows you've pinned so the judge sees them next time it grades. Each one shows what the judge gave and what a human said it should have been.</p>
-      <ol class="ck-few-shot-list">
-        <% Array(@metric.few_shot_examples).each do |fs| %>
-          <li class="ck-few-shot-item">
-            <div class="ck-few-shot-item__scores">
-              <span class="ck-meta-copy">judge said</span>
-              <% if fs["judge_score"] %>
-                <span class="<%= ck_badge_classes(ck_score_kind(fs["judge_score"].to_f)) %>"><%= fs["judge_score"] %></span>
-              <% end %>
-              <span class="ck-meta-copy">human said</span>
-              <% if fs["human_score"] %>
-                <span class="<%= ck_badge_classes(ck_score_kind(fs["human_score"].to_f)) %>"><%= fs["human_score"] %></span>
-              <% end %>
-            </div>
-            <% if fs["human_note"].to_s.present? %>
-              <p class="ck-copy"><%= fs["human_note"] %></p>
-            <% end %>
-          </li>
-        <% end %>
-      </ol>
-    </section>
-  <% end %>
 <% end %>

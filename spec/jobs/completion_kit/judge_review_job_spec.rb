@@ -57,6 +57,28 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     expect(bare_response.reviews.find_by(metric_id: metric.id).status).to eq("succeeded")
   end
 
+  it "passes the metric's pinned few-shot examples to the judge as human_examples" do
+    metric.update!(few_shot_examples: [
+      { "human_score" => 4.0, "response" => "good answer", "human_note" => "fine" },
+      { "human_score" => 1.0, "response" => "wrong answer", "human_note" => "off" }
+    ])
+    captured_examples = :unset
+    fake_judge = double("judge")
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+    allow(fake_judge).to receive(:evaluate) do |*_args, human_examples: nil, **_kw|
+      captured_examples = human_examples
+      { score: 3, feedback: "ok" }
+    end
+
+    described_class.perform_now(response.id, metric.id)
+
+    expect(captured_examples).to eq([
+      { human_score: 4.0, response_text: "good answer", human_note: "fine" },
+      { human_score: 1.0, response_text: "wrong answer", human_note: "off" }
+    ])
+  end
+
   it "records terminal failure context" do
     allow_any_instance_of(described_class).to receive(:perform).and_raise(
       CompletionKit::RateLimitError.new("limit", provider: "anthropic", status: 429)

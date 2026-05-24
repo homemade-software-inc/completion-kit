@@ -39,7 +39,8 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       cal = add_disagree_calibration(r1, corrected: 3.0)
       metric.update!(few_shot_examples: [{ "calibration_id" => cal.id }])
       get "/completion_kit/metrics/#{metric.id}"
-      expect(response.body).to include('ck-chip--done">Remembered')
+      expect(response.body).to include("ck-chip--done")
+      expect(response.body).to include(">Remembered<")
       expect(response.body).not_to include('value="Remember this"')
     end
 
@@ -99,6 +100,58 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       expect(example["human_score"]).to be_nil
       expect(example["judge_feedback"]).to eq("")
       expect(example["human_note"]).to eq("")
+    end
+  end
+
+  describe "DELETE remove_few_shot" do
+    it "drops the matching example from the metric's few_shot_examples and redirects with a flash" do
+      r1 = create(:completion_kit_response, run: run)
+      add_review(r1, ai_score: 5.0)
+      cal = add_disagree_calibration(r1, corrected: 3.0)
+      r2 = create(:completion_kit_response, run: run)
+      add_review(r2, ai_score: 4.0)
+      cal_other = add_disagree_calibration(r2, corrected: 2.0)
+      metric.update!(few_shot_examples: [
+        { "calibration_id" => cal.id, "human_score" => 3.0 },
+        { "calibration_id" => cal_other.id, "human_score" => 2.0 }
+      ])
+      delete "/completion_kit/metrics/#{metric.id}/remove_few_shot", params: { calibration_id: cal.id }
+      expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
+      follow_redirect!
+      expect(response.body).to include("Forgotten")
+      metric.reload
+      expect(metric.few_shot_examples.map { |fs| fs["calibration_id"] }).to eq([cal_other.id])
+    end
+
+    it "is a no-op when the calibration was never pinned" do
+      r1 = create(:completion_kit_response, run: run)
+      add_review(r1, ai_score: 5.0)
+      cal = add_disagree_calibration(r1, corrected: 3.0)
+      metric.update!(few_shot_examples: [{ "calibration_id" => cal.id }])
+      delete "/completion_kit/metrics/#{metric.id}/remove_few_shot", params: { calibration_id: 999_999 }
+      metric.reload
+      expect(metric.few_shot_examples.size).to eq(1)
+    end
+  end
+
+  describe "metric show 'Cases to learn from'" do
+    it "renders a Forget button on rows that have been pinned" do
+      r1 = create(:completion_kit_response, run: run)
+      add_review(r1, ai_score: 5.0)
+      cal = add_disagree_calibration(r1, corrected: 3.0)
+      metric.update!(few_shot_examples: [{ "calibration_id" => cal.id }])
+      get "/completion_kit/metrics/#{metric.id}"
+      expect(response.body).to include('value="Forget"')
+      expect(response.body).to include("ck-disagreement--remembered")
+    end
+
+    it "no longer renders a separate 'What the judge remembers' card" do
+      r1 = create(:completion_kit_response, run: run)
+      add_review(r1, ai_score: 5.0)
+      cal = add_disagree_calibration(r1, corrected: 3.0)
+      metric.update!(few_shot_examples: [{ "calibration_id" => cal.id }])
+      get "/completion_kit/metrics/#{metric.id}"
+      expect(response.body).not_to include("What the judge remembers")
     end
   end
 

@@ -19,7 +19,8 @@ CompletionKit::Engine.routes.draw do
       post "starters/:key/dismiss", to: "metrics#dismiss_starter", as: :dismiss_starter
     end
     member do
-      post :add_few_shot
+      post   :add_few_shot
+      delete :remove_few_shot
       post :publish_draft
       post :suggest_variants
       delete :dismiss_suggestion
