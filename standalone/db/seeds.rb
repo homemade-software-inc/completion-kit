@@ -480,33 +480,37 @@ if pinned && Array(accuracy_metric.few_shot_examples).none? { |fs| fs["calibrati
   accuracy_metric.update!(few_shot_examples: examples)
 end
 
-if CompletionKit::JudgeVersion.drafts.where(metric_id: accuracy_metric.id, source: "suggestion").none?
-  CompletionKit::JudgeVersion.create!(
-    metric: accuracy_metric,
-    instruction: "Are the factual claims and policy statements in the reply correct, and grounded in the ticket plus known company facts? Flag any invented policy, price, deadline, or product feature. Soft claims that could mislead also count against the score.",
-    rubric_bands: [
-      { "stars" => 5, "description" => "Every factual claim is verifiable and explicitly grounded in the ticket. Policies and numbers cited are real and exact." },
-      { "stars" => 4, "description" => "One minor embellishment or slightly soft claim, but nothing that would mislead the customer." },
-      { "stars" => 3, "description" => "Mostly accurate but includes one detail that's questionable (e.g. cites a feature with the wrong limit, references a policy loosely)." },
-      { "stars" => 2, "description" => "Multiple inaccuracies or invented details that could cause material confusion or future complaints." },
-      { "stars" => 1, "description" => "Contradicts ticket facts, invents policies that don't exist, or commits the company to something it can't deliver." }
-    ],
-    state: "draft",
-    source: "suggestion",
-    current: false
-  )
-end
+CompletionKit::JudgeVersion.drafts.where(metric_id: accuracy_metric.id, source: "suggestion").destroy_all
+CompletionKit::JudgeVersion.create!(
+  metric: accuracy_metric,
+  instruction: "Are the factual claims and policy statements in the reply correct, and grounded in the ticket plus known company facts? Flag any invented policy, price, deadline, or product feature. Soft claims that could mislead the customer also count against the score.",
+  rubric_bands: [
+    { "stars" => 5, "description" => "Every factual claim is explicitly grounded in the ticket or in known company facts. Numbers, dates, policies, and product behaviour are all verifiable and exact." },
+    { "stars" => 4, "description" => "One minor embellishment or slightly soft claim, but nothing that would mislead the customer." },
+    { "stars" => 3, "description" => "Mostly accurate but includes one detail that's questionable (e.g. cites a feature with the wrong limit, references a policy loosely)." },
+    { "stars" => 2, "description" => "Multiple inaccuracies or invented details that could cause material confusion, public complaints, or future support load." },
+    { "stars" => 1, "description" => "Contradicts ticket facts, invents policies that don't exist, or commits the company to something it can't deliver." }
+  ],
+  state: "draft",
+  source: "suggestion",
+  current: false
+)
 
 helpfulness_metric = CompletionKit::Metric.find_by!(name: "Helpfulness")
-if CompletionKit::JudgeVersion.drafts.where(metric_id: helpfulness_metric.id, source: "edit").none?
-  CompletionKit::JudgeVersion.create!(
-    metric: helpfulness_metric,
-    instruction: "Does the reply move the case forward in one round-trip? It should resolve the question, propose a concrete next step the customer can act on, or both. Replies that defer, ask for information already in the ticket, or commit to nothing don't count as helpful.",
-    rubric_bands: helpfulness_metric.rubric_bands,
-    state: "draft",
-    source: "edit",
-    current: false
-  )
-end
+CompletionKit::JudgeVersion.drafts.where(metric_id: helpfulness_metric.id, source: "edit").destroy_all
+CompletionKit::JudgeVersion.create!(
+  metric: helpfulness_metric,
+  instruction: "Does the reply move the case forward in one round-trip? It should resolve the question, propose a concrete next step the customer can act on, or both. Replies that defer, ask for information already in the ticket, or commit to nothing don't count as helpful.",
+  rubric_bands: [
+    { "stars" => 5, "description" => "Resolves the question outright or gives the customer exactly what they need to act, in one round-trip. No further back-and-forth required." },
+    { "stars" => 4, "description" => "Addresses the core question with one minor gap (e.g. forgot to confirm a detail). Customer can act on it." },
+    { "stars" => 3, "description" => "Partial answer. Customer will likely need to reply for clarification before they can move forward." },
+    { "stars" => 2, "description" => "Deflects, asks for information already in the ticket, or stalls without committing to anything." },
+    { "stars" => 1, "description" => "Unhelpful, off-topic, or contradicts what the customer asked for." }
+  ],
+  state: "draft",
+  source: "edit",
+  current: false
+)
 
 puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews, #{CompletionKit::Tag.count} tags, #{CompletionKit::Calibration.count} calibrations, #{CompletionKit::JudgeVersion.drafts.count} draft judge versions"
