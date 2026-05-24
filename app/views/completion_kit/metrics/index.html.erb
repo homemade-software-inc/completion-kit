@@ -19,7 +19,7 @@
       <tr>
         <th scope="col">Name</th>
         <th scope="col">Instruction</th>
-        <th scope="col" title="How often the judge agrees with the humans who reviewed its scores.">Judge trust</th>
+        <th scope="col" title="How often this metric's scores match the humans who reviewed them.">Trust score</th>
         <th scope="col">In groups</th>
         <th scope="col"></th>
       </tr>
@@ -36,7 +36,7 @@
             <% end %>
           </td>
           <td data-label="Instruction" class="ck-meta-copy"><div class="ck-clamp-2"><%= metric.instruction.presence || "—" %></div></td>
-          <td data-label="Judge trust" class="ck-metrics-table__trust">
+          <td data-label="Trust score" class="ck-metrics-table__trust">
             <% if CompletionKit.config.judge_calibration_enabled %>
               <% s = CompletionKit::MetricCalibrationStats.for(metric) %>
               <% if s.counter_only? %>
