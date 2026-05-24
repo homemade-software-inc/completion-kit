@@ -160,9 +160,10 @@
             <p class="ck-disagreement__note"><%= cal.note %></p>
           <% end %>
           <p class="ck-disagreement__source ck-meta-copy">
-            <%= link_to cal.response.run.name.to_s.truncate(50), ck_run_path(cal.response.run), class: "ck-link" %>
-            ·
-            <%= link_to "row ##{cal.response.id}", run_response_path(cal.response.run, cal.response), class: "ck-link" %>
+            <%= link_to run_response_path(cal.response.run, cal.response, anchor: @metric.name.parameterize),
+                    class: "ck-disagreement__source-link" do %>
+              View row <%= (cal.response.row_index || 0) + 1 %> in <%= cal.response.run.name.to_s.truncate(50) %> →
+            <% end %>
           </p>
         </li>
       <% end %>

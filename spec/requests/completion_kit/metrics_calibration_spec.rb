@@ -24,13 +24,14 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
     end
 
     it "lists disagreements with judge + human scores and an Add-as-few-shot button" do
-      r1 = create(:completion_kit_response, run: run)
+      r1 = create(:completion_kit_response, run: run, row_index: 2)
       add_review(r1, ai_score: 5.0)
       add_disagree_calibration(r1, corrected: 3.0)
       get "/completion_kit/metrics/#{metric.id}"
       expect(response.body).to include("Remember this")
       expect(response.body).to include("off by a star")
-      expect(response.body).to include("row ##{r1.id}")
+      expect(response.body).to include("View row 3 in")
+      expect(response.body).to include("#" + metric.name.parameterize)
     end
 
     it "shows a 'Remembered' chip and hides the button once a disagreement has been pinned" do

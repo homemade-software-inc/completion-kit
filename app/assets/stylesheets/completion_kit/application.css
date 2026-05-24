@@ -5829,6 +5829,16 @@ a.tag-mark {
   margin: 0;
   font-size: 0.78rem;
 }
+.ck-disagreement__source-link {
+  color: var(--ck-accent);
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(56, 189, 248, 0.4);
+}
+.ck-disagreement__source-link:hover,
+.ck-disagreement__source-link:focus-visible {
+  color: var(--ck-accent-hover);
+  border-bottom-color: var(--ck-accent-hover);
+}
 
 .ck-starter-row {
   margin-top: 2rem;
