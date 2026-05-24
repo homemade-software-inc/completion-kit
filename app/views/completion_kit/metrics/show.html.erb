@@ -9,15 +9,15 @@
     <% if CompletionKit.config.judge_calibration_enabled %>
       <%= render "completion_kit/calibrations/trust_panel",
             stats: CompletionKit::MetricCalibrationStats.for(@metric) %>
-      <% if @latest_draft %>
+      <% if @edit_draft %>
         <% pub_instr = @published_judge_version&.instruction.to_s %>
-        <% draft_instr = @latest_draft.instruction.to_s %>
+        <% draft_instr = @edit_draft.instruction.to_s %>
         <% instruction_changed = pub_instr != draft_instr %>
-        <% rubric_changed = @published_judge_version && @published_judge_version.rubric_bands != @latest_draft.rubric_bands %>
+        <% rubric_changed = @published_judge_version && @published_judge_version.rubric_bands != @edit_draft.rubric_bands %>
         <section class="ck-card ck-card--spaced ck-draft-pending">
           <div class="ck-prompt-preview__header">
             <p class="ck-kicker">Draft pending</p>
-            <%= button_to "Publish this version", publish_draft_metric_path(@metric, draft_id: @latest_draft.id),
+            <%= button_to "Publish this version", publish_draft_metric_path(@metric, draft_id: @edit_draft.id),
                   method: :post, form_class: "inline-block",
                   class: ck_button_classes(:dark) %>
           </div>

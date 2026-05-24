@@ -12,7 +12,7 @@ module CompletionKit
                                   .includes(response: [:reviews, :run])
                                   .order(created_at: :desc)
                                   .limit(50)
-      @latest_draft = JudgeVersion.drafts.where(metric_id: @metric.id).order(created_at: :desc).first
+      @edit_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @published_judge_version = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
       @suggestion_drafts = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc)
     end
