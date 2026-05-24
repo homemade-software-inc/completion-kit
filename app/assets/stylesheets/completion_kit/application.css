@@ -5388,15 +5388,9 @@ a.tag-mark {
   text-transform: uppercase;
 }
 
-.ck-draft-banner {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  padding: 8px 12px;
-  background: var(--ck-accent-soft);
-  border: 1px dashed rgba(6, 182, 212, 0.4);
-  border-radius: 6px;
+.ck-draft-pending {
+  border-color: rgba(6, 182, 212, 0.45);
+  background: linear-gradient(180deg, var(--ck-accent-soft), var(--ck-surface));
 }
 
 .ck-suggestion-list {
@@ -5495,21 +5489,9 @@ a.tag-mark {
   outline-offset: 2px;
 }
 
-.ck-calibration__submit {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.ck-button--just-saved {
+  animation: ck-saved-flash 1.4s ease-out;
 }
-.ck-calibration__saved {
-  font-family: var(--ck-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  color: var(--ck-success);
-  animation: ck-saved-fade 2.4s ease-out forwards;
-}
-@keyframes ck-saved-fade {
-  0% { opacity: 0; transform: translateY(2px); }
-  10% { opacity: 1; transform: translateY(0); }
-  70% { opacity: 1; }
-  100% { opacity: 0; }
+@keyframes ck-saved-flash {
+  0% { background: var(--ck-success); border-color: var(--ck-success); }
 }

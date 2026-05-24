@@ -57,12 +57,7 @@
         </div>
       </fieldset>
       <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="Why? (optional)"><%= calibration&.note %></textarea>
-      <div class="ck-calibration__submit">
-        <%= f.submit "Save", class: ck_button_classes(:dark) %>
-        <% if local_assigns[:just_saved] %>
-          <span class="ck-calibration__saved" role="status">Saved ✓</span>
-        <% end %>
-      </div>
+      <%= f.submit "Save", class: "#{ck_button_classes(:dark)}#{' ck-button--just-saved' if local_assigns[:just_saved]}" %>
     <% end %>
   <% elsif active_verdict == "borderline" %>
     <%= form_with url: run_response_calibrations_path(run, response_row),
@@ -71,12 +66,7 @@
       <%= hidden_field_tag :metric_id, metric.id %>
       <%= hidden_field_tag :verdict, "borderline" %>
       <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="What made this borderline? (optional)"><%= calibration&.note %></textarea>
-      <div class="ck-calibration__submit">
-        <%= f.submit "Save", class: ck_button_classes(:dark) %>
-        <% if local_assigns[:just_saved] %>
-          <span class="ck-calibration__saved" role="status">Saved ✓</span>
-        <% end %>
-      </div>
+      <%= f.submit "Save", class: "#{ck_button_classes(:dark)}#{' ck-button--just-saved' if local_assigns[:just_saved]}" %>
     <% end %>
   <% end %>
 </div>
