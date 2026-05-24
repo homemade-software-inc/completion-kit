@@ -8,14 +8,15 @@
 <p class="ck-trust-line ck-trust-line--<%= stats.gate %>">
   <span class="ck-trust-line__label"><%= heroicon_tag "shield-check", variant: :outline, "aria-hidden": "true" %>Trust</span>
   <% if stats.sample_size.zero? %>
-    <span class="ck-trust-line__state">Unknown</span>
-    <% if target_response %>
-      <span class="ck-trust-line__sep">·</span>
-      <%= link_to "Give a verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %>
-    <% else %>
-      <span class="ck-trust-line__sep">·</span>
-      <span class="ck-trust-line__hint">Run this metric on a dataset, then give a verdict.</span>
-    <% end %>
+    <span class="ck-trust-line__state">Not measured yet</span>
+    <span class="ck-trust-line__hint">
+      We haven't checked this judge against any humans.
+      <% if target_response %>
+        <%= link_to "Give a verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %>
+      <% else %>
+        Run this metric on a dataset, then give a verdict.
+      <% end %>
+    </span>
   <% elsif stats.counter_only? %>
     <span class="ck-trust-line__counter"><%= stats.sample_size %>/<%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %></span>
     <span class="ck-trust-line__hint"><%= pluralize(stats.sample_size, "verdict") %><% if stats.short_to_target > 0 %> · needs <%= pluralize(stats.short_to_target, "more") %> to call it<% end %></span>

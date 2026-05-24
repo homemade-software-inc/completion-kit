@@ -5387,12 +5387,12 @@ a.tag-mark {
   margin: 10px 0 0;
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   font-family: var(--ck-mono);
   font-size: 0.82rem;
   color: var(--ck-dim);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 .ck-trust-line__label {
   display: inline-flex;
@@ -5402,10 +5402,16 @@ a.tag-mark {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ck-muted);
+  line-height: 1;
 }
 .ck-trust-line__label svg {
   width: 12px;
   height: 12px;
+  flex-shrink: 0;
+}
+.ck-trust-line__state {
+  color: var(--ck-text);
+  font-weight: 500;
 }
 .ck-trust-icon {
   display: inline-block;
