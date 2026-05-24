@@ -1,6 +1,6 @@
 <% stats = local_assigns[:stats] %>
 <div class="ck-trust-panel ck-trust-panel--<%= stats.gate %>">
-  <p class="ck-trust-panel__label" title="How often this metric's scores match the humans who reviewed them.">Trust score</p>
+  <p class="ck-trust-panel__label" title="How often this metric's scores match the humans who reviewed them.">Trust level</p>
   <% if stats.counter_only? %>
     <div class="ck-trust-panel__body">
       <span class="ck-trust-panel__counter"><%= stats.sample_size %><span class="ck-trust-panel__counter-of">/ <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %></span></span>
