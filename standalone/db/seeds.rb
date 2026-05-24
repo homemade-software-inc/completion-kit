@@ -421,19 +421,22 @@ metric_tags.each do |metric_name, names|
   CompletionKit::Metric.find_by(name: metric_name)&.update!(tag_names: names)
 end
 
+CompletionKit::Calibration.where(created_by: %w[operator_1 operator_2 operator_3]).delete_all
+
+current_operator = CompletionKit.config.username.presence || "operator"
+
 seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
   metric = CompletionKit::Metric.find_by!(name: metric_name)
   jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
   reviewed_responses = CompletionKit::Response.joins(:reviews)
     .where(reviews: { metric_id: metric.id })
     .where.not(reviews: { ai_score: nil })
-    .distinct.to_a
+    .distinct.order(:created_at).to_a
   next if reviewed_responses.empty?
 
-  total = agree + disagree + borderline
+  total = [agree + disagree + borderline, reviewed_responses.size].min
   total.times do |i|
-    resp = reviewed_responses[i % reviewed_responses.size]
-    operator = "operator_#{(i / reviewed_responses.size) + 1}"
+    resp = reviewed_responses[i]
     verdict = if i < agree
                 "agree"
               elsif i < agree + disagree
@@ -442,9 +445,9 @@ seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
                 "borderline"
               end
 
-    next if CompletionKit::Calibration.exists?(response_id: resp.id, metric_id: metric.id, created_by: operator)
+    next if CompletionKit::Calibration.exists?(response_id: resp.id, metric_id: metric.id, created_by: current_operator)
 
-    attrs = { run: resp.run, response: resp, metric: metric, judge_version: jv, verdict: verdict, created_by: operator }
+    attrs = { run: resp.run, response: resp, metric: metric, judge_version: jv, verdict: verdict, created_by: current_operator }
     if verdict == "disagree"
       live = resp.reviews.find_by(metric_id: metric.id)
       attrs[:corrected_score] = ((live&.ai_score || 3.0) - 1).clamp(1, 5)
@@ -456,10 +459,10 @@ seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
   end
 end
 
-seed_calibrations.call(metric_name: "Tone",                agree: 3,  disagree: 1,  borderline: 0)
-seed_calibrations.call(metric_name: "Accuracy",            agree: 11, disagree: 3,  borderline: 4)
-seed_calibrations.call(metric_name: "Confidence",          agree: 28, disagree: 3,  borderline: 1)
-seed_calibrations.call(metric_name: "Urgency Calibration", agree: 5,  disagree: 2,  borderline: 5)
+seed_calibrations.call(metric_name: "Tone",                agree: 3,  disagree: 1, borderline: 0)
+seed_calibrations.call(metric_name: "Accuracy",            agree: 6,  disagree: 2, borderline: 2)
+seed_calibrations.call(metric_name: "Confidence",          agree: 12, disagree: 2, borderline: 1)
+seed_calibrations.call(metric_name: "Urgency Calibration", agree: 5,  disagree: 2, borderline: 5)
 
 accuracy_metric = CompletionKit::Metric.find_by!(name: "Accuracy")
 pinned = CompletionKit::Calibration.where(metric_id: accuracy_metric.id, verdict: "disagree").first
