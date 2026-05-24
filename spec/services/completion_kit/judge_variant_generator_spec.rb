@@ -116,6 +116,35 @@ RSpec.describe CompletionKit::JudgeVariantGenerator, type: :service do
       expect(captured).to include("Human said 3")
       expect(captured).to include("missed nuance")
     end
+
+    it "also includes borderline (rubric-ambiguous) cases when present, with and without notes" do
+      run = create(:completion_kit_run)
+      r1 = create(:completion_kit_response, run: run, input_data: "Q1?", response_text: "A1.")
+      r2 = create(:completion_kit_response, run: run, input_data: "Q2?", response_text: "A2.")
+      create(:completion_kit_review, response: r1, metric: metric, metric_name: metric.name, ai_score: 4, ai_feedback: "hmm")
+      create(:completion_kit_review, response: r2, metric: metric, metric_name: metric.name, ai_score: 4, ai_feedback: "hmm")
+      jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      create(:completion_kit_calibration,
+             run: run, response: r1, metric: metric, judge_version: jv,
+             verdict: "borderline", note: "two bands overlap here", created_by: "alice")
+      create(:completion_kit_calibration,
+             run: run, response: r2, metric: metric, judge_version: jv,
+             verdict: "borderline", note: nil, created_by: "bob")
+
+      captured = nil
+      client = instance_double("CompletionKit::OpenAiClient")
+      allow(client).to receive(:generate_completion) do |prompt, **|
+        captured = prompt
+        "VARIANT:\nREASONING: r\nINSTRUCTION:\nrewrite\nEND_VARIANT"
+      end
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+
+      described_class.new(metric, count: 1).call
+      expect(captured).to include("Rubric-ambiguous cases")
+      expect(captured).to include("Borderline 1")
+      expect(captured).to include("Borderline 2")
+      expect(captured).to include("two bands overlap here")
+    end
   end
 
   describe CompletionKit::JudgeCalibrationExamples do

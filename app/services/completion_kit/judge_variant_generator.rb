@@ -39,7 +39,8 @@ module CompletionKit
     private
 
     def build_meta_prompt
-      examples = JudgeCalibrationExamples.for(@metric)
+      disagreements = JudgeCalibrationExamples.disagreements_for(@metric)
+      borderlines = JudgeCalibrationExamples.borderlines_for(@metric)
       sections = []
       sections << "You are an expert evaluator. Rewrite a judge's grading instruction so it agrees better with humans on the cases below."
       sections << ""
@@ -51,17 +52,31 @@ module CompletionKit
       sections << "## Rubric (unchanged across variants — only rewrite the instruction)"
       sections << @metric.display_rubric_text
       sections << ""
-      sections << "## Recent disagreements (judge vs human)"
-      examples.each_with_index do |ex, i|
-        sections << "### Case #{i + 1}"
-        sections << "Input: #{ex[:input].to_s.truncate(200)}"
-        sections << "Output: #{ex[:output].to_s.truncate(200)}"
-        sections << "Judge said #{ex[:judge_score]}/5: #{ex[:judge_feedback].to_s.truncate(160)}"
-        sections << "Human said #{ex[:human_score]}/5: #{ex[:human_note].to_s.truncate(160)}"
-        sections << ""
+      if disagreements.any?
+        sections << "## Recent disagreements (judge vs human)"
+        disagreements.each_with_index do |ex, i|
+          sections << "### Case #{i + 1}"
+          sections << "Input: #{ex[:input].to_s.truncate(200)}"
+          sections << "Output: #{ex[:output].to_s.truncate(200)}"
+          sections << "Judge said #{ex[:judge_score]}/5: #{ex[:judge_feedback].to_s.truncate(160)}"
+          sections << "Human said #{ex[:human_score]}/5: #{ex[:human_note].to_s.truncate(160)}"
+          sections << ""
+        end
+      end
+      if borderlines.any?
+        sections << "## Rubric-ambiguous cases (humans marked these borderline)"
+        sections << "Each case below is one where a human said the rubric was unclear. Use these to sharpen language, split overlapping bands, or call out edge cases explicitly."
+        borderlines.each_with_index do |ex, i|
+          sections << "### Borderline #{i + 1}"
+          sections << "Input: #{ex[:input].to_s.truncate(200)}"
+          sections << "Output: #{ex[:output].to_s.truncate(200)}"
+          sections << "Judge said #{ex[:judge_score]}/5: #{ex[:judge_feedback].to_s.truncate(160)}"
+          sections << "Human note: #{ex[:human_note].to_s.truncate(200)}" if ex[:human_note].to_s.present?
+          sections << ""
+        end
       end
       sections << "## Task"
-      sections << "Propose #{@count} alternative instructions. Each should be a focused rewrite — not a wholesale rewrite of the rubric. Aim to close the disagreement gap."
+      sections << "Propose #{@count} alternative instructions. Each should be a focused rewrite — not a wholesale rewrite of the rubric. Close the disagreement gap and disambiguate the borderline cases."
       sections << ""
       sections << "Respond in EXACTLY this format, repeated #{@count} times:"
       sections << ""
@@ -88,11 +103,23 @@ module CompletionKit
     module_function
 
     def for(metric, limit: 8)
-      disagreements = Calibration.where(metric_id: metric.id, verdict: "disagree")
-                                 .includes(response: :reviews)
-                                 .order(created_at: :desc)
-                                 .limit(limit)
-      disagreements.map do |cal|
+      disagreements_for(metric, limit: limit)
+    end
+
+    def disagreements_for(metric, limit: 8)
+      calibrations_for(metric, verdict: "disagree", limit: limit)
+    end
+
+    def borderlines_for(metric, limit: 6)
+      calibrations_for(metric, verdict: "borderline", limit: limit)
+    end
+
+    def calibrations_for(metric, verdict:, limit:)
+      Calibration.where(metric_id: metric.id, verdict: verdict)
+                 .includes(response: :reviews)
+                 .order(created_at: :desc)
+                 .limit(limit)
+                 .map do |cal|
         review = cal.response.reviews.find { |r| r.metric_id == metric.id }
         {
           input: cal.response.input_data,

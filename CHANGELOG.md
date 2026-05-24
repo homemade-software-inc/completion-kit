@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.39] - 2026-05-23
+
+### Fixed
+
+- **Propshaft hosts can now load `application.css`.** (#53) `app/assets/stylesheets/completion_kit/application.css.erb` is now a plain `.css` file with three explicit `@font-face` blocks pointing at `completion_kit/jetbrains-mono-{400,500,700}.woff2`. Propshaft's `CssAssetUrls` compiler rewrites those `url()` refs to digested paths at build time; Sprockets resolves them at request time too. No more ERB requirement on the host. Hosts running a Propshaft-compat workaround (pre-rendering the ERB file to `tmp/` on boot) can remove it.
+- **Disagree click no longer fires a validation error from across the page.** Clicking the disagree pill without a score doesn't try to save anymore — it reveals the score slider + note form inline so the user supplies the data before submitting. Real validation failures (e.g., a score outside 1–5) render inside the calibration block via Turbo Stream, not in the page-level flash. Slider input gets `required` so the browser blocks the bad case too.
+- **Publishing a judge draft actually swaps the live judge text.** Was previously flipping only the `state` flag; now the publish transaction copies the draft's instruction and rubric onto the metric.
+- **Per-variant Publish buttons publish the variant they sit next to.** The action now takes `draft_id`; was always grabbing the newest draft.
+- **Review stars no longer wrap on mobile.** The 5-star row inside the review-card header is `flex-wrap: nowrap`; the header itself stacks vertically below 640px.
+
+### Changed
+
+- **Calibration copy de-jargoned for non-experts.** "Judge trust" → "Trust score" everywhere. "Few-shot" → "teaching example". "Suggest rewrites" → "Improve the metric". "Suggested rewrites" → "Suggested improvements". Per-verdict tooltips spell out what agree / disagree / borderline mean. The verdict counter on the response page links to the metric's trust score. The "Improve the metric" generator now feeds both disagreements *and* rubric-ambiguous (borderline) cases into the meta-prompt, with the latter clearly labeled — borderlines are a directly actionable signal about rubric ambiguity. `MAE` and `κ` no longer appear in the visible trust panel; they're still in the MCP / API payload.
+- **Metric index gains a Trust score column.** At-a-glance state per metric (`No verdicts yet`, `N / 10 verdicts`, or `~82% ±12 pt · early / settled`) so users can scan which metrics need attention without clicking in.
+- **Instruction box on the metric show page is no longer nested.** Was a `.ck-card` wrapping a `.ck-note-box` (box-in-a-box). Now one container, simple-format content directly inside.
+
 ## [0.5.38] - 2026-05-23
 
 ### Fixed

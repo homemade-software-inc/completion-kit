@@ -25,8 +25,8 @@
       <%= button_to "Improve the metric", suggest_variants_metric_path(@metric),
             method: :post, form_class: "inline-block",
             class: ck_button_classes(:light, variant: :outline),
-            title: "Ask the model to rewrite this metric's instruction based on the disagreements collected so far.",
-            data: { turbo_confirm: "Ask the model to rewrite this metric's instruction based on the disagreements collected so far?" } %>
+            title: "Ask the model to rewrite this metric's instruction based on the disagreements and rubric-ambiguous cases collected so far.",
+            data: { turbo_confirm: "Ask the model to rewrite this metric's instruction based on the disagreements and rubric-ambiguous cases collected so far?" } %>
     <% end %>
     <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
   </div>
