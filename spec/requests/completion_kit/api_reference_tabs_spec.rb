@@ -7,7 +7,7 @@ require "rails_helper"
 # the old set, so some panels rendered blank. This guards the invariant.
 RSpec.describe "CompletionKit API reference tabs", type: :request do
   let(:css) do
-    File.read(CompletionKit::Engine.root.join("app/assets/stylesheets/completion_kit/application.css.erb"))
+    File.read(CompletionKit::Engine.root.join("app/assets/stylesheets/completion_kit/application.css"))
   end
 
   it "keeps the tab radios, panels, and the tab CSS in sync" do

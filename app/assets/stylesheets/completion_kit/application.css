@@ -1,12 +1,26 @@
-<% %w[400 500 700].each do |weight| %>
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;
-  font-weight: <%= weight %>;
+  font-weight: 400;
   font-display: swap;
-  src: url('<%= asset_path("completion_kit/jetbrains-mono-#{weight}.woff2") %>') format('woff2');
+  src: url('completion_kit/jetbrains-mono-400.woff2') format('woff2');
 }
-<% end %>
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('completion_kit/jetbrains-mono-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('completion_kit/jetbrains-mono-700.woff2') format('woff2');
+}
 
 .turbo-progress-bar {
   background-color: var(--ck-accent);
