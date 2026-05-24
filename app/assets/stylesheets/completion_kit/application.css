@@ -5413,9 +5413,11 @@ a.tag-mark {
 }
 
 .ck-metrics-table__trust {
+  margin: 4px 0 0;
   font-family: var(--ck-mono);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   letter-spacing: 0.03em;
+  color: var(--ck-dim);
 }
 .ck-metrics-table__trust-rate {
   font-weight: 600;
