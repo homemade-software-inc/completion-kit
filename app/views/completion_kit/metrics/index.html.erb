@@ -75,12 +75,36 @@
       Use the same metrics on multiple runs? <%= link_to "Group them →", metric_groups_path, class: "ck-link" %>
     </p>
   <% end %>
+
+  <% if @available_starters.any? %>
+    <section class="ck-starter-row">
+      <p class="ck-kicker">Add a starter metric</p>
+      <p class="ck-meta-copy">Pre-written rubrics for the dimensions most teams score against. Click a card to preview before it's created.</p>
+      <div class="ck-starter-grid">
+        <% @available_starters.each do |starter| %>
+          <%= render "starter_card", starter: starter %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
 <% elsif @selected_tags.any? %>
   <div class="ck-empty">
     <p>No metrics match these tags. <%= link_to "Clear filters", metrics_path, class: "ck-link" %>.</p>
   </div>
 <% else %>
-  <div class="ck-empty">
-    <p>No metrics yet. <%= link_to "Create your first metric", new_metric_path, class: "ck-link" %> to start scoring prompt outputs.</p>
-  </div>
+  <% if @available_starters.any? %>
+    <section class="ck-starter-row ck-starter-row--empty-state">
+      <h2 class="ck-title ck-title--sm">Start with a ready-made rubric</h2>
+      <p class="ck-lead">Pick one of the dimensions below to drop in a pre-written 1–5 rubric. You can edit anything after adding it. Or <%= link_to "write your own from scratch", new_metric_path, class: "ck-link" %>.</p>
+      <div class="ck-starter-grid">
+        <% @available_starters.each do |starter| %>
+          <%= render "starter_card", starter: starter %>
+        <% end %>
+      </div>
+    </section>
+  <% else %>
+    <div class="ck-empty">
+      <p>No metrics yet. <%= link_to "Create your first metric", new_metric_path, class: "ck-link" %> to start scoring prompt outputs.</p>
+    </div>
+  <% end %>
 <% end %>

@@ -5,6 +5,33 @@ module CompletionKit
 
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
+      @available_starters = StarterMetrics.available
+    end
+
+    def starter_preview
+      @starter = StarterMetrics.find(params[:key])
+      return redirect_to(metrics_path, alert: "Unknown starter metric.") unless @starter
+    end
+
+    def adopt_starter
+      starter = StarterMetrics.find(params[:key])
+      return redirect_to(metrics_path, alert: "Unknown starter metric.") unless starter
+      if Metric.exists?(name: starter.name)
+        return redirect_to(metrics_path, alert: "A metric named \"#{starter.name}\" already exists.")
+      end
+      metric = Metric.create!(
+        name: starter.name,
+        instruction: starter.instruction,
+        rubric_bands: starter.rubric_bands
+      )
+      redirect_to metric_path(metric), notice: "Added the \"#{starter.name}\" starter. Tweak any band before you run a judge against it."
+    end
+
+    def dismiss_starter
+      starter = StarterMetrics.find(params[:key])
+      return redirect_to(metrics_path, alert: "Unknown starter metric.") unless starter
+      StarterMetricDismissal.find_or_create_by(starter_key: starter.key)
+      redirect_to metrics_path, notice: "Dismissed \"#{starter.name}\". It won't appear here again."
     end
 
     def show

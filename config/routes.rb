@@ -13,6 +13,11 @@ CompletionKit::Engine.routes.draw do
 
   resources :datasets
   resources :metrics do
+    collection do
+      get  "starters/:key", to: "metrics#starter_preview",  as: :starter_preview
+      post "starters/:key", to: "metrics#adopt_starter",    as: :adopt_starter
+      post "starters/:key/dismiss", to: "metrics#dismiss_starter", as: :dismiss_starter
+    end
     member do
       post :add_few_shot
       post :publish_draft

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_23_184748) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_24_190429) do
   create_table "completion_kit_calibrations", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -207,6 +207,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_23_184748) do
     t.datetime "updated_at", null: false
     t.index ["dataset_id"], name: "index_completion_kit_runs_on_dataset_id"
     t.index ["prompt_id"], name: "index_completion_kit_runs_on_prompt_id"
+  end
+
+  create_table "completion_kit_starter_metric_dismissals", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "starter_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["starter_key"], name: "index_ck_starter_dismissals_on_key", unique: true
   end
 
   create_table "completion_kit_suggestions", force: :cascade do |t|

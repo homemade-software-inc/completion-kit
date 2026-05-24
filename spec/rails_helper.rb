@@ -254,6 +254,14 @@ ActiveRecord::Schema.define do
             [:response_id, :metric_id, :created_by],
             unique: true,
             name: "index_ck_calibrations_on_response_metric_user"
+
+  create_table :completion_kit_starter_metric_dismissals, force: true do |t|
+    t.string :starter_key, null: false
+    t.timestamps
+  end
+  add_index :completion_kit_starter_metric_dismissals, :starter_key,
+            unique: true,
+            name: "index_ck_starter_dismissals_on_key"
 end
 
 FactoryBot.definition_file_paths = [File.expand_path("factories", __dir__)]
