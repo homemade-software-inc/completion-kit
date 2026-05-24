@@ -78,9 +78,10 @@ module CompletionKit
     end
 
     def suggest_variants
+      target = params[:back_to] == "edit" ? edit_metric_path(@metric) : metric_path(@metric)
       disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
       if disagreement_count.zero?
-        redirect_to metric_path(@metric), alert: "Mark at least one row as Disagree before asking the model to suggest a change."
+        redirect_to target, alert: "Mark at least one row as Disagree before asking the model to suggest a change."
         return
       end
 
@@ -89,17 +90,18 @@ module CompletionKit
       generator = JudgeVariantGenerator.new(@metric, count: 1)
       variants = generator.call
       if variants.empty?
-        redirect_to metric_path(@metric), alert: "The model returned no usable variants. Try again with a different model."
+        redirect_to target, alert: "The model returned no usable variants. Try again with a different model."
         return
       end
       generator.persist!(variants)
-      redirect_to metric_path(@metric), notice: "Drafted a new version. Review it below."
+      redirect_to target, notice: "Drafted a new version. Review it below."
     end
 
     def dismiss_suggestion
       draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").find_by(id: params[:draft_id])
       draft&.destroy
-      redirect_to metric_path(@metric), notice: "Dismissed."
+      target = params[:back_to] == "edit" ? edit_metric_path(@metric) : metric_path(@metric)
+      redirect_to target, notice: "Dismissed."
     end
 
     def publish_draft

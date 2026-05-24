@@ -1943,6 +1943,16 @@ tr:hover .ck-chip--publish {
   transition: all 0.15s;
 }
 
+.ck-form-card .ck-actions .ck-icon-btn {
+  min-height: 2rem;
+  padding: 0.4rem 0.7rem;
+  border-color: var(--ck-line);
+}
+.ck-form-card .ck-actions .ck-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
 .ck-icon-btn svg {
   width: 16px;
   height: 16px;

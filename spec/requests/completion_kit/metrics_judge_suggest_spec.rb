@@ -78,6 +78,30 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response.body).to match(%r{<form[^>]*action="/completion_kit/metrics/#{metric.id}/suggest_variants"})
   end
 
+  it "renders inline rubric band suggestions on the edit form when the draft changes a band" do
+    add_disagree
+    rubric_block = <<~R
+      VARIANT:
+      REASONING: rubric tighter
+      INSTRUCTION:
+      same instruction
+      RUBRIC:
+      5: pristine and fully verifiable
+      4: one minor lapse, no harm
+      3: a couple of soft claims
+      2: meaningful inaccuracies
+      1: dangerously wrong
+      END_VARIANT
+    R
+    stub_llm(rubric_block)
+    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
+    get "/completion_kit/metrics/#{metric.id}/edit"
+    expect(response.body).to include("Suggested band")
+    expect(response.body).to include("Use this band")
+    expect(response.body).to include("pristine and fully verifiable")
+    expect(response.body).to include('data-target="metric[rubric_bands][0][description]"')
+  end
+
   it "dismisses the inline suggestion via the dedicated route" do
     add_disagree
     stub_llm("VARIANT:\nREASONING: r\nINSTRUCTION:\ndoomed\nEND_VARIANT")
@@ -92,5 +116,33 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
   it "tolerates a dismiss request for a missing draft (no-op)" do
     delete "/completion_kit/metrics/#{metric.id}/dismiss_suggestion", params: { draft_id: 999_999 }
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
+  end
+
+  it "redirects back to edit when suggest_variants is called with back_to=edit" do
+    add_disagree
+    stub_llm("VARIANT:\nREASONING: r\nINSTRUCTION:\nnext\nEND_VARIANT")
+    post "/completion_kit/metrics/#{metric.id}/suggest_variants", params: { back_to: "edit" }
+    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/edit")
+  end
+
+  it "still routes the no-disagreement and empty-variant alerts back to edit when back_to=edit" do
+    post "/completion_kit/metrics/#{metric.id}/suggest_variants", params: { back_to: "edit" }
+    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/edit")
+
+    add_disagree
+    stub_llm("nothing parseable")
+    post "/completion_kit/metrics/#{metric.id}/suggest_variants", params: { back_to: "edit" }
+    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/edit")
+  end
+
+  it "redirects back to edit when dismiss_suggestion is called with back_to=edit" do
+    add_disagree
+    stub_llm("VARIANT:\nREASONING: r\nINSTRUCTION:\ndoomed\nEND_VARIANT")
+    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
+    draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "suggestion").first
+
+    delete "/completion_kit/metrics/#{metric.id}/dismiss_suggestion",
+           params: { draft_id: draft.id, back_to: "edit" }
+    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/edit")
   end
 end
