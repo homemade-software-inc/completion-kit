@@ -86,7 +86,7 @@ module CompletionKit
       sections << "REASONING: <one short sentence: what changes and why>"
       sections << "INSTRUCTION:"
       sections << "<the rewritten instruction>"
-      sections << "RUBRIC:                  # optional — omit this block if the rubric is unchanged"
+      sections << "RUBRIC:                  # optional. Omit this block if the rubric is unchanged."
       sections << "5: <description for 5 stars>"
       sections << "4: <description for 4 stars>"
       sections << "3: <description for 3 stars>"

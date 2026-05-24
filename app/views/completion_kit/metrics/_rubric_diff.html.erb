@@ -1,0 +1,25 @@
+<% current_bands = local_assigns[:current_bands] || [] %>
+<% draft_bands = local_assigns[:draft_bands] || [] %>
+<% lookup = ->(bands, stars) { bands.find { |b| b["stars"].to_i == stars }&.dig("description").to_s } %>
+<div class="ck-rubric-diff">
+  <% 5.downto(1) do |stars| %>
+    <% old_band = lookup.call(current_bands, stars) %>
+    <% new_band = lookup.call(draft_bands, stars) %>
+    <% changed = old_band != new_band %>
+    <div class="ck-rubric-diff__row ck-rubric-diff__row--<%= changed ? "changed" : "unchanged" %>">
+      <div class="ck-rubric-diff__stars">
+        <% 5.times do |i| %>
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke-width="1.75" class="ck-star <%= i < stars ? "ck-star--filled" : "ck-star--empty" %>"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <% end %>
+      </div>
+      <% if changed %>
+        <div class="ck-rubric-diff__panes">
+          <pre class="ck-rubric-diff__pane ck-rubric-diff__pane--before"><%= ck_word_diff_old(old_band, new_band) %></pre>
+          <pre class="ck-rubric-diff__pane ck-rubric-diff__pane--after"><%= ck_word_diff_new(old_band, new_band) %></pre>
+        </div>
+      <% else %>
+        <p class="ck-rubric-diff__unchanged"><%= old_band.presence || "—" %></p>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -51,7 +51,10 @@
           <% end %>
 
           <% if rubric_changed %>
-            <p class="ck-meta-copy"><strong>Rubric also changed.</strong> Edit the metric to inspect each band, or publish to apply the new wording.</p>
+            <p class="ck-kicker ck-kicker--inset">Rubric changes</p>
+            <%= render "completion_kit/metrics/rubric_diff",
+                  current_bands: @published_judge_version&.rubric_bands || [],
+                  draft_bands: @edit_draft.rubric_bands || [] %>
           <% end %>
         </section>
       <% end %>
@@ -127,7 +130,10 @@
     </div>
 
     <% if sd_rubric_changed %>
-      <p class="ck-meta-copy"><strong>Rubric also changed.</strong> Publishing applies the new rubric too.</p>
+      <p class="ck-kicker ck-kicker--inset">Rubric changes</p>
+      <%= render "completion_kit/metrics/rubric_diff",
+            current_bands: sd_current_rubric,
+            draft_bands: @suggestion_draft.rubric_bands || [] %>
     <% end %>
 
     <div class="ck-actions">
