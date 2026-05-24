@@ -202,13 +202,19 @@ module CompletionKit
     def ck_format_maybe_json(text)
       s = text.to_s
       return s if s.strip.empty?
-      first = s.strip[0]
+      payload = ck_unwrap_json_fence(s.strip)
+      first = payload[0]
       return s unless first == "{" || first == "["
       begin
-        ck_highlight_json(JSON.pretty_generate(JSON.parse(s)))
+        ck_highlight_json(JSON.pretty_generate(JSON.parse(payload)))
       rescue JSON::ParserError
         s
       end
+    end
+
+    def ck_unwrap_json_fence(text)
+      m = text.match(/\A```(?:json|JSON)?\s*\n(.*?)\n?```\s*\z/m)
+      m ? m[1].strip : text
     end
 
     def ck_highlight_json(text)

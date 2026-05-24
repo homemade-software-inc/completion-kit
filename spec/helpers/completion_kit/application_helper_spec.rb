@@ -377,6 +377,26 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_format_maybe_json(malformed)).to eq(malformed)
     end
 
+    it "unwraps a ```json fenced response and highlights the inner JSON" do
+      fenced = "```json\n{\"score\":4,\"why\":\"clear\"}\n```"
+      out = helper.ck_format_maybe_json(fenced)
+      expect(out).to include('class="ck-json-key"')
+      expect(out).to include("&quot;score&quot;")
+      expect(out).to include("4")
+    end
+
+    it "unwraps an unlabeled triple-backtick fence as well" do
+      fenced = "```\n[1, 2, 3]\n```"
+      out = helper.ck_format_maybe_json(fenced)
+      expect(out).to include('class="ck-json-number"')
+      expect(out).to include("1")
+    end
+
+    it "still returns the raw input when a fenced block contains malformed JSON" do
+      fenced = "```json\n{not valid\n```"
+      expect(helper.ck_format_maybe_json(fenced)).to eq(fenced)
+    end
+
     it "handles tabs and unterminated strings defensively when ck_highlight_json is called directly" do
       out = helper.ck_highlight_json("{\n\t\"k\":\t\"v\"\n}")
       expect(out).to include('class="ck-json-key"')
