@@ -2771,16 +2771,10 @@ select.ck-input {
 }
 
 .ck-review-card {
-  padding: 1rem 0;
-}
-.ck-review-card + .ck-review-card {
-  border-top: 1px solid var(--ck-line);
-}
-.ck-review-card:first-child {
-  padding-top: 0.5rem;
-}
-.ck-review-card:last-child {
-  padding-bottom: 0.25rem;
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius-lg);
+  background: var(--ck-surface);
+  padding: 1.25rem;
 }
 
 .ck-review-card__header {
