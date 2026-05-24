@@ -1541,6 +1541,25 @@ tr:hover .ck-chip--publish {
   border: 0;
   border-radius: 0;
   background: transparent;
+  white-space: pre;
+  color: #93c5fd;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+.ck-code-scroll-wrap > .ck-code .ck-json-key {
+  color: #c4b5fd;
+}
+.ck-code-scroll-wrap > .ck-code .ck-json-string {
+  color: #93c5fd;
+}
+.ck-code-scroll-wrap > .ck-code .ck-json-number {
+  color: #fcd34d;
+}
+.ck-code-scroll-wrap > .ck-code .ck-json-keyword {
+  color: #f9a8d4;
+}
+.ck-code-scroll-wrap > .ck-code .ck-json-punct {
+  color: var(--ck-dim);
 }
 
 .ck-note-box {

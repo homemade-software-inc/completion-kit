@@ -205,9 +205,74 @@ module CompletionKit
       first = s.strip[0]
       return s unless first == "{" || first == "["
       begin
-        JSON.pretty_generate(JSON.parse(s))
+        ck_highlight_json(JSON.pretty_generate(JSON.parse(s)))
       rescue JSON::ParserError
         s
+      end
+    end
+
+    def ck_highlight_json(text)
+      tokens = ck_tokenize_json(text)
+      is_key = ck_mark_json_keys(tokens)
+      parts = tokens.each_with_index.map do |(type, value), idx|
+        escaped = ERB::Util.html_escape(value)
+        case type
+        when :punct then %(<span class="ck-json-punct">#{escaped}</span>)
+        when :string
+          %(<span class="#{is_key[idx] ? "ck-json-key" : "ck-json-string"}">#{escaped}</span>)
+        when :number then %(<span class="ck-json-number">#{escaped}</span>)
+        when :keyword then %(<span class="ck-json-keyword">#{escaped}</span>)
+        else escaped
+        end
+      end
+      parts.join.html_safe
+    end
+
+    def ck_tokenize_json(text)
+      tokens = []
+      i = 0
+      len = text.length
+      while i < len
+        ch = text[i]
+        if ch == " " || ch == "\n" || ch == "\t"
+          tokens << [:ws, ch]
+          i += 1
+        elsif "{}[]:,".include?(ch)
+          tokens << [:punct, ch]
+          i += 1
+        elsif ch == '"'
+          j = i + 1
+          while j < len && text[j] != '"'
+            j += text[j] == "\\" ? 2 : 1
+          end
+          j = len - 1 if j >= len
+          tokens << [:string, text[i..j]]
+          i = j + 1
+        elsif ch == "-" || (ch >= "0" && ch <= "9")
+          j = i + 1
+          j += 1 while j < len && "0123456789.eE+-".include?(text[j])
+          tokens << [:number, text[i...j]]
+          i = j
+        elsif text[i, 4] == "true" || text[i, 4] == "null"
+          tokens << [:keyword, text[i, 4]]
+          i += 4
+        elsif text[i, 5] == "false"
+          tokens << [:keyword, "false"]
+          i += 5
+        else
+          tokens << [:other, ch]
+          i += 1
+        end
+      end
+      tokens
+    end
+
+    def ck_mark_json_keys(tokens)
+      tokens.each_with_index.map do |(type, _), idx|
+        next false unless type == :string
+        j = idx + 1
+        j += 1 while j < tokens.length && tokens[j][0] == :ws
+        j < tokens.length && tokens[j] == [:punct, ":"]
       end
     end
 

@@ -334,17 +334,60 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_format_maybe_json("Hello world")).to eq("Hello world")
     end
 
-    it "pretty-prints a JSON object" do
-      expect(helper.ck_format_maybe_json('{"a":1,"b":2}')).to eq("{\n  \"a\": 1,\n  \"b\": 2\n}")
+    it "pretty-prints a JSON object and wraps keys, strings, numbers, and keywords (true/false/null) in highlight spans" do
+      out = helper.ck_format_maybe_json('{"name":"Alice","age":30,"admin":true,"banned":false,"deleted_at":null,"tags":["x"]}')
+      expect(out).to include('class="ck-json-key"', '&quot;name&quot;')
+      expect(out).to include('class="ck-json-string"', '&quot;Alice&quot;')
+      expect(out).to include('class="ck-json-number"', '30')
+      expect(out).to include('class="ck-json-keyword"', 'true')
+      expect(out).to include('class="ck-json-keyword"', 'false')
+      expect(out).to include('class="ck-json-keyword"', 'null')
+      expect(out).to include('class="ck-json-punct"', '{')
+      expect(out).to be_html_safe
     end
 
-    it "pretty-prints a JSON array" do
-      expect(helper.ck_format_maybe_json('[1,2]')).to eq("[\n  1,\n  2\n]")
+    it "pretty-prints a JSON array with negative and decimal numbers wrapped in number spans" do
+      out = helper.ck_format_maybe_json('[-1, 1.5]')
+      expect(out).to include("-1")
+      expect(out).to include("1.5")
+      expect(out).to include('class="ck-json-number"')
+    end
+
+    it "tokenizes scientific-notation numbers when handed pretty-printed JSON directly" do
+      out = helper.ck_highlight_json("[1.5e3, -2E-1]")
+      expect(out).to include('class="ck-json-number"')
+      expect(out).to include("1.5e3")
+      expect(out).to include("-2E-1")
+    end
+
+    it "preserves strings that contain escaped quotes" do
+      out = helper.ck_format_maybe_json('{"k":"he said \"hi\""}')
+      expect(out).to include('class="ck-json-string"')
+      expect(out).to include('he said')
+    end
+
+    it "uses ck-json-string (not ck-json-key) for plain string values" do
+      out = helper.ck_format_maybe_json('["alpha"]')
+      expect(out).to include('class="ck-json-string"')
+      expect(out).not_to include('class="ck-json-key">&quot;alpha&quot;</span>')
     end
 
     it "returns the raw input when JSON parsing fails" do
       malformed = '{"oops": '
       expect(helper.ck_format_maybe_json(malformed)).to eq(malformed)
+    end
+
+    it "handles tabs and unterminated strings defensively when ck_highlight_json is called directly" do
+      out = helper.ck_highlight_json("{\n\t\"k\":\t\"v\"\n}")
+      expect(out).to include('class="ck-json-key"')
+
+      unterminated = helper.ck_highlight_json('"unterminated')
+      expect(unterminated).to include('class="ck-json-string"')
+    end
+
+    it "leaves stray characters through the :other branch when ck_highlight_json is given non-JSON noise" do
+      out = helper.ck_highlight_json("@@@")
+      expect(out).to eq("@@@")
     end
   end
 
