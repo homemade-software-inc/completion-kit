@@ -17,11 +17,10 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
   end
 
   describe "GET metric show — disagreements section" do
-    it "renders the empty state when no disagreements exist" do
+    it "hides the disagreements section entirely when there are no disagreements yet" do
       get "/completion_kit/metrics/#{metric.id}"
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Where the judge got it wrong")
-      expect(response.body).to include("Nothing here yet")
+      expect(response.body).not_to include("Cases to learn from")
     end
 
     it "lists disagreements with judge + human scores and an Add-as-few-shot button" do
@@ -29,26 +28,26 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       add_review(r1, ai_score: 5.0)
       add_disagree_calibration(r1, corrected: 3.0)
       get "/completion_kit/metrics/#{metric.id}"
-      expect(response.body).to include("Teach the judge")
+      expect(response.body).to include("Remember this")
       expect(response.body).to include("off by a star")
       expect(response.body).to include("row ##{r1.id}")
     end
 
-    it "shows a 'Saved as example' chip and hides the button once a disagreement has been promoted to a teaching example" do
+    it "shows a 'Remembered' chip and hides the button once a disagreement has been pinned" do
       r1 = create(:completion_kit_response, run: run)
       add_review(r1, ai_score: 5.0)
       cal = add_disagree_calibration(r1, corrected: 3.0)
       metric.update!(few_shot_examples: [{ "calibration_id" => cal.id }])
       get "/completion_kit/metrics/#{metric.id}"
-      expect(response.body).to include("Saved as example")
-      expect(response.body).not_to include("Teach the judge")
+      expect(response.body).to include('ck-chip--done">Remembered')
+      expect(response.body).not_to include('value="Remember this"')
     end
 
     it "hides the section when judge_calibration_enabled is off" do
       original = CompletionKit.config.judge_calibration_enabled
       CompletionKit.config.judge_calibration_enabled = false
       get "/completion_kit/metrics/#{metric.id}"
-      expect(response.body).not_to include("Where the judge got it wrong")
+      expect(response.body).not_to include("Cases to learn from")
     ensure
       CompletionKit.config.judge_calibration_enabled = original
     end
@@ -62,7 +61,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       post "/completion_kit/metrics/#{metric.id}/add_few_shot", params: { calibration_id: cal.id }
       expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
       follow_redirect!
-      expect(response.body).to include("Saved as a teaching example")
+      expect(response.body).to include("The judge will remember this")
       metric.reload
       expect(metric.few_shot_examples.size).to eq(1)
       example = metric.few_shot_examples.first

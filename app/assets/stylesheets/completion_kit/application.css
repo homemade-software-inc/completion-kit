@@ -5485,3 +5485,54 @@ a.tag-mark {
 @keyframes ck-saved-flash {
   0% { background: var(--ck-success); border-color: var(--ck-success); }
 }
+
+.ck-disagreement-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ck-disagreement {
+  padding: 14px;
+  background: var(--ck-surface-soft);
+  border: 1px solid var(--ck-line);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ck-disagreement__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ck-disagreement__scores {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ck-disagreement__scores-label {
+  font-family: var(--ck-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
+}
+.ck-disagreement__scores-arrow {
+  color: var(--ck-dim);
+}
+.ck-disagreement__note {
+  margin: 0;
+  color: var(--ck-text);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.ck-disagreement__source {
+  margin: 0;
+  font-size: 0.78rem;
+}

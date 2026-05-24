@@ -109,7 +109,7 @@ module CompletionKit
         "added_at" => Time.current.utc.iso8601
       }
       @metric.update!(few_shot_examples: examples)
-      redirect_to metric_path(@metric), notice: "Saved as a teaching example. The judge will see it next time it grades."
+      redirect_to metric_path(@metric), notice: "Got it. The judge will remember this next time it grades."
     end
 
     private
