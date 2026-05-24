@@ -15,12 +15,12 @@
   <span class="ck-trust-line__label"><%= heroicon_tag "adjustments-horizontal", variant: :outline, "aria-hidden": "true" %>Calibration</span>
   <% if stats.sample_size.zero? %>
     <span class="ck-trust-line__state">Not measured yet.</span>
-    <span class="ck-trust-line__hint">We need <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> verdicts from you on how this metric is performing before we can measure how trustworthy it is.<% if target_response %>
+    <span class="ck-trust-line__hint">Needs <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> verdicts on the judge's scores.<% if target_response %>
       <%= link_to "Give a verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %>
     <% else %> Run this metric on a dataset, then give a verdict.<% end %></span>
   <% elsif stats.counter_only? %>
     <span class="ck-trust-line__counter"><%= stats.sample_size %>/<%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %></span>
-    <span class="ck-trust-line__hint"><%= pluralize(stats.sample_size, "verdict") %><% if stats.short_to_target > 0 %> · <%= stats.short_to_target %> more to go before we can call it<% end %><% if target_response %> · <%= link_to "Give another verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %><% end %></span>
+    <span class="ck-trust-line__hint"><%= pluralize(stats.sample_size, "verdict") %><% if stats.short_to_target > 0 %> · <%= stats.short_to_target %> more before this can be measured<% end %><% if target_response %> · <%= link_to "Give another verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %><% end %></span>
   <% else %>
     <span class="ck-trust-line__score" title="Roughly how often the judge and the humans agreed.">~<%= (stats.agreement_point * 100).round %>%</span>
     <span class="ck-trust-line__margin" title="The range we're confident the true rate sits in.">±<%= (stats.margin * 100).round %> pt</span>

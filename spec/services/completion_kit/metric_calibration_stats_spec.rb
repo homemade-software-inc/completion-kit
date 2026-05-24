@@ -83,6 +83,56 @@ RSpec.describe CompletionKit::MetricCalibrationStats, type: :service do
       expect(scoped.disagree_count).to eq(1)
     end
 
+    it "defaults to the metric's current published judge version, ignoring verdicts on superseded versions" do
+      old_version = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      r1 = add_response(ai_score: 4)
+      create(:completion_kit_calibration,
+             run: run, response: r1, metric: metric,
+             judge_version: old_version, verdict: "agree", created_by: "alice")
+      create(:completion_kit_calibration,
+             run: run, response: add_response(ai_score: 3), metric: metric,
+             judge_version: old_version, verdict: "agree", created_by: "bob")
+
+      old_version.update!(current: false)
+      new_version = CompletionKit::JudgeVersion.create!(
+        metric: metric, instruction: "rewritten",
+        rubric_bands: metric.rubric_bands, state: "published", current: true
+      )
+      create(:completion_kit_calibration,
+             run: run, response: add_response(ai_score: 5), metric: metric,
+             judge_version: new_version, verdict: "agree", created_by: "casey")
+
+      stats = described_class.for(metric)
+      expect(stats.sample_size).to eq(1)
+      expect(CompletionKit::Calibration.where(metric_id: metric.id).count).to eq(3)
+    end
+
+    it "returns lifetime stats across all versions when judge_version: nil is passed explicitly" do
+      old_version = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      create(:completion_kit_calibration,
+             run: run, response: add_response(ai_score: 4), metric: metric,
+             judge_version: old_version, verdict: "agree", created_by: "alice")
+      old_version.update!(current: false)
+      new_version = CompletionKit::JudgeVersion.create!(
+        metric: metric, instruction: "rewritten",
+        rubric_bands: metric.rubric_bands, state: "published", current: true
+      )
+      create(:completion_kit_calibration,
+             run: run, response: add_response(ai_score: 5), metric: metric,
+             judge_version: new_version, verdict: "agree", created_by: "bob")
+
+      lifetime = described_class.for(metric, judge_version: nil)
+      expect(lifetime.sample_size).to eq(2)
+    end
+
+    it "yields an empty result when the metric has no current published version" do
+      orphan = create(:completion_kit_metric)
+      CompletionKit::JudgeVersion.where(metric_id: orphan.id).destroy_all
+      stats = described_class.for(orphan)
+      expect(stats.sample_size).to eq(0)
+      expect(stats.gate).to eq(:counter)
+    end
+
     it "returns zero sample_size with nil interval bounds when no calibrations exist" do
       stats = described_class.for(metric)
       expect(stats.sample_size).to eq(0)
