@@ -112,9 +112,7 @@
             </div>
           </div>
           <% if review.ai_feedback.present? %>
-            <div class="ck-review-card__feedback">
-              <div class="ck-note-box"><%= review.ai_feedback %></div>
-            </div>
+            <p class="ck-review-card__feedback"><%= review.ai_feedback %></p>
           <% end %>
           <% if CompletionKit.config.judge_calibration_enabled && review.metric && review.ai_score %>
             <% existing = CompletionKit::Calibration.find_by(

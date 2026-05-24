@@ -2771,10 +2771,16 @@ select.ck-input {
 }
 
 .ck-review-card {
-  border: 1px solid var(--ck-line);
-  border-radius: var(--ck-radius-lg);
-  background: var(--ck-surface);
-  padding: 1.5rem;
+  padding: 1rem 0;
+}
+.ck-review-card + .ck-review-card {
+  border-top: 1px solid var(--ck-line);
+}
+.ck-review-card:first-child {
+  padding-top: 0.5rem;
+}
+.ck-review-card:last-child {
+  padding-bottom: 0.25rem;
 }
 
 .ck-review-card__header {
@@ -2797,11 +2803,9 @@ select.ck-input {
 }
 
 .ck-review-card__feedback {
-  margin-top: 0.75rem;
-}
-
-.ck-review-card__feedback .ck-note-box {
-  margin-top: 0;
+  margin: 0.6rem 0 0;
+  color: var(--ck-muted);
+  line-height: 1.55;
 }
 
 @media (max-width: 900px) {
@@ -5259,14 +5263,10 @@ a.tag-mark {
 .ck-calibration__pill--disagree:hover { border-color: rgba(248, 113, 113, 0.45); color: var(--ck-danger); }
 .ck-calibration__pill--borderline:hover { border-color: rgba(224, 164, 88, 0.45); color: var(--ck-warning); }
 .ck-calibration__detail {
-  margin-top: 14px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 16px;
-  background: var(--ck-surface-soft);
-  border: 1px solid var(--ck-line);
-  border-radius: 6px;
+  gap: 12px;
 }
 .ck-calibration__detail > * {
   margin: 0;
