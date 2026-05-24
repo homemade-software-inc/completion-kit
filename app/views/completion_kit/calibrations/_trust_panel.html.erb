@@ -1,21 +1,16 @@
 <% stats = local_assigns[:stats] %>
 <% metric = local_assigns[:metric] %>
 <% if stats.sample_size.zero? %>
-  <% recent_runs = metric ? CompletionKit::Run.joins(responses: :reviews).where(reviews: { metric_id: metric.id }).where.not(reviews: { ai_score: nil }).distinct.order(created_at: :desc).limit(3) : [] %>
-  <div class="ck-trust-empty">
-    <p class="ck-trust-empty__line">
-      <span class="ck-trust-empty__label">Trust level</span>
-      No score yet. Give a verdict on any scored row to start.
-    </p>
-    <% if recent_runs.any? %>
-      <p class="ck-trust-empty__runs">
-        Jump to a recent run:
-        <% recent_runs.each_with_index do |run, idx| %>
-          <%= link_to run.name.to_s.truncate(40), ck_run_path(run), class: "ck-link" %><%= idx < recent_runs.length - 1 ? " · " : "" %>
-        <% end %>
-      </p>
+  <% target_response = metric ? CompletionKit::Response.joins(:reviews).where(reviews: { metric_id: metric.id }).where.not(reviews: { ai_score: nil }).order(created_at: :desc).first : nil %>
+  <p class="ck-trust-empty">
+    <span class="ck-trust-empty__label">Trust level</span>
+    No score yet.
+    <% if target_response %>
+      <%= link_to "Give a verdict", run_response_path(target_response.run, target_response), class: "ck-link" %> on any scored row to start.
+    <% else %>
+      Run this metric on a dataset, then give a verdict on any scored row.
     <% end %>
-  </div>
+  </p>
 <% else %>
   <div class="ck-trust-panel ck-trust-panel--<%= stats.gate %>">
     <p class="ck-trust-panel__label" title="How often this metric's scores match the humans who reviewed them.">Trust level</p>
