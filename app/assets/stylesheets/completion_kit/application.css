@@ -4048,7 +4048,7 @@ table.ck-runs-table {
 }
 .ck-rubric-diff__row {
   display: grid;
-  grid-template-columns: 90px 1fr;
+  grid-template-columns: 110px 1fr;
   gap: 1px;
   align-items: stretch;
   background: var(--ck-surface);
@@ -4058,14 +4058,14 @@ table.ck-runs-table {
 .ck-rubric-diff__row--unchanged { opacity: 0.55; }
 .ck-rubric-diff__stars {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 2px;
   padding: 0.75rem 0.85rem;
   background: var(--ck-bg-strong);
   border-right: 1px solid var(--ck-line);
+  white-space: nowrap;
 }
-.ck-rubric-diff__stars svg { width: 12px; height: 12px; }
+.ck-rubric-diff__stars svg { width: 12px; height: 12px; flex-shrink: 0; }
 .ck-rubric-diff__panes {
   display: grid;
   grid-template-columns: 1fr 1fr;

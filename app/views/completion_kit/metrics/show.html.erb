@@ -16,49 +16,6 @@
         <%= render "completion_kit/tags/marks", tags: @metric.tags %>
       </div>
     <% end %>
-    <% if CompletionKit.config.judge_calibration_enabled %>
-      <% if @edit_draft %>
-        <% pub_instr = @published_judge_version&.instruction.to_s %>
-        <% draft_instr = @edit_draft.instruction.to_s %>
-        <% instruction_changed = pub_instr != draft_instr %>
-        <% rubric_changed = @published_judge_version && @published_judge_version.rubric_bands != @edit_draft.rubric_bands %>
-        <section class="ck-card ck-card--spaced ck-draft-pending">
-          <div class="ck-prompt-preview__header">
-            <p class="ck-kicker">Draft pending</p>
-            <%= button_to "Publish this version", publish_draft_metric_path(@metric, draft_id: @edit_draft.id),
-                  method: :post, form_class: "inline-block",
-                  class: ck_button_classes(:dark) %>
-          </div>
-          <p class="ck-meta-copy">A draft of this metric is saved. Publishing it replaces the live instruction<%= ", rubric," if rubric_changed %> for future runs. Here's what changes.</p>
-
-          <% if instruction_changed %>
-            <div class="ck-suggest-diff">
-              <div class="ck-suggest-diff__pane">
-                <div class="ck-suggest-diff__header">
-                  <span class="ck-suggest-diff__label ck-suggest-diff__label--before">Currently live</span>
-                </div>
-                <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(pub_instr, draft_instr) %></pre>
-              </div>
-              <div class="ck-suggest-diff__pane">
-                <div class="ck-suggest-diff__header">
-                  <span class="ck-suggest-diff__label ck-suggest-diff__label--after">Draft</span>
-                </div>
-                <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(pub_instr, draft_instr) %></pre>
-              </div>
-            </div>
-          <% else %>
-            <p class="ck-meta-copy">The instruction is unchanged.</p>
-          <% end %>
-
-          <% if rubric_changed %>
-            <p class="ck-kicker ck-kicker--inset">Rubric changes</p>
-            <%= render "completion_kit/metrics/rubric_diff",
-                  current_bands: @published_judge_version&.rubric_bands || [],
-                  draft_bands: @edit_draft.rubric_bands || [] %>
-          <% end %>
-        </section>
-      <% end %>
-    <% end %>
   </div>
   <div class="ck-actions">
     <% if CompletionKit.config.judge_calibration_enabled %>
@@ -80,6 +37,48 @@
     <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
+
+<% if CompletionKit.config.judge_calibration_enabled && @edit_draft %>
+  <% pub_instr = @published_judge_version&.instruction.to_s %>
+  <% draft_instr = @edit_draft.instruction.to_s %>
+  <% instruction_changed = pub_instr != draft_instr %>
+  <% rubric_changed = @published_judge_version && @published_judge_version.rubric_bands != @edit_draft.rubric_bands %>
+  <section class="ck-card ck-card--spaced ck-draft-pending">
+    <div class="ck-prompt-preview__header">
+      <p class="ck-kicker">Draft pending</p>
+      <%= button_to "Publish this version", publish_draft_metric_path(@metric, draft_id: @edit_draft.id),
+            method: :post, form_class: "inline-block",
+            class: ck_button_classes(:dark) %>
+    </div>
+    <p class="ck-meta-copy">A draft of this metric is saved. Publishing it replaces the live instruction<%= ", rubric," if rubric_changed %> for future runs. Here's what changes.</p>
+
+    <% if instruction_changed %>
+      <div class="ck-suggest-diff">
+        <div class="ck-suggest-diff__pane">
+          <div class="ck-suggest-diff__header">
+            <span class="ck-suggest-diff__label ck-suggest-diff__label--before">Currently live</span>
+          </div>
+          <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(pub_instr, draft_instr) %></pre>
+        </div>
+        <div class="ck-suggest-diff__pane">
+          <div class="ck-suggest-diff__header">
+            <span class="ck-suggest-diff__label ck-suggest-diff__label--after">Draft</span>
+          </div>
+          <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(pub_instr, draft_instr) %></pre>
+        </div>
+      </div>
+    <% else %>
+      <p class="ck-meta-copy">The instruction is unchanged.</p>
+    <% end %>
+
+    <% if rubric_changed %>
+      <p class="ck-kicker ck-kicker--inset">Rubric changes</p>
+      <%= render "completion_kit/metrics/rubric_diff",
+            current_bands: @published_judge_version&.rubric_bands || [],
+            draft_bands: @edit_draft.rubric_bands || [] %>
+    <% end %>
+  </section>
+<% end %>
 
 <% if @metric.instruction.present? %>
 <section class="ck-card">
