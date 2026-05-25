@@ -52,6 +52,7 @@ module CompletionKit
 
     def edit
       @suggestion_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
+      @edit_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @published_judge_version = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
     end
 
@@ -99,7 +100,7 @@ module CompletionKit
     end
 
     def dismiss_suggestion
-      draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").find_by(id: params[:draft_id])
+      draft = JudgeVersion.drafts.where(metric_id: @metric.id).find_by(id: params[:draft_id])
       draft&.destroy
       target = params[:back_to] == "edit" ? edit_metric_path(@metric) : metric_path(@metric)
       redirect_to target, notice: "Dismissed."

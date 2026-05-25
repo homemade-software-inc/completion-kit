@@ -17,11 +17,16 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     }.not_to change { CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).count }
   end
 
-  it "shows the draft banner on the metric show page" do
+  it "shows a 'Review draft →' affordance on the metric show page and the draft banner on edit" do
     metric.update!(instruction: "score it carefully")
     get "/completion_kit/metrics/#{metric.id}"
+    expect(response.body).not_to include("Draft pending")
+    expect(response.body).to include("Review draft")
+
+    get "/completion_kit/metrics/#{metric.id}/edit"
     expect(response.body).to include("Draft pending")
     expect(response.body).to include("Publish this version")
+    expect(response.body).to include("Discard draft")
   end
 
   it "publishes the latest draft, demoting the previous published version" do

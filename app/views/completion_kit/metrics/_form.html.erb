@@ -1,4 +1,5 @@
 <% suggestion = local_assigns[:suggestion_draft] %>
+<% edit_draft = local_assigns[:edit_draft] %>
 <% suggestion_bands = suggestion ? Array(suggestion.rubric_bands).each_with_object({}) { |b, h| h[b["stars"].to_i] = b["description"].to_s } : {} %>
 <% suggested_instruction = suggestion&.instruction.to_s %>
 <% instruction_changed = suggestion && suggested_instruction.present? && suggested_instruction != metric.instruction.to_s %>
@@ -12,6 +13,27 @@
           <li><%= message %></li>
         <% end %>
       </ul>
+    </div>
+  <% end %>
+
+  <% if edit_draft && !suggestion %>
+    <% pub = local_assigns[:published_judge_version] %>
+    <% draft_instr_changed = pub && pub.instruction.to_s != edit_draft.instruction.to_s %>
+    <% draft_rubric_changed = pub && pub.rubric_bands != edit_draft.rubric_bands %>
+    <div class="ck-suggestion-banner" role="status">
+      <div class="ck-suggestion-banner__body">
+        <p class="ck-kicker">Draft pending</p>
+        <p class="ck-meta-copy">An unpublished draft of this metric is saved. Publish to replace the live<%= " instruction" if draft_instr_changed %><%= " and" if draft_instr_changed && draft_rubric_changed %><%= " rubric" if draft_rubric_changed %> for future runs, or keep editing.</p>
+      </div>
+      <div class="ck-suggestion-banner__actions">
+        <%= button_to "Discard draft", dismiss_suggestion_metric_path(metric, draft_id: edit_draft.id, back_to: "edit"),
+              method: :delete, form_class: "inline-block",
+              class: ck_button_classes(:light, variant: :outline),
+              data: { turbo_confirm: "Drop this draft?" } %>
+        <%= button_to "Publish this version", publish_draft_metric_path(metric, draft_id: edit_draft.id),
+              method: :post, form_class: "inline-block",
+              class: ck_button_classes(:dark) %>
+      </div>
     </div>
   <% end %>
 
