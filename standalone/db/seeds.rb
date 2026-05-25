@@ -423,29 +423,81 @@ metric_tags.each do |metric_name, names|
   CompletionKit::Metric.find_by(name: metric_name)&.update!(tag_names: names)
 end
 
-CompletionKit::Calibration.where(created_by: %w[operator_1 operator_2 operator_3]).delete_all
-
 current_operator = CompletionKit.config.username.presence || "operator"
+
+CompletionKit::Calibration.where(created_by: %w[operator_1 operator_2 operator_3]).delete_all
+CompletionKit::Calibration.where(created_by: current_operator).delete_all
+%w[Tone Accuracy Helpfulness Confidence Urgency\ Calibration Clarity Completeness Brevity Category\ Accuracy].each do |raw|
+  name = raw.tr("\\", "")
+  m = CompletionKit::Metric.find_by(name: name)
+  next unless m
+  m.update_columns(few_shot_examples: nil) if m.few_shot_examples.present?
+  CompletionKit::JudgeVersion.drafts.where(metric_id: m.id).destroy_all
+  pubs = CompletionKit::JudgeVersion.published.where(metric_id: m.id).order(:version_number).to_a
+  if pubs.size > 1
+    pubs.last(pubs.size - 1).each(&:destroy)
+    pubs.first.update_columns(current: true)
+    m.update_columns(instruction: pubs.first.instruction, rubric_bands: Array(pubs.first.rubric_bands).to_json)
+  end
+end
+
+publish_new_version = lambda do |metric, instruction:, rubric_bands:|
+  v = CompletionKit::JudgeVersion.create!(
+    metric: metric, instruction: instruction, rubric_bands: rubric_bands,
+    state: "draft", source: "suggestion"
+  )
+  v.publish!
+  v
+end
+
+accuracy_metric = CompletionKit::Metric.find_by!(name: "Accuracy")
+publish_new_version.call(accuracy_metric,
+  instruction: "Are the factual claims and policy statements in the reply correct? It must not invent policies, prices, deadlines, or product features. Soft claims that could mislead are also penalised.",
+  rubric_bands: [
+    { "stars" => 5, "description" => "Every factual claim is verifiable and grounded in the ticket. Policies cited are real. Numbers, dates, and product behaviour all match what's known." },
+    { "stars" => 4, "description" => "One minor embellishment or slightly soft claim, but nothing that would mislead the customer." },
+    { "stars" => 3, "description" => "Mostly accurate but includes one detail that's questionable (e.g. cites a feature with the wrong limit, references a policy loosely)." },
+    { "stars" => 2, "description" => "Multiple inaccuracies or invented details that could cause material confusion or future complaints." },
+    { "stars" => 1, "description" => "Contradicts ticket facts, invents policies that don't exist, or commits the company to something it can't deliver." }
+  ]
+)
+
+confidence_metric = CompletionKit::Metric.find_by!(name: "Confidence")
+publish_new_version.call(confidence_metric,
+  instruction: "Is the model's confidence well-calibrated? It should hedge when the ticket is genuinely ambiguous, commit when it isn't, and never be confidently wrong.",
+  rubric_bands: [
+    { "stars" => 5, "description" => "Confidence tracks actual ambiguity. Hedges where the ticket is unclear; commits where it isn't. Rationale references the specific signal." },
+    { "stars" => 4, "description" => "Calibration is mostly right with one slight over- or under-confident call." },
+    { "stars" => 3, "description" => "Calibration is roughly right but the confidence statement is generic enough to fit anything." },
+    { "stars" => 2, "description" => "Overconfident on at least one clearly ambiguous case, or vague on a clear one." },
+    { "stars" => 1, "description" => "Overconfident on ambiguous tickets and confidently wrong. Confidence carries no signal." }
+  ]
+)
 
 disagree_notes = {
   "Accuracy" => [
-    "The '24 months from issue' policy isn't documented anywhere I can find. Either soft-claim or wrong.",
-    "WELCOME20 is first-time-customer only; the date check is a red herring. The judge gave it too much credit.",
-    "Tracking confirmation isn't proof of delivery here — both neighbours' Rings show no van. Judge shouldn't credit the reply.",
-    "Grandfather offer would need retention sign-off. Calling that 'verifiable' is a stretch."
+    ["The '24 months from issue' policy isn't documented anywhere I can find. Either soft-claim or wrong.", -1],
+    ["WELCOME20 is first-time-customer only; the date check is a red herring. Judge missed the whole reason for rejection.", -2],
+    ["Tracking confirmation isn't proof of delivery — both neighbours' Rings show no van. Judge credited the reply for accuracy it didn't earn.", -2],
+    ["Grandfather offer needs retention sign-off before being written down. The reply committed to it. Calling that 'verifiable' is a stretch.", -1]
   ],
   "Tone" => [
-    "Reply is procedural for a ticket that has wedding-deadline pressure. Tone score should be lower.",
-    "Stock phrase 'we apologise for the inconvenience' shouldn't earn a 5."
+    ["Reply is procedural for a ticket that has wedding-deadline pressure. The 'thanks for the report' opener undersells it.", -2],
+    ["Acknowledges the human stakes well; judge undersold the warmth here.", +1]
   ],
   "Confidence" => [
-    "Model committed to 'critical' on a clear-cut shipping case where 'high' is the better fit.",
-    "Overconfident on the urgency given the active-cart signal was ignored.",
-    "Hedged on a case that's textbook account_access — should have been definite."
+    ["Model committed to 'critical' on a clear-cut shipping case where 'high' was the right call.", -1],
+    ["Overconfident on the urgency call; the active-cart signal was ignored entirely.", -2],
+    ["Hedged on a case that's textbook account_access. Judge should have been definite.", +1],
+    ["Confidence chip on the loyalty case said 'medium' but the rationale was speculative — should be lower.", -1]
   ],
   "Urgency Calibration" => [
-    "Wedding-deadline shipping case is critical, not high.",
-    "Loyalty churn from a 6-year $4k/year member deserves the top urgency tier."
+    ["Wedding-deadline shipping case is critical, not high. The customer named the date.", -1],
+    ["Loyalty churn from a 6-year $4k/year member deserves the top urgency tier; high is too low.", -2]
+  ],
+  "Clarity" => [
+    ["The 'who is the customer' fact got truncated, makes the summary feel generic.", -1],
+    ["'Reads strangely' isn't a one-read summary; a triage agent would re-read.", -1]
   ]
 }.freeze
 
@@ -457,7 +509,7 @@ borderline_notes = {
     "Borderline because the reply commits to a stopgap that may or may not get retention sign-off."
   ],
   "Confidence" => [
-    "Defensible either as well-calibrated or slightly overconfident."
+    "Defensible either as well-calibrated or slightly overconfident — rubric needs a band for 'committed where ambiguous.'"
   ],
   "Urgency Calibration" => [
     "High vs critical is a judgement call here; either is defensible.",
@@ -465,6 +517,9 @@ borderline_notes = {
     "Account access + credit deadline → medium feels right but low is also reasonable.",
     "Churn risk at this spend is high, but argument exists for critical.",
     "Refund + 11-day delay is critical, but high is also justifiable."
+  ],
+  "Clarity" => [
+    "Borderline because the placeholder '~$X' kept the structure intact but degraded the actual usefulness."
   ]
 }.freeze
 
@@ -477,7 +532,7 @@ seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
     .distinct.order(:created_at).to_a
   next if reviewed_responses.empty?
 
-  metric_disagree_notes = disagree_notes[metric_name] || ["Judge missed a fact the ticket made plain."]
+  metric_disagree_notes = disagree_notes[metric_name] || [["Judge missed a fact the ticket made plain.", -1]]
   metric_borderline_notes = borderline_notes[metric_name] || ["Rubric was ambiguous between two bands."]
 
   total = [agree + disagree + borderline, reviewed_responses.size].min
@@ -498,8 +553,9 @@ seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
     attrs = { run: resp.run, response: resp, metric: metric, judge_version: jv, verdict: verdict, created_by: current_operator }
     if verdict == "disagree"
       live = resp.reviews.find_by(metric_id: metric.id)
-      attrs[:corrected_score] = ((live&.ai_score || 3.0) - 1).clamp(1, 5)
-      attrs[:note] = metric_disagree_notes[disagree_index % metric_disagree_notes.size]
+      note, offset = metric_disagree_notes[disagree_index % metric_disagree_notes.size]
+      attrs[:corrected_score] = ((live&.ai_score || 3.0) + offset).clamp(1, 5)
+      attrs[:note] = note
       disagree_index += 1
     elsif verdict == "borderline"
       attrs[:note] = metric_borderline_notes[borderline_index % metric_borderline_notes.size]
@@ -510,30 +566,39 @@ seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
 end
 
 seed_calibrations.call(metric_name: "Tone",                agree: 3,  disagree: 1, borderline: 0)
-seed_calibrations.call(metric_name: "Accuracy",            agree: 6,  disagree: 2, borderline: 2)
-seed_calibrations.call(metric_name: "Confidence",          agree: 12, disagree: 2, borderline: 1)
+seed_calibrations.call(metric_name: "Accuracy",            agree: 5,  disagree: 3, borderline: 2)
+seed_calibrations.call(metric_name: "Confidence",          agree: 10, disagree: 3, borderline: 1)
 seed_calibrations.call(metric_name: "Urgency Calibration", agree: 5,  disagree: 2, borderline: 5)
+seed_calibrations.call(metric_name: "Clarity",             agree: 8,  disagree: 2, borderline: 1)
+seed_calibrations.call(metric_name: "Category Accuracy",   agree: 6,  disagree: 0, borderline: 0)
 
-accuracy_metric = CompletionKit::Metric.find_by!(name: "Accuracy")
-pinned = CompletionKit::Calibration.where(metric_id: accuracy_metric.id, verdict: "disagree").first
-if pinned && Array(accuracy_metric.few_shot_examples).none? { |fs| fs["calibration_id"] == pinned.id }
-  resp = pinned.response
-  review = resp.reviews.find_by(metric_id: accuracy_metric.id)
-  examples = Array(accuracy_metric.few_shot_examples)
-  examples << {
+pin_few_shot = lambda do |metric, calibration|
+  return unless calibration
+  return if Array(metric.few_shot_examples).any? { |fs| fs["calibration_id"] == calibration.id }
+  resp = calibration.response
+  review = resp.reviews.find_by(metric_id: metric.id)
+  examples = Array(metric.few_shot_examples) + [{
     "input" => resp.input_data.to_s.truncate(2000),
     "response" => resp.response_text.to_s.truncate(2000),
     "judge_score" => review&.ai_score&.to_f,
     "judge_feedback" => review&.ai_feedback.to_s.truncate(1000),
-    "human_score" => pinned.corrected_score&.to_f,
-    "human_note" => pinned.note.to_s.truncate(1000),
-    "calibration_id" => pinned.id,
+    "human_score" => calibration.corrected_score&.to_f,
+    "human_note" => calibration.note.to_s.truncate(1000),
+    "calibration_id" => calibration.id,
     "added_at" => Time.current.utc.iso8601
-  }
-  accuracy_metric.update!(few_shot_examples: examples)
+  }]
+  metric.update!(few_shot_examples: examples)
 end
 
-CompletionKit::JudgeVersion.drafts.where(metric_id: accuracy_metric.id, source: "suggestion").destroy_all
+accuracy_metric = CompletionKit::Metric.find_by!(name: "Accuracy")
+accuracy_disagrees = CompletionKit::Calibration.where(metric_id: accuracy_metric.id, verdict: "disagree").order(:id).to_a
+pin_few_shot.call(accuracy_metric, accuracy_disagrees[0])
+pin_few_shot.call(accuracy_metric, accuracy_disagrees[1])
+
+confidence_metric = CompletionKit::Metric.find_by!(name: "Confidence")
+confidence_disagree = CompletionKit::Calibration.where(metric_id: confidence_metric.id, verdict: "disagree").order(:id).first
+pin_few_shot.call(confidence_metric, confidence_disagree)
+
 CompletionKit::JudgeVersion.create!(
   metric: accuracy_metric,
   instruction: "Are the factual claims and policy statements in the reply correct, and grounded in the ticket plus known company facts? Flag any invented policy, price, deadline, or product feature. Soft claims that could mislead the customer also count against the score.",
@@ -544,13 +609,23 @@ CompletionKit::JudgeVersion.create!(
     { "stars" => 2, "description" => "Multiple inaccuracies or invented details that could cause material confusion, public complaints, or future support load." },
     { "stars" => 1, "description" => "Contradicts ticket facts, invents policies that don't exist, or commits the company to something it can't deliver." }
   ],
-  state: "draft",
-  source: "suggestion",
-  current: false
+  state: "draft", source: "suggestion", current: false
+)
+
+CompletionKit::JudgeVersion.create!(
+  metric: confidence_metric,
+  instruction: "Is the model's confidence well-calibrated against the ticket's actual ambiguity? It should hedge when the ticket is genuinely unclear, commit when it isn't, and the rationale should name the signal it leaned on (e.g. 'six-year tenure plus alternatives language').",
+  rubric_bands: [
+    { "stars" => 5, "description" => "Confidence tracks actual ambiguity. Hedges where the ticket is unclear, commits where it isn't. Rationale names the signal." },
+    { "stars" => 4, "description" => "Mostly right with one slight over- or under-confident call. Rationale could be sharper." },
+    { "stars" => 3, "description" => "Calibration is roughly right but the confidence statement is generic enough to fit anything." },
+    { "stars" => 2, "description" => "Overconfident on at least one clearly ambiguous case, or vague on a clear one." },
+    { "stars" => 1, "description" => "Overconfident on ambiguous tickets and confidently wrong. Confidence carries no signal." }
+  ],
+  state: "draft", source: "suggestion", current: false
 )
 
 helpfulness_metric = CompletionKit::Metric.find_by!(name: "Helpfulness")
-CompletionKit::JudgeVersion.drafts.where(metric_id: helpfulness_metric.id, source: "edit").destroy_all
 CompletionKit::JudgeVersion.create!(
   metric: helpfulness_metric,
   instruction: "Does the reply move the case forward in one round-trip? It should resolve the question, propose a concrete next step the customer can act on, or both. Replies that defer, ask for information already in the ticket, or commit to nothing don't count as helpful.",
@@ -561,9 +636,7 @@ CompletionKit::JudgeVersion.create!(
     { "stars" => 2, "description" => "Deflects, asks for information already in the ticket, or stalls without committing to anything." },
     { "stars" => 1, "description" => "Unhelpful, off-topic, or contradicts what the customer asked for." }
   ],
-  state: "draft",
-  source: "edit",
-  current: false
+  state: "draft", source: "edit", current: false
 )
 
 puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews, #{CompletionKit::Tag.count} tags, #{CompletionKit::Calibration.count} calibrations, #{CompletionKit::JudgeVersion.drafts.count} draft judge versions"

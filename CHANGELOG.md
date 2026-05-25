@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.43] - 2026-05-25
+
+### Added
+
+- **Judge versioning surfaces, mirroring prompt versioning.** Each metric show page now carries a Versions table listing every `JudgeVersion` (drafts and published) with a state-aware action chip per row (Published / Publish / Make current), a Δ button per row opening a side-by-side word-diff modal of the instruction + per-band rubric_diff against the predecessor, and a Source column showing the chip-styled provenance (Original / Manual edit / AI suggestion). New `version_number` and `published_at` columns on `JudgeVersion`, plus a `publish!` model method that transactionally flips current, demotes peers, and writes the new instruction + rubric_bands back onto the Metric. The `publish_draft` controller action is now version-agnostic: it handles draft → live, suggestion → live, and revert-to-older-published in one route. The flash carries the version label ("Accuracy v3 is now the published version").
+- **Calibration verdicts scope to the current judge version.** `MetricCalibrationStats.for(metric)` now defaults to the metric's current published `JudgeVersion`, so publishing a new judge via "Take everything" or "Make current" resets the trust counter to 0/10 honestly. Old verdicts stay on the version they were made against. Pass `judge_version: nil` for lifetime stats across all versions; pass an explicit version to scope to it.
+- **Drafts review inline on the edit form.** Both edit-drafts and suggestion-drafts now funnel through the metric edit form. The form banner shows the relevant draft (suggestion or edit) with Discard / Take everything controls and inline word-diff panels under the instruction textarea and under each changed rubric band. The metric show page no longer carries draft panels — it shows the live state with a header button (`Review draft →` or `Review improvements →`) routing to the edit surface.
+- **"What others said" disclosure on response calibration.** When verdicts from other operators exist on a row+metric, the verdict prompt surfaces a count plus a disclosure listing each prior verdict color-coded by type, with stars for the corrected score and the operator's note.
+- **Forget a remembered case.** New `DELETE /metrics/:id/remove_few_shot` route. Pinned disagreements in "Cases to learn from" now render a `FORGET` button next to the `REMEMBERED` chip. `JudgeReviewJob` finally passes `metric.few_shot_examples` to `JudgeService` as `human_examples`, so pinned cases actually reach the judge prompt at grading time (a long-standing latent bug).
+- **Per-case version chip** in "Cases to learn from". Each disagreement row wears a small `v2`-style chip indicating which judge version produced the score being verdicted, with `--past` dimming for verdicts on superseded versions. The display query is unscoped to show full history; the Improve-the-metric gate stays scoped to current-version disagreements via a separate count.
+
+### Changed
+
+- **"Trust level" → "Calibration"** across user-facing copy. Score is the per-row 1–5, verdict is the act, calibration is the aggregate signal. Shield-check icon swapped for `adjustments-horizontal` because calibration is tuning, not trust.
+- **No more "row" in user-facing copy.** `View row N` → `View case N`, `Rows where...` → `Cases where...`, pin/forget tooltips reference `this case`, retry-failed button reads "Retry N failed cases", API reference dataset summary reads "N entries".
+- **Mutually exclusive improvement buttons** on metric show. `Improve the metric` and `Review improvements →` never appear together; the second replaces the first when a suggestion draft exists. Regenerate moved into the edit-form suggestion banner with turbo-confirm.
+- **Seed data rebuilt for signal.** Single configured operator. Per-metric disagreement notes mapped to actual seeded tickets. Per-note corrected_score offsets (sometimes off by 1, sometimes by 2, sometimes judge undersold). Multiple metrics carry version history, pinned few-shot cases, pending drafts, and varied borderline rates so the metrics index demonstrates the full range of trust states.
+
+### Fixed
+
+- **`row_index` populated on seeded responses** so the `View case N in <run>` link doesn't fall back to `(nil || 0) + 1 = 1` for every response, falsely collapsing different cases to "row 1".
+- **Trash button height in form action bars** matches the CANCEL/SAVE row instead of being half the height with a 1-pixel icon inside.
+
 ## [0.5.42] - 2026-05-24
 
 ### Added
