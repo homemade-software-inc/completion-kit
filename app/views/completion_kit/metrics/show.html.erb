@@ -174,9 +174,14 @@
       <% @disagreements.each do |cal| %>
         <% review = cal.response.reviews.find { |r| r.metric_id == @metric.id } %>
         <% already = existing_ids.include?(cal.id) %>
-        <li class="ck-disagreement<%= " ck-disagreement--remembered" if already %>">
+        <% cal_version = cal.judge_version %>
+        <% on_current = cal_version&.id == @published_judge_version.id %>
+        <li class="ck-disagreement<%= " ck-disagreement--remembered" if already %><%= " ck-disagreement--stale" unless on_current %>">
           <div class="ck-disagreement__head">
             <div class="ck-disagreement__scores">
+              <% if cal_version %>
+                <span class="ck-source-chip <%= on_current ? "ck-source-chip--current" : "ck-source-chip--past" %>" title="<%= on_current ? "Verdict on the live judge version." : "Verdict on a superseded judge version." %>"><%= cal_version.version_label %></span>
+              <% end %>
               <span class="ck-disagreement__scores-label">Judge</span>
               <% if review&.ai_score %>
                 <span class="<%= ck_badge_classes(ck_score_kind(review.ai_score.to_f)) %>"><%= review.ai_score %></span>
@@ -217,7 +222,8 @@
           <p class="ck-disagreement__source ck-meta-copy">
             <%= link_to run_response_path(cal.response.run, cal.response, anchor: @metric.name.parameterize),
                     class: "ck-disagreement__source-link" do %>
-              View row <%= (cal.response.row_index || 0) + 1 %> in <%= cal.response.run.name.to_s.truncate(50) %> →
+              <% row_display = cal.response.row_index.nil? ? "##{cal.response.id}" : (cal.response.row_index + 1).to_s %>
+              View row <%= row_display %> in <%= cal.response.run.name.to_s.truncate(50) %> →
             <% end %>
           </p>
         </li>

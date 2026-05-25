@@ -36,14 +36,14 @@ module CompletionKit
 
     def show
       @published_judge_version = JudgeVersion.ensure_current_for(@metric)
-      @disagreements = Calibration.where(metric_id: @metric.id, verdict: "disagree",
-                                         judge_version_id: @published_judge_version.id)
-                                  .includes(response: [:reviews, :run])
+      @disagreements = Calibration.where(metric_id: @metric.id, verdict: "disagree")
+                                  .includes(:judge_version, response: [:reviews, :run])
                                   .order(created_at: :desc)
                                   .limit(50)
       @edit_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @suggestion_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
-      @improve_disagreement_count = @disagreements.size
+      @improve_disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree",
+                                                      judge_version_id: @published_judge_version.id).count
       @versions = JudgeVersion.where(metric_id: @metric.id).order(version_number: :desc).to_a
     end
 

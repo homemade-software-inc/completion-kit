@@ -351,13 +351,15 @@ seed_run = lambda do |name:, prompt:, dataset:, metrics:, days_ago:, responses:,
     CompletionKit::RunMetric.find_or_create_by!(run: run, metric: metric) { |rm| rm.position = i + 1 }
   end
 
-  responses.each do |rd|
+  responses.each_with_index do |rd, idx|
     response = run.responses.find_or_create_by!(input_data: rd[:input]) do |r|
       r.response_text = rd[:text]
       r.status = "succeeded"
+      r.row_index = idx
       r.created_at = at
       r.updated_at = at
     end
+    response.update!(row_index: idx) if response.row_index.nil?
 
     rd[:scores].each do |metric_name, (score, feedback)|
       metric = CompletionKit::Metric.find_by!(name: metric_name)

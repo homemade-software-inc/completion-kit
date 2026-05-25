@@ -3565,6 +3565,17 @@ select.ck-input {
   border-color: var(--ck-line);
   color: var(--ck-dim);
 }
+.ck-source-chip--current {
+  border-color: var(--ck-line-strong);
+  color: var(--ck-text);
+}
+.ck-source-chip--past {
+  border-color: var(--ck-line);
+  color: var(--ck-dim);
+}
+.ck-disagreement--stale {
+  opacity: 0.7;
+}
 
 .ck-suggestions-table th:nth-child(1), .ck-suggestions-table td:nth-child(1) { width: 16rem; white-space: nowrap; }
 .ck-suggestions-table th:nth-child(2), .ck-suggestions-table td:nth-child(2) { width: auto; }
