@@ -30,7 +30,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       get "/completion_kit/metrics/#{metric.id}"
       expect(response.body).to include("Remember this")
       expect(response.body).to include("off by a star")
-      expect(response.body).to include("View row 3 in")
+      expect(response.body).to include("View case 3 in")
       expect(response.body).to include("#" + metric.name.parameterize)
     end
 

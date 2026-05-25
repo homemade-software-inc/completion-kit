@@ -72,7 +72,7 @@
 
       <% if failed_count > 0 %>
         <%= button_to retry_failures_run_path(run), method: :post, class: "ck-run-status__retry", form_class: "ck-run-status__action" do %>
-          Retry <%= failed_count %> failed <%= "row".pluralize(failed_count) %>
+          Retry <%= failed_count %> failed <%= "case".pluralize(failed_count) %>
         <% end %>
       <% end %>
     </section>

@@ -187,7 +187,7 @@
       </div>
       <%= render "completion_kit/api_reference/resource_list", title: "Your datasets",
             items: datasets.map { |d|
-              { name: d.name, meta: pluralize([d.csv_data.to_s.lines.count - 1, 0].max, "row"),
+              { name: d.name, meta: pluralize([d.csv_data.to_s.lines.count - 1, 0].max, "entry"),
                 url: "#{base_url}/api/v1/datasets/#{d.id}", dom_id: "dataset_ep_#{d.id}" }
             } %>
     </div>

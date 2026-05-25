@@ -84,7 +84,7 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
 
     expect(html).to include("Your datasets")
     expect(html).to include("Tickets")
-    expect(html).to include("2 rows")
+    expect(html).to include("2 entries")
     expect(html).to include("#{base}/api/v1/datasets/#{dataset.id}")
 
     expect(html).to include("Your metrics")

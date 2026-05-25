@@ -35,7 +35,7 @@
               data: { turbo_confirm: "Rewrite this metric based on the disagreements collected so far?" } %>
       <% else %>
         <button type="button" class="<%= ck_button_classes(:light, variant: :outline) %>" disabled
-                title="Mark at least one row as Disagree before the model can suggest a change.">Improve the metric</button>
+                title="Mark at least one case as Disagree before the model can suggest a change.">Improve the metric</button>
       <% end %>
     <% end %>
     <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
@@ -166,9 +166,9 @@
   <section class="ck-card ck-card--spaced">
     <div class="ck-prompt-preview__header">
       <p class="ck-kicker">Cases to learn from</p>
-      <span class="ck-chip"><%= pluralize(@disagreements.size, "row") %></span>
+      <span class="ck-chip"><%= pluralize(@disagreements.size, "case") %></span>
     </div>
-    <p class="ck-meta-copy">Rows where a reviewer's score didn't match the judge's. Pin useful ones with <strong>Remember this</strong> so the judge sees them next time it grades.</p>
+    <p class="ck-meta-copy">Cases where a reviewer's score didn't match the judge's. Pin useful ones with <strong>Remember this</strong> so the judge sees them next time it grades.</p>
     <% existing_ids = Array(@metric.few_shot_examples).map { |fs| fs["calibration_id"] } %>
     <ul class="ck-disagreement-list">
       <% @disagreements.each do |cal| %>
@@ -203,8 +203,8 @@
                       method: :delete,
                       form_class: "inline-block",
                       class: ck_button_classes(:light, variant: :outline),
-                      title: "Stop showing this row to the judge.",
-                      data: { turbo_confirm: "Stop showing this row to the judge?" } %>
+                      title: "Stop showing this case to the judge.",
+                      data: { turbo_confirm: "Stop showing this case to the judge?" } %>
                 <span class="ck-chip ck-chip--done" title="The judge sees this row when it grades for this metric.">Remembered</span>
               <% else %>
                 <%= button_to "Remember this",
@@ -212,7 +212,7 @@
                       method: :post,
                       form_class: "inline-block",
                       class: ck_button_classes(:light, variant: :outline),
-                      title: "Pin this row so the judge sees it next time it grades for this metric." %>
+                      title: "Pin this case so the judge sees it next time it grades for this metric." %>
               <% end %>
             </div>
           </div>
@@ -222,8 +222,8 @@
           <p class="ck-disagreement__source ck-meta-copy">
             <%= link_to run_response_path(cal.response.run, cal.response, anchor: @metric.name.parameterize),
                     class: "ck-disagreement__source-link" do %>
-              <% row_display = cal.response.row_index.nil? ? "##{cal.response.id}" : (cal.response.row_index + 1).to_s %>
-              View row <%= row_display %> in <%= cal.response.run.name.to_s.truncate(50) %> →
+              <% case_display = cal.response.row_index.nil? ? "##{cal.response.id}" : (cal.response.row_index + 1).to_s %>
+              View case <%= case_display %> in <%= cal.response.run.name.to_s.truncate(50) %> →
             <% end %>
           </p>
         </li>
