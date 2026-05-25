@@ -36,6 +36,8 @@ module CompletionKit
 
     def show
       @published_judge_version = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
+      JudgeVersion.ensure_current_for(@metric) unless @published_judge_version
+      @published_judge_version ||= JudgeVersion.published.where(metric_id: @metric.id, current: true).first
       disagreements_scope = Calibration.where(metric_id: @metric.id, verdict: "disagree")
       disagreements_scope = disagreements_scope.where(judge_version_id: @published_judge_version.id) if @published_judge_version
       @disagreements = disagreements_scope.includes(response: [:reviews, :run])
@@ -44,6 +46,7 @@ module CompletionKit
       @edit_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @suggestion_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @improve_disagreement_count = @disagreements.size
+      @versions = JudgeVersion.where(metric_id: @metric.id).order(version_number: :desc).to_a
     end
 
     def new
@@ -107,24 +110,21 @@ module CompletionKit
     end
 
     def publish_draft
-      scope = JudgeVersion.drafts.where(metric_id: @metric.id)
-      draft = params[:draft_id].present? ? scope.find_by(id: params[:draft_id]) : scope.order(created_at: :desc).first
+      scope = JudgeVersion.where(metric_id: @metric.id)
+      version = if params[:draft_id].present?
+                  scope.find_by(id: params[:draft_id])
+                else
+                  JudgeVersion.drafts.where(metric_id: @metric.id).order(created_at: :desc).first
+                end
 
-      if draft.nil?
-        redirect_to metric_path(@metric), alert: "No draft to publish."
+      if version.nil?
+        redirect_to metric_path(@metric), alert: "No version to publish."
         return
       end
 
-      JudgeVersion.transaction do
-        JudgeVersion.where(metric_id: @metric.id, state: "published").update_all(current: false)
-        draft.update!(state: "published", current: true)
-        @metric.update_columns(
-          instruction: draft.instruction,
-          rubric_bands: Array(draft.rubric_bands).to_json
-        )
-      end
-
-      redirect_to metric_path(@metric), notice: "This judge version is now live."
+      version.publish!
+      redirect_to metric_path(@metric),
+                  notice: "#{@metric.name} #{version.version_label} is now the published version."
     end
 
     def add_few_shot

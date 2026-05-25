@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_190429) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_25_001152) do
   create_table "completion_kit_calibrations", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -50,12 +50,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_190429) do
     t.boolean "current", default: true, null: false
     t.text "instruction"
     t.integer "metric_id", null: false
+    t.datetime "published_at"
     t.text "rubric_bands"
     t.string "source"
     t.string "state", default: "published", null: false
     t.datetime "updated_at", null: false
+    t.integer "version_number", null: false
     t.index ["metric_id", "current"], name: "index_ck_judge_versions_on_metric_current"
     t.index ["metric_id", "state"], name: "index_ck_judge_versions_on_metric_state"
+    t.index ["metric_id", "version_number"], name: "index_ck_judge_versions_on_metric_version"
     t.index ["metric_id"], name: "index_ck_judge_versions_on_metric_id"
   end
 

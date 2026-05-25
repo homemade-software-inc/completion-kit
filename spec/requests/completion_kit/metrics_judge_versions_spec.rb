@@ -17,6 +17,41 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     }.not_to change { CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).count }
   end
 
+  it "renders the Versions table on the metric show page with a Published chip on current and a Make current button on superseded published versions" do
+    metric.update!(instruction: "v2 instruction")
+    draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).order(:created_at).last
+    post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: draft.id }
+    follow_redirect!
+
+    versions = CompletionKit::JudgeVersion.where(metric_id: metric.id).order(:version_number).to_a
+    expect(versions.size).to eq(2)
+    expect(versions.last.current?).to be(true)
+
+    get "/completion_kit/metrics/#{metric.id}"
+    expect(response.body).to include("Versions")
+    expect(response.body).to include("ck-metric-versions-table")
+    expect(response.body).to include(versions.last.version_label)
+    expect(response.body).to include("Published")
+    expect(response.body).to include("Make current")
+    expect(response.body).to include("ck-cell-link--delta")
+    expect(response.body).to include("ck-mvdiff-#{versions.last.id}")
+  end
+
+  it "lets the user revert to an older published version via Make current" do
+    metric.update!(instruction: "v2 instruction")
+    draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).order(:created_at).last
+    post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: draft.id }
+    follow_redirect!
+
+    older = CompletionKit::JudgeVersion.where(metric_id: metric.id).order(:version_number).first
+    expect(older.current?).to be(false)
+    expect(older.published?).to be(true)
+
+    post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: older.id }
+    expect(older.reload.current?).to be(true)
+    expect(metric.reload.instruction).to eq(older.instruction)
+  end
+
   it "shows a 'Review draft →' affordance on the metric show page and the draft banner on edit" do
     metric.update!(instruction: "score it carefully")
     get "/completion_kit/metrics/#{metric.id}"
@@ -37,7 +72,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     post "/completion_kit/metrics/#{metric.id}/publish_draft"
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
     follow_redirect!
-    expect(response.body).to include("This judge version is now live")
+    expect(response.body).to match(/v\d+ is now the published version/)
 
     versions = CompletionKit::JudgeVersion.where(metric_id: metric.id).order(:created_at).to_a
     expect(versions.map(&:state)).to eq(%w[published published])
@@ -69,7 +104,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     post "/completion_kit/metrics/#{metric.id}/publish_draft"
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
     follow_redirect!
-    expect(response.body).to include("No draft to publish")
+    expect(response.body).to include("No version to publish")
   end
 
   it "rolls older drafts off current when a new draft fork happens" do

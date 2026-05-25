@@ -3536,6 +3536,10 @@ select.ck-input {
 .ck-prompt-versions-table th:nth-child(3), .ck-prompt-versions-table td:nth-child(3) { width: 8rem; white-space: nowrap; }
 .ck-prompt-versions-table th:nth-child(4), .ck-prompt-versions-table td:nth-child(4) { width: auto; }
 
+.ck-metric-versions-table th:nth-child(1), .ck-metric-versions-table td:nth-child(1) { width: 16rem; }
+.ck-metric-versions-table th:nth-child(2), .ck-metric-versions-table td:nth-child(2) { width: 10rem; white-space: nowrap; }
+.ck-metric-versions-table th:nth-child(3), .ck-metric-versions-table td:nth-child(3) { width: auto; }
+
 .ck-suggestions-table th:nth-child(1), .ck-suggestions-table td:nth-child(1) { width: 16rem; white-space: nowrap; }
 .ck-suggestions-table th:nth-child(2), .ck-suggestions-table td:nth-child(2) { width: auto; }
 .ck-suggestions-table th:nth-child(3), .ck-suggestions-table td:nth-child(3) { width: 6rem; white-space: nowrap; }

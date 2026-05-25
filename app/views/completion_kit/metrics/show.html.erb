@@ -67,6 +67,93 @@
   </div>
 </section>
 
+<% if CompletionKit.config.judge_calibration_enabled && @versions.size > 1 %>
+  <% predecessor_of = @versions.index_with { |v| @versions.detect { |o| o.version_number < v.version_number } } %>
+  <% version_changed = ->(v, pred) { pred && (pred.instruction.to_s != v.instruction.to_s || pred.rubric_bands != v.rubric_bands) } %>
+  <section class="ck-card ck-card--spaced">
+    <p class="ck-kicker">Versions</p>
+    <table class="ck-results-table ck-metric-versions-table">
+      <thead>
+        <tr>
+          <th scope="col">Version</th>
+          <th scope="col">Source</th>
+          <th scope="col">Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @versions.each do |v| %>
+          <% pred = predecessor_of[v] %>
+          <tr>
+            <td>
+              <div class="ck-version-cell">
+                <div class="ck-version-cell__label">
+                  <strong><%= v.version_label %></strong>
+                  <% if v.current? %>
+                    <span class="ck-chip">Published</span>
+                  <% elsif v.draft? %>
+                    <%= button_to "Publish", publish_draft_metric_path(@metric, draft_id: v.id),
+                          method: :post, form_class: "inline-block",
+                          class: "ck-chip ck-chip--publish" %>
+                  <% else %>
+                    <%= button_to "Make current", publish_draft_metric_path(@metric, draft_id: v.id),
+                          method: :post, form_class: "inline-block",
+                          class: "ck-chip ck-chip--publish",
+                          data: { turbo_confirm: "Roll the live judge back to #{v.version_label}? Calibration verdicts collected against the current version stay tied to it." } %>
+                  <% end %>
+                </div>
+                <% if version_changed.call(v, pred) %>
+                  <button type="button" class="ck-cell-link ck-cell-link--delta"
+                          title="What changed from #{pred.version_label}"
+                          onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()">&Delta;</button>
+                <% end %>
+              </div>
+            </td>
+            <td class="ck-meta-copy"><%= v.source.presence || (v.published? ? "initial" : "—") %></td>
+            <td class="ck-meta-copy">
+              <time datetime="<%= v.created_at.utc.iso8601 %>" data-relative-time><%= time_ago_in_words(v.created_at) %> ago</time>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+
+  <% @versions.each do |v| %>
+    <% pred = predecessor_of[v] %>
+    <% next unless version_changed.call(v, pred) %>
+    <dialog id="ck-mvdiff-<%= v.id %>" class="ck-modal" onclick="if(event.target===this)this.close()">
+      <article class="ck-modal__panel" tabindex="-1" onclick="event.stopPropagation()">
+        <header class="ck-modal__header">
+          <div class="ck-modal__heading">
+            <h2 class="ck-modal__title"><%= pred.version_label %> &rarr; <%= v.version_label %></h2>
+            <span class="ck-modal__meta">What changed in <%= v.version_label %><% if v.current? %> (live)<% elsif v.draft? %> (draft)<% end %></span>
+          </div>
+          <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">&times;</button>
+        </header>
+        <div class="ck-modal__body">
+          <% if pred.instruction.to_s != v.instruction.to_s %>
+            <div class="ck-suggest-diff">
+              <div class="ck-suggest-diff__pane">
+                <div class="ck-suggest-diff__header"><span class="ck-suggest-diff__label ck-suggest-diff__label--before"><%= pred.version_label %> instruction</span></div>
+                <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(pred.instruction.to_s, v.instruction.to_s) %></pre>
+              </div>
+              <div class="ck-suggest-diff__pane">
+                <div class="ck-suggest-diff__header"><span class="ck-suggest-diff__label ck-suggest-diff__label--after"><%= v.version_label %> instruction</span></div>
+                <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(pred.instruction.to_s, v.instruction.to_s) %></pre>
+              </div>
+            </div>
+          <% end %>
+          <% if pred.rubric_bands != v.rubric_bands %>
+            <p class="ck-kicker ck-kicker--inset">Rubric changes</p>
+            <%= render "completion_kit/metrics/rubric_diff",
+                  current_bands: pred.rubric_bands || [],
+                  draft_bands: v.rubric_bands || [] %>
+          <% end %>
+        </div>
+      </article>
+    </dialog>
+  <% end %>
+<% end %>
 
 <% if CompletionKit.config.judge_calibration_enabled && @disagreements.any? %>
   <section class="ck-card ck-card--spaced">
