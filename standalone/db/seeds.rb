@@ -427,6 +427,47 @@ CompletionKit::Calibration.where(created_by: %w[operator_1 operator_2 operator_3
 
 current_operator = CompletionKit.config.username.presence || "operator"
 
+disagree_notes = {
+  "Accuracy" => [
+    "The '24 months from issue' policy isn't documented anywhere I can find. Either soft-claim or wrong.",
+    "WELCOME20 is first-time-customer only; the date check is a red herring. The judge gave it too much credit.",
+    "Tracking confirmation isn't proof of delivery here — both neighbours' Rings show no van. Judge shouldn't credit the reply.",
+    "Grandfather offer would need retention sign-off. Calling that 'verifiable' is a stretch."
+  ],
+  "Tone" => [
+    "Reply is procedural for a ticket that has wedding-deadline pressure. Tone score should be lower.",
+    "Stock phrase 'we apologise for the inconvenience' shouldn't earn a 5."
+  ],
+  "Confidence" => [
+    "Model committed to 'critical' on a clear-cut shipping case where 'high' is the better fit.",
+    "Overconfident on the urgency given the active-cart signal was ignored.",
+    "Hedged on a case that's textbook account_access — should have been definite."
+  ],
+  "Urgency Calibration" => [
+    "Wedding-deadline shipping case is critical, not high.",
+    "Loyalty churn from a 6-year $4k/year member deserves the top urgency tier."
+  ]
+}.freeze
+
+borderline_notes = {
+  "Accuracy" => [
+    "Hard to tell if 'recovery code via email' is verified policy or improvised. Rubric doesn't cover unverified-but-plausible.",
+    "Falls between band 3 and band 4 — one soft claim but no invented policy.",
+    "Could argue either band 2 or band 3; the gap between them isn't defined sharply enough.",
+    "Borderline because the reply commits to a stopgap that may or may not get retention sign-off."
+  ],
+  "Confidence" => [
+    "Defensible either as well-calibrated or slightly overconfident."
+  ],
+  "Urgency Calibration" => [
+    "High vs critical is a judgement call here; either is defensible.",
+    "Promo code rejection at $186 — could be low or medium depending on how you weight active-cart signal.",
+    "Account access + credit deadline → medium feels right but low is also reasonable.",
+    "Churn risk at this spend is high, but argument exists for critical.",
+    "Refund + 11-day delay is critical, but high is also justifiable."
+  ]
+}.freeze
+
 seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
   metric = CompletionKit::Metric.find_by!(name: metric_name)
   jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
@@ -436,7 +477,12 @@ seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
     .distinct.order(:created_at).to_a
   next if reviewed_responses.empty?
 
+  metric_disagree_notes = disagree_notes[metric_name] || ["Judge missed a fact the ticket made plain."]
+  metric_borderline_notes = borderline_notes[metric_name] || ["Rubric was ambiguous between two bands."]
+
   total = [agree + disagree + borderline, reviewed_responses.size].min
+  disagree_index = 0
+  borderline_index = 0
   total.times do |i|
     resp = reviewed_responses[i]
     verdict = if i < agree
@@ -453,9 +499,11 @@ seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
     if verdict == "disagree"
       live = resp.reviews.find_by(metric_id: metric.id)
       attrs[:corrected_score] = ((live&.ai_score || 3.0) - 1).clamp(1, 5)
-      attrs[:note] = "Judge was a star too generous here."
+      attrs[:note] = metric_disagree_notes[disagree_index % metric_disagree_notes.size]
+      disagree_index += 1
     elsif verdict == "borderline"
-      attrs[:note] = "Rubric was ambiguous between two bands."
+      attrs[:note] = metric_borderline_notes[borderline_index % metric_borderline_notes.size]
+      borderline_index += 1
     end
     CompletionKit::Calibration.create!(attrs)
   end
