@@ -3537,8 +3537,34 @@ select.ck-input {
 .ck-prompt-versions-table th:nth-child(4), .ck-prompt-versions-table td:nth-child(4) { width: auto; }
 
 .ck-metric-versions-table th:nth-child(1), .ck-metric-versions-table td:nth-child(1) { width: 16rem; }
-.ck-metric-versions-table th:nth-child(2), .ck-metric-versions-table td:nth-child(2) { width: 10rem; white-space: nowrap; }
+.ck-metric-versions-table th:nth-child(2), .ck-metric-versions-table td:nth-child(2) { width: 12rem; white-space: nowrap; }
 .ck-metric-versions-table th:nth-child(3), .ck-metric-versions-table td:nth-child(3) { width: auto; }
+
+.ck-source-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--ck-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--ck-line-strong);
+  background: var(--ck-surface-soft);
+  color: var(--ck-muted);
+}
+.ck-source-chip--ai {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.08);
+  color: var(--ck-accent);
+}
+.ck-source-chip--manual {
+  border-color: var(--ck-line-strong);
+  color: var(--ck-text);
+}
+.ck-source-chip--initial {
+  border-color: var(--ck-line);
+  color: var(--ck-dim);
+}
 
 .ck-suggestions-table th:nth-child(1), .ck-suggestions-table td:nth-child(1) { width: 16rem; white-space: nowrap; }
 .ck-suggestions-table th:nth-child(2), .ck-suggestions-table td:nth-child(2) { width: auto; }

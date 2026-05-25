@@ -108,7 +108,14 @@
                 <% end %>
               </div>
             </td>
-            <td class="ck-meta-copy"><%= v.source.presence || (v.published? ? "initial" : "—") %></td>
+            <td>
+              <% source_label, source_class = case v.source
+                                              when "suggestion" then ["Model rewrite", "ck-source-chip ck-source-chip--ai"]
+                                              when "edit" then ["Manual edit", "ck-source-chip ck-source-chip--manual"]
+                                              else ["Original", "ck-source-chip ck-source-chip--initial"]
+                                              end %>
+              <span class="<%= source_class %>"><%= source_label %></span>
+            </td>
             <td class="ck-meta-copy">
               <time datetime="<%= v.created_at.utc.iso8601 %>" data-relative-time><%= time_ago_in_words(v.created_at) %> ago</time>
             </td>
