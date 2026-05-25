@@ -35,14 +35,12 @@ module CompletionKit
     end
 
     def show
-      @published_judge_version = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
-      JudgeVersion.ensure_current_for(@metric) unless @published_judge_version
-      @published_judge_version ||= JudgeVersion.published.where(metric_id: @metric.id, current: true).first
-      disagreements_scope = Calibration.where(metric_id: @metric.id, verdict: "disagree")
-      disagreements_scope = disagreements_scope.where(judge_version_id: @published_judge_version.id) if @published_judge_version
-      @disagreements = disagreements_scope.includes(response: [:reviews, :run])
-                                          .order(created_at: :desc)
-                                          .limit(50)
+      @published_judge_version = JudgeVersion.ensure_current_for(@metric)
+      @disagreements = Calibration.where(metric_id: @metric.id, verdict: "disagree",
+                                         judge_version_id: @published_judge_version.id)
+                                  .includes(response: [:reviews, :run])
+                                  .order(created_at: :desc)
+                                  .limit(50)
       @edit_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @suggestion_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @improve_disagreement_count = @disagreements.size

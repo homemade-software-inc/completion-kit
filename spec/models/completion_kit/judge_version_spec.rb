@@ -1,6 +1,13 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::JudgeVersion, type: :model do
+  it "honors an explicit version_number on create instead of auto-incrementing" do
+    metric = create(:completion_kit_metric)
+    CompletionKit::JudgeVersion.create!(metric: metric, instruction: "a", state: "published", current: true)
+    v = CompletionKit::JudgeVersion.create!(metric: metric, instruction: "b", state: "draft", current: false, version_number: 99)
+    expect(v.version_number).to eq(99)
+  end
+
   describe "associations" do
     it "belongs to a metric and has many calibrations" do
       jv = create(:completion_kit_judge_version)
