@@ -41,6 +41,7 @@ RSpec.describe "CompletionKit responses", type: :request do
     before do
       allow(CompletionKit::JudgeReviewJob).to receive(:perform_later)
       allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+      allow(CompletionKit::ApiConfig).to receive(:valid_for_model?).and_return(true)
       allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_ui)
     end
 

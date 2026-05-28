@@ -19,6 +19,7 @@ RSpec.describe CompletionKit::Run, type: :model do
     before do
       allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
       allow(CompletionKit::JudgeReviewJob).to receive(:perform_later)
+      allow(CompletionKit::ApiConfig).to receive(:valid_for_model?).and_return(true)
       CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
     end
 
