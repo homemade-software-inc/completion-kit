@@ -7,20 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.44] - 2026-05-28
+
+### Added
+
+- **Reviews carry `metric_version_id`.** New `bigint` + index on `completion_kit_reviews`. `JudgeReviewJob` stamps the current `MetricVersion.id` on every new review, so each judge score now has a clean FK to the exact metric configuration that produced it (not just an `instruction` text snapshot). Migration backfills existing rows from each metric's current published version.
+- **Stale-version surfacing across the run + response detail pages.** Each metric review card on the response detail page now wears a `v_n` source chip; when the review's `metric_version_id` doesn't match the metric's current published version, the chip dims to the `past` variant, the card gets a warning left-border, and a one-line note reads "Scored against a superseded version of this metric. The live judge may score this differently." On the run show page, when any review in the run is stale, a banner appears naming each metric (`Accuracy (scored by v1, v3; live is v5)`) with a primary "Re-run with current judge" button on completed runs.
+- **`retry_failures` refuses on version drift.** Both the web action and `POST /api/v1/runs/:id/retry_failures` guard on `Run#stale_review_summary`. If any review in the run was scored against a superseded `MetricVersion`, retrying would mix two judge versions inside the same run — so the web action redirects with a flash alert pointing at "Re-run with current judge" and the API action returns `409 Conflict` with an error pointing at `POST /api/v1/runs/:id/rerun`. No failed responses get reset, no `GenerateRowJob`s enqueue.
+- **`Review#stale_against_current_judge?`** model method and **`Run#stale_review_summary`** for consumers that want to surface their own UI on top of the staleness signal.
+
 ### Changed
 
-- **`JudgeVersion` renamed to `MetricVersion` throughout.** The model was a snapshot of a metric's configuration (instruction + rubric_bands), not of "the judge" (which is an LLM model identifier). The misnomer was making the data model harder to reason about. Renamed: table `completion_kit_judge_versions` → `completion_kit_metric_versions`, FK `Calibration#judge_version_id` → `metric_version_id`, model `CompletionKit::JudgeVersion` → `CompletionKit::MetricVersion`, service `JudgeVariantGenerator` → `MetricVariantGenerator`, helper module `JudgeCalibrationExamples` → `MetricCalibrationExamples`. Kwarg `MetricCalibrationStats.for(metric, judge_version:)` is now `metric_version:`. Backward-compat aliases left in place: `CompletionKit::JudgeVersion` is `MetricVersion`, `Calibration#judge_version`/`judge_version_id` still read; MCP tool `judges_compare` accepts either `metric_version_a_id` or `judge_version_a_id` (same for b). Migration renames table + column + indexes in one shot.
-
-### Other consistency pass items
-
-- Edit-form save creates a real draft instead of writing to `metric.instruction` directly. Live state only changes when the draft is published.
-- Edit form pre-populates from the existing edit-draft so re-edits build on the unpublished work.
-- Edit-draft and suggestion-draft banners coexist on the edit form when both exist.
-- `JudgeReviewJob` now gates `few_shot_payload` on `judge_calibration_enabled`.
-- Trust panel's "Give another verdict" target excludes verdicts on the current version only (not lifetime).
-- "Cases to learn from" version chip renders only when the list contains a mix of versions.
-- Show-page header `Review draft →` and `Review improvements →` collapsed to one `Review changes →` with source-aware tooltip.
-- `Improve the metric` tooltip + confirm copy stopped saying "rewrite."
+- **`JudgeVersion` renamed to `MetricVersion` throughout.** The model was a snapshot of a metric's configuration (instruction + rubric_bands), not of "the judge" (which is an LLM model identifier). Renamed: table `completion_kit_judge_versions` → `completion_kit_metric_versions`, FK `Calibration#judge_version_id` → `metric_version_id`, model `CompletionKit::JudgeVersion` → `CompletionKit::MetricVersion`, service `JudgeVariantGenerator` → `MetricVariantGenerator`, helper module `JudgeCalibrationExamples` → `MetricCalibrationExamples`. Kwarg `MetricCalibrationStats.for(metric, judge_version:)` is now `metric_version:`. Backward-compat aliases left in place for one minor release: `CompletionKit::JudgeVersion` is the renamed class, `Calibration#judge_version`/`judge_version_id` still read, MCP tool `judges_compare` accepts either `metric_version_a_id` or `judge_version_a_id` (same for `b`). One migration renames table + column + four indexes.
+- **Edit-form save creates a real draft instead of writing `metric.instruction` directly.** Previously the `after_update :fork_draft_judge_version` callback fired on every metric edit, which meant the live `metric.instruction` was already updated by the time the "Draft pending" UI claimed there was a pending change — the publish button was a no-op. The callback was removed; `MetricsController#update` is now explicit: meta attrs save in place, judge content (instruction + rubric_bands) creates a real `source: "edit"` draft when the metric has reviews against it, and stays in place (with the current published version synced) when it doesn't. Publishing the draft is now the actual act of pushing the change live.
+- **Edit form pre-populates from the existing edit-draft** so re-edits build on the unpublished work instead of clobbering it.
+- **Edit-draft and suggestion-draft banners coexist** on the edit form when both pending drafts exist. The earlier `if edit_draft && !suggestion` guard silently hid the edit-draft. Both banners now render with independent Publish / Discard / Take everything controls.
+- **`JudgeReviewJob` gates `few_shot_payload` on `judge_calibration_enabled`.** Pinned cases no longer reach the judge prompt when the feature flag is off.
+- **Trust panel's "Give another verdict" target excludes verdicts on the current version only.** Previously the `verdicted_ids` query crossed all versions, so after publishing a new version you wouldn't get pointed back at responses you'd already verdicted on an older judge — even though those old verdicts no longer count toward the new judge's calibration.
+- **"Cases to learn from" version chip renders only when the list contains a mix of versions.** Redundant chip noise on lists where every row is on the current version is suppressed.
+- **Show-page header `Review draft →` and `Review improvements →` collapsed to one `Review changes →`** with a source-aware tooltip.
+- **`Improve the metric` tooltip + confirm copy stopped saying "rewrite."** The model suggests, the user accepts.
 
 ## [0.5.43] - 2026-05-25
 
