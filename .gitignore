@@ -27,3 +27,4 @@ settings.local.json
 .playwright-mcp/
 completion-kit-*.gem
 /*.png
+/docs/social-preview.png
