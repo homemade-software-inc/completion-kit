@@ -24,7 +24,6 @@ module CompletionKit
     before_validation :generate_key
     before_validation :normalize_rubric_bands
     before_validation :set_defaults
-    after_update :fork_draft_judge_version, if: :judge_relevant_changes?
 
     def self.default_rubric_bands
       DEFAULT_RUBRIC_BANDS.map(&:dup)
@@ -98,21 +97,5 @@ module CompletionKit
       self.rubric_bands = self.class.normalize_rubric_bands(rubric_bands) if rubric_bands.present?
     end
 
-    def judge_relevant_changes?
-      saved_change_to_instruction? || saved_change_to_rubric_bands?
-    end
-
-    def fork_draft_judge_version
-      JudgeVersion.ensure_current_for(self)
-      JudgeVersion.where(metric_id: id, state: "draft").update_all(current: false)
-      JudgeVersion.create!(
-        metric: self,
-        instruction: instruction,
-        rubric_bands: rubric_bands,
-        current: false,
-        state: "draft",
-        source: "edit"
-      )
-    end
   end
 end

@@ -122,6 +122,7 @@ module CompletionKit
     end
 
     def few_shot_payload(metric)
+      return nil unless CompletionKit.config.judge_calibration_enabled
       Array(metric.few_shot_examples).map do |fs|
         {
           human_score: fs["human_score"],

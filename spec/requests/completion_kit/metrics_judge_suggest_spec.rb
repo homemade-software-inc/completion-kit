@@ -26,7 +26,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
     follow_redirect!
     expect(response.body).to include("Drafted a new version")
-    expect(response.body).to include("Review improvements")
+    expect(response.body).to include("Review changes")
     expect(response.body).not_to include('value="Improve the metric"')
     expect(CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "suggestion").count).to eq(1)
 

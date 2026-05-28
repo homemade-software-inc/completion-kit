@@ -19,20 +19,17 @@
   </div>
   <div class="ck-actions">
     <% if CompletionKit.config.judge_calibration_enabled %>
-      <% if @suggestion_draft %>
-        <%= link_to "Review improvements →", edit_metric_path(@metric),
+      <% if @suggestion_draft || @edit_draft %>
+        <% review_title = @suggestion_draft ? "The model proposed improvements based on your disagreements. Review and apply what you want." : "An unpublished draft of this metric is saved. Review and publish, or keep editing." %>
+        <%= link_to "Review changes →", edit_metric_path(@metric),
               class: ck_button_classes(:dark),
-              title: "The model proposed improvements based on your disagreements. Review and apply what you want." %>
-      <% elsif @edit_draft %>
-        <%= link_to "Review draft →", edit_metric_path(@metric),
-              class: ck_button_classes(:dark),
-              title: "An unpublished draft of this metric is saved. Review and publish, or keep editing." %>
+              title: review_title %>
       <% elsif @improve_disagreement_count.positive? %>
         <%= button_to "Improve the metric", suggest_variants_metric_path(@metric),
               method: :post, form_class: "inline-block",
               class: ck_button_classes(:light, variant: :outline),
-              title: "Have the model rewrite this metric's instruction and rubric based on the disagreements collected so far.",
-              data: { turbo_confirm: "Rewrite this metric based on the disagreements collected so far?" } %>
+              title: "Ask the model to suggest improvements to this metric's instruction and rubric based on the disagreements collected so far.",
+              data: { turbo_confirm: "Ask the model for suggested improvements based on the disagreements collected so far?" } %>
       <% else %>
         <button type="button" class="<%= ck_button_classes(:light, variant: :outline) %>" disabled
                 title="Mark at least one case as Disagree before the model can suggest a change.">Improve the metric</button>
@@ -168,7 +165,8 @@
       <p class="ck-kicker">Cases to learn from</p>
       <span class="ck-chip"><%= pluralize(@disagreements.size, "case") %></span>
     </div>
-    <p class="ck-meta-copy">Cases where a reviewer's score didn't match the judge's. Pin useful ones with <strong>Remember this</strong> so the judge sees them next time it grades.</p>
+    <% mixed_versions = @disagreements.map(&:judge_version_id).uniq.size > 1 %>
+    <p class="ck-meta-copy">Cases where a reviewer's score didn't match the judge's. Pin useful ones with <strong>Remember this</strong> so the judge sees them next time it grades<%= " (pins flow into the current judge regardless of which version produced the verdict)" if mixed_versions %>.</p>
     <% existing_ids = Array(@metric.few_shot_examples).map { |fs| fs["calibration_id"] } %>
     <ul class="ck-disagreement-list">
       <% @disagreements.each do |cal| %>
@@ -179,7 +177,7 @@
         <li class="ck-disagreement<%= " ck-disagreement--remembered" if already %><%= " ck-disagreement--stale" unless on_current %>">
           <div class="ck-disagreement__head">
             <div class="ck-disagreement__scores">
-              <% if cal_version %>
+              <% if cal_version && mixed_versions %>
                 <span class="ck-source-chip <%= on_current ? "ck-source-chip--current" : "ck-source-chip--past" %>" title="<%= on_current ? "Verdict on the live judge version." : "Verdict on a superseded judge version." %>"><%= cal_version.version_label %></span>
               <% end %>
               <span class="ck-disagreement__scores-label">Judge</span>

@@ -68,10 +68,42 @@ module CompletionKit
     end
 
     def update
-      if @metric.update(metric_params)
-        redirect_to metric_path(@metric), notice: "Metric was successfully updated."
+      judge_keys = %i[instruction rubric_bands]
+      meta_attrs = metric_params.except(*judge_keys)
+      proposed_instruction = metric_params[:instruction]
+      proposed_rubric = metric_params[:rubric_bands]
+
+      unless @metric.update(meta_attrs)
+        return render(:edit, status: :unprocessable_entity)
+      end
+
+      current_instruction = @metric.instruction.to_s
+      current_rubric = @metric.rubric_bands || []
+      normalized_proposed_rubric = normalize_rubric_bands_for_update(proposed_rubric)
+
+      instruction_changed = !proposed_instruction.nil? && proposed_instruction.to_s != current_instruction
+      rubric_changed = !normalized_proposed_rubric.nil? && normalized_proposed_rubric != current_rubric
+
+      unless instruction_changed || rubric_changed
+        return redirect_to(metric_path(@metric), notice: "Metric was successfully updated.")
+      end
+
+      new_instruction = instruction_changed ? proposed_instruction.to_s : current_instruction
+      new_rubric = rubric_changed ? normalized_proposed_rubric : current_rubric
+
+      if @metric.reviews.exists?
+        JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").destroy_all
+        draft = JudgeVersion.create!(
+          metric: @metric, instruction: new_instruction, rubric_bands: new_rubric,
+          state: "draft", source: "edit", current: false
+        )
+        redirect_to edit_metric_path(@metric),
+                    notice: "Saved as draft #{draft.version_label}. Publish to push these changes to the live judge."
       else
-        render :edit, status: :unprocessable_entity
+        @metric.update!(instruction: new_instruction, rubric_bands: new_rubric)
+        current_pub = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
+        current_pub&.update!(instruction: @metric.instruction, rubric_bands: @metric.rubric_bands)
+        redirect_to metric_path(@metric), notice: "Metric was successfully updated."
       end
     end
 
@@ -159,6 +191,15 @@ module CompletionKit
     def metric_params
       params.require(:metric).permit(:name, :instruction,
         rubric_bands: [:stars, :description], tag_names: [])
+    end
+
+    def normalize_rubric_bands_for_update(bands)
+      return nil if bands.nil?
+      array = bands.is_a?(ActionController::Parameters) ? bands.to_unsafe_h.values : bands
+      Array(array).map do |b|
+        h = b.respond_to?(:to_unsafe_h) ? b.to_unsafe_h : b
+        { "stars" => h["stars"].to_i, "description" => h["description"].to_s }
+      end.sort_by { |b| -b["stars"] }
     end
   end
 end
