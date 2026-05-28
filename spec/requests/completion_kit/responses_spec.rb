@@ -21,6 +21,35 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).to include(metric_group.metrics.first.name)
   end
 
+  it "marks a review as stale and shows the source-chip v-label when the review's metric_version is no longer current" do
+    metric = metric_group.metrics.first
+    v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+    review = response_with_output.reviews.find_by(metric_id: metric.id)
+    review.update!(metric_version_id: v1.id)
+    v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+    v2.publish!
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_with_output.id}"
+
+    expect(response.body).to include("ck-review-card--stale")
+    expect(response.body).to include("Scored against a superseded version")
+    expect(response.body).to include("ck-source-chip--past")
+    expect(response.body).to include(">v1<")
+  end
+
+  it "shows the source-chip with current styling when the review's metric_version matches the metric's current version" do
+    metric = metric_group.metrics.first
+    current = CompletionKit::MetricVersion.ensure_current_for(metric)
+    review = response_with_output.reviews.find_by(metric_id: metric.id)
+    review.update!(metric_version_id: current.id)
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_with_output.id}"
+
+    expect(response.body).not_to include("ck-review-card--stale")
+    expect(response.body).to include("ck-source-chip--current")
+    expect(response.body).to include(">v1<")
+  end
+
   it "renders show for a judge-only run (no prompt) without crashing" do
     dataset = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
     judge_only_run = create(:completion_kit_run, prompt: nil, dataset: dataset, output_column: "actual_output", name: "Judge baseline")
