@@ -7,10 +7,6 @@ module CompletionKit
     belongs_to :metric
     belongs_to :metric_version
 
-    alias_attribute :judge_version_id, :metric_version_id
-    alias_method :judge_version, :metric_version
-    alias_method :judge_version=, :metric_version=
-
     validates :verdict, presence: true, inclusion: { in: VERDICTS }
     validates :response_id,
               uniqueness: { scope: [:metric_id, :created_by] }

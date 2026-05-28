@@ -77,5 +77,4 @@ module CompletionKit
     end
   end
 
-  JudgeVersion = MetricVersion
 end

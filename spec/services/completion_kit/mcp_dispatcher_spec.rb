@@ -103,7 +103,7 @@ RSpec.describe CompletionKit::McpDispatcher do
       metric = create(:completion_kit_metric)
       a = CompletionKit::MetricVersion.ensure_current_for(metric)
       b = CompletionKit::MetricVersion.create!(metric: metric, instruction: "draft", current: false, state: "draft", source: "edit")
-      result = described_class.dispatch("tools/call", {"name" => "judges_compare", "arguments" => {"metric_id" => metric.id, "judge_version_a_id" => a.id, "judge_version_b_id" => b.id}})
+      result = described_class.dispatch("tools/call", {"name" => "judges_compare", "arguments" => {"metric_id" => metric.id, "metric_version_a_id" => a.id, "metric_version_b_id" => b.id}})
       payload = JSON.parse(result[:content].first[:text])
       expect(payload["metric_id"]).to eq(metric.id)
     end

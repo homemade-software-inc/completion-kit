@@ -62,8 +62,8 @@ RSpec.describe CompletionKit::McpTools::Judges do
 
       result = described_class.call("judges_compare", {
         "metric_id" => metric.id,
-        "judge_version_a_id" => published_version.id,
-        "judge_version_b_id" => draft_version.id
+        "metric_version_a_id" => published_version.id,
+        "metric_version_b_id" => draft_version.id
       })
       payload = JSON.parse(result[:content].first[:text])
       expect(payload["a"]["sample_size"]).to eq(20)
@@ -76,8 +76,8 @@ RSpec.describe CompletionKit::McpTools::Judges do
       5.times { add_calibration(published_version, verdict: "agree") }
       result = described_class.call("judges_compare", {
         "metric_id" => metric.id,
-        "judge_version_a_id" => published_version.id,
-        "judge_version_b_id" => draft_version.id
+        "metric_version_a_id" => published_version.id,
+        "metric_version_b_id" => draft_version.id
       })
       payload = JSON.parse(result[:content].first[:text])
       expect(payload["recommendation"]["state"]).to eq("need_more_data")
@@ -89,8 +89,8 @@ RSpec.describe CompletionKit::McpTools::Judges do
       20.times { add_calibration(draft_version, verdict: "agree") }
       result = described_class.call("judges_compare", {
         "metric_id" => metric.id,
-        "judge_version_a_id" => published_version.id,
-        "judge_version_b_id" => draft_version.id
+        "metric_version_a_id" => published_version.id,
+        "metric_version_b_id" => draft_version.id
       })
       payload = JSON.parse(result[:content].first[:text])
       expect(payload["recommendation"]["state"]).to eq("recommend")
@@ -101,8 +101,8 @@ RSpec.describe CompletionKit::McpTools::Judges do
       20.times { add_calibration(draft_version, verdict: "agree") }
       result = described_class.call("judges_compare", {
         "metric_id" => metric.id,
-        "judge_version_a_id" => published_version.id,
-        "judge_version_b_id" => draft_version.id
+        "metric_version_a_id" => published_version.id,
+        "metric_version_b_id" => draft_version.id
       })
       payload = JSON.parse(result[:content].first[:text])
       expect(payload["recommendation"]["state"]).to eq("no_change")
@@ -112,8 +112,8 @@ RSpec.describe CompletionKit::McpTools::Judges do
       30.times { add_calibration(published_version, verdict: "agree") }
       result = described_class.call("judges_compare", {
         "metric_id" => metric.id,
-        "judge_version_a_id" => published_version.id,
-        "judge_version_b_id" => draft_version.id
+        "metric_version_a_id" => published_version.id,
+        "metric_version_b_id" => draft_version.id
       })
       payload = JSON.parse(result[:content].first[:text])
       expect(payload["recommendation"]["state"]).to eq("no_change")

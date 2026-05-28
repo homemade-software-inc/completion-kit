@@ -75,10 +75,8 @@ module CompletionKit
 
       def self.compare(args)
         metric = CompletionKit::Metric.find(args["metric_id"])
-        a_id = args["metric_version_a_id"] || args["judge_version_a_id"]
-        b_id = args["metric_version_b_id"] || args["judge_version_b_id"]
-        a = CompletionKit::MetricVersion.where(metric_id: metric.id).find(a_id)
-        b = CompletionKit::MetricVersion.where(metric_id: metric.id).find(b_id)
+        a = CompletionKit::MetricVersion.where(metric_id: metric.id).find(args["metric_version_a_id"])
+        b = CompletionKit::MetricVersion.where(metric_id: metric.id).find(args["metric_version_b_id"])
         stats_a = CompletionKit::MetricCalibrationStats.for(metric, metric_version: a)
         stats_b = CompletionKit::MetricCalibrationStats.for(metric, metric_version: b)
         text_result({

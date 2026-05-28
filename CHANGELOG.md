@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-28
+
+### Added
+
+- **Cross-run comparison view** at `GET /runs/:id/compare`. Picker lists other completed runs on the same dataset + prompt; selecting one renders a side-by-side per-case table with A score / B score / signed Δ / version chip per side. Pairing is by `input_data` so a regrade against the current judge can be diffed against the original scoring. Compare button on the run-show action bar of completed runs.
+- **Regrade-only flow** at `POST /runs/:id/regrade`. `Run#regrade!` clears each succeeded review's score and metric_version_id stamp, dispatches `JudgeReviewJob` for every (succeeded response, attached metric) pair, and lets the run's status state machine settle via `RunCompletionCheckJob`. The stale-versions banner on the run show page now offers Re-grade with current judge (primary, cheap) and Re-run from scratch (secondary, full regeneration) side by side.
+- **Pinned cases feed `MetricVariantGenerator`'s meta-prompt.** Improve-the-metric now passes the metric's `few_shot_examples` to the model under a "Pinned cases the judge already references" section, telling the model the new rubric must remain consistent with what the operator already pins (must produce roughly the human_score, not the judge_score, on those inputs).
+- **Lifetime gate on Improve the metric.** Previously the button was disabled when the current `MetricVersion` had zero disagreements, even if v_old held dozens. The gate now counts all-version disagreements; `MetricCalibrationExamples` falls back from current-version-scoped to all-version-scoped when the current pool is empty so the model still has data to work with.
+- **Revert-aware flash** on the publish_draft action. When the target was already published (revert), the flash names the prior current version and acknowledges that pinned cases still flow to the judge and that calibration verdicts collected against the demoted version stay tied to it.
+- **Zero-state calibration line acknowledges prior versions.** "Needs 10 verdicts on the judge's scores. (18 verdicts on prior versions, tied to that version's history.)"
+
+### Changed
+
+- **Cases-to-learn-from version chip** now renders whenever any row's `metric_version_id` differs from the metric's current version (was: only on lists with multiple distinct versions). Catches the case where every disagreement is on a single non-current version after a revert.
+
+### Removed
+
+- **Backward-compat aliases from 0.5.43 / 0.5.44 are gone.** `CompletionKit::JudgeVersion` no longer exists as an alias for `CompletionKit::MetricVersion`; `Calibration#judge_version` / `judge_version_id` aliases are gone; the `judges_compare` MCP tool no longer accepts `judge_version_a_id` / `judge_version_b_id` (use `metric_version_a_id` / `metric_version_b_id`). The 0.6.0 cut is the deadline. If you were ignoring the deprecation warnings, this is the breaking release.
+
 ## [0.5.44] - 2026-05-28
 
 ### Added

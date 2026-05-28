@@ -1,10 +1,6 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::MetricVersion, type: :model do
-  it "exposes CompletionKit::JudgeVersion as a backward-compat alias for the renamed model" do
-    expect(CompletionKit::JudgeVersion).to eq(CompletionKit::MetricVersion)
-  end
-
   describe "Review#stale_against_current_judge?" do
     let(:metric) { create(:completion_kit_metric) }
     let(:response_row) { create(:completion_kit_response) }
