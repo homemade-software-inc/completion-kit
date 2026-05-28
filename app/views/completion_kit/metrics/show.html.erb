@@ -165,7 +165,7 @@
       <p class="ck-kicker">Cases to learn from</p>
       <span class="ck-chip"><%= pluralize(@disagreements.size, "case") %></span>
     </div>
-    <% mixed_versions = @disagreements.map(&:metric_version_id).uniq.size > 1 %>
+    <% mixed_versions = @disagreements.any? { |c| c.metric_version_id != @published_metric_version.id } %>
     <p class="ck-meta-copy">Cases where a reviewer's score didn't match the judge's. Pin useful ones with <strong>Remember this</strong> so the judge sees them next time it grades<%= " (pins flow into the current judge regardless of which version produced the verdict)" if mixed_versions %>.</p>
     <% existing_ids = Array(@metric.few_shot_examples).map { |fs| fs["calibration_id"] } %>
     <ul class="ck-disagreement-list">

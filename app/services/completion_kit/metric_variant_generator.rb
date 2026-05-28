@@ -43,6 +43,7 @@ module CompletionKit
     def build_meta_prompt
       disagreements = MetricCalibrationExamples.disagreements_for(@metric)
       borderlines = MetricCalibrationExamples.borderlines_for(@metric)
+      pinned_examples = Array(@metric.few_shot_examples)
       sections = []
       sections << "You are an expert evaluator. The judge below is misaligned with humans. Propose #{@count == 1 ? "a single" : "#{@count}"} concrete rewrite that closes the gap."
       sections << ""
@@ -74,6 +75,18 @@ module CompletionKit
           sections << "Output: #{ex[:output].to_s.truncate(200)}"
           sections << "Judge said #{ex[:judge_score]}/5: #{ex[:judge_feedback].to_s.truncate(160)}"
           sections << "Human note: #{ex[:human_note].to_s.truncate(200)}" if ex[:human_note].to_s.present?
+          sections << ""
+        end
+      end
+      if pinned_examples.any?
+        sections << "## Pinned cases the judge already references"
+        sections << "These are cases the operator pinned for the judge to remember. The improved rubric must remain consistent with these — that is, the new instruction + rubric should produce roughly the human_score on these inputs, not the judge_score."
+        pinned_examples.each_with_index do |ex, i|
+          sections << "### Pinned #{i + 1}"
+          sections << "Input: #{ex["input"].to_s.truncate(200)}"
+          sections << "Output: #{ex["response"].to_s.truncate(200)}"
+          sections << "Judge previously said #{ex["judge_score"]}/5: #{ex["judge_feedback"].to_s.truncate(160)}"
+          sections << "Human said #{ex["human_score"]}/5: #{ex["human_note"].to_s.truncate(160)}"
           sections << ""
         end
       end
@@ -133,13 +146,14 @@ module CompletionKit
     end
 
     def calibrations_for(metric, verdict:, limit:)
-      scope = Calibration.where(metric_id: metric.id, verdict: verdict)
+      base = Calibration.where(metric_id: metric.id, verdict: verdict)
       current_version = MetricVersion.current.find_by(metric_id: metric.id)
-      scope = scope.where(metric_version_id: current_version.id) if current_version
-      scope.includes(response: :reviews)
-           .order(created_at: :desc)
-           .limit(limit)
-           .map do |cal|
+      scoped = current_version ? base.where(metric_version_id: current_version.id) : base
+      effective = scoped.exists? ? scoped : base
+      effective.includes(response: :reviews)
+               .order(created_at: :desc)
+               .limit(limit)
+               .map do |cal|
         review = cal.response.reviews.find { |r| r.metric_id == metric.id }
         {
           input: cal.response.input_data,

@@ -42,8 +42,7 @@ module CompletionKit
                                   .limit(50)
       @edit_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
-      @improve_disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree",
-                                                      metric_version_id: @published_metric_version.id).count
+      @improve_disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
       @versions = MetricVersion.where(metric_id: @metric.id).order(version_number: :desc).to_a
     end
 
@@ -157,9 +156,20 @@ module CompletionKit
         return
       end
 
+      was_published_already = version.published?
+      reverting = was_published_already && !version.current?
+      previously_current = MetricVersion.current.find_by(metric_id: @metric.id)
+
       version.publish!
-      redirect_to metric_path(@metric),
-                  notice: "#{@metric.name} #{version.version_label} is now the published version."
+
+      if reverting
+        prior_label = previously_current.version_label
+        redirect_to metric_path(@metric),
+                    notice: "Reverted to #{@metric.name} #{version.version_label}. Pinned cases still flow to the judge, and calibration verdicts collected against #{prior_label} stay tied to it."
+      else
+        redirect_to metric_path(@metric),
+                    notice: "#{@metric.name} #{version.version_label} is now the published version."
+      end
     end
 
     def add_few_shot

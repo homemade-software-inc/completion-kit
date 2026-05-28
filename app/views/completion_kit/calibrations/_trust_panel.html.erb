@@ -15,12 +15,17 @@
        .where.not(id: verdicted_ids)
        .order(created_at: :desc).first
    end %>
+<% prior_version_verdicts = if stats.sample_size.zero? && metric && current_metric_version
+     CompletionKit::Calibration.where(metric_id: metric.id).where.not(metric_version_id: current_metric_version.id).count
+   else
+     0
+   end %>
 
 <p class="ck-trust-line ck-trust-line--<%= stats.gate %>">
   <span class="ck-trust-line__label"><%= heroicon_tag "adjustments-horizontal", variant: :outline, "aria-hidden": "true" %>Calibration</span>
   <% if stats.sample_size.zero? %>
     <span class="ck-trust-line__state">Not measured yet.</span>
-    <span class="ck-trust-line__hint">Needs <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> verdicts on the judge's scores.<% if target_response %>
+    <span class="ck-trust-line__hint">Needs <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> verdicts on the judge's scores.<% if prior_version_verdicts > 0 %> (<%= pluralize(prior_version_verdicts, "verdict") %> on prior versions, tied to that version's history.)<% end %><% if target_response %>
       <%= link_to "Give a verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %>
     <% else %> Run this metric on a dataset, then give a verdict.<% end %></span>
   <% elsif stats.counter_only? %>
