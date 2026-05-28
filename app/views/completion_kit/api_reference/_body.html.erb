@@ -17,17 +17,19 @@
   <input type="radio" name="ck-api-tab" id="ck-tab-datasets" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-metrics" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-metric-groups" class="ck-api-tabs__radio">
+  <input type="radio" name="ck-api-tab" id="ck-tab-calibrations" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-tags" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-providers" class="ck-api-tabs__radio">
 
   <nav class="ck-api-tabs__nav">
-    <label for="ck-tab-mcp" class="ck-api-tabs__label">MCP <span class="ck-api-tabs__count">35</span></label>
+    <label for="ck-tab-mcp" class="ck-api-tabs__label">MCP <span class="ck-api-tabs__count"><%= CompletionKit::McpDispatcher.tool_definitions.size %></span></label>
     <label for="ck-tab-prompts" class="ck-api-tabs__label">Prompts <span class="ck-api-tabs__count">6</span></label>
-    <label for="ck-tab-runs" class="ck-api-tabs__label">Runs <span class="ck-api-tabs__count">7</span></label>
+    <label for="ck-tab-runs" class="ck-api-tabs__label">Runs <span class="ck-api-tabs__count">10</span></label>
     <label for="ck-tab-responses" class="ck-api-tabs__label">Responses <span class="ck-api-tabs__count">2</span></label>
     <label for="ck-tab-datasets" class="ck-api-tabs__label">Datasets <span class="ck-api-tabs__count">5</span></label>
-    <label for="ck-tab-metrics" class="ck-api-tabs__label">Metrics <span class="ck-api-tabs__count">5</span></label>
+    <label for="ck-tab-metrics" class="ck-api-tabs__label">Metrics <span class="ck-api-tabs__count">12</span></label>
     <label for="ck-tab-metric-groups" class="ck-api-tabs__label">Metric Groups <span class="ck-api-tabs__count">5</span></label>
+    <label for="ck-tab-calibrations" class="ck-api-tabs__label">Calibrations <span class="ck-api-tabs__count">3</span></label>
     <label for="ck-tab-tags" class="ck-api-tabs__label">Tags <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-providers" class="ck-api-tabs__label">Providers <span class="ck-api-tabs__count">5</span></label>
   </nav>
@@ -36,7 +38,7 @@
 
     <div class="ck-api-tabs__panel">
       <h2 class="ck-section-title">MCP Server</h2>
-      <p class="ck-copy">Connect Claude Code, Cursor, or any <a href="https://modelcontextprotocol.io" class="ck-link">MCP</a> client to manage prompts, runs, datasets, and metrics conversationally. 35 tools over streamable HTTP.</p>
+      <p class="ck-copy">Connect Claude Code, Cursor, or any <a href="https://modelcontextprotocol.io" class="ck-link">MCP</a> client to manage prompts, runs, datasets, and metrics conversationally. <%= CompletionKit::McpDispatcher.tool_definitions.size %> tools over streamable HTTP.</p>
 
       <div class="ck-mcp-install-grid">
         <div class="ck-mcp-install-card">
@@ -140,6 +142,24 @@
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/generate \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/retry_failures</p>
+        <p class="ck-meta-copy">Re-queue any responses that failed during generation. Returns 202 Accepted.</p>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/rerun</p>
+        <p class="ck-meta-copy">Clone the run and start generating responses on the copy against the current prompt and metric versions. Returns the new run with 201 Created. Useful for capturing a fresh baseline after metric edits.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/rerun \\\n  -H \"Authorization: Bearer #{token}\"" %>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/regrade</p>
+        <p class="ck-meta-copy">Re-judge the existing successful responses against the current metric versions without regenerating model output. Returns 202 Accepted, or 422 if no responses are eligible.</p>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:id/compare?with=:other_id</p>
+        <p class="ck-meta-copy">Side-by-side comparison against another run. Returns <code>{rows: [...], metric_ids: [...]}</code> with one row per input case, per-metric scores on both sides, and the delta. Cases that exist on only one side are still returned with the missing side nulled out.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl \"#{base_url}/api/v1/runs/1/compare?with=2\" \\\n  -H \"Authorization: Bearer #{token}\"" %>
+      </div>
+      <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/runs/:id</p>
         <p class="ck-meta-copy">Update a run. Accepts same params as create.</p>
       </div>
@@ -214,6 +234,48 @@
               { name: m.name, subtitle: m.instruction.presence&.truncate(100),
                 url: "#{base_url}/api/v1/metrics/#{m.id}", dom_id: "metric_ep_#{m.id}" }
             } %>
+
+      <div class="ck-api-endpoint" style="padding-top: 1.5rem;">
+        <p class="ck-kicker" style="margin-bottom: 0.5rem;">Calibration loop</p>
+        <p class="ck-meta-copy">Drive metric improvement from disagree-flagged calibrations: ask the model for variants, then pin individual cases as few-shot examples on the metric.</p>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics/:id/suggest_variants</p>
+        <p class="ck-meta-copy">Generate draft metric versions from the current disagreements. Returns 201 with the new draft versions, 422 if no disagreements exist or the model produced nothing usable.</p>
+        <p class="ck-api-params"><strong>Optional:</strong>&ensp;<code>count</code>, <code>model</code></p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/metrics/1/suggest_variants \\\n  -H \"Authorization: Bearer #{token}\"" %>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics/:id/add_few_shot</p>
+        <p class="ck-meta-copy">Pin a disagree calibration as a few-shot example on the metric. Returns the updated metric, or 404 if the calibration is not a disagree on this metric.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>calibration_id</code></p>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metrics/:id/remove_few_shot</p>
+        <p class="ck-meta-copy">Drop the pinned few-shot example by calibration ID.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>calibration_id</code></p>
+      </div>
+
+      <div class="ck-api-endpoint" style="padding-top: 1.5rem;">
+        <p class="ck-kicker" style="margin-bottom: 0.5rem;">Metric versions</p>
+        <p class="ck-meta-copy">Every metric carries a history of versions (the current published one, prior published ones, and any draft suggestions). Reviews and calibrations record the version they ran against, so the API can surface stale state and let you revert.</p>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/metrics/:metric_id/metric_versions</p>
+        <p class="ck-meta-copy">List every version for the metric, newest version_number first.</p>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/metrics/:metric_id/metric_versions/:id</p>
+        <p class="ck-meta-copy">Get a single version with its instruction, rubric bands, state, and source.</p>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics/:metric_id/metric_versions/:id/publish</p>
+        <p class="ck-meta-copy">Publish the version as current. Works for a draft (promote) or a superseded published version (revert). Copies the version's instruction and rubric back onto the metric.</p>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metrics/:metric_id/metric_versions/:id</p>
+        <p class="ck-meta-copy">Dismiss a draft version. Returns 204 No Content, or 409 Conflict if the version is published (published versions are immutable history).</p>
+      </div>
     </div>
 
     <div class="ck-api-tabs__panel">
@@ -237,6 +299,27 @@
               { name: g.name, subtitle: g.description.presence, meta: pluralize(g.metric_ids.size, "metric"),
                 url: "#{base_url}/api/v1/metric_groups/#{g.id}", dom_id: "metric_group_ep_#{g.id}" }
             } %>
+    </div>
+
+    <div class="ck-api-tabs__panel">
+      <h2 class="ck-section-title">Calibrations</h2>
+      <p class="ck-copy">Per-verdict feedback events on a response/metric pair: agree, disagree (with a corrected score and note), or borderline. Calibrations capture the metric version that was current when the verdict was cast, which is what drives the trust signal and the "stale" indicators across the rest of the API.</p>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/calibrations</p>
+        <p class="ck-meta-copy">List calibrations across all runs. Supports filtering by any combination of the query params below.</p>
+        <p class="ck-api-params"><strong>Optional filters:</strong>&ensp;<code>run_id</code>, <code>response_id</code>, <code>metric_id</code>, <code>metric_version_id</code>, <code>created_by</code>, <code>verdict</code> (<code>agree</code>, <code>disagree</code>, or <code>borderline</code>)</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl \"#{base_url}/api/v1/calibrations?metric_id=1&verdict=disagree\" \\\n  -H \"Authorization: Bearer #{token}\"" %>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:run_id/responses/:response_id/metrics/:metric_id/calibrations</p>
+        <p class="ck-meta-copy">Cast a calibration on a specific response/metric pair. The metric version on the record is set automatically from the run's review.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>verdict</code>, <code>created_by</code>&emsp;<strong>Optional:</strong>&ensp;<code>corrected_score</code>, <code>note</code></p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/responses/42/metrics/3/calibrations \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"verdict\": \"disagree\", \"corrected_score\": 3, \"note\": \"too generous\", \"created_by\": \"alice\"}'" %>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/calibrations/:id</p>
+        <p class="ck-meta-copy">Delete a calibration. Returns 204 No Content.</p>
+      </div>
     </div>
 
     <div class="ck-api-tabs__panel">
