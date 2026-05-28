@@ -89,6 +89,34 @@ module CompletionKit
       end
     end
 
+    def stale_review_summary
+      review_pairs = Review.where(response_id: response_ids)
+                          .where.not(metric_id: nil)
+                          .where.not(metric_version_id: nil)
+                          .pluck(:metric_id, :metric_version_id, :metric_name)
+      return {} if review_pairs.empty?
+
+      metric_ids = review_pairs.map(&:first).uniq
+      version_ids = review_pairs.map { |_, vid, _| vid }.uniq
+      current_by_metric = MetricVersion.current.where(metric_id: metric_ids).pluck(:metric_id, :id, :version_number).each_with_object({}) do |(mid, vid, vnum), h|
+        h[mid] = { id: vid, label: "v#{vnum}" }
+      end
+      label_by_version = MetricVersion.where(id: version_ids).pluck(:id, :version_number).each_with_object({}) { |(vid, vnum), h| h[vid] = "v#{vnum}" }
+
+      summary = {}
+      review_pairs.each do |metric_id, version_id, metric_name|
+        current = current_by_metric[metric_id]
+        next if current.nil?
+        next if version_id == current[:id]
+        label = label_by_version[version_id]
+        next if label.nil?
+        summary[metric_id] ||= { metric_name: metric_name, current_label: current[:label], stale_count: 0, scored_labels: [] }
+        summary[metric_id][:stale_count] += 1
+        summary[metric_id][:scored_labels] |= [label]
+      end
+      summary
+    end
+
     def start!
       rows = if dataset
                CsvProcessor.process_self(self)

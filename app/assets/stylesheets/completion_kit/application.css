@@ -2819,6 +2819,21 @@ select.ck-input {
 .ck-review-card--stale {
   border-left: 2px solid rgba(224, 164, 88, 0.45);
 }
+
+.ck-stale-versions-banner {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(224, 164, 88, 0.4);
+  background: rgba(224, 164, 88, 0.06);
+  border-radius: var(--ck-radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.ck-stale-versions-banner__body { min-width: 0; flex: 1 1 320px; }
+.ck-stale-versions-banner .ck-kicker { color: var(--ck-warning); }
 .ck-review-card__stale-note {
   margin: 0.4rem 0 0;
   font-family: var(--ck-mono);

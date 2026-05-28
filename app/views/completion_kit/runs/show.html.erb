@@ -18,6 +18,29 @@
   <% dataset_preview_lines = dataset_lines.first(50) %>
 <% end %>
 
+<% if CompletionKit.config.judge_calibration_enabled %>
+  <% stale_summary = @run.stale_review_summary %>
+  <% if stale_summary.any? %>
+    <div class="ck-stale-versions-banner" role="status">
+      <div class="ck-stale-versions-banner__body">
+        <p class="ck-kicker">Stale judge versions</p>
+        <p class="ck-meta-copy">
+          This run was scored against metric versions that are no longer live.
+          <% stale_summary.values.each_with_index do |s, i| %>
+            <%= ", " if i > 0 %><strong><%= s[:metric_name] %></strong> (scored by <%= s[:scored_labels].join(", ") %>; live is <%= s[:current_label] %>)<% end %>.
+          Re-run to refresh the scores with the current judge.
+        </p>
+      </div>
+      <% if @run.status == "completed" %>
+        <%= button_to "Re-run with current judge",
+              rerun_run_path(@run), method: :post,
+              class: ck_button_classes(:dark), form_class: "inline-block",
+              data: { turbo_confirm: "Create a new run with the current metric versions? The original run stays as a record." } %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
+
 <div class="ck-run-config">
   <div class="ck-run-config__row">
     <span class="ck-run-config__key">Created</span>

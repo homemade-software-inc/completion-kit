@@ -12,6 +12,67 @@ RSpec.describe CompletionKit::Run, type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_clear_responses)
   end
 
+  describe "#stale_review_summary" do
+    it "returns an empty hash when there are no reviews" do
+      run = create(:completion_kit_run)
+      expect(run.stale_review_summary).to eq({})
+    end
+
+    it "returns an empty hash when all reviews are stamped against the current metric_version" do
+      run = create(:completion_kit_run)
+      metric = create(:completion_kit_metric)
+      current = CompletionKit::MetricVersion.ensure_current_for(metric)
+      response = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: current.id)
+      expect(run.stale_review_summary).to eq({})
+    end
+
+    it "returns the metric, stale labels, current label, and stale count when a review's metric_version is superseded" do
+      run = create(:completion_kit_run)
+      metric = create(:completion_kit_metric)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      response = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: v1.id)
+      v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+      v2.publish!
+      summary = run.stale_review_summary
+      expect(summary[metric.id][:metric_name]).to eq(metric.name)
+      expect(summary[metric.id][:current_label]).to eq("v2")
+      expect(summary[metric.id][:scored_labels]).to eq(["v1"])
+      expect(summary[metric.id][:stale_count]).to eq(1)
+    end
+
+    it "skips reviews missing a metric_version stamp or a current published version" do
+      run = create(:completion_kit_run)
+      metric = create(:completion_kit_metric)
+      response = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: nil)
+      expect(run.stale_review_summary).to eq({})
+    end
+
+    it "skips reviews whose metric_version_id points at a row that no longer exists" do
+      run = create(:completion_kit_run)
+      metric = create(:completion_kit_metric)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+      v2.publish!
+      response = create(:completion_kit_response, run: run)
+      ghost_review = create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: v1.id)
+      v1.delete
+      expect(run.stale_review_summary).to eq({})
+    end
+
+    it "skips reviews on a metric that has no current published version" do
+      run = create(:completion_kit_run)
+      metric = create(:completion_kit_metric)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      response = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: v1.id)
+      CompletionKit::MetricVersion.where(metric_id: metric.id).update_all(current: false)
+      expect(run.stale_review_summary).to eq({})
+    end
+  end
+
   describe "#metrics" do
     it "returns empty array when no metrics associated" do
       run = create(:completion_kit_run)

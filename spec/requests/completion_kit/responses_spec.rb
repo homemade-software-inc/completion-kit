@@ -37,6 +37,49 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).to include(">v1<")
   end
 
+  it "surfaces the stale-versions banner on the run show page with a Re-run with current judge button when a published metric_version supersedes the one a review was scored against" do
+    metric = metric_group.metrics.first
+    v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+    review = response_with_output.reviews.find_by(metric_id: metric.id)
+    review.update!(metric_version_id: v1.id)
+    v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+    v2.publish!
+    run.update!(status: "completed")
+
+    get "/completion_kit/runs/#{run.id}"
+
+    expect(response.body).to include("ck-stale-versions-banner")
+    expect(response.body).to include("Re-run with current judge")
+    expect(response.body).to include(metric.name)
+  end
+
+  it "hides the stale-versions banner when no reviews are scored against a superseded version" do
+    metric = metric_group.metrics.first
+    current = CompletionKit::MetricVersion.ensure_current_for(metric)
+    review = response_with_output.reviews.find_by(metric_id: metric.id)
+    review.update!(metric_version_id: current.id)
+    run.update!(status: "completed")
+
+    get "/completion_kit/runs/#{run.id}"
+
+    expect(response.body).not_to include("ck-stale-versions-banner")
+  end
+
+  it "hides the stale-versions banner when the run is not yet completed even if a review is technically stale" do
+    metric = metric_group.metrics.first
+    v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+    review = response_with_output.reviews.find_by(metric_id: metric.id)
+    review.update!(metric_version_id: v1.id)
+    v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+    v2.publish!
+    run.update!(status: "running")
+
+    get "/completion_kit/runs/#{run.id}"
+
+    expect(response.body).to include("ck-stale-versions-banner")
+    expect(response.body).not_to include("Re-run with current judge")
+  end
+
   it "shows the source-chip with current styling when the review's metric_version matches the metric's current version" do
     metric = metric_group.metrics.first
     current = CompletionKit::MetricVersion.ensure_current_for(metric)
