@@ -126,6 +126,12 @@ module CompletionKit
     end
 
     def retry_failures
+      if @run.stale_review_summary.any?
+        redirect_to run_path(@run),
+                    alert: "The judge has changed since this run executed. Retrying failed cases would mix scores from two metric versions in the same run. Use 'Re-run with current judge' to refresh everything against the live judge."
+        return
+      end
+
       scope = @run.responses.where(status: "failed")
       scope = scope.where(id: params[:only]) if params[:only].present?
 

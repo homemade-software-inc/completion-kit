@@ -110,6 +110,24 @@ RSpec.describe "API V1 Runs", type: :request do
       expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).with(run.id, failed.id)
     end
 
+    it "returns 409 with a use-rerun message when reviews are stale against the current metric version" do
+      run = create(:completion_kit_run, status: "completed")
+      metric = create(:completion_kit_metric)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      response_row = create(:completion_kit_response, run: run, status: "succeeded", row_index: 0, response_text: "ok")
+      create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: v1.id, status: "succeeded")
+      failed_row = create(:completion_kit_response, :failed, run: run, row_index: 1)
+      v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+      v2.publish!
+
+      post "/completion_kit/api/v1/runs/#{run.id}/retry_failures", headers: headers
+
+      expect(response).to have_http_status(:conflict)
+      expect(JSON.parse(response.body)["error"]).to include("Judge has changed")
+      expect(failed_row.reload.status).to eq("failed")
+      expect(CompletionKit::GenerateRowJob).not_to have_received(:perform_later)
+    end
+
     it "scopes to a single response when only param is supplied" do
       run = create(:completion_kit_run, status: "completed")
       failed_a = create(:completion_kit_response, :failed, run: run, row_index: 0)

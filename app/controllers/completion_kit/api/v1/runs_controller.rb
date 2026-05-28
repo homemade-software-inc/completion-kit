@@ -45,6 +45,10 @@ module CompletionKit
         end
 
         def retry_failures
+          if @run.stale_review_summary.any?
+            return render(json: { error: "Judge has changed since this run executed. Retry would mix versions in the same run; use POST /api/v1/runs/:id/rerun instead." }, status: :conflict)
+          end
+
           scope = @run.responses.where(status: "failed")
           scope = scope.where(id: params[:only]) if params[:only].present?
 

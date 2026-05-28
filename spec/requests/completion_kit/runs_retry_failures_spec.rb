@@ -13,6 +13,25 @@ RSpec.describe "POST /completion_kit/runs/:id/retry_failures", type: :request do
     allow(CompletionKit::GenerateRowJob).to receive(:perform_later)
   end
 
+  it "refuses retry when any review in the run is stale against the current metric_version, and points the user at Re-run with current judge" do
+    metric = create(:completion_kit_metric)
+    v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+    response_row = create(:completion_kit_response, run: run, status: "succeeded", row_index: 0, response_text: "ok")
+    create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: v1.id, status: "succeeded")
+    failed_row = create(:completion_kit_response, :failed, run: run, row_index: 1)
+    v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+    v2.publish!
+
+    post "/completion_kit/runs/#{run.id}/retry_failures"
+
+    expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
+    follow_redirect!
+    expect(response.body).to include("Re-run with current judge")
+    expect(failed_row.reload.status).to eq("failed")
+    expect(run.reload.status).to eq("completed")
+    expect(CompletionKit::GenerateRowJob).not_to have_received(:perform_later)
+  end
+
   it "resets failed responses to pending and re-enqueues their jobs" do
     failed = create(:completion_kit_response, :failed, run: run, row_index: 0)
     succeeded = create(:completion_kit_response, run: run, status: "succeeded", row_index: 1, response_text: "ok")
