@@ -79,6 +79,23 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(result_hash.first["description"]).to eq("top")
   end
 
+  it "pre-populates the edit form from the existing edit-draft so re-edits build on the unpublished work instead of clobbering it" do
+    edit_metric_via_form(instruction: "the unpublished idea I want to keep iterating on")
+    get "/completion_kit/metrics/#{metric.id}/edit"
+    expect(response.body).to include("the unpublished idea I want to keep iterating on")
+    expect(metric.reload.instruction).to eq("score it") # live state untouched
+  end
+
+  it "shows both the suggestion banner and the edit-draft banner on the edit form when both pending drafts exist" do
+    edit_metric_via_form(instruction: "an in-flight edit")
+    CompletionKit::JudgeVersion.create!(metric: metric, instruction: "a separate model suggestion",
+                                        rubric_bands: metric.rubric_bands || [],
+                                        state: "draft", source: "suggestion", current: false)
+    get "/completion_kit/metrics/#{metric.id}/edit"
+    expect(response.body).to include("Draft pending")
+    expect(response.body).to include("Proposed improvements")
+  end
+
   it "tolerates a fresh metric with no published JudgeVersion when persisting an in-place edit" do
     fresh = create(:completion_kit_metric, instruction: "no-version-yet")
     CompletionKit::JudgeVersion.where(metric_id: fresh.id).destroy_all

@@ -16,14 +16,14 @@
     </div>
   <% end %>
 
-  <% if edit_draft && !suggestion %>
+  <% if edit_draft %>
     <% pub = local_assigns[:published_judge_version] %>
     <% draft_instr_changed = pub && pub.instruction.to_s != edit_draft.instruction.to_s %>
     <% draft_rubric_changed = pub && pub.rubric_bands != edit_draft.rubric_bands %>
     <div class="ck-suggestion-banner" role="status">
       <div class="ck-suggestion-banner__body">
         <p class="ck-kicker">Draft pending</p>
-        <p class="ck-meta-copy">An unpublished draft of this metric is saved. Publish to replace the live<%= " instruction" if draft_instr_changed %><%= " and" if draft_instr_changed && draft_rubric_changed %><%= " rubric" if draft_rubric_changed %> for future runs, or keep editing.</p>
+        <p class="ck-meta-copy">The form below shows your unpublished draft. Publish to replace the live<%= " instruction" if draft_instr_changed %><%= " and" if draft_instr_changed && draft_rubric_changed %><%= " rubric" if draft_rubric_changed %> for future runs, or keep editing.</p>
       </div>
       <div class="ck-suggestion-banner__actions">
         <%= button_to "Discard draft", dismiss_suggestion_metric_path(metric, draft_id: edit_draft.id, back_to: "edit"),

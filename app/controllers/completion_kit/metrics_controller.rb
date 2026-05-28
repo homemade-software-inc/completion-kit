@@ -55,6 +55,11 @@ module CompletionKit
       @suggestion_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @edit_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @published_judge_version = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
+
+      if @edit_draft
+        @metric.instruction = @edit_draft.instruction
+        @metric.rubric_bands = @edit_draft.rubric_bands
+      end
     end
 
     def create
