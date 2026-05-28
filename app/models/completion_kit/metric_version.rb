@@ -77,5 +77,5 @@ module CompletionKit
     end
   end
 
-  JudgeVersion = MetricVersion unless const_defined?(:JudgeVersion)
+  JudgeVersion = MetricVersion
 end

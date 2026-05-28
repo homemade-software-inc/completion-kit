@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_28_201336) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_28_201817) do
   create_table "completion_kit_calibrations", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -175,10 +175,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_201336) do
     t.text "instruction"
     t.integer "metric_id"
     t.string "metric_name"
+    t.bigint "metric_version_id"
     t.integer "response_id", null: false
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["metric_id"], name: "index_completion_kit_reviews_on_metric_id"
+    t.index ["metric_version_id"], name: "index_ck_reviews_on_metric_version_id"
     t.index ["response_id", "status"], name: "index_completion_kit_reviews_on_response_id_and_status"
     t.index ["response_id"], name: "index_completion_kit_reviews_on_response_id"
   end

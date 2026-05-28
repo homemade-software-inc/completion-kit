@@ -139,6 +139,7 @@ ActiveRecord::Schema.define do
   create_table :completion_kit_reviews, force: true do |t|
     t.references :response, null: false
     t.references :metric
+    t.bigint :metric_version_id
     t.string :metric_name
     t.text :instruction
     t.string :status
@@ -150,6 +151,7 @@ ActiveRecord::Schema.define do
     t.text :error_message
     t.integer :attempts, default: 0, null: false
     t.index [:response_id, :status]
+    t.index :metric_version_id, name: "index_ck_reviews_on_metric_version_id"
     t.timestamps
   end
 

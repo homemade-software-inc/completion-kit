@@ -1,6 +1,41 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::MetricVersion, type: :model do
+  it "exposes CompletionKit::JudgeVersion as a backward-compat alias for the renamed model" do
+    expect(CompletionKit::JudgeVersion).to eq(CompletionKit::MetricVersion)
+  end
+
+  describe "Review#stale_against_current_judge?" do
+    let(:metric) { create(:completion_kit_metric) }
+    let(:response_row) { create(:completion_kit_response) }
+
+    it "returns false when the review carries no metric_version_id" do
+      review = create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4)
+      expect(review.stale_against_current_judge?).to be(false)
+    end
+
+    it "returns true when the review's metric_version is not the metric's current version" do
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      review = create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: v1.id)
+      v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands, state: "draft", source: "edit")
+      v2.publish!
+      expect(review.stale_against_current_judge?).to be(true)
+    end
+
+    it "returns false when the review's metric_version matches the metric's current version" do
+      current = CompletionKit::MetricVersion.ensure_current_for(metric)
+      review = create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: current.id)
+      expect(review.stale_against_current_judge?).to be(false)
+    end
+
+    it "returns false when there is no current version recorded for the metric" do
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      review = create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: v1.id)
+      CompletionKit::MetricVersion.where(metric_id: metric.id).destroy_all
+      expect(review.stale_against_current_judge?).to be(false)
+    end
+  end
+
   it "honors an explicit version_number on create instead of auto-incrementing" do
     metric = create(:completion_kit_metric)
     CompletionKit::MetricVersion.create!(metric: metric, instruction: "a", state: "published", current: true)

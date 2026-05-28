@@ -62,9 +62,11 @@ module CompletionKit
       )
 
       review = response.reviews.find_or_initialize_by(metric_id: metric.id)
+      current_metric_version = MetricVersion.ensure_current_for(metric)
       review.assign_attributes(
         metric_name: metric.name,
         instruction: metric.instruction.to_s,
+        metric_version_id: current_metric_version.id,
         status: "succeeded",
         ai_score: evaluation[:score],
         ai_feedback: evaluation[:feedback],
