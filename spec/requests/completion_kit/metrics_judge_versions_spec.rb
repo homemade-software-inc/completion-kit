@@ -6,7 +6,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
   let(:response_row) { create(:completion_kit_response, run: run) }
 
   before do
-    CompletionKit::JudgeVersion.ensure_current_for(metric)
+    CompletionKit::MetricVersion.ensure_current_for(metric)
     create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4)
   end
 
@@ -18,13 +18,13 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
   it "creates an edit-source draft judge version when the instruction changes via the form" do
     expect {
       edit_metric_via_form(instruction: "score it carefully")
-    }.to change { CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "edit").count }.by(1)
+    }.to change { CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "edit").count }.by(1)
   end
 
   it "does not create a draft when only the name changes" do
     expect {
       patch "/completion_kit/metrics/#{metric.id}", params: { metric: { name: "renamed", instruction: metric.instruction } }
-    }.not_to change { CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).count }
+    }.not_to change { CompletionKit::MetricVersion.drafts.where(metric_id: metric.id).count }
   end
 
   it "does not change metric.instruction in place when the metric has reviews — the change waits until publish" do
@@ -34,10 +34,10 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
 
   it "writes the change in place when there are no reviews yet" do
     metric_without_reviews = create(:completion_kit_metric, instruction: "fresh")
-    CompletionKit::JudgeVersion.ensure_current_for(metric_without_reviews)
+    CompletionKit::MetricVersion.ensure_current_for(metric_without_reviews)
     patch "/completion_kit/metrics/#{metric_without_reviews.id}", params: { metric: { name: metric_without_reviews.name, instruction: "edited in place" } }
     expect(metric_without_reviews.reload.instruction).to eq("edited in place")
-    current = CompletionKit::JudgeVersion.current.find_by(metric_id: metric_without_reviews.id)
+    current = CompletionKit::MetricVersion.current.find_by(metric_id: metric_without_reviews.id)
     expect(current.instruction).to eq("edited in place")
   end
 
@@ -45,19 +45,19 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     new_bands = (5).downto(1).map { |s| { "stars" => s, "description" => "band #{s} (revised)" } }
     expect {
       patch "/completion_kit/metrics/#{metric.id}", params: { metric: { name: metric.name, instruction: metric.instruction, rubric_bands: new_bands } }
-    }.to change { CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "edit").count }.by(1)
-    draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "edit").order(:created_at).last
+    }.to change { CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "edit").count }.by(1)
+    draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "edit").order(:created_at).last
     expect(draft.rubric_bands.first["description"]).to eq("band 5 (revised)")
     expect(metric.reload.rubric_bands).not_to eq(draft.rubric_bands)
   end
 
   it "updates rubric_bands in place and syncs the current published version when there are no reviews" do
     fresh = create(:completion_kit_metric, instruction: "fresh")
-    CompletionKit::JudgeVersion.ensure_current_for(fresh)
+    CompletionKit::MetricVersion.ensure_current_for(fresh)
     new_bands = (5).downto(1).map { |s| { "stars" => s, "description" => "fresh band #{s}" } }
     patch "/completion_kit/metrics/#{fresh.id}", params: { metric: { name: fresh.name, instruction: fresh.instruction, rubric_bands: new_bands } }
     expect(fresh.reload.rubric_bands.first["description"]).to eq("fresh band 5")
-    expect(CompletionKit::JudgeVersion.current.find_by(metric_id: fresh.id).rubric_bands.first["description"]).to eq("fresh band 5")
+    expect(CompletionKit::MetricVersion.current.find_by(metric_id: fresh.id).rubric_bands.first["description"]).to eq("fresh band 5")
   end
 
   it "normalizes rubric_bands whether they come in as plain hashes or as ActionController::Parameters" do
@@ -88,7 +88,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
 
   it "shows both the suggestion banner and the edit-draft banner on the edit form when both pending drafts exist" do
     edit_metric_via_form(instruction: "an in-flight edit")
-    CompletionKit::JudgeVersion.create!(metric: metric, instruction: "a separate model suggestion",
+    CompletionKit::MetricVersion.create!(metric: metric, instruction: "a separate model suggestion",
                                         rubric_bands: metric.rubric_bands || [],
                                         state: "draft", source: "suggestion", current: false)
     get "/completion_kit/metrics/#{metric.id}/edit"
@@ -96,9 +96,9 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(response.body).to include("Proposed improvements")
   end
 
-  it "tolerates a fresh metric with no published JudgeVersion when persisting an in-place edit" do
+  it "tolerates a fresh metric with no published MetricVersion when persisting an in-place edit" do
     fresh = create(:completion_kit_metric, instruction: "no-version-yet")
-    CompletionKit::JudgeVersion.where(metric_id: fresh.id).destroy_all
+    CompletionKit::MetricVersion.where(metric_id: fresh.id).destroy_all
     expect {
       patch "/completion_kit/metrics/#{fresh.id}", params: { metric: { name: fresh.name, instruction: "edited" } }
     }.not_to raise_error
@@ -107,11 +107,11 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
 
   it "renders the Versions table on the metric show page with a Published chip on current and a Make current button on superseded published versions" do
     edit_metric_via_form(instruction: "v2 instruction")
-    draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).order(:created_at).last
+    draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id).order(:created_at).last
     post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: draft.id }
     follow_redirect!
 
-    versions = CompletionKit::JudgeVersion.where(metric_id: metric.id).order(:version_number).to_a
+    versions = CompletionKit::MetricVersion.where(metric_id: metric.id).order(:version_number).to_a
     expect(versions.size).to eq(2)
     expect(versions.last.current?).to be(true)
 
@@ -127,11 +127,11 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
 
   it "lets the user revert to an older published version via Make current" do
     edit_metric_via_form(instruction: "v2 instruction")
-    draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).order(:created_at).last
+    draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id).order(:created_at).last
     post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: draft.id }
     follow_redirect!
 
-    older = CompletionKit::JudgeVersion.where(metric_id: metric.id).order(:version_number).first
+    older = CompletionKit::MetricVersion.where(metric_id: metric.id).order(:version_number).first
     expect(older.current?).to be(false)
     expect(older.published?).to be(true)
 
@@ -154,7 +154,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
 
   it "publishes the latest draft, demoting the previous published version" do
     edit_metric_via_form(instruction: "v2 instruction")
-    previously_published = CompletionKit::JudgeVersion.published.where(metric_id: metric.id).first
+    previously_published = CompletionKit::MetricVersion.published.where(metric_id: metric.id).first
     expect(previously_published).to be_present
 
     post "/completion_kit/metrics/#{metric.id}/publish_draft"
@@ -162,14 +162,14 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     follow_redirect!
     expect(response.body).to match(/v\d+ is now the published version/)
 
-    versions = CompletionKit::JudgeVersion.where(metric_id: metric.id).order(:created_at).to_a
+    versions = CompletionKit::MetricVersion.where(metric_id: metric.id).order(:created_at).to_a
     expect(versions.map(&:state)).to eq(%w[published published])
     expect(versions.map(&:current)).to eq([false, true])
   end
 
   it "copies a published draft's instruction back into the metric so the judge actually uses it" do
     edit_metric_via_form(instruction: "v2 instruction")
-    draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).order(:created_at).last
+    draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id).order(:created_at).last
     draft.update!(instruction: "the version we actually want")
 
     post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: draft.id }
@@ -178,10 +178,10 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
 
   it "publishes the specific draft passed in draft_id, not just the newest" do
     edit_metric_via_form(instruction: "first edit")
-    older = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).order(:created_at).last
+    older = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id).order(:created_at).last
     # A second edit replaces the prior edit-source draft (only one edit draft at a time).
     edit_metric_via_form(instruction: "second edit")
-    second_draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "edit").order(:created_at).last
+    second_draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "edit").order(:created_at).last
     expect(second_draft.id).not_to eq(older.id)
 
     # Publish the second (newer) edit draft.
@@ -198,9 +198,9 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
 
   it "replaces the prior edit-source draft instead of stacking when the user edits again" do
     edit_metric_via_form(instruction: "v2")
-    first_count = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "edit").count
+    first_count = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "edit").count
     edit_metric_via_form(instruction: "v3")
-    second_count = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "edit").count
+    second_count = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "edit").count
     expect(first_count).to eq(1)
     expect(second_count).to eq(1)
   end

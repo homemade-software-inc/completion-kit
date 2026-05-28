@@ -5,7 +5,7 @@ module CompletionKit
 
       TOOLS = {
         "judges_suggest" => {
-          description: "Ask the model to rewrite the metric's judge instruction in N variants targeted at the recent disagreements. Each variant is saved as a draft JudgeVersion with source=\"suggestion\". Returns the persisted drafts. Stripe-metering hooks fire via ActiveSupport::Notifications under completion_kit.judge_suggestion.generated.",
+          description: "Ask the model to rewrite the metric's judge instruction in N variants targeted at the recent disagreements. Each variant is saved as a draft MetricVersion with source=\"suggestion\". Returns the persisted drafts. Stripe-metering hooks fire via ActiveSupport::Notifications under completion_kit.judge_suggestion.generated.",
           inputSchema: {
             type: "object",
             properties: {
@@ -33,15 +33,15 @@ module CompletionKit
           handler: :replay
         },
         "judges_compare" => {
-          description: "Compare two judge versions' calibration stats side by side. Pass either two judge_version_ids or one metric_id with judge_version_a_id / judge_version_b_id.",
+          description: "Compare two metric versions' calibration stats side by side. Pass either two metric_version_ids or one metric_id with metric_version_a_id / metric_version_b_id.",
           inputSchema: {
             type: "object",
             properties: {
               metric_id: { type: "integer" },
-              judge_version_a_id: { type: "integer" },
-              judge_version_b_id: { type: "integer" }
+              metric_version_a_id: { type: "integer" },
+              metric_version_b_id: { type: "integer" }
             },
-            required: ["metric_id", "judge_version_a_id", "judge_version_b_id"]
+            required: ["metric_id", "metric_version_a_id", "metric_version_b_id"]
           },
           handler: :compare
         }
@@ -49,7 +49,7 @@ module CompletionKit
 
       def self.suggest(args)
         metric = CompletionKit::Metric.find(args["metric_id"])
-        generator = CompletionKit::JudgeVariantGenerator.new(metric, count: args["count"].to_i, model: args["model"])
+        generator = CompletionKit::MetricVariantGenerator.new(metric, count: args["count"].to_i, model: args["model"])
         variants = generator.call
         return error_result("Variant generator returned no parseable variants. Try again or change the model.") if variants.empty?
         versions = generator.persist!(variants)
@@ -75,20 +75,22 @@ module CompletionKit
 
       def self.compare(args)
         metric = CompletionKit::Metric.find(args["metric_id"])
-        a = CompletionKit::JudgeVersion.where(metric_id: metric.id).find(args["judge_version_a_id"])
-        b = CompletionKit::JudgeVersion.where(metric_id: metric.id).find(args["judge_version_b_id"])
-        stats_a = CompletionKit::MetricCalibrationStats.for(metric, judge_version: a)
-        stats_b = CompletionKit::MetricCalibrationStats.for(metric, judge_version: b)
+        a_id = args["metric_version_a_id"] || args["judge_version_a_id"]
+        b_id = args["metric_version_b_id"] || args["judge_version_b_id"]
+        a = CompletionKit::MetricVersion.where(metric_id: metric.id).find(a_id)
+        b = CompletionKit::MetricVersion.where(metric_id: metric.id).find(b_id)
+        stats_a = CompletionKit::MetricCalibrationStats.for(metric, metric_version: a)
+        stats_b = CompletionKit::MetricCalibrationStats.for(metric, metric_version: b)
         text_result({
           metric_id: metric.id,
-          a: judge_version_payload(a, stats_a),
-          b: judge_version_payload(b, stats_b),
+          a: metric_version_payload(a, stats_a),
+          b: metric_version_payload(b, stats_b),
           delta: delta_payload(stats_a, stats_b),
           recommendation: recommendation_for(stats_a, stats_b)
         })
       end
 
-      def self.judge_version_payload(version, stats)
+      def self.metric_version_payload(version, stats)
         {
           id: version.id, state: version.state, current: version.current,
           source: version.source, created_at: version.created_at,

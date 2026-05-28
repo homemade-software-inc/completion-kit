@@ -227,7 +227,7 @@ ActiveRecord::Schema.define do
             unique: true,
             name: "index_ck_dashboard_dismissals_on_dismissable"
 
-  create_table :completion_kit_judge_versions, force: true do |t|
+  create_table :completion_kit_metric_versions, force: true do |t|
     t.references :metric, null: false
     t.text :instruction
     t.text :rubric_bands
@@ -238,15 +238,15 @@ ActiveRecord::Schema.define do
     t.datetime :published_at
     t.timestamps
   end
-  add_index :completion_kit_judge_versions, [:metric_id, :current], name: "index_ck_judge_versions_on_metric_current"
-  add_index :completion_kit_judge_versions, [:metric_id, :state], name: "index_ck_judge_versions_on_metric_state"
-  add_index :completion_kit_judge_versions, [:metric_id, :version_number], name: "index_ck_judge_versions_on_metric_version"
+  add_index :completion_kit_metric_versions, [:metric_id, :current], name: "index_ck_metric_versions_on_metric_current"
+  add_index :completion_kit_metric_versions, [:metric_id, :state], name: "index_ck_metric_versions_on_metric_state"
+  add_index :completion_kit_metric_versions, [:metric_id, :version_number], name: "index_ck_metric_versions_on_metric_vnum"
 
   create_table :completion_kit_calibrations, force: true do |t|
     t.references :run, null: false
     t.references :response, null: false
     t.references :metric, null: false
-    t.references :judge_version, null: false
+    t.references :metric_version, null: false
     t.string :verdict, null: false
     t.string :created_by
     t.decimal :corrected_score, precision: 4, scale: 1

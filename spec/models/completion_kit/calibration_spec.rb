@@ -4,11 +4,11 @@ RSpec.describe CompletionKit::Calibration, type: :model do
   let(:metric) { create(:completion_kit_metric) }
   let(:run) { create(:completion_kit_run) }
   let(:response) { create(:completion_kit_response, run: run) }
-  let(:judge_version) { CompletionKit::JudgeVersion.ensure_current_for(metric) }
+  let(:metric_version) { CompletionKit::MetricVersion.ensure_current_for(metric) }
 
   def build_calibration(attrs = {})
     build(:completion_kit_calibration,
-          run: run, response: response, metric: metric, judge_version: judge_version, **attrs)
+          run: run, response: response, metric: metric, metric_version: metric_version, **attrs)
   end
 
   describe "validations" do
@@ -43,20 +43,20 @@ RSpec.describe CompletionKit::Calibration, type: :model do
     it "is unique on (response, metric, created_by)" do
       create(:completion_kit_calibration,
              run: run, response: response, metric: metric,
-             judge_version: judge_version, created_by: "alice")
+             metric_version: metric_version, created_by: "alice")
       duplicate = build(:completion_kit_calibration,
                         run: run, response: response, metric: metric,
-                        judge_version: judge_version, created_by: "alice")
+                        metric_version: metric_version, created_by: "alice")
       expect(duplicate).not_to be_valid
     end
 
     it "allows the same response+metric for a different user" do
       create(:completion_kit_calibration,
              run: run, response: response, metric: metric,
-             judge_version: judge_version, created_by: "alice")
+             metric_version: metric_version, created_by: "alice")
       other = build(:completion_kit_calibration,
                     run: run, response: response, metric: metric,
-                    judge_version: judge_version, created_by: "bob")
+                    metric_version: metric_version, created_by: "bob")
       expect(other).to be_valid
     end
   end
@@ -64,7 +64,7 @@ RSpec.describe CompletionKit::Calibration, type: :model do
   describe "scopes" do
     it "scopes by run and metric" do
       cal = create(:completion_kit_calibration,
-                   run: run, response: response, metric: metric, judge_version: judge_version)
+                   run: run, response: response, metric: metric, metric_version: metric_version)
       expect(described_class.for_run(run.id)).to include(cal)
       expect(described_class.for_metric(metric.id)).to include(cal)
     end
@@ -74,14 +74,14 @@ RSpec.describe CompletionKit::Calibration, type: :model do
     it "exposes the structured payload" do
       cal = create(:completion_kit_calibration,
                    run: run, response: response, metric: metric,
-                   judge_version: judge_version,
+                   metric_version: metric_version,
                    verdict: "borderline", note: "rubric ambiguous")
       payload = cal.as_json
       expect(payload).to include(
         run_id: run.id,
         response_id: response.id,
         metric_id: metric.id,
-        judge_version_id: judge_version.id,
+        metric_version_id: metric_version.id,
         verdict: "borderline",
         note: "rubric ambiguous"
       )

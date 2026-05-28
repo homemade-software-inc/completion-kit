@@ -12,10 +12,10 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
   end
 
   def add_disagree(corrected: 3, note: "off")
-    jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+    jv = CompletionKit::MetricVersion.ensure_current_for(metric)
     create(:completion_kit_calibration,
            run: run, response: response_row, metric: metric,
-           judge_version: jv, verdict: "disagree",
+           metric_version: jv, verdict: "disagree",
            corrected_score: corrected, note: note, created_by: SecureRandom.uuid)
   end
 
@@ -28,7 +28,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response.body).to include("Drafted a new version")
     expect(response.body).to include("Review changes")
     expect(response.body).not_to include('value="Improve the metric"')
-    expect(CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "suggestion").count).to eq(1)
+    expect(CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion").count).to eq(1)
 
     get "/completion_kit/metrics/#{metric.id}/edit"
     expect(response.body).to include("Proposed improvements")
@@ -45,7 +45,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
     stub_llm("VARIANT:\nREASONING: b\nINSTRUCTION:\nsecond\nEND_VARIANT")
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    drafts = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "suggestion")
+    drafts = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion")
     expect(drafts.count).to eq(1)
     expect(drafts.first.instruction).to eq("second")
   end
@@ -106,11 +106,11 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     add_disagree
     stub_llm("VARIANT:\nREASONING: r\nINSTRUCTION:\ndoomed\nEND_VARIANT")
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "suggestion").first
+    draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion").first
 
     delete "/completion_kit/metrics/#{metric.id}/dismiss_suggestion", params: { draft_id: draft.id }
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
-    expect(CompletionKit::JudgeVersion.where(id: draft.id)).to be_empty
+    expect(CompletionKit::MetricVersion.where(id: draft.id)).to be_empty
   end
 
   it "tolerates a dismiss request for a missing draft (no-op)" do
@@ -139,7 +139,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     add_disagree
     stub_llm("VARIANT:\nREASONING: r\nINSTRUCTION:\ndoomed\nEND_VARIANT")
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    draft = CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id, source: "suggestion").first
+    draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion").first
 
     delete "/completion_kit/metrics/#{metric.id}/dismiss_suggestion",
            params: { draft_id: draft.id, back_to: "edit" }

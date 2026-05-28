@@ -49,15 +49,15 @@ RSpec.describe CompletionKit::McpTools::Calibrations do
   describe "calibrations_list" do
     it "filters by run_id, response_id, metric_id, and created_by" do
       other_response = create(:completion_kit_response, run: run)
-      jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      jv = CompletionKit::MetricVersion.ensure_current_for(metric)
       create(:completion_kit_calibration,
-             run: run, response: response_row, metric: metric, judge_version: jv,
+             run: run, response: response_row, metric: metric, metric_version: jv,
              created_by: "alice", verdict: "agree")
       create(:completion_kit_calibration,
-             run: run, response: other_response, metric: metric, judge_version: jv,
+             run: run, response: other_response, metric: metric, metric_version: jv,
              created_by: "alice", verdict: "disagree", corrected_score: 2.0)
       create(:completion_kit_calibration,
-             run: run, response: response_row, metric: metric, judge_version: jv,
+             run: run, response: response_row, metric: metric, metric_version: jv,
              created_by: "bob", verdict: "borderline")
 
       filtered = described_class.call("calibrations_list", {

@@ -9,10 +9,10 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
   end
 
   def add_disagree_calibration(response, corrected:, note: "off by a star", created_by: SecureRandom.uuid)
-    jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+    jv = CompletionKit::MetricVersion.ensure_current_for(metric)
     create(:completion_kit_calibration,
            run: run, response: response, metric: metric,
-           judge_version: jv, verdict: "disagree",
+           metric_version: jv, verdict: "disagree",
            corrected_score: corrected, note: note, created_by: created_by)
   end
 
@@ -78,7 +78,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       add_review(r1, ai_score: 4.0)
       agree = create(:completion_kit_calibration,
                      run: run, response: r1, metric: metric,
-                     judge_version: CompletionKit::JudgeVersion.ensure_current_for(metric),
+                     metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
                      verdict: "agree", created_by: "alice")
       expect {
         post "/completion_kit/metrics/#{metric.id}/add_few_shot", params: { calibration_id: agree.id }
@@ -89,7 +89,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       r1 = create(:completion_kit_response, run: run, input_data: "Q?", response_text: "A.")
       cal = CompletionKit::Calibration.new(
         run: run, response: r1, metric: metric,
-        judge_version: CompletionKit::JudgeVersion.ensure_current_for(metric),
+        metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
         verdict: "disagree", corrected_score: nil, note: nil, created_by: "ghost"
       )
       cal.save(validate: false)
@@ -162,7 +162,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
         r = create(:completion_kit_response, run: run)
         create(:completion_kit_calibration,
                run: run, response: r, metric: metric,
-               judge_version: CompletionKit::JudgeVersion.ensure_current_for(metric),
+               metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
                verdict: "borderline", created_by: SecureRandom.uuid)
       end
     end
@@ -172,7 +172,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
         r = create(:completion_kit_response, run: run)
         create(:completion_kit_calibration,
                run: run, response: r, metric: metric,
-               judge_version: CompletionKit::JudgeVersion.ensure_current_for(metric),
+               metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
                verdict: "agree", created_by: SecureRandom.uuid)
       end
     end

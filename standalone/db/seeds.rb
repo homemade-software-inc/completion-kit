@@ -432,8 +432,8 @@ CompletionKit::Calibration.where(created_by: current_operator).delete_all
   m = CompletionKit::Metric.find_by(name: name)
   next unless m
   m.update_columns(few_shot_examples: nil) if m.few_shot_examples.present?
-  CompletionKit::JudgeVersion.drafts.where(metric_id: m.id).destroy_all
-  pubs = CompletionKit::JudgeVersion.published.where(metric_id: m.id).order(:version_number).to_a
+  CompletionKit::MetricVersion.drafts.where(metric_id: m.id).destroy_all
+  pubs = CompletionKit::MetricVersion.published.where(metric_id: m.id).order(:version_number).to_a
   if pubs.size > 1
     pubs.last(pubs.size - 1).each(&:destroy)
     pubs.first.update_columns(current: true)
@@ -442,7 +442,7 @@ CompletionKit::Calibration.where(created_by: current_operator).delete_all
 end
 
 publish_new_version = lambda do |metric, instruction:, rubric_bands:|
-  v = CompletionKit::JudgeVersion.create!(
+  v = CompletionKit::MetricVersion.create!(
     metric: metric, instruction: instruction, rubric_bands: rubric_bands,
     state: "draft", source: "suggestion"
   )
@@ -525,7 +525,7 @@ borderline_notes = {
 
 seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
   metric = CompletionKit::Metric.find_by!(name: metric_name)
-  jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+  jv = CompletionKit::MetricVersion.ensure_current_for(metric)
   reviewed_responses = CompletionKit::Response.joins(:reviews)
     .where(reviews: { metric_id: metric.id })
     .where.not(reviews: { ai_score: nil })
@@ -550,7 +550,7 @@ seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
 
     next if CompletionKit::Calibration.exists?(response_id: resp.id, metric_id: metric.id, created_by: current_operator)
 
-    attrs = { run: resp.run, response: resp, metric: metric, judge_version: jv, verdict: verdict, created_by: current_operator }
+    attrs = { run: resp.run, response: resp, metric: metric, metric_version: jv, verdict: verdict, created_by: current_operator }
     if verdict == "disagree"
       live = resp.reviews.find_by(metric_id: metric.id)
       note, offset = metric_disagree_notes[disagree_index % metric_disagree_notes.size]
@@ -599,7 +599,7 @@ confidence_metric = CompletionKit::Metric.find_by!(name: "Confidence")
 confidence_disagree = CompletionKit::Calibration.where(metric_id: confidence_metric.id, verdict: "disagree").order(:id).first
 pin_few_shot.call(confidence_metric, confidence_disagree)
 
-CompletionKit::JudgeVersion.create!(
+CompletionKit::MetricVersion.create!(
   metric: accuracy_metric,
   instruction: "Are the factual claims and policy statements in the reply correct, and grounded in the ticket plus known company facts? Flag any invented policy, price, deadline, or product feature. Soft claims that could mislead the customer also count against the score.",
   rubric_bands: [
@@ -612,7 +612,7 @@ CompletionKit::JudgeVersion.create!(
   state: "draft", source: "suggestion", current: false
 )
 
-CompletionKit::JudgeVersion.create!(
+CompletionKit::MetricVersion.create!(
   metric: confidence_metric,
   instruction: "Is the model's confidence well-calibrated against the ticket's actual ambiguity? It should hedge when the ticket is genuinely unclear, commit when it isn't, and the rationale should name the signal it leaned on (e.g. 'six-year tenure plus alternatives language').",
   rubric_bands: [
@@ -626,7 +626,7 @@ CompletionKit::JudgeVersion.create!(
 )
 
 helpfulness_metric = CompletionKit::Metric.find_by!(name: "Helpfulness")
-CompletionKit::JudgeVersion.create!(
+CompletionKit::MetricVersion.create!(
   metric: helpfulness_metric,
   instruction: "Does the reply move the case forward in one round-trip? It should resolve the question, propose a concrete next step the customer can act on, or both. Replies that defer, ask for information already in the ticket, or commit to nothing don't count as helpful.",
   rubric_bands: [
@@ -639,4 +639,4 @@ CompletionKit::JudgeVersion.create!(
   state: "draft", source: "edit", current: false
 )
 
-puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews, #{CompletionKit::Tag.count} tags, #{CompletionKit::Calibration.count} calibrations, #{CompletionKit::JudgeVersion.drafts.count} draft judge versions"
+puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews, #{CompletionKit::Tag.count} tags, #{CompletionKit::Calibration.count} calibrations, #{CompletionKit::MetricVersion.drafts.count} draft metric versions"

@@ -35,16 +35,16 @@ module CompletionKit
     end
 
     def show
-      @published_judge_version = JudgeVersion.ensure_current_for(@metric)
+      @published_metric_version = MetricVersion.ensure_current_for(@metric)
       @disagreements = Calibration.where(metric_id: @metric.id, verdict: "disagree")
-                                  .includes(:judge_version, response: [:reviews, :run])
+                                  .includes(:metric_version, response: [:reviews, :run])
                                   .order(created_at: :desc)
                                   .limit(50)
-      @edit_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
-      @suggestion_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
+      @edit_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
+      @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @improve_disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree",
-                                                      judge_version_id: @published_judge_version.id).count
-      @versions = JudgeVersion.where(metric_id: @metric.id).order(version_number: :desc).to_a
+                                                      metric_version_id: @published_metric_version.id).count
+      @versions = MetricVersion.where(metric_id: @metric.id).order(version_number: :desc).to_a
     end
 
     def new
@@ -52,9 +52,9 @@ module CompletionKit
     end
 
     def edit
-      @suggestion_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
-      @edit_draft = JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
-      @published_judge_version = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
+      @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
+      @edit_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
+      @published_metric_version = MetricVersion.published.where(metric_id: @metric.id, current: true).first
 
       if @edit_draft
         @metric.instruction = @edit_draft.instruction
@@ -97,8 +97,8 @@ module CompletionKit
       new_rubric = rubric_changed ? normalized_proposed_rubric : current_rubric
 
       if @metric.reviews.exists?
-        JudgeVersion.drafts.where(metric_id: @metric.id, source: "edit").destroy_all
-        draft = JudgeVersion.create!(
+        MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").destroy_all
+        draft = MetricVersion.create!(
           metric: @metric, instruction: new_instruction, rubric_bands: new_rubric,
           state: "draft", source: "edit", current: false
         )
@@ -106,7 +106,7 @@ module CompletionKit
                     notice: "Saved as draft #{draft.version_label}. Publish to push these changes to the live judge."
       else
         @metric.update!(instruction: new_instruction, rubric_bands: new_rubric)
-        current_pub = JudgeVersion.published.where(metric_id: @metric.id, current: true).first
+        current_pub = MetricVersion.published.where(metric_id: @metric.id, current: true).first
         current_pub&.update!(instruction: @metric.instruction, rubric_bands: @metric.rubric_bands)
         redirect_to metric_path(@metric), notice: "Metric was successfully updated."
       end
@@ -125,9 +125,9 @@ module CompletionKit
         return
       end
 
-      JudgeVersion.drafts.where(metric_id: @metric.id, source: "suggestion").destroy_all
+      MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").destroy_all
 
-      generator = JudgeVariantGenerator.new(@metric, count: 1)
+      generator = MetricVariantGenerator.new(@metric, count: 1)
       variants = generator.call
       if variants.empty?
         redirect_to target, alert: "The model returned no usable variants. Try again with a different model."
@@ -138,18 +138,18 @@ module CompletionKit
     end
 
     def dismiss_suggestion
-      draft = JudgeVersion.drafts.where(metric_id: @metric.id).find_by(id: params[:draft_id])
+      draft = MetricVersion.drafts.where(metric_id: @metric.id).find_by(id: params[:draft_id])
       draft&.destroy
       target = params[:back_to] == "edit" ? edit_metric_path(@metric) : metric_path(@metric)
       redirect_to target, notice: "Dismissed."
     end
 
     def publish_draft
-      scope = JudgeVersion.where(metric_id: @metric.id)
+      scope = MetricVersion.where(metric_id: @metric.id)
       version = if params[:draft_id].present?
                   scope.find_by(id: params[:draft_id])
                 else
-                  JudgeVersion.drafts.where(metric_id: @metric.id).order(created_at: :desc).first
+                  MetricVersion.drafts.where(metric_id: @metric.id).order(created_at: :desc).first
                 end
 
       if version.nil?

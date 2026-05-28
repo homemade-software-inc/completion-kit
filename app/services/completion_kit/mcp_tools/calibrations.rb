@@ -56,7 +56,7 @@ module CompletionKit
           run_id: run.id, response_id: response.id, metric_id: metric.id, created_by: created_by
         )
         calibration.assign_attributes(
-          judge_version: CompletionKit::JudgeVersion.ensure_current_for(metric),
+          metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
           verdict: args["verdict"],
           corrected_score: args["corrected_score"],
           note: args["note"]

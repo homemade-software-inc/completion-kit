@@ -3,9 +3,9 @@
 <% anchor = metric&.name&.parameterize %>
 <% target_response = if (stats.sample_size.zero? || stats.counter_only?) && metric
      created_by = CompletionKit.config.username.presence || "operator"
-     current_jv = CompletionKit::JudgeVersion.current.find_by(metric_id: metric.id)
-     verdicted_ids = if current_jv
-       CompletionKit::Calibration.where(metric_id: metric.id, created_by: created_by, judge_version_id: current_jv.id).pluck(:response_id)
+     current_metric_version = CompletionKit::MetricVersion.current.find_by(metric_id: metric.id)
+     verdicted_ids = if current_metric_version
+       CompletionKit::Calibration.where(metric_id: metric.id, created_by: created_by, metric_version_id: current_metric_version.id).pluck(:response_id)
      else
        []
      end

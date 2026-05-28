@@ -17,7 +17,7 @@
   <% end %>
 
   <% if edit_draft %>
-    <% pub = local_assigns[:published_judge_version] %>
+    <% pub = local_assigns[:published_metric_version] %>
     <% draft_instr_changed = pub && pub.instruction.to_s != edit_draft.instruction.to_s %>
     <% draft_rubric_changed = pub && pub.rubric_bands != edit_draft.rubric_bands %>
     <div class="ck-suggestion-banner" role="status">

@@ -10,20 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_25_001152) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_28_201336) do
   create_table "completion_kit_calibrations", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
     t.string "created_by"
-    t.integer "judge_version_id", null: false
     t.integer "metric_id", null: false
+    t.integer "metric_version_id", null: false
     t.text "note"
     t.integer "response_id", null: false
     t.integer "run_id", null: false
     t.datetime "updated_at", null: false
     t.string "verdict", null: false
-    t.index ["judge_version_id"], name: "index_ck_calibrations_on_judge_version_id"
     t.index ["metric_id"], name: "index_ck_calibrations_on_metric_id"
+    t.index ["metric_version_id"], name: "index_ck_calibrations_on_metric_version_id"
     t.index ["response_id", "metric_id", "created_by"], name: "index_ck_calibrations_on_response_metric_user", unique: true
     t.index ["response_id"], name: "index_ck_calibrations_on_response_id"
     t.index ["run_id"], name: "index_ck_calibrations_on_run_id"
@@ -43,23 +43,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_25_001152) do
     t.text "csv_data", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
-  end
-
-  create_table "completion_kit_judge_versions", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.boolean "current", default: true, null: false
-    t.text "instruction"
-    t.integer "metric_id", null: false
-    t.datetime "published_at"
-    t.text "rubric_bands"
-    t.string "source"
-    t.string "state", default: "published", null: false
-    t.datetime "updated_at", null: false
-    t.integer "version_number", null: false
-    t.index ["metric_id", "current"], name: "index_ck_judge_versions_on_metric_current"
-    t.index ["metric_id", "state"], name: "index_ck_judge_versions_on_metric_state"
-    t.index ["metric_id", "version_number"], name: "index_ck_judge_versions_on_metric_version"
-    t.index ["metric_id"], name: "index_ck_judge_versions_on_metric_id"
   end
 
   create_table "completion_kit_mcp_sessions", force: :cascade do |t|
@@ -86,6 +69,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_25_001152) do
     t.text "description"
     t.string "name", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "completion_kit_metric_versions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "current", default: true, null: false
+    t.text "instruction"
+    t.integer "metric_id", null: false
+    t.datetime "published_at"
+    t.text "rubric_bands"
+    t.string "source"
+    t.string "state", default: "published", null: false
+    t.datetime "updated_at", null: false
+    t.integer "version_number", null: false
+    t.index ["metric_id", "current"], name: "index_ck_metric_versions_on_metric_current"
+    t.index ["metric_id", "state"], name: "index_ck_metric_versions_on_metric_state"
+    t.index ["metric_id", "version_number"], name: "index_ck_metric_versions_on_metric_vnum"
+    t.index ["metric_id"], name: "index_ck_metric_versions_on_metric_id"
   end
 
   create_table "completion_kit_metrics", force: :cascade do |t|
@@ -382,13 +382,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_25_001152) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
-  add_foreign_key "completion_kit_calibrations", "completion_kit_judge_versions", column: "judge_version_id", on_delete: :cascade
+  add_foreign_key "completion_kit_calibrations", "completion_kit_metric_versions", column: "metric_version_id", on_delete: :cascade
   add_foreign_key "completion_kit_calibrations", "completion_kit_metrics", column: "metric_id", on_delete: :cascade
   add_foreign_key "completion_kit_calibrations", "completion_kit_responses", column: "response_id", on_delete: :cascade
   add_foreign_key "completion_kit_calibrations", "completion_kit_runs", column: "run_id", on_delete: :cascade
-  add_foreign_key "completion_kit_judge_versions", "completion_kit_metrics", column: "metric_id", on_delete: :cascade
   add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metric_groups", column: "metric_group_id"
   add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metrics", column: "metric_id"
+  add_foreign_key "completion_kit_metric_versions", "completion_kit_metrics", column: "metric_id", on_delete: :cascade
   add_foreign_key "completion_kit_responses", "completion_kit_runs", column: "run_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_metrics", column: "metric_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_responses", column: "response_id"

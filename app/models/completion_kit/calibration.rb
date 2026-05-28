@@ -5,7 +5,11 @@ module CompletionKit
     belongs_to :run
     belongs_to :response
     belongs_to :metric
-    belongs_to :judge_version
+    belongs_to :metric_version
+
+    alias_attribute :judge_version_id, :metric_version_id
+    alias_method :judge_version, :metric_version
+    alias_method :judge_version=, :metric_version=
 
     validates :verdict, presence: true, inclusion: { in: VERDICTS }
     validates :response_id,
@@ -22,7 +26,7 @@ module CompletionKit
         run_id: run_id,
         response_id: response_id,
         metric_id: metric_id,
-        judge_version_id: judge_version_id,
+        metric_version_id: metric_version_id,
         verdict: verdict,
         corrected_score: corrected_score,
         note: note,

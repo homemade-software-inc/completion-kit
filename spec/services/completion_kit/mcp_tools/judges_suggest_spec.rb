@@ -17,22 +17,22 @@ RSpec.describe CompletionKit::McpTools::Judges do
       expect(payload.length).to eq(1)
       expect(payload.first["source"]).to eq("suggestion")
       expect(payload.first["state"]).to eq("draft")
-      expect(CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).count).to eq(1)
+      expect(CompletionKit::MetricVersion.drafts.where(metric_id: metric.id).count).to eq(1)
     end
 
     it "clamps count to a max of 3" do
       blocks = Array.new(7) { |i| "VARIANT:\nREASONING: r#{i}\nINSTRUCTION:\nv#{i}\nEND_VARIANT" }
       stub_llm(blocks.join("\n\n"))
       described_class.call("judges_suggest", {"metric_id" => metric.id, "count" => 99})
-      expect(CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).count).to eq(3)
+      expect(CompletionKit::MetricVersion.drafts.where(metric_id: metric.id).count).to eq(3)
     end
 
     it "falls back to the default count when none is supplied" do
       blocks = Array.new(7) { |i| "VARIANT:\nREASONING: r#{i}\nINSTRUCTION:\nv#{i}\nEND_VARIANT" }
       stub_llm(blocks.join("\n\n"))
       described_class.call("judges_suggest", {"metric_id" => metric.id})
-      expect(CompletionKit::JudgeVersion.drafts.where(metric_id: metric.id).count)
-        .to eq(CompletionKit::JudgeVariantGenerator::DEFAULT_VARIANT_COUNT)
+      expect(CompletionKit::MetricVersion.drafts.where(metric_id: metric.id).count)
+        .to eq(CompletionKit::MetricVariantGenerator::DEFAULT_VARIANT_COUNT)
     end
 
     it "returns isError when the model returns nothing parseable" do

@@ -42,16 +42,16 @@ RSpec.describe CompletionKit::McpTools::Judges do
 
   describe "judges_compare" do
     let(:run) { create(:completion_kit_run) }
-    let(:published_version) { CompletionKit::JudgeVersion.ensure_current_for(metric) }
+    let(:published_version) { CompletionKit::MetricVersion.ensure_current_for(metric) }
     let(:draft_version) do
-      CompletionKit::JudgeVersion.create!(metric: metric, instruction: "fresh", current: false, state: "draft", source: "edit")
+      CompletionKit::MetricVersion.create!(metric: metric, instruction: "fresh", current: false, state: "draft", source: "edit")
     end
 
     def add_calibration(version, verdict:, response: nil, corrected: nil, created_by: SecureRandom.uuid)
       response ||= create(:completion_kit_response, run: run)
       create(:completion_kit_calibration,
              run: run, response: response, metric: metric,
-             judge_version: version, verdict: verdict,
+             metric_version: version, verdict: verdict,
              corrected_score: corrected, created_by: created_by)
     end
 

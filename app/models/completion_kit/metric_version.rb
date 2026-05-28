@@ -1,5 +1,5 @@
 module CompletionKit
-  class JudgeVersion < ApplicationRecord
+  class MetricVersion < ApplicationRecord
     STATES = %w[draft published].freeze
 
     belongs_to :metric
@@ -41,7 +41,7 @@ module CompletionKit
     end
 
     def publish!
-      JudgeVersion.transaction do
+      MetricVersion.transaction do
         self.class.where(metric_id: metric_id).where.not(id: id).update_all(current: false)
         reload
         update!(state: "published", current: true, published_at: published_at || Time.current)
@@ -76,4 +76,6 @@ module CompletionKit
       self.version_number = max + 1
     end
   end
+
+  JudgeVersion = MetricVersion unless const_defined?(:JudgeVersion)
 end

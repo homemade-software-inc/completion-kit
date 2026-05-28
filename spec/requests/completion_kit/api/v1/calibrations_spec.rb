@@ -23,7 +23,7 @@ RSpec.describe "API V1 Calibrations", type: :request do
       body = JSON.parse(response.body)
       expect(body["verdict"]).to eq("agree")
       expect(body["created_by"]).to eq("alice")
-      expect(body["judge_version_id"]).to be_present
+      expect(body["metric_version_id"]).to be_present
     end
 
     it "upserts on subsequent POST with the same (response, metric, created_by)" do
@@ -71,13 +71,13 @@ RSpec.describe "API V1 Calibrations", type: :request do
 
   describe "GET" do
     it "lists calibrations for the (run, response, metric) triple" do
-      jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      jv = CompletionKit::MetricVersion.ensure_current_for(metric)
       create(:completion_kit_calibration,
              run: run, response: response_row, metric: metric,
-             judge_version: jv, created_by: "alice")
+             metric_version: jv, created_by: "alice")
       create(:completion_kit_calibration,
              run: run, response: response_row, metric: metric,
-             judge_version: jv, created_by: "bob", verdict: "borderline")
+             metric_version: jv, created_by: "bob", verdict: "borderline")
       get base_path, headers: headers
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)

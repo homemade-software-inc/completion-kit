@@ -33,25 +33,25 @@ module CompletionKit
 
     CURRENT = :current
 
-    def self.for(metric, judge_version: CURRENT)
-      resolved = case judge_version
-                 when CURRENT then JudgeVersion.current.find_by(metric_id: metric.id)
+    def self.for(metric, metric_version: CURRENT)
+      resolved = case metric_version
+                 when CURRENT then MetricVersion.current.find_by(metric_id: metric.id)
                  when nil then nil
-                 else judge_version
+                 else metric_version
                  end
-      new(metric: metric, judge_version: resolved, all_versions: judge_version.nil?).call
+      new(metric: metric, metric_version: resolved, all_versions: metric_version.nil?).call
     end
 
-    def initialize(metric:, judge_version: nil, all_versions: false)
+    def initialize(metric:, metric_version: nil, all_versions: false)
       @metric = metric
-      @judge_version = judge_version
+      @metric_version = metric_version
       @all_versions = all_versions
     end
 
     def call
       scope = Calibration.where(metric_id: @metric.id)
-      if @judge_version
-        scope = scope.where(judge_version_id: @judge_version.id)
+      if @metric_version
+        scope = scope.where(metric_version_id: @metric_version.id)
       elsif !@all_versions
         scope = scope.none
       end

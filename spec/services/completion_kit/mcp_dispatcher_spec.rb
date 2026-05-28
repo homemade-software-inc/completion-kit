@@ -101,8 +101,8 @@ RSpec.describe CompletionKit::McpDispatcher do
 
     it "calls a judges tool through dispatcher" do
       metric = create(:completion_kit_metric)
-      a = CompletionKit::JudgeVersion.ensure_current_for(metric)
-      b = CompletionKit::JudgeVersion.create!(metric: metric, instruction: "draft", current: false, state: "draft", source: "edit")
+      a = CompletionKit::MetricVersion.ensure_current_for(metric)
+      b = CompletionKit::MetricVersion.create!(metric: metric, instruction: "draft", current: false, state: "draft", source: "edit")
       result = described_class.dispatch("tools/call", {"name" => "judges_compare", "arguments" => {"metric_id" => metric.id, "judge_version_a_id" => a.id, "judge_version_b_id" => b.id}})
       payload = JSON.parse(result[:content].first[:text])
       expect(payload["metric_id"]).to eq(metric.id)

@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe CompletionKit::JudgeVariantGenerator, type: :service do
+RSpec.describe CompletionKit::MetricVariantGenerator, type: :service do
   let(:metric) { create(:completion_kit_metric, instruction: "Be fair") }
 
   def stub_llm(response_text)
@@ -57,7 +57,7 @@ RSpec.describe CompletionKit::JudgeVariantGenerator, type: :service do
   end
 
   describe "#persist!" do
-    it "saves each variant as a draft judge_version with source=suggestion and emits a Stripe-metering notification" do
+    it "saves each variant as a draft metric_version with source=suggestion and emits a Stripe-metering notification" do
       events = []
       subscriber = ActiveSupport::Notifications.subscribe("completion_kit.judge_suggestion.generated") do |_, _, _, _, payload|
         events << payload
@@ -69,7 +69,7 @@ RSpec.describe CompletionKit::JudgeVariantGenerator, type: :service do
       versions = gen.persist!(variants)
 
       expect(versions.length).to eq(1)
-      expect(versions.first).to be_a(CompletionKit::JudgeVersion)
+      expect(versions.first).to be_a(CompletionKit::MetricVersion)
       expect(versions.first.state).to eq("draft")
       expect(versions.first.source).to eq("suggestion")
       expect(events.length).to eq(1)
@@ -162,9 +162,9 @@ RSpec.describe CompletionKit::JudgeVariantGenerator, type: :service do
       run = create(:completion_kit_run)
       response = create(:completion_kit_response, run: run, input_data: "Q?", response_text: "A.")
       create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 5, ai_feedback: "perfect")
-      jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      jv = CompletionKit::MetricVersion.ensure_current_for(metric)
       create(:completion_kit_calibration,
-             run: run, response: response, metric: metric, judge_version: jv,
+             run: run, response: response, metric: metric, metric_version: jv,
              verdict: "disagree", corrected_score: 3, note: "missed nuance", created_by: "alice")
 
       captured = nil
@@ -188,12 +188,12 @@ RSpec.describe CompletionKit::JudgeVariantGenerator, type: :service do
       r2 = create(:completion_kit_response, run: run, input_data: "Q2?", response_text: "A2.")
       create(:completion_kit_review, response: r1, metric: metric, metric_name: metric.name, ai_score: 4, ai_feedback: "hmm")
       create(:completion_kit_review, response: r2, metric: metric, metric_name: metric.name, ai_score: 4, ai_feedback: "hmm")
-      jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      jv = CompletionKit::MetricVersion.ensure_current_for(metric)
       create(:completion_kit_calibration,
-             run: run, response: r1, metric: metric, judge_version: jv,
+             run: run, response: r1, metric: metric, metric_version: jv,
              verdict: "borderline", note: "two bands overlap here", created_by: "alice")
       create(:completion_kit_calibration,
-             run: run, response: r2, metric: metric, judge_version: jv,
+             run: run, response: r2, metric: metric, metric_version: jv,
              verdict: "borderline", note: nil, created_by: "bob")
 
       captured = nil
@@ -212,14 +212,14 @@ RSpec.describe CompletionKit::JudgeVariantGenerator, type: :service do
     end
   end
 
-  describe CompletionKit::JudgeCalibrationExamples do
+  describe CompletionKit::MetricCalibrationExamples do
     it "returns the latest disagreement examples with judge + human context" do
       run = create(:completion_kit_run)
       response = create(:completion_kit_response, run: run, input_data: "Q?", response_text: "A.")
       create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 5, ai_feedback: "perfect")
-      jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      jv = CompletionKit::MetricVersion.ensure_current_for(metric)
       create(:completion_kit_calibration,
-             run: run, response: response, metric: metric, judge_version: jv,
+             run: run, response: response, metric: metric, metric_version: jv,
              verdict: "disagree", corrected_score: 3, note: "missed nuance", created_by: "alice")
 
       examples = described_class.for(metric)
@@ -232,9 +232,9 @@ RSpec.describe CompletionKit::JudgeVariantGenerator, type: :service do
     it "tolerates a disagreement whose review is missing (no judge score / feedback)" do
       run = create(:completion_kit_run)
       response = create(:completion_kit_response, run: run, input_data: "Q?", response_text: "A.")
-      jv = CompletionKit::JudgeVersion.ensure_current_for(metric)
+      jv = CompletionKit::MetricVersion.ensure_current_for(metric)
       create(:completion_kit_calibration,
-             run: run, response: response, metric: metric, judge_version: jv,
+             run: run, response: response, metric: metric, metric_version: jv,
              verdict: "disagree", corrected_score: 3, note: "no review", created_by: "ghost")
 
       examples = described_class.for(metric)

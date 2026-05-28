@@ -1,5 +1,5 @@
 module CompletionKit
-  class JudgeVariantGenerator
+  class MetricVariantGenerator
     DEFAULT_VARIANT_COUNT = 1
     MAX_VARIANT_COUNT = 3
     DEFAULT_TEMPERATURE = 0.4
@@ -20,9 +20,9 @@ module CompletionKit
     end
 
     def persist!(variants)
-      JudgeVersion.where(metric_id: @metric.id, state: "draft", source: "suggestion").update_all(current: false)
+      MetricVersion.where(metric_id: @metric.id, state: "draft", source: "suggestion").update_all(current: false)
       versions = variants.map do |variant|
-        JudgeVersion.create!(
+        MetricVersion.create!(
           metric: @metric,
           instruction: variant.instruction,
           rubric_bands: variant.rubric_bands.presence || @metric.rubric_bands,
@@ -41,8 +41,8 @@ module CompletionKit
     private
 
     def build_meta_prompt
-      disagreements = JudgeCalibrationExamples.disagreements_for(@metric)
-      borderlines = JudgeCalibrationExamples.borderlines_for(@metric)
+      disagreements = MetricCalibrationExamples.disagreements_for(@metric)
+      borderlines = MetricCalibrationExamples.borderlines_for(@metric)
       sections = []
       sections << "You are an expert evaluator. The judge below is misaligned with humans. Propose #{@count == 1 ? "a single" : "#{@count}"} concrete rewrite that closes the gap."
       sections << ""
@@ -117,7 +117,7 @@ module CompletionKit
     end
   end
 
-  module JudgeCalibrationExamples
+  module MetricCalibrationExamples
     module_function
 
     def for(metric, limit: 8)
@@ -134,8 +134,8 @@ module CompletionKit
 
     def calibrations_for(metric, verdict:, limit:)
       scope = Calibration.where(metric_id: metric.id, verdict: verdict)
-      current_version = JudgeVersion.current.find_by(metric_id: metric.id)
-      scope = scope.where(judge_version_id: current_version.id) if current_version
+      current_version = MetricVersion.current.find_by(metric_id: metric.id)
+      scope = scope.where(metric_version_id: current_version.id) if current_version
       scope.includes(response: :reviews)
            .order(created_at: :desc)
            .limit(limit)

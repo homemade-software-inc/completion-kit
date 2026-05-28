@@ -165,20 +165,20 @@
       <p class="ck-kicker">Cases to learn from</p>
       <span class="ck-chip"><%= pluralize(@disagreements.size, "case") %></span>
     </div>
-    <% mixed_versions = @disagreements.map(&:judge_version_id).uniq.size > 1 %>
+    <% mixed_versions = @disagreements.map(&:metric_version_id).uniq.size > 1 %>
     <p class="ck-meta-copy">Cases where a reviewer's score didn't match the judge's. Pin useful ones with <strong>Remember this</strong> so the judge sees them next time it grades<%= " (pins flow into the current judge regardless of which version produced the verdict)" if mixed_versions %>.</p>
     <% existing_ids = Array(@metric.few_shot_examples).map { |fs| fs["calibration_id"] } %>
     <ul class="ck-disagreement-list">
       <% @disagreements.each do |cal| %>
         <% review = cal.response.reviews.find { |r| r.metric_id == @metric.id } %>
         <% already = existing_ids.include?(cal.id) %>
-        <% cal_version = cal.judge_version %>
-        <% on_current = cal_version&.id == @published_judge_version.id %>
+        <% cal_metric_version = cal.metric_version %>
+        <% on_current = cal_metric_version&.id == @published_metric_version.id %>
         <li class="ck-disagreement<%= " ck-disagreement--remembered" if already %><%= " ck-disagreement--stale" unless on_current %>">
           <div class="ck-disagreement__head">
             <div class="ck-disagreement__scores">
-              <% if cal_version && mixed_versions %>
-                <span class="ck-source-chip <%= on_current ? "ck-source-chip--current" : "ck-source-chip--past" %>" title="<%= on_current ? "Verdict on the live judge version." : "Verdict on a superseded judge version." %>"><%= cal_version.version_label %></span>
+              <% if cal_metric_version && mixed_versions %>
+                <span class="ck-source-chip <%= on_current ? "ck-source-chip--current" : "ck-source-chip--past" %>" title="<%= on_current ? "Verdict on the live judge version." : "Verdict on a superseded judge version." %>"><%= cal_metric_version.version_label %></span>
               <% end %>
               <span class="ck-disagreement__scores-label">Judge</span>
               <% if review&.ai_score %>

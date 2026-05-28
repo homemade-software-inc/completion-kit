@@ -1,16 +1,16 @@
 require "rails_helper"
 
-RSpec.describe CompletionKit::JudgeVersion, type: :model do
+RSpec.describe CompletionKit::MetricVersion, type: :model do
   it "honors an explicit version_number on create instead of auto-incrementing" do
     metric = create(:completion_kit_metric)
-    CompletionKit::JudgeVersion.create!(metric: metric, instruction: "a", state: "published", current: true)
-    v = CompletionKit::JudgeVersion.create!(metric: metric, instruction: "b", state: "draft", current: false, version_number: 99)
+    CompletionKit::MetricVersion.create!(metric: metric, instruction: "a", state: "published", current: true)
+    v = CompletionKit::MetricVersion.create!(metric: metric, instruction: "b", state: "draft", current: false, version_number: 99)
     expect(v.version_number).to eq(99)
   end
 
   describe "associations" do
     it "belongs to a metric and has many calibrations" do
-      jv = create(:completion_kit_judge_version)
+      jv = create(:completion_kit_metric_version)
       expect(jv.metric).to be_present
       expect(jv.calibrations).to eq([])
     end
@@ -36,7 +36,7 @@ RSpec.describe CompletionKit::JudgeVersion, type: :model do
 
   describe "#as_json" do
     it "returns the structured payload" do
-      jv = create(:completion_kit_judge_version, instruction: "Be precise")
+      jv = create(:completion_kit_metric_version, instruction: "Be precise")
       payload = jv.as_json
       expect(payload).to include(
         id: jv.id,
@@ -51,8 +51,8 @@ RSpec.describe CompletionKit::JudgeVersion, type: :model do
 
   describe "state predicates" do
     it "exposes draft? and published?" do
-      published = create(:completion_kit_judge_version, state: "published")
-      draft = create(:completion_kit_judge_version, state: "draft", current: false)
+      published = create(:completion_kit_metric_version, state: "published")
+      draft = create(:completion_kit_metric_version, state: "draft", current: false)
       expect(published.published?).to be(true)
       expect(published.draft?).to be(false)
       expect(draft.draft?).to be(true)
@@ -63,8 +63,8 @@ RSpec.describe CompletionKit::JudgeVersion, type: :model do
   describe ".current scope" do
     it "returns only versions flagged as current" do
       metric = create(:completion_kit_metric)
-      current = create(:completion_kit_judge_version, metric: metric, current: true)
-      create(:completion_kit_judge_version, metric: metric, current: false)
+      current = create(:completion_kit_metric_version, metric: metric, current: true)
+      create(:completion_kit_metric_version, metric: metric, current: false)
       expect(described_class.current.where(metric: metric)).to contain_exactly(current)
     end
   end

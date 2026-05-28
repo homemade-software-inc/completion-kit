@@ -18,7 +18,7 @@ module CompletionKit
         run: @run, response: @response, metric: @metric, created_by: created_by
       )
       calibration.assign_attributes(
-        judge_version: JudgeVersion.ensure_current_for(@metric),
+        metric_version: MetricVersion.ensure_current_for(@metric),
         verdict: params[:verdict],
         corrected_score: params[:corrected_score].presence,
         note: params[:note].presence

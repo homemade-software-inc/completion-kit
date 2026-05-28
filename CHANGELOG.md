@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`JudgeVersion` renamed to `MetricVersion` throughout.** The model was a snapshot of a metric's configuration (instruction + rubric_bands), not of "the judge" (which is an LLM model identifier). The misnomer was making the data model harder to reason about. Renamed: table `completion_kit_judge_versions` → `completion_kit_metric_versions`, FK `Calibration#judge_version_id` → `metric_version_id`, model `CompletionKit::JudgeVersion` → `CompletionKit::MetricVersion`, service `JudgeVariantGenerator` → `MetricVariantGenerator`, helper module `JudgeCalibrationExamples` → `MetricCalibrationExamples`. Kwarg `MetricCalibrationStats.for(metric, judge_version:)` is now `metric_version:`. Backward-compat aliases left in place: `CompletionKit::JudgeVersion` is `MetricVersion`, `Calibration#judge_version`/`judge_version_id` still read; MCP tool `judges_compare` accepts either `metric_version_a_id` or `judge_version_a_id` (same for b). Migration renames table + column + indexes in one shot.
+
+### Other consistency pass items
+
+- Edit-form save creates a real draft instead of writing to `metric.instruction` directly. Live state only changes when the draft is published.
+- Edit form pre-populates from the existing edit-draft so re-edits build on the unpublished work.
+- Edit-draft and suggestion-draft banners coexist on the edit form when both exist.
+- `JudgeReviewJob` now gates `few_shot_payload` on `judge_calibration_enabled`.
+- Trust panel's "Give another verdict" target excludes verdicts on the current version only (not lifetime).
+- "Cases to learn from" version chip renders only when the list contains a mix of versions.
+- Show-page header `Review draft →` and `Review improvements →` collapsed to one `Review changes →` with source-aware tooltip.
+- `Improve the metric` tooltip + confirm copy stopped saying "rewrite."
+
 ## [0.5.43] - 2026-05-25
 
 ### Added

@@ -15,7 +15,7 @@ module CompletionKit
             run: @run,
             response: @response,
             metric: @metric,
-            judge_version: JudgeVersion.ensure_current_for(@metric),
+            metric_version: MetricVersion.ensure_current_for(@metric),
             **calibration_params
           )
 
