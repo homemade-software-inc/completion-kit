@@ -78,10 +78,22 @@ CompletionKit::Engine.routes.draw do
         end
       end
       resources :datasets
-      resources :metrics
+      resources :metrics do
+        resources :metric_versions, only: [:index, :show, :destroy] do
+          member do
+            post :publish
+          end
+        end
+        member do
+          post :suggest_variants
+          post :add_few_shot
+          delete :remove_few_shot
+        end
+      end
       resources :metric_groups
       resources :tags
       resources :provider_credentials
+      resources :calibrations, only: [:index, :destroy]
     end
   end
 
