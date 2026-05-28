@@ -37,6 +37,42 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).to include(">v1<")
   end
 
+  describe "POST /runs/:id/regrade" do
+    before do
+      allow(CompletionKit::JudgeReviewJob).to receive(:perform_later)
+      allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+      allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_ui)
+    end
+
+    it "re-grades existing responses with the current judge and flashes a regrading notice" do
+      run.update!(judge_model: "gpt-4.1")
+      metric = metric_group.metrics.first
+      CompletionKit::RunMetric.find_or_create_by!(run: run, metric: metric) { |rm| rm.position = 1 }
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      review = response_with_output.reviews.find_by(metric_id: metric.id)
+      review.update!(status: "succeeded", metric_version_id: v1.id)
+      response_with_output.update!(status: "succeeded", response_text: "ok")
+
+      post "/completion_kit/runs/#{run.id}/regrade"
+      follow_redirect!
+      expect(response.body).to include("Re-grading existing responses with the current judge")
+      expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).with(response_with_output.id, metric.id)
+    end
+
+    it "flashes a nothing-to-regrade alert when the run has no succeeded responses" do
+      run.update!(judge_model: "gpt-4.1")
+      metric = metric_group.metrics.first
+      CompletionKit::RunMetric.find_or_create_by!(run: run, metric: metric) { |rm| rm.position = 1 }
+      CompletionKit::MetricVersion.ensure_current_for(metric)
+      response_with_output.update!(status: "failed", response_text: nil)
+      response_without_expected.update!(status: "failed", response_text: nil)
+
+      post "/completion_kit/runs/#{run.id}/regrade"
+      follow_redirect!
+      expect(response.body).to include("Nothing to re-grade")
+    end
+  end
+
   it "surfaces the stale-versions banner on the run show page with a Re-run with current judge button when a published metric_version supersedes the one a review was scored against" do
     metric = metric_group.metrics.first
     v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
@@ -49,7 +85,8 @@ RSpec.describe "CompletionKit responses", type: :request do
     get "/completion_kit/runs/#{run.id}"
 
     expect(response.body).to include("ck-stale-versions-banner")
-    expect(response.body).to include("Re-run with current judge")
+    expect(response.body).to include("Re-grade with current judge")
+    expect(response.body).to include("Re-run from scratch")
     expect(response.body).to include(metric.name)
   end
 
@@ -77,7 +114,8 @@ RSpec.describe "CompletionKit responses", type: :request do
     get "/completion_kit/runs/#{run.id}"
 
     expect(response.body).to include("ck-stale-versions-banner")
-    expect(response.body).not_to include("Re-run with current judge")
+    expect(response.body).not_to include("Re-grade with current judge")
+    expect(response.body).not_to include("Re-run from scratch")
   end
 
   it "shows the source-chip with current styling when the review's metric_version matches the metric's current version" do

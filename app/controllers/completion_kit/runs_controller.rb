@@ -1,7 +1,7 @@
 module CompletionKit
   class RunsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :rerun, :refresh_status]
+    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :rerun, :regrade, :refresh_status]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
@@ -75,6 +75,14 @@ module CompletionKit
         redirect_to run_path(@run)
       else
         redirect_to run_path(@run), alert: @run.failure_summary || @run.errors.full_messages.to_sentence
+      end
+    end
+
+    def regrade
+      if @run.regrade!
+        redirect_to run_path(@run), notice: "Re-grading existing responses with the current judge."
+      else
+        redirect_to run_path(@run), alert: "Nothing to re-grade. The run has no succeeded responses or no metrics attached."
       end
     end
 

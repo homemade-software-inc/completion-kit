@@ -179,6 +179,38 @@ module CompletionKit
       start!
     end
 
+    def regrade!
+      grading_metrics = metrics
+      return false if grading_metrics.empty? || !judge_configured?
+
+      eligible_responses = responses.where(status: "succeeded").where.not(response_text: nil)
+      response_ids = eligible_responses.pluck(:id)
+      return false if response_ids.empty?
+
+      transaction do
+        Review.where(response_id: response_ids).update_all(
+          status: "pending",
+          attempts: 0,
+          metric_version_id: nil,
+          ai_score: nil,
+          ai_feedback: nil,
+          error_provider: nil,
+          error_class: nil,
+          error_status: nil,
+          error_message: nil
+        )
+        update!(status: "running", failure_summary: nil, error_message: nil)
+
+        response_ids.each do |rid|
+          grading_metrics.each { |m| JudgeReviewJob.perform_later(rid, m.id) }
+        end
+        RunCompletionCheckJob.perform_later(id)
+      end
+
+      broadcast_ui
+      true
+    end
+
     def progress_snapshot
       generated_done = responses.where(status: "succeeded").count
       generated_failed = responses.where(status: "failed").count

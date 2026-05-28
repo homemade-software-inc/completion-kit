@@ -32,10 +32,16 @@
         </p>
       </div>
       <% if @run.status == "completed" %>
-        <%= button_to "Re-run with current judge",
+        <%= button_to "Re-run from scratch",
               rerun_run_path(@run), method: :post,
+              class: ck_button_classes(:light, variant: :outline), form_class: "inline-block",
+              title: "Create a new run that regenerates responses and grades them with the current judge.",
+              data: { turbo_confirm: "Create a new run with fresh responses and the current judge? The original run stays as a record." } %>
+        <%= button_to "Re-grade with current judge",
+              regrade_run_path(@run), method: :post,
               class: ck_button_classes(:dark), form_class: "inline-block",
-              data: { turbo_confirm: "Create a new run with the current metric versions? The original run stays as a record." } %>
+              title: "Re-judge this run's existing responses against the current judge. Faster and cheaper than re-running.",
+              data: { turbo_confirm: "Re-judge this run's existing responses against the current judge?" } %>
       <% end %>
     </div>
   <% end %>

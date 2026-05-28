@@ -37,6 +37,7 @@ CompletionKit::Engine.routes.draw do
       post :suggest
       post :retry_failures
       post :rerun
+      post :regrade
       get :refresh_status
     end
     resources :responses, only: [:show] do

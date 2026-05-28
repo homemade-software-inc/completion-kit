@@ -12,6 +12,50 @@ RSpec.describe CompletionKit::Run, type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_clear_responses)
   end
 
+  describe "#regrade!" do
+    let(:run) { create(:completion_kit_run, judge_model: "gpt-4.1") }
+    let(:metric) { create(:completion_kit_metric) }
+
+    before do
+      allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+      allow(CompletionKit::JudgeReviewJob).to receive(:perform_later)
+      CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
+    end
+
+    it "resets each succeeded response's review back to pending and re-enqueues JudgeReviewJob for every metric x response" do
+      response_row = create(:completion_kit_response, run: run, status: "succeeded", response_text: "scored")
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      review = create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 5, status: "succeeded", metric_version_id: v1.id)
+
+      expect(run.regrade!).to be(true)
+
+      review.reload
+      expect(review.status).to eq("pending")
+      expect(review.ai_score).to be_nil
+      expect(review.metric_version_id).to be_nil
+      expect(run.reload.status).to eq("running")
+      expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).with(response_row.id, metric.id)
+    end
+
+    it "returns false and does no work when the run has no eligible succeeded responses" do
+      expect(run.regrade!).to be(false)
+      expect(CompletionKit::JudgeReviewJob).not_to have_received(:perform_later)
+    end
+
+    it "returns false when the run has no metrics attached" do
+      bare_run = create(:completion_kit_run, judge_model: "gpt-4.1")
+      create(:completion_kit_response, run: bare_run, status: "succeeded", response_text: "ok")
+      expect(bare_run.regrade!).to be(false)
+    end
+
+    it "returns false when no judge_model is configured on the run" do
+      judgeless_run = create(:completion_kit_run, judge_model: nil)
+      CompletionKit::RunMetric.create!(run: judgeless_run, metric: metric, position: 1)
+      create(:completion_kit_response, run: judgeless_run, status: "succeeded", response_text: "ok")
+      expect(judgeless_run.regrade!).to be(false)
+    end
+  end
+
   describe "#stale_review_summary" do
     it "returns an empty hash when there are no reviews" do
       run = create(:completion_kit_run)
