@@ -6,14 +6,14 @@ RSpec.describe "CompletionKit starter metrics", type: :request do
   describe "GET /metrics (index empty state)" do
     it "renders all five starter cards when the org has no metrics" do
       get "/completion_kit/metrics"
-      expect(response.body).to include("Start with a ready-made rubric")
+      expect(response.body).to include("Skip the blank page")
       starters.each { |s| expect(response.body).to include(s.name) }
     end
 
     it "hides the empty-state starter row when no starters remain (all dismissed)" do
       starters.each { |s| CompletionKit::StarterMetricDismissal.create!(starter_key: s.key) }
       get "/completion_kit/metrics"
-      expect(response.body).not_to include("Start with a ready-made rubric")
+      expect(response.body).not_to include("Skip the blank page")
       expect(response.body).to include("No metrics yet")
     end
   end
@@ -21,9 +21,9 @@ RSpec.describe "CompletionKit starter metrics", type: :request do
   describe "GET /metrics (index non-empty)" do
     before { create(:completion_kit_metric, name: "Existing metric") }
 
-    it "renders the 'Add a starter metric' row at the bottom" do
+    it "renders the 'Skip the blank page' row at the bottom" do
       get "/completion_kit/metrics"
-      expect(response.body).to include("Add a starter metric")
+      expect(response.body).to include("Skip the blank page")
       starters.each { |s| expect(response.body).to include(s.name) }
     end
 
@@ -37,7 +37,7 @@ RSpec.describe "CompletionKit starter metrics", type: :request do
     it "hides the starter section entirely once every starter is adopted or dismissed" do
       starters.each { |s| CompletionKit::StarterMetricDismissal.create!(starter_key: s.key) }
       get "/completion_kit/metrics"
-      expect(response.body).not_to include("Add a starter metric")
+      expect(response.body).not_to include("Skip the blank page")
     end
   end
 

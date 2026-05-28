@@ -6021,8 +6021,14 @@ a.tag-mark {
 }
 .ck-starter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+@media (max-width: 1000px) {
+  .ck-starter-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .ck-starter-grid { grid-template-columns: 1fr; }
 }
 .ck-starter-card {
   display: flex;

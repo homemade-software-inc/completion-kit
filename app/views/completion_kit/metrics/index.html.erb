@@ -80,7 +80,7 @@
 
   <% if @available_starters.any? %>
     <section class="ck-starter-row">
-      <p class="ck-kicker">Add a starter metric</p>
+      <p class="ck-kicker">Skip the blank page</p>
       <p class="ck-meta-copy">Pre-written rubrics for the dimensions most teams score against. Click a card to preview before it's created.</p>
       <div class="ck-starter-grid">
         <% @available_starters.each do |starter| %>
@@ -96,8 +96,8 @@
 <% else %>
   <% if @available_starters.any? %>
     <section class="ck-starter-row ck-starter-row--empty-state">
-      <h2 class="ck-title ck-title--sm">Start with a ready-made rubric</h2>
-      <p class="ck-lead">Pick one of the dimensions below to drop in a pre-written 1–5 rubric. You can edit anything after adding it. Or <%= link_to "write your own from scratch", new_metric_path, class: "ck-link" %>.</p>
+      <h2 class="ck-title ck-title--sm">Skip the blank page</h2>
+      <p class="ck-lead">Five rubrics we've worked through for common evaluation dimensions. Adopt one to drop in a pre-written 1&ndash;5 scale, edit anything after. Or <%= link_to "write your own from scratch", new_metric_path, class: "ck-link" %>.</p>
       <div class="ck-starter-grid">
         <% @available_starters.each do |starter| %>
           <%= render "starter_card", starter: starter %>

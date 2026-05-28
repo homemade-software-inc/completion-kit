@@ -21,8 +21,8 @@ module CompletionKit
         key: "instruction_following",
         name: "Instruction following",
         description: "Did the model do everything that was asked?",
-        catches: "The response is factually right but ignores \"answer in two sentences\", \"use bullet points\", \"do not include X\". Distinct from Correctness — a response can be right and still fail this.",
-        instruction: "Did the model do every concrete thing the prompt asked for? Score against the explicit requirements in the prompt (format constraints, count limits, exclusions, audience cues). Factual accuracy is a different dimension — score that elsewhere.",
+        catches: "The response is factually right but ignores \"answer in two sentences\", \"use bullet points\", \"do not include X\". Distinct from Correctness; a response can be right and still fail this.",
+        instruction: "Did the model do every concrete thing the prompt asked for? Score against the explicit requirements in the prompt (format constraints, count limits, exclusions, audience cues). Factual accuracy is a different dimension; score that elsewhere.",
         rubric_bands: [
           { "stars" => 5, "description" => "Followed every requirement in the prompt exactly." },
           { "stars" => 4, "description" => "Followed every requirement with a small slip." },
@@ -36,7 +36,7 @@ module CompletionKit
         name: "Format compliance",
         description: "Does the output follow the required structure?",
         catches: "Invalid JSON, missing schema fields, extra prose around a structured response, wrong casing on keys. Critical for any LLM wired into an API.",
-        instruction: "Does the output match the format the prompt asked for — JSON shape, schema, keys, casing, no stray prose? Score on whether a downstream parser would accept it without massaging.",
+        instruction: "Does the output match the format the prompt asked for: JSON shape, schema, keys, casing, no stray prose? Score on whether a downstream parser would accept it without massaging.",
         rubric_bands: [
           { "stars" => 5, "description" => "Exact spec, ready to consume programmatically." },
           { "stars" => 4, "description" => "Spec-compliant with one cosmetic issue." },
@@ -62,9 +62,9 @@ module CompletionKit
       Starter.new(
         key: "conciseness",
         name: "Conciseness",
-        description: "Is it the right length — no padding, no missing detail?",
+        description: "Is it the right length, no padding, no missing detail?",
         catches: "Rambling responses, repetitive caveats, over-hedging. LLMs default to verbose. Conciseness is the dimension where users most often see scores move after tuning.",
-        instruction: "Is the output the right length for the task — no padding, no missing detail, no hedging filler? Penalise rambling, repetition, over-caveating, and unnecessary preamble. Penalise too-short outputs that drop information.",
+        instruction: "Is the output the right length for the task: no padding, no missing detail, no hedging filler? Penalise rambling, repetition, over-caveating, and unnecessary preamble. Penalise too-short outputs that drop information.",
         rubric_bands: [
           { "stars" => 5, "description" => "Exactly as long as the task needs, no more, no less." },
           { "stars" => 4, "description" => "Right length with a small redundancy." },
