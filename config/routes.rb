@@ -39,6 +39,7 @@ CompletionKit::Engine.routes.draw do
       post :rerun
       post :regrade
       get :refresh_status
+      get :compare
     end
     resources :responses, only: [:show] do
       resources :calibrations, only: [:create]

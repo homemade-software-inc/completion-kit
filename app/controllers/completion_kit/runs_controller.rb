@@ -1,7 +1,7 @@
 module CompletionKit
   class RunsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :rerun, :regrade, :refresh_status]
+    before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :rerun, :regrade, :refresh_status, :compare]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
@@ -76,6 +76,21 @@ module CompletionKit
       else
         redirect_to run_path(@run), alert: @run.failure_summary || @run.errors.full_messages.to_sentence
       end
+    end
+
+    def compare
+      other_id = params[:with]
+      if other_id.blank?
+        @other_runs = Run.where(dataset_id: @run.dataset_id, prompt_id: @run.prompt_id)
+                          .where.not(id: @run.id)
+                          .order(created_at: :desc)
+                          .limit(50)
+        return render(:compare_picker)
+      end
+
+      @other_run = Run.find(other_id)
+      @comparison = build_run_comparison(@run, @other_run)
+      render(:compare)
     end
 
     def regrade
@@ -169,6 +184,45 @@ module CompletionKit
 
     def set_run
       @run = Run.find(params[:id])
+    end
+
+    def build_run_comparison(left, right)
+      left_responses = left.responses.includes(:reviews).order(:row_index, :id)
+      right_responses = right.responses.includes(:reviews).order(:row_index, :id)
+      right_by_input = right_responses.each_with_object({}) { |r, h| h[r.input_data.to_s] ||= r }
+
+      all_reviews = left_responses.flat_map(&:reviews) + right_responses.flat_map(&:reviews)
+      metric_ids = all_reviews.map(&:metric_id).compact.uniq
+      metric_versions = MetricVersion.where(id: all_reviews.map(&:metric_version_id).compact.uniq).index_by(&:id)
+
+      rows = left_responses.map do |lr|
+        rr = right_by_input[lr.input_data.to_s]
+        {
+          left_response: lr,
+          right_response: rr,
+          per_metric: metric_ids.map do |mid|
+            l_review = lr.reviews.find { |r| r.metric_id == mid }
+            r_review = rr && rr.reviews.find { |r| r.metric_id == mid }
+            next nil if l_review.nil? && r_review.nil?
+            anchor = l_review || r_review
+            {
+              metric_id: mid,
+              metric_name: anchor.metric_name,
+              left_score: l_review ? l_review.ai_score : nil,
+              right_score: r_review ? r_review.ai_score : nil,
+              left_version_label: version_label_for(l_review, metric_versions),
+              right_version_label: version_label_for(r_review, metric_versions),
+              delta: (l_review&.ai_score && r_review&.ai_score) ? (r_review.ai_score.to_f - l_review.ai_score.to_f).round(2) : nil
+            }
+          end.compact
+        }
+      end
+      { rows: rows, metric_ids: metric_ids }
+    end
+
+    def version_label_for(review, metric_versions)
+      return nil if review.nil? || review.metric_version_id.nil?
+      metric_versions[review.metric_version_id]&.version_label
     end
 
     def load_form_collections

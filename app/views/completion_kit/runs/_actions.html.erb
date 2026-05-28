@@ -11,6 +11,7 @@
       <%= button_to "Retry", generate_run_path(run), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
       <%= button_to "Re-run as new", rerun_run_path(run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
     <% elsif run.status == "completed" %>
+      <%= link_to "Compare", compare_run_path(run), class: ck_button_classes(:light, variant: :outline) %>
       <%= button_to "Re-run", rerun_run_path(run), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
     <% end %>
   <% end %>

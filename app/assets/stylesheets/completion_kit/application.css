@@ -2834,6 +2834,19 @@ select.ck-input {
 }
 .ck-stale-versions-banner__body { min-width: 0; flex: 1 1 320px; }
 .ck-stale-versions-banner .ck-kicker { color: var(--ck-warning); }
+
+.ck-delta {
+  font-family: var(--ck-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.ck-delta--positive { color: var(--ck-success); background: var(--ck-success-soft); }
+.ck-delta--negative { color: var(--ck-danger); background: var(--ck-danger-soft); }
+.ck-delta--zero { color: var(--ck-dim); }
+
+.ck-run-compare-table td { vertical-align: middle; }
 .ck-review-card__stale-note {
   margin: 0.4rem 0 0;
   font-family: var(--ck-mono);

@@ -1,0 +1,39 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Runs", runs_path %></li>
+  <li><%= link_to @run.name, run_path(@run) %></li>
+  <li>Compare</li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Compare with another run</h1>
+    <p class="ck-lead">Pick a run on the same dataset and prompt to see per-case score deltas side by side.</p>
+  </div>
+</section>
+
+<% if @other_runs.any? %>
+  <table class="ck-results-table">
+    <thead>
+      <tr>
+        <th scope="col">Run</th>
+        <th scope="col">Judge</th>
+        <th scope="col">Created</th>
+        <th scope="col"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @other_runs.each do |other| %>
+        <tr>
+          <td><%= link_to other.name, run_path(other), class: "ck-link" %></td>
+          <td class="ck-meta-copy"><%= other.judge_model %></td>
+          <td class="ck-meta-copy"><time datetime="<%= other.created_at.utc.iso8601 %>"><%= time_ago_in_words(other.created_at) %> ago</time></td>
+          <td class="ck-results-table__arrow"><%= link_to "Compare →", compare_run_path(@run, with: other.id), class: "ck-link" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="ck-empty">
+    <p>No other runs on this dataset + prompt combination yet. <%= link_to "Re-run from this one", rerun_run_path(@run), method: :post, class: "ck-link" %> to create one.</p>
+  </div>
+<% end %>

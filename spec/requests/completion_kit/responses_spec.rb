@@ -37,6 +37,99 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).to include(">v1<")
   end
 
+  describe "GET /runs/:id/compare" do
+    it "renders the picker view listing other runs on the same dataset + prompt when no with= is supplied" do
+      sibling = create(:completion_kit_run, prompt: prompt, dataset: run.dataset, name: "Earlier run")
+      get "/completion_kit/runs/#{run.id}/compare"
+      expect(response.body).to include("Compare with another run")
+      expect(response.body).to include("Earlier run")
+    end
+
+    it "shows the no-other-runs empty state when there are no candidates" do
+      other_prompt = create(:completion_kit_prompt)
+      create(:completion_kit_run, prompt: other_prompt, name: "Different prompt")
+      get "/completion_kit/runs/#{run.id}/compare"
+      expect(response.body).to include("No other runs on this dataset")
+    end
+
+    it "renders the side-by-side comparison when with= is supplied" do
+      sibling = create(:completion_kit_run, prompt: prompt, dataset: run.dataset, name: "Sibling run")
+      metric = metric_group.metrics.first
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      sibling_response = create(:completion_kit_response, run: sibling, input_data: response_with_output.input_data, response_text: "different reply")
+      create(:completion_kit_review, response: sibling_response, metric: metric, metric_name: metric.name, ai_score: 2.0, status: "succeeded", metric_version_id: v1.id)
+      review = response_with_output.reviews.find_by(metric_id: metric.id)
+      review.update!(metric_version_id: v1.id)
+
+      get "/completion_kit/runs/#{run.id}/compare?with=#{sibling.id}"
+
+      expect(response.body).to include("Comparing runs")
+      expect(response.body).to include(metric.name)
+      expect(response.body).to include("ck-delta")
+      expect(response.body).to include("ck-run-compare-table")
+    end
+
+    it "renders the empty-rows message when neither run has reviews" do
+      sibling = create(:completion_kit_run, prompt: prompt, dataset: run.dataset, name: "Empty sibling")
+      empty_run = create(:completion_kit_run, prompt: prompt, dataset: run.dataset, name: "Also empty")
+      get "/completion_kit/runs/#{empty_run.id}/compare?with=#{sibling.id}"
+      expect(response.body).to include("No responses to compare")
+    end
+
+    it "renders score badges without a delta when one side has no review for the metric" do
+      sibling = create(:completion_kit_run, prompt: prompt, dataset: run.dataset, name: "Half-judged")
+      metric = metric_group.metrics.first
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      review = response_with_output.reviews.find_by(metric_id: metric.id)
+      review.update!(metric_version_id: v1.id)
+      sibling_response = create(:completion_kit_response, run: sibling, input_data: response_with_output.input_data, response_text: "skipped grading")
+
+      get "/completion_kit/runs/#{run.id}/compare?with=#{sibling.id}"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(metric.name)
+    end
+
+    it "leaves the version chip blank when a review's metric_version_id has been deleted out from under it" do
+      sibling = create(:completion_kit_run, prompt: prompt, dataset: run.dataset, name: "Ghost-version sibling")
+      metric = metric_group.metrics.first
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+      v2.publish!
+      review = response_with_output.reviews.find_by(metric_id: metric.id)
+      review.update!(metric_version_id: v1.id)
+      sibling_response = create(:completion_kit_response, run: sibling, input_data: response_with_output.input_data, response_text: "ghost")
+      ghost_review = create(:completion_kit_review, response: sibling_response, metric: metric, metric_name: metric.name, ai_score: 3.0, status: "succeeded", metric_version_id: v1.id)
+      # Delete v1 so the review's metric_version_id no longer resolves to a row.
+      v1.delete
+
+      get "/completion_kit/runs/#{run.id}/compare?with=#{sibling.id}"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(metric.name)
+    end
+
+    it "tolerates left-side cases that have no matching right-side response, and right-only metrics on matched cases" do
+      sibling = create(:completion_kit_run, prompt: prompt, dataset: run.dataset, name: "Mismatched")
+      metric_a = metric_group.metrics.first
+      metric_b = create(:completion_kit_metric, name: "Right-only metric")
+      v1a = CompletionKit::MetricVersion.ensure_current_for(metric_a)
+      v1b = CompletionKit::MetricVersion.ensure_current_for(metric_b)
+      # Left run: response_with_output (matched on the right) and response_without_expected (NOT matched on the right). Give the unmatched one a review so its row renders, exercising the rr-is-nil branches.
+      review_a_on_left = create(:completion_kit_review, response: response_without_expected, metric: metric_a, metric_name: metric_a.name, ai_score: 4.0, status: "succeeded", metric_version_id: v1a.id)
+      review = response_with_output.reviews.find_by(metric_id: metric_a.id)
+      review.update!(metric_version_id: v1a.id)
+      sibling_response = create(:completion_kit_response, run: sibling, input_data: response_with_output.input_data, response_text: "judged on a different metric")
+      create(:completion_kit_review, response: sibling_response, metric: metric_b, metric_name: metric_b.name, ai_score: 3.5, status: "succeeded", metric_version_id: v1b.id)
+
+      get "/completion_kit/runs/#{run.id}/compare?with=#{sibling.id}"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(metric_a.name)
+      expect(response.body).to include(metric_b.name)
+    end
+  end
+
   describe "POST /runs/:id/regrade" do
     before do
       allow(CompletionKit::JudgeReviewJob).to receive(:perform_later)

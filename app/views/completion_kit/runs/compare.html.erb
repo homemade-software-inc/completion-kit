@@ -1,0 +1,85 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Runs", runs_path %></li>
+  <li><%= link_to @run.name, run_path(@run) %></li>
+  <li>vs <%= @other_run.name %></li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Comparing runs</h1>
+    <p class="ck-meta-copy"><strong>A</strong>: <%= link_to @run.name, run_path(@run), class: "ck-link" %> &middot; <strong>B</strong>: <%= link_to @other_run.name, run_path(@other_run), class: "ck-link" %></p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "Pick another", compare_run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
+  </div>
+</section>
+
+<% if @comparison[:rows].empty? %>
+  <div class="ck-empty">
+    <p>No responses to compare yet.</p>
+  </div>
+<% else %>
+  <table class="ck-results-table ck-run-compare-table">
+    <thead>
+      <tr>
+        <th scope="col">Case</th>
+        <th scope="col">Metric</th>
+        <th scope="col">A score</th>
+        <th scope="col">B score</th>
+        <th scope="col">Δ</th>
+        <th scope="col">A version</th>
+        <th scope="col">B version</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @comparison[:rows].each do |row| %>
+        <% case_label = ((row[:left_response].row_index || 0) + 1).to_s %>
+        <% row[:per_metric].each_with_index do |pm, idx| %>
+          <tr>
+            <% if idx == 0 %>
+              <td rowspan="<%= row[:per_metric].size %>">
+                <%= link_to case_label, run_response_path(@run, row[:left_response]), class: "ck-link" %>
+                <% if row[:right_response] %>
+                  <span class="ck-meta-copy">/ <%= link_to "B", run_response_path(@other_run, row[:right_response]), class: "ck-link" %></span>
+                <% end %>
+              </td>
+            <% end %>
+            <td><%= pm[:metric_name] %></td>
+            <td>
+              <% if pm[:left_score] %>
+                <span class="<%= ck_badge_classes(ck_score_kind(pm[:left_score].to_f)) %>"><%= pm[:left_score] %></span>
+              <% else %>
+                <span class="ck-meta-copy">—</span>
+              <% end %>
+            </td>
+            <td>
+              <% if pm[:right_score] %>
+                <span class="<%= ck_badge_classes(ck_score_kind(pm[:right_score].to_f)) %>"><%= pm[:right_score] %></span>
+              <% else %>
+                <span class="ck-meta-copy">—</span>
+              <% end %>
+            </td>
+            <td>
+              <% if pm[:delta] %>
+                <% delta_class = pm[:delta] > 0 ? "ck-delta--positive" : pm[:delta] < 0 ? "ck-delta--negative" : "ck-delta--zero" %>
+                <span class="ck-delta <%= delta_class %>"><%= pm[:delta].positive? ? "+#{pm[:delta]}" : pm[:delta].to_s %></span>
+              <% else %>
+                <span class="ck-meta-copy">—</span>
+              <% end %>
+            </td>
+            <td>
+              <% if pm[:left_version_label] %>
+                <span class="ck-source-chip ck-source-chip--current"><%= pm[:left_version_label] %></span>
+              <% end %>
+            </td>
+            <td>
+              <% if pm[:right_version_label] %>
+                <span class="ck-source-chip ck-source-chip--current"><%= pm[:right_version_label] %></span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
