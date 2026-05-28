@@ -164,6 +164,117 @@ RSpec.describe "API V1 Runs", type: :request do
     end
   end
 
+  describe "POST /api/v1/runs/:id/rerun" do
+    it "creates a new run with the same configuration and returns 202" do
+      prompt = create(:completion_kit_prompt, template: "Static")
+      dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1")
+      allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
+      expect { post "/completion_kit/api/v1/runs/#{run.id}/rerun", headers: headers }.to change { CompletionKit::Run.count }.by(1)
+      expect(response).to have_http_status(:accepted)
+    end
+
+    it "returns 422 when the new run cannot start" do
+      prompt = create(:completion_kit_prompt, template: "Static")
+      dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1")
+      allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
+      allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("Dataset empty")
+      post "/completion_kit/api/v1/runs/#{run.id}/rerun", headers: headers
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["errors"]).to eq(["Dataset empty"])
+    end
+  end
+
+  describe "POST /api/v1/runs/:id/regrade" do
+    before do
+      allow(CompletionKit::JudgeReviewJob).to receive(:perform_later)
+      allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+      allow(CompletionKit::ApiConfig).to receive(:valid_for_model?).and_return(true)
+      allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_ui)
+    end
+
+    it "re-grades succeeded responses with the current judge and returns 202" do
+      metric = create(:completion_kit_metric)
+      run = create(:completion_kit_run, judge_model: "gpt-4.1")
+      CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
+      response_row = create(:completion_kit_response, run: run, status: "succeeded", response_text: "ok")
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4, status: "succeeded", metric_version_id: v1.id)
+      post "/completion_kit/api/v1/runs/#{run.id}/regrade", headers: headers
+      expect(response).to have_http_status(:accepted)
+    end
+
+    it "returns 422 when there is nothing to re-grade" do
+      run = create(:completion_kit_run, judge_model: "gpt-4.1")
+      post "/completion_kit/api/v1/runs/#{run.id}/regrade", headers: headers
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["error"]).to include("Nothing to re-grade")
+    end
+  end
+
+  describe "GET /api/v1/runs/:id/compare" do
+    it "returns side-by-side per-case-per-metric scores and deltas" do
+      prompt = create(:completion_kit_prompt, template: "Static")
+      dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
+      left = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1")
+      right = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1")
+      metric = create(:completion_kit_metric)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      left_response = create(:completion_kit_response, run: left, input_data: "hi", response_text: "a")
+      right_response = create(:completion_kit_response, run: right, input_data: "hi", response_text: "b")
+      create(:completion_kit_review, response: left_response, metric: metric, metric_name: metric.name, ai_score: 5, status: "succeeded", metric_version_id: v1.id)
+      create(:completion_kit_review, response: right_response, metric: metric, metric_name: metric.name, ai_score: 3, status: "succeeded", metric_version_id: v1.id)
+
+      get "/completion_kit/api/v1/runs/#{left.id}/compare", params: { with: right.id }, headers: headers
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body["left_run_id"]).to eq(left.id)
+      expect(body["right_run_id"]).to eq(right.id)
+      first_row = body["rows"].first
+      pm = first_row["per_metric"].first
+      expect(pm["left_score"].to_f).to eq(5.0)
+      expect(pm["right_score"].to_f).to eq(3.0)
+      expect(pm["delta"].to_f).to eq(-2.0)
+    end
+
+    it "returns 404 when the with= run does not exist" do
+      run = create(:completion_kit_run)
+      get "/completion_kit/api/v1/runs/#{run.id}/compare", params: { with: 9999999 }, headers: headers
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "tolerates mixed shapes: left-only metric review, right-only metric review, and an orphan response on the left with no matching right" do
+      prompt = create(:completion_kit_prompt, template: "Static")
+      dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
+      left = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1")
+      right = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1")
+      metric_a = create(:completion_kit_metric, name: "Both-sides metric")
+      metric_b = create(:completion_kit_metric, name: "Right-only metric")
+      v_a = CompletionKit::MetricVersion.ensure_current_for(metric_a)
+      v_b = CompletionKit::MetricVersion.ensure_current_for(metric_b)
+      # Shared input: left has metric_a only, right has metric_b only -> exercises left-only / right-only branches
+      shared_left = create(:completion_kit_response, run: left, input_data: "shared", response_text: "L")
+      shared_right = create(:completion_kit_response, run: right, input_data: "shared", response_text: "R")
+      create(:completion_kit_review, response: shared_left, metric: metric_a, metric_name: metric_a.name, ai_score: 4.0, status: "succeeded", metric_version_id: v_a.id)
+      create(:completion_kit_review, response: shared_right, metric: metric_b, metric_name: metric_b.name, ai_score: 2.0, status: "succeeded", metric_version_id: v_b.id)
+      # Orphan left response: no matching right input -> exercises rr&.id else and "neither side has review" skip
+      orphan_left = create(:completion_kit_response, run: left, input_data: "orphan-only-left", response_text: "X")
+      create(:completion_kit_review, response: orphan_left, metric: metric_a, metric_name: metric_a.name, ai_score: 5.0, status: "succeeded", metric_version_id: v_a.id)
+
+      get "/completion_kit/api/v1/runs/#{left.id}/compare", params: { with: right.id }, headers: headers
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      shared_row = body["rows"].find { |r| r["left_response_id"] == shared_left.id }
+      orphan_row = body["rows"].find { |r| r["left_response_id"] == orphan_left.id }
+      expect(shared_row["per_metric"].size).to eq(2)
+      expect(orphan_row["right_response_id"]).to be_nil
+      orphan_metric_a = orphan_row["per_metric"].find { |pm| pm["metric_id"] == metric_a.id }
+      expect(orphan_metric_a["right_score"]).to be_nil
+      expect(orphan_metric_a["delta"]).to be_nil
+    end
+  end
+
   describe "tag_names round-trip" do
     let(:prompt) { create(:completion_kit_prompt, template: "Static prompt") }
 

@@ -12,6 +12,7 @@ module CompletionKit
 
     has_many :metric_group_memberships, dependent: :destroy
     has_many :metric_groups, through: :metric_group_memberships, source: :metric_group
+    has_many :metric_versions, dependent: :destroy
     has_many :reviews, dependent: :nullify
     has_many :dashboard_dismissals, as: :dismissable, dependent: :destroy
 

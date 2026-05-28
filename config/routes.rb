@@ -70,6 +70,9 @@ CompletionKit::Engine.routes.draw do
         member do
           post :generate
           post :retry_failures
+          post :rerun
+          post :regrade
+          get :compare
         end
         resources :responses, only: [:index, :show] do
           resources :metrics, only: [] do
