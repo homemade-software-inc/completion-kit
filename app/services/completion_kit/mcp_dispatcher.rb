@@ -32,6 +32,7 @@ module CompletionKit
         McpTools::Datasets.definitions +
         McpTools::Metrics.definitions +
         McpTools::MetricGroups.definitions +
+        McpTools::MetricVersions.definitions +
         McpTools::ProviderCredentials.definitions +
         McpTools::Tags.definitions +
         McpTools::Calibrations.definitions +
@@ -44,8 +45,9 @@ module CompletionKit
       when /\Aruns_/                 then McpTools::Runs.call(name, arguments)
       when /\Aresponses_/            then McpTools::Responses.call(name, arguments)
       when /\Adatasets_/             then McpTools::Datasets.call(name, arguments)
-      when /\Ametrics_/              then McpTools::Metrics.call(name, arguments)
+      when /\Ametric_versions_/      then McpTools::MetricVersions.call(name, arguments)
       when /\Ametric_groups_/        then McpTools::MetricGroups.call(name, arguments)
+      when /\Ametrics_/              then McpTools::Metrics.call(name, arguments)
       when /\Aprovider_credentials_/ then McpTools::ProviderCredentials.call(name, arguments)
       when /\Atags_/                 then McpTools::Tags.call(name, arguments)
       when /\Acalibrations_/         then McpTools::Calibrations.call(name, arguments)
