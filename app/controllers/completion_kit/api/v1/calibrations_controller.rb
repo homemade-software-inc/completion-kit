@@ -30,7 +30,7 @@ module CompletionKit
           if calibration.save
             render json: calibration, status: calibration.previously_new_record? ? :created : :ok
           else
-            render json: { errors: calibration.errors }, status: :unprocessable_entity
+            render_validation_errors(calibration)
           end
         end
 
@@ -42,7 +42,7 @@ module CompletionKit
         private
 
         def ensure_calibration_enabled
-          render(json: { error: "Calibration disabled" }, status: :not_found) unless CompletionKit.config.judge_calibration_enabled
+          render_error("Calibration disabled", status: :not_found) unless CompletionKit.config.judge_calibration_enabled
         end
 
         def set_nested_scope

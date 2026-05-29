@@ -17,7 +17,7 @@ module CompletionKit
           if tag.save
             render json: tag, status: :created
           else
-            render json: {errors: tag.errors}, status: :unprocessable_entity
+            render_validation_errors(tag)
           end
         end
 
@@ -25,7 +25,7 @@ module CompletionKit
           if @tag.update(tag_params)
             render json: @tag
           else
-            render json: {errors: @tag.errors}, status: :unprocessable_entity
+            render_validation_errors(@tag)
           end
         end
 

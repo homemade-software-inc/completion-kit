@@ -124,7 +124,7 @@ RSpec.describe "API V1 Runs", type: :request do
       run = create(:completion_kit_run)
       patch "/completion_kit/api/v1/runs/#{run.id}", params: {name: ""}.to_json, headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)).to have_key("errors")
+      expect(JSON.parse(response.body)).to have_key("details")
     end
 
     it "updates a run with metric_ids" do
@@ -212,7 +212,7 @@ RSpec.describe "API V1 Runs", type: :request do
       allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("Cannot start run")
       post "/completion_kit/api/v1/runs/#{run.id}/generate", headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)["errors"]).to eq(["Cannot start run"])
+      expect(JSON.parse(response.body)["error"]).to eq("Cannot start run")
     end
   end
 
@@ -234,7 +234,7 @@ RSpec.describe "API V1 Runs", type: :request do
       allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("Dataset empty")
       post "/completion_kit/api/v1/runs/#{run.id}/rerun", headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)["errors"]).to eq(["Dataset empty"])
+      expect(JSON.parse(response.body)["error"]).to eq("Dataset empty")
     end
   end
 

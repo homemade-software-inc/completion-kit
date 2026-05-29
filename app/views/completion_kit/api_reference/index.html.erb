@@ -20,6 +20,10 @@
         <p class="ck-kicker">Tag filtering</p>
         <p class="ck-meta-copy">Prompts, runs, metrics, datasets, and metric groups accept <code>?tag[]=name</code> (repeat for OR semantics).</p>
       </div>
+      <div>
+        <p class="ck-kicker">Error shape</p>
+        <p class="ck-meta-copy">Every error response carries a top-level <code>error</code> string. Validation failures (422) add a <code>details</code> object keyed by field: <code>{ "error": "Validation failed", "details": { "name": ["can't be blank"] } }</code>.</p>
+      </div>
     </div>
   </div>
 </div>

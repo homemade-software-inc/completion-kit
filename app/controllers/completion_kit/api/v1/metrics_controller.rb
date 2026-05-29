@@ -19,7 +19,7 @@ module CompletionKit
           if metric.save
             render json: metric, status: :created
           else
-            render json: {errors: metric.errors}, status: :unprocessable_entity
+            render_validation_errors(metric)
           end
         end
 
@@ -27,7 +27,7 @@ module CompletionKit
           if @metric.update(metric_params)
             render json: @metric
           else
-            render json: {errors: @metric.errors}, status: :unprocessable_entity
+            render_validation_errors(@metric)
           end
         end
 
@@ -39,7 +39,7 @@ module CompletionKit
         def suggest_variants
           disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
           if disagreement_count.zero?
-            render json: { error: "Mark at least one case as Disagree before asking the model to suggest a change." }, status: :unprocessable_entity
+            render_error("Mark at least one case as Disagree before asking the model to suggest a change.", status: :unprocessable_entity)
             return
           end
 
@@ -47,7 +47,7 @@ module CompletionKit
           generator = MetricVariantGenerator.new(@metric, count: params[:count].to_i, model: params[:model])
           variants = generator.call
           if variants.empty?
-            render json: { error: "The model returned no usable variants. Try again with a different model." }, status: :unprocessable_entity
+            render_error("The model returned no usable variants. Try again with a different model.", status: :unprocessable_entity)
             return
           end
           versions = generator.persist!(variants)
@@ -71,7 +71,7 @@ module CompletionKit
           @metric.update!(few_shot_examples: examples)
           render json: @metric.reload
         rescue ActiveRecord::RecordNotFound
-          render json: { error: "Calibration not found or not a disagree on this metric." }, status: :not_found
+          render_error("Calibration not found or not a disagree on this metric.", status: :not_found)
         end
 
         def remove_few_shot

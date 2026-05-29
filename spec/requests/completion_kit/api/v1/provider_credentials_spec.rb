@@ -64,7 +64,7 @@ RSpec.describe "API V1 Provider Credentials", type: :request do
         params: {provider: "invalid-provider"}.to_json,
         headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)).to have_key("errors")
+      expect(JSON.parse(response.body)).to have_key("details")
     end
   end
 

@@ -20,7 +20,7 @@ module CompletionKit
             metric_group.replace_metrics!(params[:metric_ids]) if params.key?(:metric_ids)
             render json: metric_group.reload, status: :created
           else
-            render json: {errors: metric_group.errors}, status: :unprocessable_entity
+            render_validation_errors(metric_group)
           end
         end
 
@@ -29,7 +29,7 @@ module CompletionKit
             @metric_group.replace_metrics!(params[:metric_ids]) if params.key?(:metric_ids)
             render json: @metric_group.reload
           else
-            render json: {errors: @metric_group.errors}, status: :unprocessable_entity
+            render_validation_errors(@metric_group)
           end
         end
 

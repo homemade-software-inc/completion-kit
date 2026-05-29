@@ -19,7 +19,7 @@ module CompletionKit
           if dataset.save
             render json: dataset, status: :created
           else
-            render json: {errors: dataset.errors}, status: :unprocessable_entity
+            render_validation_errors(dataset)
           end
         end
 
@@ -27,7 +27,7 @@ module CompletionKit
           if @dataset.update(dataset_params)
             render json: @dataset
           else
-            render json: {errors: @dataset.errors}, status: :unprocessable_entity
+            render_validation_errors(@dataset)
           end
         end
 

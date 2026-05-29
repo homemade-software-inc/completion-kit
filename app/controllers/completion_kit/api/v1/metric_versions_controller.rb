@@ -25,7 +25,7 @@ module CompletionKit
 
         def destroy
           if @version.published?
-            render json: { error: "Cannot dismiss a published version. Publish a different version as current instead." }, status: :conflict
+            render_error("Cannot dismiss a published version. Publish a different version as current instead.", status: :conflict)
             return
           end
           @version.destroy!

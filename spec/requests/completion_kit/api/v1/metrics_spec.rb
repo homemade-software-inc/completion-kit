@@ -55,7 +55,7 @@ RSpec.describe "API V1 Metrics", type: :request do
       metric = create(:completion_kit_metric)
       patch "/completion_kit/api/v1/metrics/#{metric.id}", params: {name: ""}.to_json, headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)).to have_key("errors")
+      expect(JSON.parse(response.body)).to have_key("details")
     end
   end
 

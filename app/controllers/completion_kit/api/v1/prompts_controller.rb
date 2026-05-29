@@ -19,7 +19,7 @@ module CompletionKit
           if prompt.save
             render json: prompt, status: :created
           else
-            render json: {errors: prompt.errors}, status: :unprocessable_entity
+            render_validation_errors(prompt)
           end
         end
 
@@ -32,7 +32,7 @@ module CompletionKit
           elsif @prompt.update(prompt_params)
             render json: @prompt
           else
-            render json: {errors: @prompt.errors}, status: :unprocessable_entity
+            render_validation_errors(@prompt)
           end
         end
 

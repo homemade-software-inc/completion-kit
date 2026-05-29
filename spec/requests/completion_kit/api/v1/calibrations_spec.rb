@@ -123,7 +123,9 @@ RSpec.describe "API V1 Calibrations", type: :request do
       post base_path, headers: headers,
                       params: { verdict: "disagree", created_by: "alice" }.to_json
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)["errors"]).to be_present
+      body = JSON.parse(response.body)
+      expect(body["error"]).to eq("Validation failed")
+      expect(body["details"]).to be_present
     end
 
     it "returns 404 when the run, response, or metric is missing" do

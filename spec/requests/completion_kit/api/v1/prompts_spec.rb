@@ -51,7 +51,9 @@ RSpec.describe "API V1 Prompts", type: :request do
     it "returns 422 with invalid params" do
       post "/completion_kit/api/v1/prompts", params: {name: ""}.to_json, headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)).to have_key("errors")
+      body = JSON.parse(response.body)
+      expect(body["error"]).to eq("Validation failed")
+      expect(body["details"]["name"]).to be_an(Array).and be_present
     end
   end
 
@@ -67,7 +69,7 @@ RSpec.describe "API V1 Prompts", type: :request do
     it "returns 422 with invalid params" do
       patch "/completion_kit/api/v1/prompts/#{prompt.id}", params: {name: ""}.to_json, headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)).to have_key("errors")
+      expect(JSON.parse(response.body)).to have_key("details")
     end
   end
 

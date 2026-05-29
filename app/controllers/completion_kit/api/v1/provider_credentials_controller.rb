@@ -17,7 +17,7 @@ module CompletionKit
           if credential.save
             render json: credential, status: :created
           else
-            render json: {errors: credential.errors}, status: :unprocessable_entity
+            render_validation_errors(credential)
           end
         end
 
@@ -25,7 +25,7 @@ module CompletionKit
           if @credential.update(credential_params)
             render json: @credential
           else
-            render json: {errors: @credential.errors}, status: :unprocessable_entity
+            render_validation_errors(@credential)
           end
         end
 

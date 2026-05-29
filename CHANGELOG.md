@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING: REST API error responses now use one canonical shape.** Every error carries a top-level `error` string. Validation failures (422) additionally include a `details` object keyed by field (`{ "error": "Validation failed", "details": { "name": ["can't be blank"] } }`). Previously three shapes were in play: `{error: "..."}` for business-rule and auth errors, `{errors: {field: [...]}}` for ActiveModel validation, and `{errors: ["..."]}` for run start/rerun failures. Clients reading `errors` must move to `error` (single message) or `details` (field map). Centralized in `render_error` / `render_validation_errors` helpers on `Api::V1::BaseController`.
+
 ## [0.7.0] - 2026-05-28
 
 ### Added

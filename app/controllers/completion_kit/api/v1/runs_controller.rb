@@ -23,7 +23,7 @@ module CompletionKit
             run.replace_metrics!(params[:metric_ids])
             render json: run.reload, status: :created
           else
-            render json: {errors: run.errors}, status: :unprocessable_entity
+            render_validation_errors(run)
           end
         end
 
@@ -32,7 +32,7 @@ module CompletionKit
             @run.replace_metrics!(params[:metric_ids]) if params.key?(:metric_ids)
             render json: @run.reload
           else
-            render json: {errors: @run.errors}, status: :unprocessable_entity
+            render_validation_errors(@run)
           end
         end
 
@@ -45,13 +45,13 @@ module CompletionKit
           if @run.start!
             render json: @run.reload, status: :accepted
           else
-            render json: { errors: [@run.failure_summary || @run.errors.full_messages.to_sentence] }, status: :unprocessable_entity
+            render_error(@run.failure_summary || @run.errors.full_messages.to_sentence, status: :unprocessable_entity)
           end
         end
 
         def retry_failures
           if @run.stale_review_summary.any?
-            return render(json: { error: "Judge has changed since this run executed. Retry would mix versions in the same run; use POST /api/v1/runs/:id/rerun instead." }, status: :conflict)
+            return render_error("Judge has changed since this run executed. Retry would mix versions in the same run; use POST /api/v1/runs/:id/rerun instead.", status: :conflict)
           end
 
           scope = @run.responses.where(status: "failed")
@@ -90,7 +90,7 @@ module CompletionKit
           if new_run.start!
             render json: new_run.reload, status: :accepted
           else
-            render json: { errors: [new_run.failure_summary || "Could not start the new run."] }, status: :unprocessable_entity
+            render_error(new_run.failure_summary || "Could not start the new run.", status: :unprocessable_entity)
           end
         end
 
@@ -98,7 +98,7 @@ module CompletionKit
           if @run.regrade!
             render json: @run.reload, status: :accepted
           else
-            render json: { error: "Nothing to re-grade. The run has no succeeded responses or no metrics attached." }, status: :unprocessable_entity
+            render_error("Nothing to re-grade. The run has no succeeded responses or no metrics attached.", status: :unprocessable_entity)
           end
         end
 
@@ -107,7 +107,7 @@ module CompletionKit
           comparison = build_run_comparison(@run, other)
           render json: { left_run_id: @run.id, right_run_id: other.id, metric_ids: comparison[:metric_ids], rows: comparison[:rows] }
         rescue ActiveRecord::RecordNotFound
-          render json: { error: "Other run not found. Pass ?with=<run_id>." }, status: :not_found
+          render_error("Other run not found. Pass ?with=<run_id>.", status: :not_found)
         end
 
         private
