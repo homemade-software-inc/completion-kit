@@ -151,7 +151,7 @@
 <% if CompletionKit.config.judge_calibration_enabled %>
   <section class="ck-card ck-card--spaced">
     <p class="ck-kicker">Calibration</p>
-    <p class="ck-meta-copy">How often the judge's scores match the reviewers who check them.</p>
+    <p class="ck-meta-copy">This is a measure of how often the judge's scores match a human reviewer.</p>
     <%= render "completion_kit/calibrations/trust_panel",
           stats: CompletionKit::MetricCalibrationStats.for(@metric),
           metric: @metric %>
