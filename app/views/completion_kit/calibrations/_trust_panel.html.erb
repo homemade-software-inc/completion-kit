@@ -24,26 +24,24 @@
 <p class="ck-trust-line ck-trust-line--<%= stats.gate %>">
   <% if stats.sample_size.zero? %>
     <span class="ck-trust-line__lead">Not measured yet.</span>
-    Mark whether the judge's score was right or wrong on <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> graded cases, and this will show how often the judge agrees with you.<% if prior_version_verdicts > 0 %> (<%= pluralize(prior_version_verdicts, "verdict") %> from earlier versions stay tied to that version's history.)<% end %>
+    <span class="ck-trust-line__hint">Needs <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> verdicts on the judge's scores.<% if prior_version_verdicts > 0 %> (<%= pluralize(prior_version_verdicts, "earlier-version verdict") %> kept on file.)<% end %></span>
     <% if target_response %>
       <%= link_to "Give a verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %>
-    <% else %> Run this metric on a dataset first.<% end %>
+    <% end %>
   <% elsif stats.counter_only? %>
-    <span class="ck-trust-line__lead"><%= stats.sample_size %> of <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> verdicts in.</span>
-    <% if stats.short_to_target > 0 %><%= pluralize(stats.short_to_target, "more verdict") %> before calibration can report an agreement rate.<% end %>
+    <span class="ck-cal-stat"><span class="ck-cal-stat__label">Verdicts</span> <strong><%= stats.sample_size %> / <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %></strong></span>
+    <% if stats.short_to_target > 0 %><span class="ck-trust-line__hint"><%= stats.short_to_target %> more to report a rate</span><% end %>
     <% if target_response %>
       <%= link_to "Give another verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %>
     <% end %>
   <% else %>
-    The judge agreed with reviewers on about <strong class="ck-trust-line__figure"><%= (stats.agreement_point * 100).round %>%</strong> of <strong><%= pluralize(stats.sample_size, "verdict") %></strong>.
-    <% if stats.firm? %>
-      Enough verdicts for a settled read, accurate to within <%= (stats.margin * 100).round %> points.
-    <% else %>
-      Still an early read, so treat it as rough: the true rate could sit anywhere within <%= (stats.margin * 100).round %> points either way.
-    <% end %>
+    <span class="ck-cal-stat"><span class="ck-cal-stat__label">Agreement</span> <strong class="ck-trust-line__figure">~<%= (stats.agreement_point * 100).round %>%</strong></span>
+    <span class="ck-cal-stat"><span class="ck-cal-stat__label">Margin</span> ±<%= (stats.margin * 100).round %> pt</span>
+    <span class="ck-cal-stat"><span class="ck-cal-stat__label">Read</span> <%= stats.firm? ? "settled" : "early" %></span>
+    <span class="ck-cal-stat"><span class="ck-cal-stat__label">Sample</span> <%= stats.sample_size %></span>
     <% if stats.borderline_rate && stats.borderline_rate > 0 %>
       <% level = stats.borderline_rate > 0.30 ? "danger" : stats.borderline_rate > 0.15 ? "warning" : "ok" %>
-      Reviewers found the rubric unclear on <span class="ck-trust-line__borderline ck-trust-line__borderline--<%= level %>"><%= (stats.borderline_rate * 100).round %>% of cases</span>.
+      <span class="ck-cal-stat"><span class="ck-cal-stat__label">Unclear</span> <span class="ck-trust-line__borderline ck-trust-line__borderline--<%= level %>"><%= (stats.borderline_rate * 100).round %>%</span></span>
     <% end %>
   <% end %>
 </p>

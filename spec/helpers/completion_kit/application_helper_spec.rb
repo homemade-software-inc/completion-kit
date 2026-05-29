@@ -400,4 +400,5 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(err).to include("can&#39;t be blank")
     end
   end
+
 end

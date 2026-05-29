@@ -45,7 +45,7 @@
 <% if CompletionKit.config.judge_calibration_enabled %>
   <section class="ck-card ck-card--spaced">
     <p class="ck-kicker">Calibration</p>
-    <p class="ck-meta-copy">How often this metric's scores have matched the reviewers who checked them. Give verdicts on graded cases to build the signal, and mark the ones the judge got wrong as disagreements. Once a few are in, the model can suggest improvements to the instruction and rubric.</p>
+    <p class="ck-meta-copy">How often the judge's scores match the reviewers who check them.</p>
     <%= render "completion_kit/calibrations/trust_panel",
           stats: CompletionKit::MetricCalibrationStats.for(@metric),
           metric: @metric %>
@@ -71,15 +71,15 @@
   </section>
 <% end %>
 
-<% if CompletionKit.config.judge_calibration_enabled && @versions.size > 1 %>
+<% if CompletionKit.config.judge_calibration_enabled && @versions.any? %>
   <% predecessor_of = @versions.index_with { |v| @versions.detect { |o| o.version_number < v.version_number } } %>
-  <% version_changed = ->(v, pred) { pred && (pred.instruction.to_s != v.instruction.to_s || pred.rubric_bands != v.rubric_bands) } %>
   <section class="ck-card ck-card--spaced">
     <p class="ck-kicker">Versions</p>
     <table class="ck-results-table ck-metric-versions-table">
       <thead>
         <tr>
           <th scope="col">Version</th>
+          <th scope="col">Change</th>
           <th scope="col">Source</th>
           <th scope="col">Created</th>
         </tr>
@@ -105,12 +105,20 @@
                           data: { turbo_confirm: "Roll the live judge back to #{v.version_label}? Calibration verdicts collected against the current version stay tied to it." } %>
                   <% end %>
                 </div>
-                <% if version_changed.call(v, pred) %>
-                  <button type="button" class="ck-cell-link ck-cell-link--delta"
-                          title="What changed from #{pred.version_label}"
-                          onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()">&Delta;</button>
-                <% end %>
               </div>
+            </td>
+            <td>
+              <% summary = v.change_summary_against(pred) %>
+              <% if summary %>
+                <button type="button" class="ck-change-summary ck-change-summary--<%= summary[:magnitude] %>"
+                        title="What changed from <%= pred.version_label %>"
+                        onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()">
+                  <span class="ck-change-summary__mag"><%= summary[:magnitude].to_s.capitalize %></span>
+                  <span class="ck-change-summary__parts"><%= summary[:parts].join(" · ") %></span>
+                </button>
+              <% else %>
+                <span class="ck-meta-copy">—</span>
+              <% end %>
             </td>
             <td>
               <% source_label, source_class = case v.source
@@ -132,7 +140,7 @@
 
   <% @versions.each do |v| %>
     <% pred = predecessor_of[v] %>
-    <% next unless version_changed.call(v, pred) %>
+    <% next unless v.change_summary_against(pred) %>
     <dialog id="ck-mvdiff-<%= v.id %>" class="ck-modal" onclick="if(event.target===this)this.close()">
       <article class="ck-modal__panel" tabindex="-1" onclick="event.stopPropagation()">
         <header class="ck-modal__header">
@@ -155,11 +163,13 @@
               </div>
             </div>
           <% end %>
-          <% if pred.rubric_bands != v.rubric_bands %>
+          <% pred_bands = CompletionKit::Metric.normalize_rubric_bands(pred.rubric_bands) %>
+          <% v_bands = CompletionKit::Metric.normalize_rubric_bands(v.rubric_bands) %>
+          <% if pred_bands != v_bands %>
             <p class="ck-kicker ck-kicker--inset">Rubric changes</p>
             <%= render "completion_kit/metrics/rubric_diff",
-                  current_bands: pred.rubric_bands || [],
-                  draft_bands: v.rubric_bands || [] %>
+                  current_bands: pred_bands,
+                  draft_bands: v_bands %>
           <% end %>
         </div>
       </article>

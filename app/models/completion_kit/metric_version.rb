@@ -40,6 +40,35 @@ module CompletionKit
       "v#{version_number}"
     end
 
+    def change_summary_against(previous)
+      return nil if previous.nil?
+
+      instruction_changed = previous.instruction.to_s.strip != instruction.to_s.strip
+      rubric_changes = rubric_band_change_count(previous)
+      return nil unless instruction_changed || rubric_changes.positive?
+
+      parts = []
+      parts << "Instruction" if instruction_changed
+      parts << "#{rubric_changes} #{"rubric band".pluralize(rubric_changes)}" if rubric_changes.positive?
+
+      words_changed = 0
+      if instruction_changed
+        old_words = previous.instruction.to_s.split
+        new_words = instruction.to_s.split
+        words_changed = (old_words - new_words).size + (new_words - old_words).size
+      end
+
+      magnitude = if rubric_changes >= 2 || (instruction_changed && rubric_changes >= 1) || words_changed >= 15
+        :major
+      elsif rubric_changes == 1 || words_changed >= 4
+        :minor
+      else
+        :trivial
+      end
+
+      { magnitude: magnitude, parts: parts }
+    end
+
     def publish!
       MetricVersion.transaction do
         self.class.where(metric_id: metric_id).where.not(id: id).update_all(current: false)
@@ -85,6 +114,12 @@ module CompletionKit
     end
 
     private
+
+    def rubric_band_change_count(previous)
+      prev = Metric.normalize_rubric_bands(previous.rubric_bands)
+      curr = Metric.normalize_rubric_bands(rubric_bands)
+      prev.zip(curr).count { |p, c| p["description"].to_s.strip != c["description"].to_s.strip }
+    end
 
     def assign_version_number
       return if version_number.present?

@@ -100,6 +100,56 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
     end
   end
 
+  describe "#change_summary_against" do
+    def version(instruction:, bands:)
+      metric = create(:completion_kit_metric)
+      CompletionKit::MetricVersion.create!(metric: metric, instruction: instruction, rubric_bands: bands, state: "draft", source: "edit", current: false)
+    end
+
+    it "returns nil when there is no predecessor" do
+      expect(version(instruction: "x", bands: []).change_summary_against(nil)).to be_nil
+    end
+
+    it "returns nil when nothing changed" do
+      bands = [{ "stars" => 5, "description" => "great" }]
+      prev = version(instruction: "same", bands: bands)
+      curr = version(instruction: "same", bands: bands)
+      expect(curr.change_summary_against(prev)).to be_nil
+    end
+
+    it "flags a tiny instruction tweak as trivial" do
+      prev = version(instruction: "Be fair here", bands: [])
+      curr = version(instruction: "Be fair now", bands: [])
+      s = curr.change_summary_against(prev)
+      expect(s[:magnitude]).to eq(:trivial)
+      expect(s[:parts]).to eq(["Instruction"])
+    end
+
+    it "flags a single rubric band edit as minor" do
+      prev = version(instruction: "same", bands: [{ "stars" => 5, "description" => "great" }])
+      curr = version(instruction: "same", bands: [{ "stars" => 5, "description" => "excellent and complete" }])
+      s = curr.change_summary_against(prev)
+      expect(s[:magnitude]).to eq(:minor)
+      expect(s[:parts]).to eq(["1 rubric band"])
+    end
+
+    it "flags instruction plus rubric changes as major" do
+      prev = version(instruction: "Old wording entirely", bands: [{ "stars" => 5, "description" => "great" }])
+      curr = version(instruction: "Brand new instruction text", bands: [{ "stars" => 5, "description" => "totally different bar" }])
+      s = curr.change_summary_against(prev)
+      expect(s[:magnitude]).to eq(:major)
+      expect(s[:parts]).to eq(["Instruction", "1 rubric band"])
+    end
+
+    it "flags two or more rubric band edits as major" do
+      prev = version(instruction: "same", bands: [{ "stars" => 5, "description" => "a" }, { "stars" => 4, "description" => "b" }])
+      curr = version(instruction: "same", bands: [{ "stars" => 5, "description" => "x" }, { "stars" => 4, "description" => "y" }])
+      s = curr.change_summary_against(prev)
+      expect(s[:magnitude]).to eq(:major)
+      expect(s[:parts]).to eq(["2 rubric bands"])
+    end
+  end
+
   describe "#revert!" do
     it "refuses to revert to a draft (only published versions can be reverted to)" do
       metric = create(:completion_kit_metric)
