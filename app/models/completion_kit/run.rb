@@ -118,6 +118,10 @@ module CompletionKit
     end
 
     def start!
+      unless %w[pending failed].include?(status)
+        return fail_with_summary!("Cannot start a run in state \"#{status}\". Use rerun to create a fresh copy, or retry_failures / regrade to work with the existing responses.")
+      end
+
       rows = if dataset
                CsvProcessor.process_self(self)
              else

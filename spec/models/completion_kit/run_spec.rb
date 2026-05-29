@@ -229,6 +229,34 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).once
     end
 
+    it "refuses to restart a running run and leaves its responses alone (prevents data loss from a stray POST /generate)" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: nil, status: "running")
+      existing = create(:completion_kit_response, run: run, status: "succeeded")
+
+      result = run.start!
+
+      expect(result).to be false
+      expect(CompletionKit::Response.where(id: existing.id)).to exist
+      expect(run.reload.failure_summary).to include("Cannot start a run")
+    end
+
+    it "refuses to restart a completed run (use rerun instead)" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: nil, status: "completed")
+      existing = create(:completion_kit_response, run: run, status: "succeeded")
+
+      result = run.start!
+
+      expect(result).to be false
+      expect(CompletionKit::Response.where(id: existing.id)).to exist
+    end
+
+    it "still allows restarting a failed run (Retry button path)" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: nil, status: "failed")
+      result = run.start!
+      expect(result).to be true
+      expect(run.reload.status).to eq("running")
+    end
+
     it "transitions status to running" do
       run = create(:completion_kit_run, prompt: prompt, dataset: nil)
 
