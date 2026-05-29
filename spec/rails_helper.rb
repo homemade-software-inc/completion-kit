@@ -56,7 +56,6 @@ ActiveRecord::Schema.define do
     t.string :name
     t.text :instruction
     t.text :rubric_bands
-    t.text :few_shot_examples
     t.string :key
     t.timestamps
   end

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **BREAKING: few-shot pinning ("Remember this" / "Cases to learn from") is gone.** The calibration loop is now just measure (verdicts → trust signal) and fix (disagreements → "Improve the metric" rewrites the instruction and rubric into a new version). The separate manual lever for pinning individual disagreements as in-context judge examples overlapped with the rubric-rewrite path and read as busy-work. Removed: the `POST /api/v1/metrics/:id/add_few_shot` and `DELETE /api/v1/metrics/:id/remove_few_shot` endpoints, the matching web routes/actions, the "Cases to learn from" section on the metric show page, the few-shot injection into the judge prompt (`human_examples`), the "Pinned cases" section of the improve-the-metric meta-prompt, and the `completion_kit_metrics.few_shot_examples` column (dropped by migration — any pinned-example data is discarded on upgrade). Disagreements still drive the trust signal and still feed "Improve the metric".
+
 ## [0.8.0] - 2026-05-29
 
 ### Changed

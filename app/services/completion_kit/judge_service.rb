@@ -10,12 +10,12 @@ module CompletionKit
       @judge_client = LlmClient.for_model(@judge_model, ApiConfig.for_model(@judge_model))
     end
 
-    def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, rubric_text: nil, human_examples: nil, input_data: nil, **_extras)
+    def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, rubric_text: nil, input_data: nil, **_extras)
       raise CompletionKit::ConfigurationError, "Judge not configured" unless @judge_client.configured?
 
       judge_prompt = build_judge_prompt(output, expected_output, prompt,
         criteria: criteria,
-        rubric_text: rubric_text, human_examples: human_examples,
+        rubric_text: rubric_text,
         input_data: input_data)
 
       response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
@@ -25,7 +25,7 @@ module CompletionKit
 
     private
 
-    def build_judge_prompt(output, expected_output, prompt, criteria: nil, rubric_text: nil, human_examples: nil, input_data: nil)
+    def build_judge_prompt(output, expected_output, prompt, criteria: nil, rubric_text: nil, input_data: nil)
       judge_prompt = <<~PROMPT
         You are an expert evaluator. You MUST respond with ONLY two lines in this exact format, nothing else:
 
@@ -40,13 +40,6 @@ module CompletionKit
 
       if criteria.present?
         judge_prompt += "\nCriteria: #{criteria}\n"
-      end
-
-      if human_examples.present?
-        judge_prompt += "\nCalibration examples:\n"
-        human_examples.each_with_index do |example, index|
-          judge_prompt += "Example #{index + 1}: score=#{example[:human_score]} output=#{example[:response_text].to_s.truncate(200)}\n"
-        end
       end
 
       judge_prompt += <<~PROMPT

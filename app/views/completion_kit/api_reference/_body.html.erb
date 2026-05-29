@@ -27,7 +27,7 @@
     <label for="ck-tab-runs" class="ck-api-tabs__label">Runs <span class="ck-api-tabs__count">10</span></label>
     <label for="ck-tab-responses" class="ck-api-tabs__label">Responses <span class="ck-api-tabs__count">2</span></label>
     <label for="ck-tab-datasets" class="ck-api-tabs__label">Datasets <span class="ck-api-tabs__count">5</span></label>
-    <label for="ck-tab-metrics" class="ck-api-tabs__label">Metrics <span class="ck-api-tabs__count">12</span></label>
+    <label for="ck-tab-metrics" class="ck-api-tabs__label">Metrics <span class="ck-api-tabs__count">10</span></label>
     <label for="ck-tab-metric-groups" class="ck-api-tabs__label">Metric Groups <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-calibrations" class="ck-api-tabs__label">Calibrations <span class="ck-api-tabs__count">3</span></label>
     <label for="ck-tab-tags" class="ck-api-tabs__label">Tags <span class="ck-api-tabs__count">5</span></label>
@@ -239,23 +239,13 @@
 
       <div class="ck-api-endpoint" style="padding-top: 1.5rem;">
         <p class="ck-kicker" style="margin-bottom: 0.5rem;">Calibration loop</p>
-        <p class="ck-meta-copy">Drive metric improvement from disagree-flagged calibrations: ask the model for variants, then pin individual cases as few-shot examples on the metric.</p>
+        <p class="ck-meta-copy">Drive metric improvement from disagree-flagged calibrations: ask the model to rewrite the instruction and rubric into a new draft version.</p>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics/:id/suggest_variants</p>
         <p class="ck-meta-copy">Generate draft metric versions from the current disagreements. Returns 201 with the new draft versions, 422 if no disagreements exist or the model produced nothing usable.</p>
         <p class="ck-api-params"><strong>Optional:</strong>&ensp;<code>count</code>, <code>model</code></p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/metrics/1/suggest_variants \\\n  -H \"Authorization: Bearer #{token}\"" %>
-      </div>
-      <div class="ck-api-endpoint">
-        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics/:id/add_few_shot</p>
-        <p class="ck-meta-copy">Pin a disagree calibration as a few-shot example on the metric. Returns the updated metric, or 404 if the calibration is not a disagree on this metric.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>calibration_id</code></p>
-      </div>
-      <div class="ck-api-endpoint">
-        <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metrics/:id/remove_few_shot</p>
-        <p class="ck-meta-copy">Drop the pinned few-shot example by calibration ID.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>calibration_id</code></p>
       </div>
 
       <div class="ck-api-endpoint" style="padding-top: 1.5rem;">

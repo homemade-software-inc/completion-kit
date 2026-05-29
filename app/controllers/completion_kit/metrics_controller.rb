@@ -1,7 +1,7 @@
 module CompletionKit
   class MetricsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_metric, only: [:show, :edit, :update, :destroy, :add_few_shot, :remove_few_shot, :publish_draft, :suggest_variants, :dismiss_suggestion]
+    before_action :set_metric, only: [:show, :edit, :update, :destroy, :publish_draft, :suggest_variants, :dismiss_suggestion]
 
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
@@ -35,11 +35,6 @@ module CompletionKit
     end
 
     def show
-      @published_metric_version = MetricVersion.ensure_current_for(@metric)
-      @disagreements = Calibration.where(metric_id: @metric.id, verdict: "disagree")
-                                  .includes(:metric_version, response: [:reviews, :run])
-                                  .order(created_at: :desc)
-                                  .limit(50)
       @edit_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @improve_disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
@@ -170,31 +165,6 @@ module CompletionKit
         redirect_to metric_path(@metric),
                     notice: "#{@metric.name} #{version.version_label} is now the published version."
       end
-    end
-
-    def add_few_shot
-      calibration = Calibration.where(metric_id: @metric.id, verdict: "disagree").find(params[:calibration_id])
-      review = calibration.response.reviews.find_by(metric_id: @metric.id)
-      examples = Array(@metric.few_shot_examples)
-      examples << {
-        "input" => calibration.response.input_data.to_s.truncate(2000),
-        "response" => calibration.response.response_text.to_s.truncate(2000),
-        "judge_score" => review&.ai_score&.to_f,
-        "judge_feedback" => review&.ai_feedback.to_s.truncate(1000),
-        "human_score" => calibration.corrected_score&.to_f,
-        "human_note" => calibration.note.to_s.truncate(1000),
-        "calibration_id" => calibration.id,
-        "added_at" => Time.current.utc.iso8601
-      }
-      @metric.update!(few_shot_examples: examples)
-      redirect_to metric_path(@metric), notice: "Got it. The judge will remember this next time it grades."
-    end
-
-    def remove_few_shot
-      cal_id = params[:calibration_id].to_i
-      remaining = Array(@metric.few_shot_examples).reject { |fs| fs["calibration_id"].to_i == cal_id }
-      @metric.update!(few_shot_examples: remaining)
-      redirect_to metric_path(@metric), notice: "Forgotten. The judge won't see this case next time."
     end
 
     private

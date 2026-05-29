@@ -83,10 +83,10 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     expect { service.evaluate("actual") }.to raise_error(Faraday::ConnectionFailed)
   end
 
-  it "includes criteria, rubric text, and human examples in prompt" do
+  it "includes criteria and rubric text in prompt" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).with(
-      include("Criteria:", "Check for accuracy", "Custom rubric", "Calibration examples:", "score=4"),
+      include("Criteria:", "Check for accuracy", "Custom rubric"),
       model: "gpt-4.1"
     ).and_return("Score: 3\nFeedback: Calibrated")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
@@ -98,8 +98,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
         "expected",
         "prompt",
         criteria: "Check for accuracy",
-        rubric_text: "Custom rubric",
-        human_examples: [{ input_data: "{x:1}", response_text: "draft", human_score: 4, human_feedback: "Good" }]
+        rubric_text: "Custom rubric"
       )
     ).to eq(score: 3.0, feedback: "Calibrated")
   end

@@ -31,32 +31,6 @@ RSpec.describe CompletionKit::MetricVariantGenerator, type: :service do
       expect(variants.first.instruction).to start_with("Be fair and reward")
     end
 
-    it "includes pinned few-shot examples in the meta-prompt so the model rewrites consistently with what the judge already references" do
-      metric.update!(few_shot_examples: [
-        {
-          "input" => "Pinned input #1 about exact policies",
-          "response" => "Pinned response #1 with a soft claim",
-          "judge_score" => 5.0,
-          "judge_feedback" => "Looked fine to me",
-          "human_score" => 3.0,
-          "human_note" => "The soft claim is unsupported by the ticket"
-        }
-      ])
-      captured_prompt = :unset
-      client = instance_double("CompletionKit::OpenAiClient")
-      allow(client).to receive(:generate_completion) do |prompt, **_kw|
-        captured_prompt = prompt
-        "VARIANT:\nREASONING: r\nINSTRUCTION:\nrewrite\nEND_VARIANT"
-      end
-      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
-
-      described_class.new(metric).call
-
-      expect(captured_prompt).to include("Pinned cases the judge already references")
-      expect(captured_prompt).to include("Pinned input #1 about exact policies")
-      expect(captured_prompt).to include("Human said 3.0/5: The soft claim is unsupported by the ticket")
-    end
-
     it "caps the output at the requested count" do
       blocks = Array.new(5) { |i| "VARIANT:\nREASONING: r#{i}\nINSTRUCTION:\nv#{i}\nEND_VARIANT" }
       stub_llm(blocks.join("\n\n"))
