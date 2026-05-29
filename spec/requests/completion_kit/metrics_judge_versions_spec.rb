@@ -135,8 +135,14 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(older.current?).to be(false)
     expect(older.published?).to be(true)
 
-    post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: older.id }
-    expect(older.reload.current?).to be(true)
+    expect {
+      post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: older.id }
+    }.to change { CompletionKit::MetricVersion.where(metric_id: metric.id, source: "revert").count }.by(1)
+    audit = CompletionKit::MetricVersion.where(metric_id: metric.id, source: "revert").order(:version_number).last
+    expect(audit.current?).to be(true)
+    expect(audit.published?).to be(true)
+    expect(audit.instruction).to eq(older.instruction)
+    expect(older.reload.current?).to be(false)
     expect(metric.reload.instruction).to eq(older.instruction)
   end
 

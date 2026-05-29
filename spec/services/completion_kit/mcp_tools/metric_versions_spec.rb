@@ -28,17 +28,23 @@ RSpec.describe CompletionKit::McpTools::MetricVersions, type: :service do
       expect(v1.reload.current).to be(false)
     end
 
-    it "reverts to an older published version by re-publishing it as current" do
+    it "reverts to an older published version by writing a new revert audit row" do
       v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
       v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
       v2.publish!
       expect(v1.reload.current).to be(false)
 
-      result = CompletionKit::McpTools::MetricVersions.call("metric_versions_publish", { "metric_version_id" => v1.id })
+      result = nil
+      expect {
+        result = CompletionKit::McpTools::MetricVersions.call("metric_versions_publish", { "metric_version_id" => v1.id })
+      }.to change { CompletionKit::MetricVersion.where(metric_id: metric.id, source: "revert").count }.by(1)
       parsed = JSON.parse(result[:content].first[:text])
 
+      expect(parsed["source"]).to eq("revert")
       expect(parsed["current"]).to be(true)
+      expect(parsed["instruction"]).to eq("v1 instruction")
       expect(metric.reload.instruction).to eq("v1 instruction")
+      expect(v1.reload.current).to be(false)
       expect(v2.reload.current).to be(false)
     end
   end

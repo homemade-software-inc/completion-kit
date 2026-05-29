@@ -160,13 +160,13 @@ module CompletionKit
       reverting = was_published_already && !version.current?
       previously_current = MetricVersion.current.find_by(metric_id: @metric.id)
 
-      version.publish!
-
       if reverting
+        audit = version.revert!
         prior_label = previously_current.version_label
         redirect_to metric_path(@metric),
-                    notice: "Reverted to #{@metric.name} #{version.version_label}. Pinned cases still flow to the judge, and calibration verdicts collected against #{prior_label} stay tied to it."
+                    notice: "Reverted to #{@metric.name} #{version.version_label} (now logged as #{audit.version_label}). Pinned cases still flow to the judge, and calibration verdicts collected against #{prior_label} stay tied to it."
       else
+        version.publish!
         redirect_to metric_path(@metric),
                     notice: "#{@metric.name} #{version.version_label} is now the published version."
       end

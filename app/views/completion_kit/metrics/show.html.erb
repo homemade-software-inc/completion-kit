@@ -109,6 +109,7 @@
               <% source_label, source_class = case v.source
                                               when "suggestion" then ["AI suggestion", "ck-source-chip ck-source-chip--ai"]
                                               when "edit" then ["Manual edit", "ck-source-chip ck-source-chip--manual"]
+                                              when "revert" then ["Reverted", "ck-source-chip ck-source-chip--revert"]
                                               else ["Original", "ck-source-chip ck-source-chip--initial"]
                                               end %>
               <span class="<%= source_class %>"><%= source_label %></span>

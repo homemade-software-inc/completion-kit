@@ -99,4 +99,12 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       expect(described_class.current.where(metric: metric)).to contain_exactly(current)
     end
   end
+
+  describe "#revert!" do
+    it "refuses to revert to a draft (only published versions can be reverted to)" do
+      metric = create(:completion_kit_metric)
+      draft = CompletionKit::MetricVersion.create!(metric: metric, instruction: "draft", rubric_bands: [], state: "draft", source: "edit")
+      expect { draft.revert! }.to raise_error(ArgumentError, /published/)
+    end
+  end
 end

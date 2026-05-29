@@ -3606,6 +3606,11 @@ select.ck-input {
   border-color: var(--ck-line);
   color: var(--ck-dim);
 }
+.ck-source-chip--revert {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+  color: rgb(217, 119, 6);
+}
 .ck-source-chip--current {
   border-color: var(--ck-line-strong);
   color: var(--ck-text);

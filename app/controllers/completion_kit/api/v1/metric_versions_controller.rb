@@ -14,8 +14,13 @@ module CompletionKit
         end
 
         def publish
-          @version.publish!
-          render json: @version.reload
+          if @version.published? && !@version.current?
+            audit = @version.revert!
+            render json: audit
+          else
+            @version.publish!
+            render json: @version.reload
+          end
         end
 
         def destroy
