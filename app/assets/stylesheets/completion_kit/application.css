@@ -5548,156 +5548,21 @@ a.tag-mark {
   font-weight: 600;
 }
 
-.ck-trust-panel {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 12px;
-  padding: 10px 14px;
-  background: var(--ck-surface-soft);
-  border: 1px solid var(--ck-line);
-  border-radius: 6px;
-}
-.ck-trust-panel__label {
-  margin: 0;
-  font-family: var(--ck-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ck-dim);
-}
-.ck-trust-panel__body {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-.ck-trust-panel__counter {
-  font-family: var(--ck-mono);
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: var(--ck-accent);
-}
-.ck-trust-panel__counter-of {
-  font-size: 0.9rem;
-  color: var(--ck-dim);
-  margin-left: 4px;
-}
-.ck-trust-panel__hint {
-  font-family: var(--ck-mono);
-  font-size: 0.72rem;
-  color: var(--ck-dim);
-  letter-spacing: 0.04em;
-}
-.ck-trust-panel__score {
-  font-family: var(--ck-mono);
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: var(--ck-success);
-}
-.ck-trust-panel__score-pct {
-  font-size: 0.9rem;
-  color: var(--ck-dim);
-  margin-left: 2px;
-}
-.ck-trust-panel__margin {
-  font-family: var(--ck-mono);
-  font-size: 0.8rem;
-  color: var(--ck-dim);
-}
-.ck-trust-panel__gate {
-  font-family: var(--ck-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 3px;
-  background: var(--ck-surface);
-  border: 1px solid var(--ck-line);
-  color: var(--ck-dim);
-}
-.ck-trust-panel--firm .ck-trust-panel__gate {
-  color: var(--ck-success);
-  border-color: rgba(45, 212, 168, 0.35);
-}
-.ck-trust-panel__details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  font-family: var(--ck-mono);
-  font-size: 0.72rem;
-  color: var(--ck-dim);
-}
-.ck-trust-panel__borderline {
-  color: var(--ck-warning);
-}
-
-.ck-trust-panel__borderline--ok { color: var(--ck-dim); }
-.ck-trust-panel__borderline--warning { color: var(--ck-warning); }
-.ck-trust-panel__borderline--danger { color: var(--ck-danger); }
-
 .ck-trust-line {
-  margin: 10px 0 0;
-  font-family: var(--ck-mono);
-  font-size: 0.82rem;
-  color: var(--ck-dim);
-  line-height: 1.55;
-}
-.ck-trust-line > * + * {
-  margin-left: 6px;
-}
-.ck-trust-line__label {
-  font-size: 0.82rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ck-muted);
-  white-space: nowrap;
-}
-.ck-trust-line__label svg {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  vertical-align: middle;
-  margin-right: 2px;
-  position: relative;
-  top: -1px;
-}
-.ck-trust-line__state {
+  margin: 12px 0 0;
+  font-size: 0.92rem;
   color: var(--ck-text);
-  font-weight: 500;
+  line-height: 1.6;
+  max-width: 72ch;
 }
-.ck-trust-line__sep {
-  color: var(--ck-line-strong);
-}
-.ck-trust-line__counter {
+.ck-trust-line__lead {
   font-weight: 600;
+}
+.ck-trust-line__figure {
   color: var(--ck-accent);
 }
-.ck-trust-line__score {
-  font-weight: 600;
+.ck-trust-line--firm .ck-trust-line__figure {
   color: var(--ck-success);
-}
-.ck-trust-line--early .ck-trust-line__score,
-.ck-trust-line--provisional .ck-trust-line__score {
-  color: var(--ck-accent);
-}
-.ck-trust-line__margin {
-  color: var(--ck-dim);
-}
-.ck-trust-line__gate {
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 1px 6px;
-  border-radius: 3px;
-  border: 1px solid var(--ck-line);
-  color: var(--ck-dim);
-}
-.ck-trust-line--firm .ck-trust-line__gate {
-  color: var(--ck-success);
-  border-color: rgba(45, 212, 168, 0.35);
-}
-.ck-trust-line__hint {
-  color: var(--ck-dim);
 }
 .ck-trust-line__link {
   color: var(--ck-accent);
@@ -5726,23 +5591,6 @@ a.tag-mark {
 .ck-trust-line__borderline--ok { color: var(--ck-dim); }
 .ck-trust-line__borderline--warning { color: var(--ck-warning); }
 .ck-trust-line__borderline--danger { color: var(--ck-danger); }
-
-@media (max-width: 640px) {
-  .ck-trust-panel {
-    display: flex;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .ck-trust-panel__body {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-  .ck-trust-panel__hint {
-    line-height: 1.4;
-    white-space: normal;
-  }
-}
 
 .ck-draft-pending {
   border-color: rgba(6, 182, 212, 0.45);
