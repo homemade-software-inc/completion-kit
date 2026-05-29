@@ -290,7 +290,6 @@ module CompletionKit
         target: "run_status_panel",
         html: render_engine_partial("completion_kit/runs/status_panel", run: self)
       )
-      broadcast_status_header
     end
 
     def broadcast_status_header
