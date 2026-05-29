@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_credential, only: [:show, :update, :destroy]
 
         def index
-          render json: ProviderCredential.order(created_at: :desc)
+          render json: paginate(ProviderCredential.order(created_at: :desc))
         end
 
         def show

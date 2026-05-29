@@ -16,6 +16,58 @@ RSpec.describe "API V1 Runs", type: :request do
       ids = JSON.parse(response.body).map { |r| r["id"] }
       expect(ids).to eq([recent.id, old.id])
     end
+
+    it "filters by status" do
+      create(:completion_kit_run, status: "pending")
+      done = create(:completion_kit_run, status: "completed")
+      get "/completion_kit/api/v1/runs?status=completed", headers: headers
+      ids = JSON.parse(response.body).map { |r| r["id"] }
+      expect(ids).to eq([done.id])
+    end
+
+    it "filters by prompt_id and dataset_id" do
+      prompt = create(:completion_kit_prompt, template: "Summarize {{content}} for {{audience}}")
+      dataset = create(:completion_kit_dataset)
+      matching = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      create(:completion_kit_run)
+      get "/completion_kit/api/v1/runs?prompt_id=#{prompt.id}&dataset_id=#{dataset.id}", headers: headers
+      ids = JSON.parse(response.body).map { |r| r["id"] }
+      expect(ids).to eq([matching.id])
+    end
+
+    it "filters by one or more tags with OR semantics" do
+      tagged_a = create(:completion_kit_run)
+      tagged_a.update!(tag_names: ["alpha"])
+      tagged_b = create(:completion_kit_run)
+      tagged_b.update!(tag_names: ["beta"])
+      create(:completion_kit_run)
+      get "/completion_kit/api/v1/runs?tag[]=alpha&tag[]=beta", headers: headers
+      ids = JSON.parse(response.body).map { |r| r["id"] }
+      expect(ids).to contain_exactly(tagged_a.id, tagged_b.id)
+    end
+
+    it "paginates with limit + offset and exposes pagination headers" do
+      runs = Array.new(3) { |i| create(:completion_kit_run, created_at: (3 - i).hours.ago) }
+      get "/completion_kit/api/v1/runs?limit=2&offset=1", headers: headers
+      ids = JSON.parse(response.body).map { |r| r["id"] }
+      expect(ids).to eq([runs[1].id, runs[0].id])
+      expect(response.headers["X-Total-Count"]).to eq("3")
+      expect(response.headers["X-Limit"]).to eq("2")
+      expect(response.headers["X-Offset"]).to eq("1")
+    end
+
+    it "clamps a non-positive limit back to the default and a negative offset back to zero" do
+      create(:completion_kit_run)
+      get "/completion_kit/api/v1/runs?limit=0&offset=-5", headers: headers
+      expect(response.headers["X-Limit"]).to eq("50")
+      expect(response.headers["X-Offset"]).to eq("0")
+    end
+
+    it "clamps a limit above the maximum back to the cap" do
+      create(:completion_kit_run)
+      get "/completion_kit/api/v1/runs?limit=10000", headers: headers
+      expect(response.headers["X-Limit"]).to eq("500")
+    end
   end
 
   describe "GET /api/v1/runs/:id" do

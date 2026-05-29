@@ -5,7 +5,9 @@ module CompletionKit
         before_action :set_metric_group, only: [:show, :update, :destroy]
 
         def index
-          render json: MetricGroup.includes(:tags).order(created_at: :desc)
+          scope = MetricGroup.includes(:tags)
+          scope = filter_by_tags(scope)
+          render json: paginate(scope.order(created_at: :desc))
         end
 
         def show

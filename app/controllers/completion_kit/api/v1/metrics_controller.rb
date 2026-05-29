@@ -5,7 +5,9 @@ module CompletionKit
         before_action :set_metric, only: [:show, :update, :destroy, :suggest_variants, :add_few_shot, :remove_few_shot]
 
         def index
-          render json: Metric.includes(:tags).order(created_at: :desc)
+          scope = Metric.includes(:tags)
+          scope = filter_by_tags(scope)
+          render json: paginate(scope.order(created_at: :desc))
         end
 
         def show

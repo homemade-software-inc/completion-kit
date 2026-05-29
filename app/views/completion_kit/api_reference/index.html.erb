@@ -12,6 +12,14 @@
         <p class="ck-kicker">Authentication</p>
         <%= render CompletionKit.config.api_reference_authentication_partial, token: @token %>
       </div>
+      <div>
+        <p class="ck-kicker">Pagination</p>
+        <p class="ck-meta-copy">Every index endpoint accepts <code>?limit=</code> and <code>?offset=</code> (default limit 50, max 500). The server returns <code>X-Total-Count</code>, <code>X-Limit</code>, and <code>X-Offset</code> headers so the caller can build cursors without re-counting.</p>
+      </div>
+      <div>
+        <p class="ck-kicker">Tag filtering</p>
+        <p class="ck-meta-copy">Prompts, runs, metrics, datasets, and metric groups accept <code>?tag[]=name</code> (repeat for OR semantics).</p>
+      </div>
     </div>
   </div>
 </div>

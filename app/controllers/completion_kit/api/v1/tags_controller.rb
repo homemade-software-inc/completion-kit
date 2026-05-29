@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_tag, only: [:show, :update, :destroy]
 
         def index
-          render json: Tag.order(:name)
+          render json: paginate(Tag.order(:name))
         end
 
         def show

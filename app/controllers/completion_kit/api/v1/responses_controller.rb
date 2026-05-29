@@ -6,7 +6,9 @@ module CompletionKit
         before_action :set_response, only: [:show]
 
         def index
-          render json: @run.responses.includes(:reviews)
+          scope = @run.responses.includes(:reviews)
+          scope = scope.where(status: params[:status]) if params[:status].present?
+          render json: paginate(scope.order(:id))
         end
 
         def show

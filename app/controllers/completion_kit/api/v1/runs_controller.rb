@@ -5,7 +5,12 @@ module CompletionKit
         before_action :set_run, only: [:show, :update, :destroy, :generate, :retry_failures, :rerun, :regrade, :compare]
 
         def index
-          render json: Run.includes(:tags).order(created_at: :desc)
+          scope = Run.includes(:tags)
+          scope = scope.where(status: params[:status]) if params[:status].present?
+          scope = scope.where(prompt_id: params[:prompt_id]) if params[:prompt_id].present?
+          scope = scope.where(dataset_id: params[:dataset_id]) if params[:dataset_id].present?
+          scope = filter_by_tags(scope)
+          render json: paginate(scope.order(created_at: :desc))
         end
 
         def show

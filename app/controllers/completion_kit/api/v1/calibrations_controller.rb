@@ -14,7 +14,7 @@ module CompletionKit
           scope = scope.where(metric_version_id: params[:metric_version_id]) if params[:metric_version_id].present?
           scope = scope.where(created_by: params[:created_by]) if params[:created_by].present?
           scope = scope.where(verdict: params[:verdict]) if params[:verdict].present?
-          render json: scope.order(:created_at)
+          render json: paginate(scope.order(:created_at))
         end
 
         def create

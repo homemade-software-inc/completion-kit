@@ -118,7 +118,8 @@
       <p class="ck-copy">Create runs, generate LLM responses, and judge them with metrics.</p>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs</p>
-        <p class="ck-meta-copy">List all runs with response counts and average scores.</p>
+        <p class="ck-meta-copy">List runs with response counts and average scores. Supports pagination (<code>limit</code>, <code>offset</code>) and the following filters.</p>
+        <p class="ck-api-params"><strong>Optional filters:</strong>&ensp;<code>status</code> (<code>pending</code>, <code>running</code>, <code>completed</code>, <code>failed</code>), <code>prompt_id</code>, <code>dataset_id</code>, <code>tag[]</code></p>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs</p>
@@ -174,7 +175,8 @@
       <p class="ck-copy">Read-only access to generated responses and their review scores. Nested under runs.</p>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:run_id/responses</p>
-        <p class="ck-meta-copy">List all responses for a run, including nested review scores.</p>
+        <p class="ck-meta-copy">List responses for a run, including nested review scores.</p>
+        <p class="ck-api-params"><strong>Optional filters:</strong>&ensp;<code>status</code> (<code>pending</code>, <code>succeeded</code>, <code>failed</code>), plus <code>limit</code> and <code>offset</code></p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl #{base_url}/api/v1/runs/1/responses \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">

@@ -23,6 +23,21 @@ RSpec.describe "API V1 Responses", type: :request do
       get "/completion_kit/api/v1/runs/999999/responses", headers: headers
       expect(response).to have_http_status(:not_found)
     end
+
+    it "filters by status" do
+      ok = create(:completion_kit_response, run: run, status: "succeeded")
+      create(:completion_kit_response, run: run, status: "failed")
+      get "/completion_kit/api/v1/runs/#{run.id}/responses?status=succeeded", headers: headers
+      ids = JSON.parse(response.body).map { |r| r["id"] }
+      expect(ids).to eq([ok.id])
+    end
+
+    it "paginates with limit and surfaces the total count header" do
+      Array.new(3) { create(:completion_kit_response, run: run) }
+      get "/completion_kit/api/v1/runs/#{run.id}/responses?limit=2", headers: headers
+      expect(JSON.parse(response.body).size).to eq(2)
+      expect(response.headers["X-Total-Count"]).to eq("3")
+    end
   end
 
   describe "GET /api/v1/runs/:run_id/responses/:id" do

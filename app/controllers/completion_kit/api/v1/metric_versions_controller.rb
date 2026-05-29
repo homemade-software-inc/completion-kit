@@ -6,7 +6,7 @@ module CompletionKit
         before_action :set_version, only: [:show, :publish, :destroy]
 
         def index
-          render json: @metric.metric_versions.order(version_number: :desc)
+          render json: paginate(@metric.metric_versions.order(version_number: :desc))
         end
 
         def show

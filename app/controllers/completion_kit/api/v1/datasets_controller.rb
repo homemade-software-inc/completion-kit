@@ -5,7 +5,9 @@ module CompletionKit
         before_action :set_dataset, only: [:show, :update, :destroy]
 
         def index
-          render json: Dataset.includes(:tags).order(created_at: :desc)
+          scope = Dataset.includes(:tags)
+          scope = filter_by_tags(scope)
+          render json: paginate(scope.order(created_at: :desc))
         end
 
         def show

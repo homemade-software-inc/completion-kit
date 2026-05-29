@@ -5,7 +5,9 @@ module CompletionKit
         before_action :set_prompt, only: [:show, :update, :destroy, :publish]
 
         def index
-          render json: Prompt.includes(:tags).order(created_at: :desc)
+          scope = Prompt.includes(:tags)
+          scope = filter_by_tags(scope)
+          render json: paginate(scope.order(created_at: :desc))
         end
 
         def show
