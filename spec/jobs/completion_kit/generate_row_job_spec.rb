@@ -1,16 +1,6 @@
 require "rails_helper"
 require "faraday"
 
-module CompletionKit
-  class JudgeReviewJob < ApplicationJob
-    def perform(*); end
-  end unless defined?(JudgeReviewJob)
-
-  class RunCompletionCheckJob < ApplicationJob
-    def perform(*); end
-  end unless defined?(RunCompletionCheckJob)
-end
-
 RSpec.describe CompletionKit::GenerateRowJob, type: :job do
   let(:run) { create(:completion_kit_run) }
   let(:response) { run.responses.create!(status: "pending", row_index: 0, response_text: nil) }

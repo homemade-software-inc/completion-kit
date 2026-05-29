@@ -1,12 +1,6 @@
 require "rails_helper"
 require "faraday"
 
-module CompletionKit
-  class RunCompletionCheckJob < ApplicationJob
-    def perform(*); end
-  end unless defined?(RunCompletionCheckJob)
-end
-
 RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   let(:run) { create(:completion_kit_run, judge_model: "gpt-4o") }
   let(:metric) { create(:completion_kit_metric, name: "Quality") }
