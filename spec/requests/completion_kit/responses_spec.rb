@@ -150,7 +150,7 @@ RSpec.describe "CompletionKit responses", type: :request do
       post "/completion_kit/runs/#{run.id}/regrade"
       follow_redirect!
       expect(response.body).to include("Re-grading existing responses with the current judge")
-      expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).with(response_with_output.id, metric.id)
+      expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).with(response_with_output.id, metric.id, run.id)
     end
 
     it "flashes a nothing-to-regrade alert when the run has no succeeded responses" do

@@ -35,7 +35,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(review.ai_score).to be_nil
       expect(review.metric_version_id).to be_nil
       expect(run.reload.status).to eq("running")
-      expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).with(response_row.id, metric.id)
+      expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).with(response_row.id, metric.id, run.id)
     end
 
     it "returns false and does no work when the run has no eligible succeeded responses" do

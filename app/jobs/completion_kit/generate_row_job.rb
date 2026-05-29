@@ -66,7 +66,7 @@ module CompletionKit
 
       if run.judge_configured?
         run.metrics.each do |metric|
-          JudgeReviewJob.perform_later(response.id, metric.id)
+          JudgeReviewJob.perform_later(response.id, metric.id, run.id)
         end
       end
 

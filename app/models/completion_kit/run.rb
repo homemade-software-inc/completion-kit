@@ -165,7 +165,7 @@ module CompletionKit
           response = responses.create!(attrs)
 
           if judge_only?
-            metrics.each { |m| JudgeReviewJob.perform_later(response.id, m.id) } if judge_configured?
+            metrics.each { |m| JudgeReviewJob.perform_later(response.id, m.id, id) } if judge_configured?
           else
             GenerateRowJob.perform_later(id, response.id)
           end
@@ -206,7 +206,7 @@ module CompletionKit
         update!(status: "running", failure_summary: nil, error_message: nil)
 
         response_ids.each do |rid|
-          grading_metrics.each { |m| JudgeReviewJob.perform_later(rid, m.id) }
+          grading_metrics.each { |m| JudgeReviewJob.perform_later(rid, m.id, id) }
         end
         RunCompletionCheckJob.perform_later(id)
       end

@@ -79,7 +79,7 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
     allow_any_instance_of(CompletionKit::Run).to receive(:judge_configured?).and_return(true)
 
-    expect(CompletionKit::JudgeReviewJob).to receive(:perform_later).with(response.id, metric.id)
+    expect(CompletionKit::JudgeReviewJob).to receive(:perform_later).with(response.id, metric.id, run.id)
 
     described_class.perform_now(run.id, response.id)
   end

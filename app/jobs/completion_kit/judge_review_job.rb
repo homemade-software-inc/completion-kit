@@ -5,7 +5,9 @@ module CompletionKit
     queue_as :llm
 
     limits_concurrency to: ENV.fetch("COMPLETION_KIT_PER_RUN_CONCURRENCY", 5).to_i,
-                       key: ->(response_id, _) { "run:#{Response.find_by(id: response_id)&.run_id}" },
+                       key: ->(response_id, _metric_id, run_id = nil) {
+                         "run:#{run_id || Response.where(id: response_id).pick(:run_id)}"
+                       },
                        duration: 10.minutes
 
     def self.rate_limit_wait(executions)
@@ -29,7 +31,7 @@ module CompletionKit
     end
 
     before_perform do |job|
-      response_id, metric_id = job.arguments
+      response_id, metric_id, _run_id = job.arguments
       response = Response.find_by(id: response_id)
       next unless response
       review = response.reviews.find_or_initialize_by(metric_id: metric_id)
@@ -40,7 +42,7 @@ module CompletionKit
       response.run.send(:broadcast_response_update, response) if response.run
     end
 
-    def perform(response_id, metric_id)
+    def perform(response_id, metric_id, _run_id = nil)
       @response_id = response_id
       @metric_id = metric_id
 
