@@ -43,7 +43,7 @@ module CompletionKit
     end
 
     def outstanding_work_zero?
-      return false if responses.where.not(status: Response::TERMINAL_STATUSES).exists?
+      return false if responses.where.not(status: HasJobStatus::TERMINAL_STATUSES).exists?
 
       metric_ids = metrics.pluck(:id)
       return true if metric_ids.empty?
@@ -55,7 +55,7 @@ module CompletionKit
       terminal_review_count = Review.where(
         response_id: succeeded_response_ids,
         metric_id: metric_ids,
-        status: Review::TERMINAL_STATUSES
+        status: HasJobStatus::TERMINAL_STATUSES
       ).count
 
       terminal_review_count >= expected_reviews

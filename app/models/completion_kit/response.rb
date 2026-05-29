@@ -1,7 +1,6 @@
 module CompletionKit
   class Response < ApplicationRecord
-    STATUSES = %w[pending retrying succeeded failed].freeze
-    TERMINAL_STATUSES = %w[succeeded failed].freeze
+    include HasJobStatus
 
     belongs_to :run
     has_many :reviews, dependent: :destroy
@@ -10,17 +9,8 @@ module CompletionKit
     delegate :prompt, to: :run
 
     validates :response_text, presence: true, if: :succeeded?
-    validates :status, inclusion: { in: STATUSES }
 
     before_validation :set_default_status, on: :create
-
-    def terminal?
-      TERMINAL_STATUSES.include?(status)
-    end
-
-    def succeeded?
-      status == "succeeded"
-    end
 
     def as_json(options = {})
       {
@@ -47,19 +37,9 @@ module CompletionKit
     def fully_reviewed?
       metric_ids = run.metric_ids
       return true if metric_ids.empty?
-      reviewed_metric_ids = reviews.where(status: Review::TERMINAL_STATUSES).pluck(:metric_id).uniq
+      reviewed_metric_ids = reviews.where(status: HasJobStatus::TERMINAL_STATUSES).pluck(:metric_id).uniq
       (metric_ids - reviewed_metric_ids).empty?
     end
 
-    def error_payload
-      return nil if error_class.blank?
-      { provider: error_provider, class: error_class, status: error_status, message: error_message }
-    end
-
-    private
-
-    def set_default_status
-      self.status ||= "pending"
-    end
   end
 end
