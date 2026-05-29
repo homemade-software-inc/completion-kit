@@ -93,9 +93,12 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "records terminal failure context" do
-    allow_any_instance_of(described_class).to receive(:perform).and_raise(
+    fake_judge = double("judge")
+    allow(fake_judge).to receive(:evaluate).and_raise(
       CompletionKit::RateLimitError.new("limit", provider: "anthropic", status: 429)
     )
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
 
     expect { described_class.perform_now(response.id, metric.id) }.not_to raise_error
 
@@ -180,8 +183,10 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "records terminal failure for errors without a status method" do
-    plain_error = RuntimeError.new("something went wrong")
-    allow_any_instance_of(described_class).to receive(:perform).and_raise(plain_error)
+    fake_judge = double("judge")
+    allow(fake_judge).to receive(:evaluate).and_raise(RuntimeError, "something went wrong")
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
 
     expect {
       described_class.perform_now(response.id, metric.id)
@@ -193,9 +198,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     expect(review.error_class).to eq("RuntimeError")
   end
 
-  it "does not raise when response_id is missing during terminal failure" do
-    allow_any_instance_of(described_class).to receive(:perform).and_raise(RuntimeError, "boom")
-
+  it "does not raise when response_id points at a missing row (Response.find blows up, rescue swallows it)" do
     expect {
       described_class.perform_now(0, metric.id)
     }.not_to raise_error
@@ -232,7 +235,10 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "uses metric name from deleted metric in record_terminal_failure!" do
-    allow_any_instance_of(described_class).to receive(:perform).and_raise(RuntimeError, "boom")
+    fake_judge = double("judge")
+    allow(fake_judge).to receive(:evaluate).and_raise(RuntimeError, "boom")
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
     allow(CompletionKit::Metric).to receive(:find_by).with(id: metric.id).and_return(nil)
 
     expect {

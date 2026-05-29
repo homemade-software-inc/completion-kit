@@ -91,14 +91,12 @@ module CompletionKit
     end
 
     def record_terminal_failure!(error)
-      response_id = @response_id || arguments.first
-      metric_id = @metric_id || arguments.last
-      response = Response.find_by(id: response_id)
+      response = Response.find_by(id: @response_id)
       return unless response
 
-      review = response.reviews.find_or_initialize_by(metric_id: metric_id)
+      review = response.reviews.find_or_initialize_by(metric_id: @metric_id)
       review.assign_attributes(
-        metric_name: review.metric_name || Metric.find_by(id: metric_id)&.name || "(deleted metric)",
+        metric_name: review.metric_name || Metric.find_by(id: @metric_id)&.name || "(deleted metric)",
         status: "failed",
         error_provider: provider_for(response),
         error_class: error.class.name,
@@ -115,8 +113,7 @@ module CompletionKit
     end
 
     def enqueue_completion_check
-      response_id = @response_id || arguments.first
-      response = Response.find_by(id: response_id)
+      response = Response.find_by(id: @response_id)
       RunCompletionCheckJob.perform_later(response.run_id) if response
     end
 

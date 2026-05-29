@@ -80,8 +80,7 @@ module CompletionKit
     end
 
     def record_terminal_failure!(error)
-      response_id = @response_id || arguments.last
-      response = Response.find_by(id: response_id)
+      response = Response.find_by(id: @response_id)
       return unless response
 
       response.update!(
@@ -98,8 +97,7 @@ module CompletionKit
     end
 
     def enqueue_completion_check
-      run_id = @run_id || arguments.first
-      RunCompletionCheckJob.perform_later(run_id)
+      RunCompletionCheckJob.perform_later(@run_id)
     end
   end
 end

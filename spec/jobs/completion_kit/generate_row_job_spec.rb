@@ -45,9 +45,11 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
   end
 
   it "records terminal failure context after exhaustion of retries" do
-    allow_any_instance_of(described_class).to receive(:perform).and_raise(
+    fake_client = double("client", configured?: true)
+    allow(fake_client).to receive(:generate_completion).and_raise(
       CompletionKit::RateLimitError.new("over budget", provider: "openai", status: 429)
     )
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
 
     expect {
       described_class.perform_now(run.id, response.id)
@@ -120,8 +122,9 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
   end
 
   it "records terminal failure for errors without a status method" do
-    plain_error = RuntimeError.new("something went wrong")
-    allow_any_instance_of(described_class).to receive(:perform).and_raise(plain_error)
+    fake_client = double("client", configured?: true)
+    allow(fake_client).to receive(:generate_completion).and_raise(RuntimeError, "something went wrong")
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
 
     expect {
       described_class.perform_now(run.id, response.id)
@@ -133,9 +136,7 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     expect(response.error_class).to eq("RuntimeError")
   end
 
-  it "does not raise when response_id is missing during terminal failure" do
-    allow_any_instance_of(described_class).to receive(:perform).and_raise(RuntimeError, "boom")
-
+  it "does not raise when response_id points at a missing row (Response.find blows up, rescue swallows it)" do
     expect {
       described_class.perform_now(run.id, 0)
     }.not_to raise_error
