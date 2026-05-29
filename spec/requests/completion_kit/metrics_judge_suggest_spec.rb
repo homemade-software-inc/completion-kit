@@ -26,7 +26,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
     follow_redirect!
     expect(response.body).to include("Drafted a new version")
-    expect(response.body).to include("Review changes")
+    expect(response.body).to include("Suggested metric improvements")
     expect(response.body).not_to include('value="Improve the metric"')
     expect(CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion").count).to eq(1)
 
@@ -65,10 +65,10 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response.body).to include("no usable variants")
   end
 
-  it "hides the Improve button (disabled) when no disagreements exist" do
+  it "shows no Improve affordance when no disagreements exist (the calibration card guides toward verdicts instead)" do
     get "/completion_kit/metrics/#{metric.id}"
-    expect(response.body).to include("Improve the metric")
-    expect(response.body).to include("disabled")
+    expect(response.body).not_to include("Improve the metric")
+    expect(response.body).to include("Calibration")
   end
 
   it "enables the Improve button as soon as a disagreement is collected" do

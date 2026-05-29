@@ -28,23 +28,6 @@
         <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
           <td>
             <%= link_to metric_path(metric), class: "ck-record-name" do %><strong><%= metric.name %></strong><% end %>
-            <% if CompletionKit.config.judge_calibration_enabled %>
-              <% s = CompletionKit::MetricCalibrationStats.for(metric) %>
-              <p class="ck-metrics-table__trust" title="Calibration: how often this metric's scores match the humans who reviewed them.">
-                <%= heroicon_tag "adjustments-horizontal", variant: :outline, "aria-hidden": "true", class: "ck-trust-icon" %>
-                <span class="ck-metrics-table__trust-label">Calibration</span>
-                <% if s.counter_only? %>
-                  <% if s.sample_size.zero? %>
-                    <span class="ck-metrics-table__trust-state">Not measured yet</span>
-                  <% else %>
-                    <%= s.sample_size %> / <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> verdicts
-                  <% end %>
-                <% else %>
-                  <span class="ck-metrics-table__trust-rate" title="<%= s.firm? ? 'Settled read.' : 'Early read. Keep giving verdicts.' %>">~<%= (s.agreement_point * 100).round %>%</span>
-                  ±<%= (s.margin * 100).round %> pt · <%= s.firm? ? "settled" : "early" %>
-                <% end %>
-              </p>
-            <% end %>
             <% if metric.tags.any? %>
               <div class="tag-marks-row">
                 <%= render "completion_kit/tags/marks", tags: metric.tags %>

@@ -5669,17 +5669,6 @@ a.tag-mark {
   color: var(--ck-text);
   font-weight: 500;
 }
-.ck-trust-icon {
-  display: inline-block;
-  width: 11px;
-  height: 11px;
-  vertical-align: -1px;
-  margin-right: 4px;
-  color: var(--ck-muted);
-}
-.ck-trust-line__state {
-  color: var(--ck-text);
-}
 .ck-trust-line__sep {
   color: var(--ck-line-strong);
 }
@@ -5723,6 +5712,20 @@ a.tag-mark {
 .ck-trust-line__link:hover,
 .ck-trust-line__link:focus-visible {
   color: var(--ck-accent-hover);
+}
+.ck-trust-line__link--button {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.ck-calibration-card__action {
+  margin-top: 0.85rem;
+}
+.ck-calibration-card__inline-form {
+  display: inline;
 }
 .ck-trust-line__borderline--ok { color: var(--ck-dim); }
 .ck-trust-line__borderline--warning { color: var(--ck-warning); }
@@ -5794,28 +5797,6 @@ a.tag-mark {
 .ck-suggestion-banner:hover,
 .ck-suggestion-banner:focus-visible {
   border-color: var(--ck-accent);
-}
-
-.ck-metrics-table__trust {
-  margin: 4px 0 0;
-  font-family: var(--ck-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.03em;
-  color: var(--ck-dim);
-}
-.ck-metrics-table__trust-label {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ck-muted);
-  margin-right: 4px;
-}
-.ck-metrics-table__trust-state {
-  color: var(--ck-text);
-}
-.ck-metrics-table__trust-rate {
-  font-weight: 600;
-  color: var(--ck-success);
-  margin-right: 6px;
 }
 
 .ck-calibration__error {

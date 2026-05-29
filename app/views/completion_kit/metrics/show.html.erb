@@ -6,11 +6,6 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title"><%= @metric.name %></h1>
-    <% if CompletionKit.config.judge_calibration_enabled %>
-      <%= render "completion_kit/calibrations/trust_panel",
-            stats: CompletionKit::MetricCalibrationStats.for(@metric),
-            metric: @metric %>
-    <% end %>
     <% if @metric.tags.any? %>
       <div class="tag-marks-row tag-marks-row--header">
         <%= render "completion_kit/tags/marks", tags: @metric.tags %>
@@ -18,23 +13,6 @@
     <% end %>
   </div>
   <div class="ck-actions">
-    <% if CompletionKit.config.judge_calibration_enabled %>
-      <% if @suggestion_draft || @edit_draft %>
-        <% review_title = @suggestion_draft ? "The model proposed improvements based on your disagreements. Review and apply what you want." : "An unpublished draft of this metric is saved. Review and publish, or keep editing." %>
-        <%= link_to "Review changes →", edit_metric_path(@metric),
-              class: ck_button_classes(:dark),
-              title: review_title %>
-      <% elsif @improve_disagreement_count.positive? %>
-        <%= button_to "Improve the metric", suggest_variants_metric_path(@metric),
-              method: :post, form_class: "inline-block",
-              class: ck_button_classes(:light, variant: :outline),
-              title: "Ask the model to suggest improvements to this metric's instruction and rubric based on the disagreements collected so far.",
-              data: { turbo_confirm: "Ask the model for suggested improvements based on the disagreements collected so far?" } %>
-      <% else %>
-        <button type="button" class="<%= ck_button_classes(:light, variant: :outline) %>" disabled
-                title="Mark at least one case as Disagree before the model can suggest a change.">Improve the metric</button>
-      <% end %>
-    <% end %>
     <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
@@ -63,6 +41,35 @@
     <% end %>
   </div>
 </section>
+
+<% if CompletionKit.config.judge_calibration_enabled %>
+  <section class="ck-card ck-card--spaced">
+    <p class="ck-kicker">Calibration</p>
+    <p class="ck-meta-copy">How often this metric's scores have matched the reviewers who checked them. Give verdicts on graded cases to build the signal, and mark the ones the judge got wrong as disagreements. Once a few are in, the model can suggest improvements to the instruction and rubric.</p>
+    <%= render "completion_kit/calibrations/trust_panel",
+          stats: CompletionKit::MetricCalibrationStats.for(@metric),
+          metric: @metric %>
+    <% if @suggestion_draft %>
+      <p class="ck-meta-copy ck-calibration-card__action">
+        The model has proposed improvements based on the cases you flagged as disagreements. They stay as a draft until you publish.
+        <%= link_to "Suggested metric improvements →", edit_metric_path(@metric), class: "ck-trust-line__link" %>
+      </p>
+    <% elsif @edit_draft %>
+      <p class="ck-meta-copy ck-calibration-card__action">
+        An unpublished draft of this metric is saved.
+        <%= link_to "Finish your draft →", edit_metric_path(@metric), class: "ck-trust-line__link" %>
+      </p>
+    <% elsif @improve_disagreement_count.positive? %>
+      <p class="ck-meta-copy ck-calibration-card__action">
+        <%= pluralize(@improve_disagreement_count, "case") %> where a reviewer's score didn't match the judge.
+        <%= button_to "Improve the metric →", suggest_variants_metric_path(@metric),
+              method: :post, form_class: "ck-calibration-card__inline-form",
+              class: "ck-trust-line__link ck-trust-line__link--button",
+              data: { turbo_confirm: "Ask the model for suggested improvements based on the disagreements collected so far?" } %>
+      </p>
+    <% end %>
+  </section>
+<% end %>
 
 <% if CompletionKit.config.judge_calibration_enabled && @versions.size > 1 %>
   <% predecessor_of = @versions.index_with { |v| @versions.detect { |o| o.version_number < v.version_number } } %>
@@ -107,7 +114,7 @@
             </td>
             <td>
               <% source_label, source_class = case v.source
-                                              when "suggestion" then ["AI suggestion", "ck-source-chip ck-source-chip--ai"]
+                                              when "suggestion" then ["AI calibration", "ck-source-chip ck-source-chip--ai"]
                                               when "edit" then ["Manual edit", "ck-source-chip ck-source-chip--manual"]
                                               when "revert" then ["Reverted", "ck-source-chip ck-source-chip--revert"]
                                               else ["Original", "ck-source-chip ck-source-chip--initial"]

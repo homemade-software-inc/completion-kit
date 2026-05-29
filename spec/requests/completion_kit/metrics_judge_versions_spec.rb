@@ -160,11 +160,11 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(response.body).to include("calibration verdicts collected against v2")
   end
 
-  it "shows a 'Review changes →' affordance on the metric show page and the draft banner on edit" do
+  it "shows a 'Finish your draft →' affordance on the metric show page and the draft banner on edit" do
     edit_metric_via_form(instruction: "score it carefully")
     get "/completion_kit/metrics/#{metric.id}"
     expect(response.body).not_to include("Draft pending")
-    expect(response.body).to include("Review changes")
+    expect(response.body).to include("Finish your draft")
 
     get "/completion_kit/metrics/#{metric.id}/edit"
     expect(response.body).to include("Draft pending")
