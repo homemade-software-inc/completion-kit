@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-05-28
+
+### Added
+
+- **REST API parity with MCP and the web UI** for the 0.5.43 / 0.6.0 feature work. New endpoints: `GET/POST/POST(:id/publish)/DELETE /api/v1/metrics/:metric_id/metric_versions`, `POST /api/v1/runs/:id/rerun`, `POST /api/v1/runs/:id/regrade`, `GET /api/v1/runs/:id/compare?with=:other_id`, `POST /api/v1/runs/:id/retry_failures`, `POST /api/v1/metrics/:id/suggest_variants`, `POST /api/v1/metrics/:id/add_few_shot`, `DELETE /api/v1/metrics/:id/remove_few_shot`.
+- **Flat calibrations endpoint:** `GET /api/v1/calibrations` with `run_id`, `response_id`, `metric_id`, `metric_version_id`, `created_by`, `verdict` filters. `DELETE /api/v1/calibrations/:id` for unwinding a mis-cast verdict. Nested `POST /api/v1/runs/:run_id/responses/:response_id/metrics/:metric_id/calibrations` unchanged.
+- **Pagination on every index endpoint:** `?limit=` (default 50, max 500), `?offset=` (default 0), `X-Total-Count` / `X-Limit` / `X-Offset` response headers. Resource-specific filters: runs `?status=`, `?prompt_id=`, `?dataset_id=`; responses `?status=`; prompts / runs / metrics / datasets / metric_groups `?tag[]=` with OR semantics. Shared `paginate` and `filter_by_tags` helpers on `Api::V1::BaseController`.
+- **MCP tools for MetricVersion management:** `metric_versions_list`, `metric_versions_publish`, `metric_versions_dismiss`. Publish handles both draft-promote and revert-to-superseded; dismiss refuses on published versions.
+- **Revert audit row.** Reverting to an older published version now writes a new `MetricVersion` record with `source: "revert"`, `state: "published"`, `current: true`, copying the reverted-to instruction and rubric. The older version stays untouched (still published, not current). History reads linearly: v1, v2, v3 (was current), v4 (revert to v1). Wired through web `publish_draft`, REST `POST /metric_versions/:id/publish`, and MCP `metric_versions_publish`. New "Reverted" amber chip on the metric show table.
+- **API reference page** got a new Calibrations tab, expanded Runs and Metrics panels, and a Metric Versions subsection. The MCP tool count chip is wired to `CompletionKit::McpDispatcher.tool_definitions.size` so it stops drifting on every release. Authentication card carries the pagination + tag-filter conventions inline.
+- **Starter metrics layout polish.** "Skip the blank page" headline (kicker on populated, h2 on empty). 4-column grid (2-col tablet, 1-col mobile). Em dashes purged from the five rubric descriptions.
+
+### Changed
+
+- **`Run#start!` refuses to wipe responses on running or completed runs.** Previously `start!` unconditionally called `responses.destroy_all` and reset progress. The web UI was safe (Start / Retry buttons only render for pending or failed runs), but the REST API (`POST /api/v1/runs/:id/generate`) accepted it on any status, so a scripted client could double-fire generate and lose all the succeeded rows from the first call. Now refuses unless status is `pending` or `failed`. For completed runs use `rerun`, for partial failures use `retry_failures`, for re-judging use `regrade`. Returns 422 with a message naming all three alternatives.
+- **`JudgeReviewJob.perform` takes `run_id` as a third argument.** The per-run concurrency cap was previously looking the `run_id` up via `Response.find_by` on every enqueue, ~300 extra SELECTs at start time for a 100-row by 3-metric run. Callers pass `run_id` through; fallback to the old lookup preserved so jobs enqueued before the deploy still drain cleanly.
+- **Internal refactor: `HasJobStatus` concern** extracted from `Response` and `Review`. Both models previously duplicated `STATUSES`, `TERMINAL_STATUSES`, `terminal?`, `succeeded?`, `error_payload`, `set_default_status`, and the status inclusion validation. Now in `CompletionKit::HasJobStatus`. The two external references (`Run#outstanding_work_zero?`, `Response#fully_reviewed?`) point at `HasJobStatus::TERMINAL_STATUSES` directly.
+- **Internal refactor: Turbo broadcasts moved into model `after_save_commit` callbacks.** `Response` and `Review` now broadcast their own row updates and (on terminal status transitions) the run-level progress repaint via callbacks instead of every job manually calling `run.broadcast_response_update(response)` and `run.broadcast_progress` after each save. 8 manual broadcast call sites in `GenerateRowJob` and `JudgeReviewJob` removed.
+- **`Run`'s broadcast methods are public.** They were marked private but called from jobs and controllers via `run.send(:broadcast_X, ...)`, wishful encapsulation. Now plain methods on the public surface.
+
+### Removed
+
+- Dead `ck_run_status_label` helper (zero production callers; `_status_header.html.erb` uses the inline `ck-status-badge` classes now). `ck_run_dot` stays; it's still used by `_row.html.erb`.
+- Dead `unless defined?(...)` job-class placeholders at the top of `generate_row_job_spec.rb` and `judge_review_job_spec.rb`. They existed to survive load-order during the multi-PR rollout when those jobs didn't exist yet; both real classes have shipped long since.
+
 ## [0.6.0] - 2026-05-28
 
 ### Added
