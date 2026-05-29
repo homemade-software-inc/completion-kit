@@ -39,7 +39,7 @@ module CompletionKit
       review.attempts = (review.attempts || 0) + 1
       review.status = "retrying"
       review.save!(validate: false)
-      response.run.send(:broadcast_response_update, response) if response.run
+      response.run.broadcast_response_update(response) if response.run
     end
 
     def perform(response_id, metric_id, _run_id = nil)
@@ -77,8 +77,8 @@ module CompletionKit
       review.save!
 
       confirm_judging_capability(run.judge_model)
-      run.send(:broadcast_response_update, response)
-      run.send(:broadcast_progress)
+      run.broadcast_response_update(response)
+      run.broadcast_progress
       enqueue_completion_check
     end
 
@@ -109,8 +109,8 @@ module CompletionKit
         error_message: error.message.to_s.truncate(2000)
       )
       review.save!(validate: false)
-      response.run&.send(:broadcast_response_update, response)
-      response.run&.send(:broadcast_progress)
+      response.run&.broadcast_response_update(response)
+      response.run&.broadcast_progress
     end
 
     def provider_for(response)

@@ -32,7 +32,7 @@ module CompletionKit
       response = Response.find_by(id: job.arguments.last)
       next unless response
       response.update_columns(status: "retrying", attempts: response.attempts + 1)
-      response.run.send(:broadcast_response_update, response) if response.run
+      response.run.broadcast_response_update(response) if response.run
     end
 
     def perform(run_id, response_id)
@@ -61,8 +61,8 @@ module CompletionKit
         response_text: text,
         error_provider: nil, error_class: nil, error_status: nil, error_message: nil
       )
-      run.send(:broadcast_response_update, response)
-      run.send(:broadcast_progress)
+      run.broadcast_response_update(response)
+      run.broadcast_progress
 
       if run.judge_configured?
         run.metrics.each do |metric|
@@ -94,8 +94,8 @@ module CompletionKit
         error_status: error.respond_to?(:status) ? error.status : nil,
         error_message: error.message.to_s.truncate(2000)
       )
-      response.run&.send(:broadcast_response_update, response)
-      response.run&.send(:broadcast_progress)
+      response.run&.broadcast_response_update(response)
+      response.run&.broadcast_progress
     end
 
     def provider_for(response)

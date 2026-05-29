@@ -176,7 +176,7 @@ module CompletionKit
         failed_response_ids.each { |rid| GenerateRowJob.perform_later(@run.id, rid) }
       end
 
-      @run.send(:broadcast_ui)
+      @run.broadcast_ui
       redirect_to run_path(@run)
     end
 

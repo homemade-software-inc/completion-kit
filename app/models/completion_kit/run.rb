@@ -276,30 +276,11 @@ module CompletionKit
       }
     end
 
-    private
-
-    def fail_with_summary!(message)
-      errors.add(:base, message)
-      if persisted?
-        update_columns(status: "failed", failure_summary: message, error_message: message)
-        broadcast_ui
-      end
-      false
-    end
-
     def broadcast_ui
       broadcast_progress
       broadcast_status_header
       broadcast_actions
       broadcast_sort_toolbar
-    end
-
-    def render_engine_partial(partial, locals)
-      CompletionKit::Engine.warm_routes!
-      CompletionKit::ApplicationController.render(
-        partial: partial,
-        locals: locals
-      )
     end
 
     def broadcast_progress
@@ -357,6 +338,25 @@ module CompletionKit
         "completion_kit_run_#{id}",
         target: "response_#{response.id}",
         html: render_engine_partial("completion_kit/runs/response_row", run: self, response: response, index: responses.where("id <= ?", response.id).count)
+      )
+    end
+
+    private
+
+    def fail_with_summary!(message)
+      errors.add(:base, message)
+      if persisted?
+        update_columns(status: "failed", failure_summary: message, error_message: message)
+        broadcast_ui
+      end
+      false
+    end
+
+    def render_engine_partial(partial, locals)
+      CompletionKit::Engine.warm_routes!
+      CompletionKit::ApplicationController.render(
+        partial: partial,
+        locals: locals
       )
     end
 
