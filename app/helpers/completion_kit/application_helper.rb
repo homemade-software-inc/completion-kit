@@ -53,20 +53,6 @@ module CompletionKit
       end
     end
 
-    def ck_run_status_label(run)
-      case run.status
-      when "pending" then "Ready to run"
-      when "running"
-        if run.progress_total.to_i > 0
-          "Running (#{run.progress_current}/#{run.progress_total})"
-        else
-          "Running…"
-        end
-      when "completed" then "Completed"
-      when "failed" then "Failed"
-      else run.status.capitalize
-      end
-    end
 
     def ck_provider_label(provider)
       CompletionKit::ProviderCredential::PROVIDER_LABELS[provider.to_s] || provider.to_s.titleize

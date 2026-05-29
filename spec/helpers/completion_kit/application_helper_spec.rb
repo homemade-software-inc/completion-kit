@@ -207,36 +207,6 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
-  describe "#ck_run_status_label" do
-    def stub_run(status, progress_current: 0, progress_total: 0)
-      instance_double(CompletionKit::Run, status: status, progress_current: progress_current, progress_total: progress_total)
-    end
-
-    it "returns Ready to run for pending" do
-      expect(helper.ck_run_status_label(stub_run("pending"))).to eq("Ready to run")
-    end
-
-    it "returns running with progress when progress_total > 0" do
-      expect(helper.ck_run_status_label(stub_run("running", progress_current: 3, progress_total: 10))).to eq("Running (3/10)")
-    end
-
-    it "returns running without progress when progress_total is 0" do
-      expect(helper.ck_run_status_label(stub_run("running", progress_total: 0))).to include("Running")
-    end
-
-    it "returns Completed for completed" do
-      expect(helper.ck_run_status_label(stub_run("completed"))).to eq("Completed")
-    end
-
-    it "returns Failed for failed" do
-      expect(helper.ck_run_status_label(stub_run("failed"))).to eq("Failed")
-    end
-
-    it "capitalizes unknown statuses" do
-      expect(helper.ck_run_status_label(stub_run("mystery"))).to eq("Mystery")
-    end
-  end
-
   describe "#ck_word_diff_old" do
     it "marks removed words in old text and skips additions" do
       result = helper.ck_word_diff_old("hello world", "hello universe")
