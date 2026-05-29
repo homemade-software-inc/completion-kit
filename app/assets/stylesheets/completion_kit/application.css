@@ -5589,12 +5589,13 @@ a.tag-mark {
 }
 
 .ck-trust-line {
-  margin: 12px 0 0;
+  margin: 14px 0 0;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px 18px;
-  font-size: 0.9rem;
+  gap: 6px 20px;
+  font-family: var(--ck-mono);
+  font-size: 0.8rem;
   color: var(--ck-text);
   line-height: 1.5;
 }
@@ -5610,7 +5611,6 @@ a.tag-mark {
   gap: 6px;
 }
 .ck-cal-stat__label {
-  font-family: var(--ck-mono);
   font-size: 0.64rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -5623,33 +5623,46 @@ a.tag-mark {
 .ck-trust-line--firm .ck-trust-line__figure {
   color: var(--ck-success);
 }
-.ck-trust-line__link {
+.ck-trust-line__borderline--ok { color: var(--ck-dim); }
+.ck-trust-line__borderline--warning { color: var(--ck-warning); }
+.ck-trust-line__borderline--danger { color: var(--ck-danger); }
+
+.ck-cal-link {
+  font-family: var(--ck-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--ck-accent);
   text-decoration: none;
-  font-weight: 500;
   white-space: nowrap;
 }
-.ck-trust-line__link:hover,
-.ck-trust-line__link:focus-visible {
+.ck-cal-link:hover,
+.ck-cal-link:focus-visible {
   color: var(--ck-accent-hover);
 }
-.ck-trust-line__link--button {
-  font-family: inherit;
-  font-size: inherit;
+.ck-cal-link--button {
   background: none;
   border: 0;
   padding: 0;
   cursor: pointer;
 }
-.ck-calibration-card__action {
-  margin-top: 0.85rem;
+.ck-cal-foot {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ck-line);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px 20px;
+  flex-wrap: wrap;
 }
-.ck-calibration-card__inline-form {
+.ck-cal-foot__note {
+  color: var(--ck-dim);
+  font-size: 0.86rem;
+}
+.ck-cal-foot__form {
   display: inline;
 }
-.ck-trust-line__borderline--ok { color: var(--ck-dim); }
-.ck-trust-line__borderline--warning { color: var(--ck-warning); }
-.ck-trust-line__borderline--danger { color: var(--ck-danger); }
 
 .ck-draft-pending {
   border-color: rgba(6, 182, 212, 0.45);

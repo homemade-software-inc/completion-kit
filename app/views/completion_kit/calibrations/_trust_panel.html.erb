@@ -26,13 +26,13 @@
     <span class="ck-trust-line__lead">Not measured yet.</span>
     <span class="ck-trust-line__hint">Needs <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> verdicts on the judge's scores.<% if prior_version_verdicts > 0 %> (<%= pluralize(prior_version_verdicts, "earlier-version verdict") %> kept on file.)<% end %></span>
     <% if target_response %>
-      <%= link_to "Give a verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %>
+      <%= link_to "Give a verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-cal-link" %>
     <% end %>
   <% elsif stats.counter_only? %>
     <span class="ck-cal-stat"><span class="ck-cal-stat__label">Verdicts</span> <strong><%= stats.sample_size %> / <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %></strong></span>
     <% if stats.short_to_target > 0 %><span class="ck-trust-line__hint"><%= stats.short_to_target %> more to report a rate</span><% end %>
     <% if target_response %>
-      <%= link_to "Give another verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-trust-line__link" %>
+      <%= link_to "Give another verdict →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-cal-link" %>
     <% end %>
   <% else %>
     <span class="ck-cal-stat"><span class="ck-cal-stat__label">Agreement</span> <strong class="ck-trust-line__figure">~<%= (stats.agreement_point * 100).round %>%</strong></span>

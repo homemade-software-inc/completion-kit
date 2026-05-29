@@ -42,35 +42,6 @@
   </div>
 </section>
 
-<% if CompletionKit.config.judge_calibration_enabled %>
-  <section class="ck-card ck-card--spaced">
-    <p class="ck-kicker">Calibration</p>
-    <p class="ck-meta-copy">How often the judge's scores match the reviewers who check them.</p>
-    <%= render "completion_kit/calibrations/trust_panel",
-          stats: CompletionKit::MetricCalibrationStats.for(@metric),
-          metric: @metric %>
-    <% if @suggestion_draft %>
-      <p class="ck-meta-copy ck-calibration-card__action">
-        The model has proposed improvements based on the cases you flagged as disagreements. They stay as a draft until you publish.
-        <%= link_to "Suggested metric improvements →", edit_metric_path(@metric), class: "ck-trust-line__link" %>
-      </p>
-    <% elsif @edit_draft %>
-      <p class="ck-meta-copy ck-calibration-card__action">
-        An unpublished draft of this metric is saved.
-        <%= link_to "Finish your draft →", edit_metric_path(@metric), class: "ck-trust-line__link" %>
-      </p>
-    <% elsif @improve_disagreement_count.positive? %>
-      <p class="ck-meta-copy ck-calibration-card__action">
-        <%= pluralize(@improve_disagreement_count, "case") %> where a reviewer's score didn't match the judge.
-        <%= button_to "Improve the metric →", suggest_variants_metric_path(@metric),
-              method: :post, form_class: "ck-calibration-card__inline-form",
-              class: "ck-trust-line__link ck-trust-line__link--button",
-              data: { turbo_confirm: "Ask the model for suggested improvements based on the disagreements collected so far?" } %>
-      </p>
-    <% end %>
-  </section>
-<% end %>
-
 <% if CompletionKit.config.judge_calibration_enabled && @versions.any? %>
   <% predecessor_of = @versions.index_with { |v| @versions.detect { |o| o.version_number < v.version_number } } %>
   <section class="ck-card ck-card--spaced">
@@ -175,5 +146,34 @@
       </article>
     </dialog>
   <% end %>
+<% end %>
+
+<% if CompletionKit.config.judge_calibration_enabled %>
+  <section class="ck-card ck-card--spaced">
+    <p class="ck-kicker">Calibration</p>
+    <p class="ck-meta-copy">How often the judge's scores match the reviewers who check them.</p>
+    <%= render "completion_kit/calibrations/trust_panel",
+          stats: CompletionKit::MetricCalibrationStats.for(@metric),
+          metric: @metric %>
+    <% if @suggestion_draft %>
+      <div class="ck-cal-foot">
+        <span class="ck-cal-foot__note">The model proposed improvements from the cases you flagged. They stay a draft until you publish.</span>
+        <%= link_to "Suggested metric improvements →", edit_metric_path(@metric), class: "ck-cal-link" %>
+      </div>
+    <% elsif @edit_draft %>
+      <div class="ck-cal-foot">
+        <span class="ck-cal-foot__note">An unpublished draft of this metric is saved.</span>
+        <%= link_to "Finish your draft →", edit_metric_path(@metric), class: "ck-cal-link" %>
+      </div>
+    <% elsif @improve_disagreement_count.positive? %>
+      <div class="ck-cal-foot">
+        <span class="ck-cal-foot__note"><%= pluralize(@improve_disagreement_count, "case") %> where a reviewer's score didn't match the judge.</span>
+        <%= button_to "Improve the metric →", suggest_variants_metric_path(@metric),
+              method: :post, form_class: "ck-cal-foot__form",
+              class: "ck-cal-link ck-cal-link--button",
+              data: { turbo_confirm: "Ask the model for suggested improvements based on the disagreements collected so far?" } %>
+      </div>
+    <% end %>
+  </section>
 <% end %>
 
