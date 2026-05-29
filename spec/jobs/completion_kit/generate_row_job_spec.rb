@@ -166,17 +166,6 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     expect { described_class.perform_now(run.id, orphan.id) }.not_to raise_error
   end
 
-  it "skips broadcast in record_terminal_failure! when response has no run" do
-    allow_any_instance_of(described_class).to receive(:perform).and_raise(RuntimeError, "boom")
-    allow(response).to receive(:run).and_return(nil)
-    allow(CompletionKit::Response).to receive(:find_by).with(id: response.id).and_return(response)
-
-    expect { described_class.perform_now(run.id, response.id) }.not_to raise_error
-
-    response.reload
-    expect(response.status).to eq("failed")
-  end
-
   it "returns nil from provider_for when response has no run" do
     allow(response).to receive(:run).and_return(nil)
     job = described_class.new

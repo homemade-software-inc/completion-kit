@@ -12,6 +12,9 @@ module CompletionKit
 
     before_validation :set_default_status
 
+    after_save_commit :broadcast_parent_row_update, unless: :destroyed?
+    after_save_commit :broadcast_run_progress, if: :should_broadcast_progress?
+
     def stale_against_current_judge?
       return false unless metric_id && metric_version_id
       current_id = MetricVersion.current.where(metric_id: metric_id).limit(1).pick(:id)
@@ -27,6 +30,20 @@ module CompletionKit
         ai_feedback: ai_feedback, status: status, attempts: attempts,
         error: error_payload
       }
+    end
+
+    private
+
+    def broadcast_parent_row_update
+      response.run.broadcast_response_update(response)
+    end
+
+    def broadcast_run_progress
+      response.run.broadcast_progress
+    end
+
+    def should_broadcast_progress?
+      saved_change_to_status? && terminal?
     end
   end
 end

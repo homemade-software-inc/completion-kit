@@ -243,14 +243,6 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     expect(review.metric_name).to eq("(deleted metric)")
   end
 
-  it "skips broadcast in record_terminal_failure! when response has no run" do
-    allow_any_instance_of(described_class).to receive(:perform).and_raise(RuntimeError, "boom")
-    allow(response).to receive(:run).and_return(nil)
-    allow(CompletionKit::Response).to receive(:find_by).with(id: response.id).and_return(response)
-
-    expect { described_class.perform_now(response.id, metric.id) }.not_to raise_error
-  end
-
   it "resolves metric name via Metric.find_by in record_terminal_failure! when review has no metric_name yet" do
     job = described_class.new
     job.instance_variable_set(:@response_id, response.id)

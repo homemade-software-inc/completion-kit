@@ -139,13 +139,23 @@ RSpec.describe CompletionKit::Run, type: :model do
     let(:run) { create(:completion_kit_run, prompt: prompt) }
 
     before do
+      allow(run).to receive(:broadcast_ui).and_call_original
       allow(run).to receive(:broadcast_progress).and_call_original
       allow(run).to receive(:broadcast_response).and_call_original
       allow(run).to receive(:broadcast_response_update).and_call_original
       allow(run).to receive(:broadcast_status_header).and_call_original
       allow(run).to receive(:broadcast_actions).and_call_original
+      allow(run).to receive(:broadcast_sort_toolbar).and_call_original
       allow(run).to receive(:broadcast_replace_to)
       allow(run).to receive(:broadcast_append_to)
+    end
+
+    it "broadcast_ui dispatches to the four sub-broadcasts" do
+      run.broadcast_ui
+      expect(run).to have_received(:broadcast_progress)
+      expect(run).to have_received(:broadcast_status_header).at_least(:once)
+      expect(run).to have_received(:broadcast_actions)
+      expect(run).to have_received(:broadcast_sort_toolbar)
     end
 
     it "broadcast_progress calls broadcast_replace_to with run_status_panel target" do
@@ -167,11 +177,11 @@ RSpec.describe CompletionKit::Run, type: :model do
 
     it "broadcast_response_update calls broadcast_replace_to with response target" do
       response = run.responses.create!(response_text: "test")
-      run.send(:broadcast_response_update, response)
+      run.broadcast_response_update(response)
       expect(run).to have_received(:broadcast_replace_to).with(
         "completion_kit_run_#{run.id}",
         hash_including(target: "response_#{response.id}")
-      )
+      ).at_least(:once)
     end
 
     it "broadcast_status_header calls broadcast_replace_to with run_status_header target" do

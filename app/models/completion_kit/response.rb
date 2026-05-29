@@ -12,6 +12,9 @@ module CompletionKit
 
     before_validation :set_default_status, on: :create
 
+    after_save_commit :broadcast_row_update, unless: :destroyed?
+    after_save_commit :broadcast_run_progress, if: :should_broadcast_progress?
+
     def as_json(options = {})
       {
         id: id, run_id: run_id, input_data: input_data,
@@ -41,5 +44,18 @@ module CompletionKit
       (metric_ids - reviewed_metric_ids).empty?
     end
 
+    private
+
+    def broadcast_row_update
+      run.broadcast_response_update(self)
+    end
+
+    def broadcast_run_progress
+      run.broadcast_progress
+    end
+
+    def should_broadcast_progress?
+      saved_change_to_status? && terminal?
+    end
   end
 end
