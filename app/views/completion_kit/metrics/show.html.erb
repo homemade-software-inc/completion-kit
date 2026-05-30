@@ -194,7 +194,7 @@
         <%= button_to suggest_variants_metric_path(@metric),
               method: :post, form_class: "inline-block",
               class: ck_button_classes(:light, variant: :outline) + " ck-button--sm",
-              data: { turbo_confirm: "Draft an improved version of this metric from the reviews where you disagreed with the judge? You can compare and publish it before it goes live." } do %>
+              data: { turbo_confirm: "Draft an improved version of this metric from the reviews where you disagreed with the judge? It stays a draft until you compare it and publish." } do %>
           <%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>
           Suggest improvements
         <% end %>
