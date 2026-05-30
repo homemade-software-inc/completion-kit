@@ -183,6 +183,9 @@
     <%= render "completion_kit/calibrations/trust_panel",
           stats: CompletionKit::MetricCalibrationStats.for(@metric),
           metric: @metric %>
+    <% if CompletionKit.config.judge_examples_from_reviews %>
+      <%= render "completion_kit/metrics/guiding_examples", metric: @metric, examples: @guiding_examples %>
+    <% end %>
     <% draft = @suggestion_draft || @edit_draft %>
     <% if draft %>
       <div class="ck-cal-foot">

@@ -5945,3 +5945,44 @@ a.tag-mark {
 .ck-starter-actions .ck-button {
   line-height: 1;
 }
+
+.ck-guiding {
+  margin-top: 0.75rem;
+}
+
+.ck-guiding__list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.ck-guiding__item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.ck-guiding__scores {
+  font-family: var(--ck-mono);
+  font-size: 0.8125rem;
+  color: var(--ck-dim);
+  white-space: nowrap;
+}
+
+.ck-guiding__output {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ck-dim);
+  font-size: 0.875rem;
+}
+
+.ck-guiding__item .ck-icon-btn {
+  width: 2rem;
+  height: 2rem;
+}

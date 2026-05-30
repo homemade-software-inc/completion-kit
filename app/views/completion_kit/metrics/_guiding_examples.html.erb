@@ -1,1 +1,17 @@
-<div id="ck-guiding-<%= metric.id %>" class="ck-guiding"></div>
+<div id="ck-guiding-<%= metric.id %>" class="ck-guiding">
+  <% if examples.any? %>
+    <p class="ck-cal-foot__note"><%= pluralize(examples.size, "reviewed case") %> guiding the judge on this metric during runs.</p>
+    <ul class="ck-guiding__list">
+      <% examples.each do |example| %>
+        <li class="ck-guiding__item">
+          <span class="ck-guiding__scores"><%= example[:judge_score].to_i %> &rarr; <%= example[:human_score].to_i %></span>
+          <span class="ck-guiding__output"><%= truncate(example[:output].to_s, length: 120) %></span>
+          <%= button_to exclude_example_metric_path(metric, calibration_id: example[:id]),
+                method: :post, form_class: "inline-block", class: "ck-icon-btn",
+                title: "Stop using this case", "aria-label": "Stop using this case",
+                data: { turbo_confirm: "Stop using this corrected case to guide the judge?" } do %><%= heroicon_tag "x-mark", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

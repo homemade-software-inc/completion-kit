@@ -39,4 +39,18 @@ RSpec.describe "Metric review-grounded examples", type: :request do
     expect(response).to have_http_status(:not_found)
     expect(cal.reload.excluded_from_examples).to eq(false)
   end
+
+  it "shows the guiding section with active cases on the metric page" do
+    disagreement(metric)
+    get "/completion_kit/metrics/#{metric.id}"
+    expect(response.body).to include("ck-guiding-#{metric.id}")
+    expect(response.body).to include("guiding the judge")
+  end
+
+  it "hides the guiding section when the flag is off" do
+    CompletionKit.config.judge_examples_from_reviews = false
+    disagreement(metric)
+    get "/completion_kit/metrics/#{metric.id}"
+    expect(response.body).not_to include("guiding the judge")
+  end
 end
