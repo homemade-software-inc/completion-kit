@@ -23,9 +23,12 @@ RSpec.describe "Metric review-grounded examples", type: :request do
     cal = disagreement(metric)
     expect(CompletionKit::MetricCalibrationExamples.judge_examples_for(metric).size).to eq(1)
 
-    post "/completion_kit/metrics/#{metric.id}/exclude_example", params: { calibration_id: cal.id }
+    post "/completion_kit/metrics/#{metric.id}/exclude_example",
+         params: { calibration_id: cal.id },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     expect(response).to have_http_status(:ok)
+    expect(response.body).to include("turbo-stream", "ck-guiding-#{metric.id}")
     expect(cal.reload.excluded_from_examples).to eq(true)
     expect(CompletionKit::MetricCalibrationExamples.judge_examples_for(metric)).to eq([])
   end

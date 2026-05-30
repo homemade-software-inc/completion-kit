@@ -25,6 +25,7 @@ module CompletionKit
                  .where.not(corrected_score: nil)
       relation = relation.where.not(response_id: exclude_response_id) if exclude_response_id
       map_examples(relation.includes(response: :reviews).order(created_at: :desc).limit(limit), metric)
+        .reject { |example| example[:judge_score].nil? }
     end
 
     def calibrations_for(metric, verdict:, limit:)

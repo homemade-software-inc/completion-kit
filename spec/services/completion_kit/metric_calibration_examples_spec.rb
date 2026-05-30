@@ -43,6 +43,14 @@ RSpec.describe CompletionKit::MetricCalibrationExamples do
     expect(described_class.judge_examples_for(metric).size).to eq(5)
   end
 
+  it "drops cases that have no judge score" do
+    response = create(:completion_kit_response)
+    create(:completion_kit_calibration,
+           metric: metric, response: response, run: response.run,
+           verdict: "disagree", corrected_score: 2.0, note: "no review")
+    expect(described_class.judge_examples_for(metric)).to eq([])
+  end
+
   it "does not fall back to corrections from a superseded version" do
     disagreement(metric)
     newer = CompletionKit::MetricVersion.create!(
