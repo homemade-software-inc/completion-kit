@@ -7,7 +7,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
   describe "GET metric show" do
     it "no longer renders a 'Cases to learn from' / few-shot section even when disagreements exist" do
       r1 = create(:completion_kit_response, run: run)
-      create(:completion_kit_review, response: r1, metric: metric, metric_name: metric.name, ai_score: 5.0, ai_feedback: "judge said so")
+      create(:completion_kit_review, response: r1, metric: metric, metric_name: metric.name, metric_version_id: CompletionKit::MetricVersion.ensure_current_for(metric).id, ai_score: 5.0, ai_feedback: "judge said so")
       create(:completion_kit_calibration,
              run: run, response: r1, metric: metric,
              metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
@@ -16,6 +16,21 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).not_to include("Cases to learn from")
       expect(response.body).not_to include("Remember this")
+    end
+
+    it "points the review link at a current-version response, not a stale-version one" do
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+      v2.publish!
+      current_resp = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: current_resp, metric: metric, metric_name: metric.name, metric_version_id: v2.id, ai_score: 4.0, ai_feedback: "current")
+      stale_resp = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: stale_resp, metric: metric, metric_name: metric.name, metric_version_id: v1.id, ai_score: 4.0, ai_feedback: "stale")
+
+      get "/completion_kit/metrics/#{metric.id}"
+
+      expect(response.body).to include("responses/#{current_resp.id}#helpfulness")
+      expect(response.body).not_to include("responses/#{stale_resp.id}#helpfulness")
     end
   end
 
