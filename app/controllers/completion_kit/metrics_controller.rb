@@ -7,6 +7,7 @@ module CompletionKit
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
       @available_starters = StarterMetrics.available
+      @current_versions = MetricVersion.published.current.where(metric_id: @metrics.map(&:id)).index_by(&:metric_id)
     end
 
     def starter_preview

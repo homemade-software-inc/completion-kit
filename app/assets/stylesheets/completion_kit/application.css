@@ -3607,9 +3607,10 @@ select.ck-input {
 }
 
 .ck-metrics-table th:nth-child(1), .ck-metrics-table td:nth-child(1) { width: 18rem; white-space: normal; }
-.ck-metrics-table th:nth-child(2), .ck-metrics-table td:nth-child(2) { width: auto; }
-.ck-metrics-table th:nth-child(3), .ck-metrics-table td:nth-child(3) { width: 16rem; }
-.ck-metrics-table th:nth-child(4), .ck-metrics-table td:nth-child(4) { width: 3rem; }
+.ck-metrics-table th:nth-child(2), .ck-metrics-table td:nth-child(2) { width: 6rem; }
+.ck-metrics-table th:nth-child(3), .ck-metrics-table td:nth-child(3) { width: auto; }
+.ck-metrics-table th:nth-child(4), .ck-metrics-table td:nth-child(4) { width: 16rem; }
+.ck-metrics-table th:nth-child(5), .ck-metrics-table td:nth-child(5) { width: 3rem; }
 .ck-metrics-table td:nth-child(1) strong { overflow-wrap: anywhere; }
 
 .ck-datasets-table th:nth-child(1), .ck-datasets-table td:nth-child(1) { width: auto; }

@@ -92,4 +92,12 @@ RSpec.describe "CompletionKit metrics", type: :request do
     expect(response.body).to include("Filter by tag")
   end
 
+  it "shows each metric's published version in the index" do
+    metric = create(:completion_kit_metric, name: "Versioned metric")
+    version = CompletionKit::MetricVersion.ensure_current_for(metric)
+    get base_path
+    expect(response.body).to include("Version")
+    expect(response.body).to include(version.version_label)
+  end
+
 end

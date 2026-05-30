@@ -18,6 +18,7 @@
     <thead>
       <tr>
         <th scope="col">Name</th>
+        <th scope="col">Version</th>
         <th scope="col">Instruction</th>
         <th scope="col">In groups</th>
         <th scope="col"></th>
@@ -33,6 +34,10 @@
                 <%= render "completion_kit/tags/marks", tags: metric.tags %>
               </div>
             <% end %>
+          </td>
+          <td data-label="Version">
+            <% v = @current_versions[metric.id] %>
+            <% if v %><strong><%= v.version_label %></strong><% else %><span class="ck-metrics-table__dim">—</span><% end %>
           </td>
           <td data-label="Instruction" class="ck-meta-copy"><div class="ck-clamp-2"><%= metric.instruction.presence || "—" %></div></td>
           <td data-label="In groups">
