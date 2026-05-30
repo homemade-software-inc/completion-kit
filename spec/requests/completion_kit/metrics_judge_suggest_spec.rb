@@ -32,9 +32,9 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
 
     get "/completion_kit/metrics/#{metric.id}/edit"
     expect(response.body).to include("Proposed improvements")
-    expect(response.body).to include("Take everything")
-    expect(response.body).to include('value="Discard"')
-    expect(response.body).to include("Try again")
+    expect(response.body).to include("Apply all")
+    expect(response.body).to include('aria-label="Discard"')
+    expect(response.body).to include('aria-label="Try again"')
     expect(response.body).to include("Suggested wording")
     expect(response.body).to include("Use this wording")
   end

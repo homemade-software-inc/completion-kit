@@ -160,6 +160,7 @@
                     method: :delete, form_class: "inline-block", class: "ck-icon-btn",
                     title: "Discard draft #{v.version_label}", "aria-label": "Discard draft #{v.version_label}",
                     data: { turbo_confirm: "Discard draft #{v.version_label}? This can't be undone." } do %><%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
+              <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
               <%= button_to "Publish #{v.version_label} →", publish_draft_metric_path(@metric, draft_id: v.id),
                     method: :post, form_class: "inline-block", class: ck_button_classes(:dark) %>
             </span>
