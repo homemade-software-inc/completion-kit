@@ -116,7 +116,7 @@ module CompletionKit
       target = params[:back_to] == "edit" ? edit_metric_path(@metric) : metric_path(@metric)
       disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
       if disagreement_count.zero?
-        redirect_to target, alert: "Mark at least one row as Disagree before asking the model to suggest a change."
+        redirect_to target, alert: "Mark at least one case as Disagree before asking the model to suggest a change."
         return
       end
 

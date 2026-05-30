@@ -54,7 +54,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(CompletionKit::LlmClient).not_to receive(:for_model)
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
     follow_redirect!
-    expect(response.body).to include("Mark at least one row as Disagree")
+    expect(response.body).to include("Mark at least one case as Disagree")
   end
 
   it "redirects with an alert when the model returns nothing usable" do
