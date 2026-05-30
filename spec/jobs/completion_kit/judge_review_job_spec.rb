@@ -231,4 +231,61 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     review = response.reviews.find_by(metric_id: metric.id)
     expect(review.metric_name).to eq("(deleted metric)")
   end
+
+  describe "review-grounded examples" do
+    around do |example|
+      original_examples = CompletionKit.config.judge_examples_from_reviews
+      original_calibration = CompletionKit.config.judge_calibration_enabled
+      example.run
+    ensure
+      CompletionKit.config.judge_examples_from_reviews = original_examples
+      CompletionKit.config.judge_calibration_enabled = original_calibration
+    end
+
+    let(:run) { create(:completion_kit_run, judge_model: "gpt-4.1") }
+    let(:response) { create(:completion_kit_response, run: run) }
+    let(:metric) { create(:completion_kit_metric) }
+
+    before do
+      allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+    end
+
+    it "passes human_examples to the judge when the flag is on" do
+      CompletionKit.config.judge_examples_from_reviews = true
+      examples = [{ output: "x", judge_score: 4.0, human_score: 2.0, human_note: "n" }]
+      allow(CompletionKit::MetricCalibrationExamples).to receive(:judge_examples_for)
+        .with(metric, exclude_response_id: response.id).and_return(examples)
+
+      judge = instance_double(CompletionKit::JudgeService)
+      allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
+      expect(judge).to receive(:evaluate)
+        .with(anything, anything, anything, hash_including(human_examples: examples))
+        .and_return(score: 2.0, feedback: "ok")
+
+      described_class.new.perform(response.id, metric.id, run.id)
+    end
+
+    it "passes no examples when the flag is off" do
+      CompletionKit.config.judge_examples_from_reviews = false
+      judge = instance_double(CompletionKit::JudgeService)
+      allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
+      expect(judge).to receive(:evaluate)
+        .with(anything, anything, anything, hash_including(human_examples: nil))
+        .and_return(score: 3.0, feedback: "ok")
+
+      described_class.new.perform(response.id, metric.id, run.id)
+    end
+
+    it "passes no examples when calibration is disabled" do
+      CompletionKit.config.judge_examples_from_reviews = true
+      CompletionKit.config.judge_calibration_enabled = false
+      judge = instance_double(CompletionKit::JudgeService)
+      allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
+      expect(judge).to receive(:evaluate)
+        .with(anything, anything, anything, hash_including(human_examples: nil))
+        .and_return(score: 3.0, feedback: "ok")
+
+      described_class.new.perform(response.id, metric.id, run.id)
+    end
+  end
 end

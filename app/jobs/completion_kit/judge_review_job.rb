@@ -58,7 +58,8 @@ module CompletionKit
         run.prompt&.template,
         criteria: metric.instruction.to_s,
         rubric_text: metric.display_rubric_text,
-        input_data: response.input_data
+        input_data: response.input_data,
+        human_examples: review_examples_for(metric, response)
       )
 
       review = response.reviews.find_or_initialize_by(metric_id: metric.id)
@@ -80,9 +81,13 @@ module CompletionKit
 
     private
 
-    # A model with supports_judging == nil ("untested") just produced a valid
-    # review — promote it to confirmed. No-op once confirmed (so repeated runs
-    # don't churn the row), and a model already flagged as a bad judge stays so.
+    def review_examples_for(metric, response)
+      return nil unless CompletionKit.config.judge_calibration_enabled
+      return nil unless CompletionKit.config.judge_examples_from_reviews
+
+      MetricCalibrationExamples.judge_examples_for(metric, exclude_response_id: response.id)
+    end
+
     def confirm_judging_capability(judge_model_id)
       model = Model.find_by(provider: ApiConfig.provider_for_model(judge_model_id), model_id: judge_model_id)
       return unless model && model.supports_judging.nil?
