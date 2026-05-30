@@ -1,16 +1,17 @@
 <div id="ck-guiding-<%= metric.id %>" class="ck-guiding">
   <% if examples.any? %>
-    <p class="ck-kicker ck-kicker--inset">Guiding the judge</p>
-    <p class="ck-cal-foot__note"><%= pluralize(examples.size, "reviewed case") %> the judge weighs while scoring this metric.</p>
+    <div class="ck-guiding__head">
+      <p class="ck-kicker ck-kicker--inset">Guiding the judge</p>
+      <span class="ck-guiding__legend">Judge &rarr; Human</span>
+    </div>
     <ul class="ck-guiding__list">
       <% examples.each do |example| %>
         <li class="ck-guiding__item">
-          <span class="ck-guiding__scores">
-            <span class="ck-guiding__label">Judge</span><span class="ck-guiding__judge"><%= example[:judge_score].to_i %></span>
-            &rarr;
-            <span class="ck-guiding__label">Human</span><span class="ck-guiding__human"><%= example[:human_score].to_i %></span>
-          </span>
-          <span class="ck-guiding__output"><%= truncate(example[:output].to_s, length: 120) %></span>
+          <%= link_to run_response_path(example[:run_id], example[:response_id], anchor: metric.name.parameterize),
+                class: "ck-guiding__link", title: "Open this review" do %>
+            <span class="ck-guiding__output"><%= truncate(example[:output].to_s, length: 90) %></span>
+            <span class="ck-guiding__scores"><span class="ck-guiding__judge"><%= example[:judge_score].to_i %></span> &rarr; <span class="ck-guiding__human"><%= example[:human_score].to_i %></span></span>
+          <% end %>
           <%= button_to exclude_example_metric_path(metric, calibration_id: example[:id]),
                 method: :post, form_class: "inline-block", class: "ck-icon-btn",
                 title: "Stop using this case", "aria-label": "Stop using this case",

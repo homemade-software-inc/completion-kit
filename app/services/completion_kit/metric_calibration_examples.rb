@@ -41,6 +41,8 @@ module CompletionKit
         review = cal.response.reviews.find { |r| r.metric_id == metric.id }
         {
           id: cal.id,
+          run_id: cal.run_id,
+          response_id: cal.response_id,
           input: cal.response.input_data,
           output: cal.response.response_text,
           judge_score: review&.ai_score,

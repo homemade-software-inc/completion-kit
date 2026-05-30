@@ -48,6 +48,7 @@ RSpec.describe "Metric review-grounded examples", type: :request do
     get "/completion_kit/metrics/#{metric.id}"
     expect(response.body).to include("ck-guiding-#{metric.id}")
     expect(response.body).to include("Guiding the judge")
+    expect(response.body).to match(%r{runs/\d+/responses/\d+})
   end
 
   it "hides the guiding section when the flag is off" do

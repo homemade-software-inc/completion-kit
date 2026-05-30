@@ -21,6 +21,8 @@ RSpec.describe CompletionKit::MetricCalibrationExamples do
     expect(examples.first[:human_score]).to eq(2.0)
     expect(examples.first[:human_note]).to eq("too high")
     expect(examples.first[:output]).to eq(cal.response.response_text)
+    expect(examples.first[:response_id]).to eq(cal.response_id)
+    expect(examples.first[:run_id]).to eq(cal.run_id)
   end
 
   it "returns an empty array when the metric has no current version" do
