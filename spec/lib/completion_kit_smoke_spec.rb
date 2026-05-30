@@ -81,6 +81,7 @@ RSpec.describe "CompletionKit boot smoke" do
     expect(config.judge_model).to eq("gpt-4.1")
     expect(config.high_quality_threshold).to eq(4)
     expect(config.medium_quality_threshold).to eq(3)
+    expect(config.judge_examples_from_reviews).to eq(false)
 
     asset_initializer = CompletionKit::Engine.initializers.find { |initializer| initializer.name == "completion_kit.assets" }
     assets = Struct.new(:precompile).new([])

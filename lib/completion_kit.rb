@@ -13,6 +13,7 @@ module CompletionKit
     attr_accessor :api_rate_limit, :web_rate_limit
     attr_accessor :allow_loopback_endpoints
     attr_accessor :judge_calibration_enabled
+    attr_accessor :judge_examples_from_reviews
 
     def initialize
       @openai_api_key = ENV['OPENAI_API_KEY']
@@ -29,6 +30,7 @@ module CompletionKit
 
       @allow_loopback_endpoints = true
       @judge_calibration_enabled = true
+      @judge_examples_from_reviews = false
 
       @api_reference_authentication_partial = "completion_kit/api_reference/authentication"
     end
