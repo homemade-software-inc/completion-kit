@@ -216,6 +216,10 @@ form.button_to {
   justify-content: flex-end;
   flex-shrink: 0;
 }
+.ck-actions .ck-icon-btn {
+  width: 2rem;
+  height: 2rem;
+}
 
 .ck-toolbar__spacer {
   flex: 1;
