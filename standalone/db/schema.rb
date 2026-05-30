@@ -10,11 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_29_232016) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_30_181008) do
   create_table "completion_kit_calibrations", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
     t.string "created_by"
+    t.boolean "excluded_from_examples", default: false, null: false
     t.integer "metric_id", null: false
     t.integer "metric_version_id", null: false
     t.text "note"

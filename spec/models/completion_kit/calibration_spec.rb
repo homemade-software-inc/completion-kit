@@ -70,6 +70,11 @@ RSpec.describe CompletionKit::Calibration, type: :model do
     end
   end
 
+  it "defaults excluded_from_examples to false" do
+    calibration = create(:completion_kit_calibration)
+    expect(calibration.excluded_from_examples).to eq(false)
+  end
+
   describe "#as_json" do
     it "exposes the structured payload" do
       cal = create(:completion_kit_calibration,

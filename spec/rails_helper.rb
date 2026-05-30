@@ -252,6 +252,7 @@ ActiveRecord::Schema.define do
     t.string :created_by
     t.decimal :corrected_score, precision: 4, scale: 1
     t.text :note
+    t.boolean :excluded_from_examples, null: false, default: false
     t.timestamps
   end
   add_index :completion_kit_calibrations,
