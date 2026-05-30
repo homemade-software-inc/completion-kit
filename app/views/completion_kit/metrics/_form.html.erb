@@ -46,12 +46,12 @@
       <div class="ck-suggestion-banner__actions">
         <%= button_to suggest_variants_metric_path(metric, back_to: "edit"),
               method: :post, form_class: "inline-block", class: "ck-icon-btn",
-              title: "Try again: discard these and ask the model for fresh ones", "aria-label": "Try again",
-              data: { turbo_confirm: "Replace these improvements with fresh ones from the model?" } do %><%= heroicon_tag "arrow-path", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
+              title: "Try again", "aria-label": "Try again",
+              data: { turbo_confirm: "Replace these changes with fresh ones from the model?" } do %><%= heroicon_tag "arrow-path", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
         <%= button_to dismiss_suggestion_metric_path(metric, draft_id: suggestion.id, back_to: "edit"),
               method: :delete, form_class: "inline-block", class: "ck-icon-btn",
-              title: "Discard these improvements", "aria-label": "Discard",
-              data: { turbo_confirm: "Drop these improvements?" } do %><%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
+              title: "Discard these changes", "aria-label": "Discard",
+              data: { turbo_confirm: "Drop these changes?" } do %><%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
         <%= button_to "Apply all", publish_draft_metric_path(metric, draft_id: suggestion.id),
               method: :post, form_class: "inline-block",
               class: ck_button_classes(:dark) %>
