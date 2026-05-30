@@ -154,7 +154,7 @@
           <% if v.current? %>
             <span class="ck-modal__foot-note">This is the metric's published version.</span>
           <% elsif v.draft? %>
-            <span class="ck-modal__foot-note">Happy with it? Publish to use <%= v.version_label %> for every grade from now on.</span>
+            <span class="ck-modal__foot-note">Happy with it? Publish to use <%= v.version_label %> for this metric from now on.</span>
             <span class="ck-modal__foot-actions">
               <%= button_to dismiss_suggestion_metric_path(@metric, draft_id: v.id),
                     method: :delete, form_class: "inline-block", class: "ck-icon-btn",
