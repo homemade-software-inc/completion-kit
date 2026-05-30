@@ -1,7 +1,8 @@
 module CompletionKit
   class MetricsController < ApplicationController
     include CompletionKit::TagFiltering
-    before_action :set_metric, only: [:show, :edit, :update, :destroy, :publish_draft, :suggest_variants, :dismiss_suggestion]
+    before_action :set_metric, only: [:show, :edit, :update, :destroy, :publish_draft, :suggest_variants, :dismiss_suggestion, :exclude_example]
+    before_action :ensure_examples_from_reviews_enabled, only: [:exclude_example]
 
     def index
       @metrics = apply_tag_filter(Metric.includes(:metric_groups, :tags).order(:name))
@@ -39,6 +40,7 @@ module CompletionKit
       @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @improve_disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
       @versions = MetricVersion.where(metric_id: @metric.id).order(version_number: :desc).to_a
+      @guiding_examples = CompletionKit.config.judge_examples_from_reviews ? MetricCalibrationExamples.judge_examples_for(@metric) : []
     end
 
     def new
@@ -145,6 +147,16 @@ module CompletionKit
       redirect_to target, notice: label ? "Discarded draft #{label}." : "Draft already gone."
     end
 
+    def exclude_example
+      calibration = Calibration.where(metric_id: @metric.id).find(params[:calibration_id])
+      calibration.update!(excluded_from_examples: true)
+      render turbo_stream: turbo_stream.replace(
+        "ck-guiding-#{@metric.id}",
+        partial: "completion_kit/metrics/guiding_examples",
+        locals: { metric: @metric, examples: MetricCalibrationExamples.judge_examples_for(@metric) }
+      )
+    end
+
     def publish_draft
       scope = MetricVersion.where(metric_id: @metric.id)
       version = if params[:draft_id].present?
@@ -175,6 +187,10 @@ module CompletionKit
     end
 
     private
+
+    def ensure_examples_from_reviews_enabled
+      head :not_found unless CompletionKit.config.judge_examples_from_reviews
+    end
 
     def set_metric
       @metric = Metric.find(params[:id])

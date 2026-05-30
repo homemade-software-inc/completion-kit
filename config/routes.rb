@@ -22,6 +22,7 @@ CompletionKit::Engine.routes.draw do
       post :publish_draft
       post :suggest_variants
       delete :dismiss_suggestion
+      post :exclude_example
     end
   end
   resources :metric_groups
