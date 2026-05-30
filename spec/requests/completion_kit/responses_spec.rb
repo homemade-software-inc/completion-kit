@@ -21,7 +21,7 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).to include(metric_group.metrics.first.name)
   end
 
-  it "marks a review as stale and shows the source-chip v-label when the review's metric_version is no longer current" do
+  it "marks a stale review with a concise version-transition chip and no border accent" do
     metric = metric_group.metrics.first
     v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
     review = response_with_output.reviews.find_by(metric_id: metric.id)
@@ -31,10 +31,11 @@ RSpec.describe "CompletionKit responses", type: :request do
 
     get "/completion_kit/runs/#{run.id}/responses/#{response_with_output.id}"
 
-    expect(response.body).to include("ck-review-card--stale")
-    expect(response.body).to include("Scored against a superseded version")
     expect(response.body).to include("ck-source-chip--past")
-    expect(response.body).to include(">v1<")
+    expect(response.body).to include("v1 &rarr; v2")
+    expect(response.body).to include("the metric is now on")
+    expect(response.body).not_to include("Scored against a superseded version")
+    expect(response.body).not_to include("ck-review-card--stale")
   end
 
   describe "GET /runs/:id/compare" do

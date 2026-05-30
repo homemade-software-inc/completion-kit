@@ -2877,10 +2877,6 @@ select.ck-input {
   line-height: 1.55;
 }
 
-.ck-review-card--stale {
-  border-left: 2px solid rgba(224, 164, 88, 0.45);
-}
-
 .ck-stale-versions-banner {
   margin: 0 0 1rem;
   padding: 0.9rem 1rem;
@@ -2908,12 +2904,6 @@ select.ck-input {
 .ck-delta--zero { color: var(--ck-dim); }
 
 .ck-run-compare-table td { vertical-align: middle; }
-.ck-review-card__stale-note {
-  margin: 0.4rem 0 0;
-  font-family: var(--ck-mono);
-  font-size: 0.78rem;
-  color: var(--ck-warning);
-}
 
 @media (max-width: 900px) {
   .ck-grid--sidebar,

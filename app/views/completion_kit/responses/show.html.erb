@@ -100,12 +100,17 @@
       <% @reviews.each do |review| %>
         <% review_version = review.metric_version %>
         <% stale = review.stale_against_current_judge? %>
-        <div class="ck-review-card<%= " ck-review-card--stale" if stale %>" id="<%= review.metric&.name&.parameterize || "review-#{review.id}" %>">
+        <div class="ck-review-card" id="<%= review.metric&.name&.parameterize || "review-#{review.id}" %>">
           <div class="ck-review-card__header">
             <span class="ck-review-card__metric"><% if review.metric %><%= link_to review.metric_name, metric_path(review.metric), class: "ck-link" %><% else %><%= review.metric_name %><% end %></span>
             <div class="ck-inline">
               <% if review_version %>
-                <span class="ck-source-chip <%= stale ? "ck-source-chip--past" : "ck-source-chip--current" %>" title="<%= stale ? "Scored against #{review_version.version_label} of this metric. The metric has been republished since." : "Scored against the metric's current version (#{review_version.version_label})." %>"><%= review_version.version_label %></span>
+                <% if stale %>
+                  <% current_version = CompletionKit::MetricVersion.current.find_by(metric_id: review.metric_id) %>
+                  <span class="ck-source-chip ck-source-chip--past" title="Scored on <%= review_version.version_label %>; the metric is now on <%= current_version.version_label %>, which may score this differently."><%= review_version.version_label %> &rarr; <%= current_version.version_label %></span>
+                <% else %>
+                  <span class="ck-source-chip ck-source-chip--current" title="Scored on the metric's current version (<%= review_version.version_label %>)."><%= review_version.version_label %></span>
+                <% end %>
               <% end %>
               <% if review.ai_score %>
                 <% 5.times do |i| %>
@@ -116,9 +121,6 @@
               <% end %>
             </div>
           </div>
-          <% if stale %>
-            <p class="ck-review-card__stale-note">Scored against a superseded version of this metric. Its current version may score this differently.</p>
-          <% end %>
           <% if review.ai_feedback.present? %>
             <p class="ck-review-card__feedback"><%= review.ai_feedback %></p>
           <% end %>
