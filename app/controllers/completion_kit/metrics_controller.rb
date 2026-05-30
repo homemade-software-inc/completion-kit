@@ -127,8 +127,9 @@ module CompletionKit
         redirect_to target, alert: "The model returned no usable variants. Try again with a different model."
         return
       end
-      generator.persist!(variants)
-      redirect_to target, notice: "Drafted a new version. Review it below."
+      versions = generator.persist!(variants)
+      new_version = versions.max_by(&:version_number)
+      redirect_to target, notice: "Drafted #{new_version.version_label} from your reviews. Open its change in the Versions table below to compare, then Publish to make it the live judge."
     end
 
     def dismiss_suggestion

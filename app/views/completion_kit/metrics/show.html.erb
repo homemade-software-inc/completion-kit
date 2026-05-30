@@ -66,9 +66,10 @@
                   <% if v.current? %>
                     <span class="ck-chip">Published</span>
                   <% elsif v.draft? %>
+                    <span class="ck-chip ck-chip--draft">Draft</span>
                     <%= button_to "Publish", publish_draft_metric_path(@metric, draft_id: v.id),
                           method: :post, form_class: "inline-block",
-                          class: "ck-chip ck-chip--publish" %>
+                          class: "ck-chip ck-chip--cta" %>
                   <% else %>
                     <%= button_to "Make current", publish_draft_metric_path(@metric, draft_id: v.id),
                           method: :post, form_class: "inline-block",
@@ -143,6 +144,20 @@
                   draft_bands: v_bands %>
           <% end %>
         </div>
+        <footer class="ck-modal__footer ck-modal__footer--split">
+          <% if v.current? %>
+            <span class="ck-modal__foot-note">This is the live judge.</span>
+          <% elsif v.draft? %>
+            <span class="ck-modal__foot-note">Happy with it? Publishing makes <%= v.version_label %> the judge that grades from now on.</span>
+            <%= button_to "Publish #{v.version_label} →", publish_draft_metric_path(@metric, draft_id: v.id),
+                  method: :post, form_class: "inline-block", class: ck_button_classes(:dark) %>
+          <% else %>
+            <span class="ck-modal__foot-note">Roll the live judge back to this version.</span>
+            <%= button_to "Make #{v.version_label} current →", publish_draft_metric_path(@metric, draft_id: v.id),
+                  method: :post, form_class: "inline-block", class: ck_button_classes(:dark),
+                  data: { turbo_confirm: "Roll the live judge back to #{v.version_label}? Human reviews collected against the current version stay tied to it." } %>
+          <% end %>
+        </footer>
       </article>
     </dialog>
   <% end %>
@@ -171,7 +186,7 @@
         <%= button_to "Improve the metric →", suggest_variants_metric_path(@metric),
               method: :post, form_class: "ck-cal-foot__form",
               class: "ck-cal-link ck-cal-link--button",
-              data: { turbo_confirm: "Ask the model for suggested improvements based on the disagreements collected so far?" } %>
+              data: { turbo_confirm: "Draft an improved version of this metric from the reviews where you disagreed with the judge? You can compare and publish it before it goes live." } %>
       </div>
     <% end %>
   </section>

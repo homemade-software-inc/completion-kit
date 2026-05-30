@@ -665,6 +665,20 @@ tr:hover .ck-chip--publish {
   border-color: var(--ck-accent);
   color: var(--ck-accent);
 }
+.ck-chip--cta {
+  cursor: pointer;
+  background: var(--ck-accent-soft);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: var(--ck-accent);
+  transition: border-color 0.15s, color 0.15s;
+}
+.ck-chip--cta:hover {
+  border-color: var(--ck-accent);
+  color: var(--ck-accent-hover);
+}
+.ck-chip--draft {
+  color: var(--ck-dim);
+}
 
 .ck-chip--soft {
   background: var(--ck-accent-soft);
@@ -2551,6 +2565,17 @@ select.ck-input {
   justify-content: flex-end;
   gap: 0.6rem;
   padding: 0.95rem 1.5rem 1.1rem;
+}
+.ck-modal__footer--split {
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--ck-line);
+}
+.ck-modal__foot-note {
+  color: var(--ck-dim);
+  font-size: 0.86rem;
 }
 
 .ck-modal__close-btn {
