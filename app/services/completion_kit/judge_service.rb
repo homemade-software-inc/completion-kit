@@ -10,13 +10,14 @@ module CompletionKit
       @judge_client = LlmClient.for_model(@judge_model, ApiConfig.for_model(@judge_model))
     end
 
-    def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, rubric_text: nil, input_data: nil, **_extras)
+    def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, rubric_text: nil, input_data: nil, human_examples: nil, **_extras)
       raise CompletionKit::ConfigurationError, "Judge not configured" unless @judge_client.configured?
 
       judge_prompt = build_judge_prompt(output, expected_output, prompt,
         criteria: criteria,
         rubric_text: rubric_text,
-        input_data: input_data)
+        input_data: input_data,
+        human_examples: human_examples)
 
       response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
       raise StandardError, response if response.start_with?("Error:")
@@ -25,7 +26,7 @@ module CompletionKit
 
     private
 
-    def build_judge_prompt(output, expected_output, prompt, criteria: nil, rubric_text: nil, input_data: nil)
+    def build_judge_prompt(output, expected_output, prompt, criteria: nil, rubric_text: nil, input_data: nil, human_examples: nil)
       judge_prompt = <<~PROMPT
         You are an expert evaluator. You MUST respond with ONLY two lines in this exact format, nothing else:
 
@@ -42,6 +43,8 @@ module CompletionKit
         judge_prompt += "\nCriteria: #{criteria}\n"
       end
 
+      judge_prompt += human_examples_block(human_examples)
+
       judge_prompt += <<~PROMPT
 
         Original prompt: #{prompt || "Not provided"}
@@ -51,6 +54,19 @@ module CompletionKit
       PROMPT
 
       judge_prompt
+    end
+
+    def human_examples_block(examples)
+      return "" if examples.blank?
+
+      lines = ["", "Reviewed examples where a human corrected the judge on this metric. Weigh them when scoring:"]
+      examples.each_with_index do |example, index|
+        note = example[:human_note].to_s
+        line = "Example #{index + 1}: Output: #{example[:output].to_s.truncate(200)}. The judge scored this #{example[:judge_score].to_i}/5. A reviewer corrected it to #{example[:human_score].to_i}/5"
+        line += note.present? ? ": #{note.truncate(160)}" : "."
+        lines << line
+      end
+      lines.join("\n") + "\n"
     end
 
     def parse_judge_response(response)

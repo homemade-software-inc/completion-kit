@@ -114,4 +114,36 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     expect(service.evaluate("actual", nil, "prompt", input_data: "{customer: acme}"))
       .to eq(score: 5.0, feedback: "Accurate")
   end
+
+  it "injects human examples between the rubric and the output to evaluate, with and without a note" do
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(client).to receive(:generate_completion).with(
+      include("Reviewed examples", "The judge scored this 4/5", "corrected it to 2/5", "way off", "corrected it to 5/5."),
+      model: "gpt-4.1"
+    ).and_return("Score: 2\nFeedback: Recalibrated")
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+
+    service = described_class.new
+    result = service.evaluate(
+      "actual", nil, "prompt",
+      human_examples: [
+        { output: "some output", judge_score: 4.0, human_score: 2.0, human_note: "way off" },
+        { output: "other output", judge_score: 1.0, human_score: 5.0, human_note: nil }
+      ]
+    )
+    expect(result).to eq(score: 2.0, feedback: "Recalibrated")
+  end
+
+  it "produces a prompt with no examples block when human_examples is nil" do
+    captured = nil
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(client).to receive(:generate_completion) do |prompt, **_|
+      captured = prompt
+      "Score: 3\nFeedback: fine"
+    end
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+
+    described_class.new.evaluate("actual")
+    expect(captured).not_to include("Reviewed examples")
+  end
 end
