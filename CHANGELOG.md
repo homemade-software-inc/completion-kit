@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-05-30
+
+### Changed
+
+- **Metric page overhaul.** Calibration moved off the index table into its own card on the metric show page: a one-line plain-language description, a mono labeled stat strip (Agreement / Margin / Read / Sample / Unclear with visible labels instead of tooltip-only tokens), and a sparkles "Suggest improvements" button. The card sits below a redesigned Versions table with a "Δ Change" column that summarizes each version's delta from its predecessor as a Trivial / Minor / Major text link opening a side-by-side diff modal. Drafts carry an inline Publish button and a trash-icon Discard (also in the diff modal); the modal closes the loop with Publish / Edit / Discard in its footer. After "Suggest improvements" generates a draft, the metric page opens straight onto that draft's diff modal.
+- **Metric vs. judge terminology.** Publishing changes the metric's current version, not "the judge" (the judge is the model that grades). Reworded the publish / revert / stale-version / re-grade copy across the metric show page, the response review cards, the run show page ("current metrics", not "current judge"), the flashes, and the `metric_versions` MCP tool description. Calibration verdicts are surfaced as "human reviews".
+- **Version-change classification** lives on `MetricVersion#change_summary_against(previous)` (magnitude + label), routed through `Metric.normalize_rubric_bands` so it matches the displayed rubric and tolerates odd stored band shapes.
+
 ### Removed
 
-- **BREAKING: few-shot pinning ("Remember this" / "Cases to learn from") is gone.** The calibration loop is now just measure (verdicts → trust signal) and fix (disagreements → "Improve the metric" rewrites the instruction and rubric into a new version). The separate manual lever for pinning individual disagreements as in-context judge examples overlapped with the rubric-rewrite path and read as busy-work. Removed: the `POST /api/v1/metrics/:id/add_few_shot` and `DELETE /api/v1/metrics/:id/remove_few_shot` endpoints, the matching web routes/actions, the "Cases to learn from" section on the metric show page, the few-shot injection into the judge prompt (`human_examples`), the "Pinned cases" section of the improve-the-metric meta-prompt, and the `completion_kit_metrics.few_shot_examples` column (dropped by migration — any pinned-example data is discarded on upgrade). Disagreements still drive the trust signal and still feed "Improve the metric".
+- **BREAKING: few-shot pinning ("Remember this" / "Cases to learn from") is gone.** The calibration loop is now just measure (human reviews → trust signal) and fix (disagreements → "Suggest improvements" rewrites the instruction and rubric into a new version). The separate manual lever for pinning individual disagreements as in-context judge examples overlapped with the rubric-rewrite path and read as busy-work. Removed: the `POST /api/v1/metrics/:id/add_few_shot` and `DELETE /api/v1/metrics/:id/remove_few_shot` endpoints, the matching web routes/actions, the "Cases to learn from" section on the metric show page, the few-shot injection into the judge prompt (`human_examples`), the "Pinned cases" section of the improve-the-metric meta-prompt, and the `completion_kit_metrics.few_shot_examples` column (dropped by migration — any pinned-example data is discarded on upgrade). Disagreements still drive the trust signal and still feed "Suggest improvements".
 
 ## [0.8.0] - 2026-05-29
 
