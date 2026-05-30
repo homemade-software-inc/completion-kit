@@ -47,13 +47,13 @@ RSpec.describe "Metric review-grounded examples", type: :request do
     disagreement(metric)
     get "/completion_kit/metrics/#{metric.id}"
     expect(response.body).to include("ck-guiding-#{metric.id}")
-    expect(response.body).to include("guiding the judge")
+    expect(response.body).to include("Guiding the judge")
   end
 
   it "hides the guiding section when the flag is off" do
     CompletionKit.config.judge_examples_from_reviews = false
     disagreement(metric)
     get "/completion_kit/metrics/#{metric.id}"
-    expect(response.body).not_to include("guiding the judge")
+    expect(response.body).not_to include("Guiding the judge")
   end
 end
