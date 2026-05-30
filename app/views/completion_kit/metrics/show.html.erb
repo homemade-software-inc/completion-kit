@@ -75,7 +75,7 @@
                     <%= button_to "Make current", publish_draft_metric_path(@metric, draft_id: v.id),
                           method: :post, form_class: "inline-block",
                           class: "ck-chip ck-chip--publish",
-                          data: { turbo_confirm: "Make #{v.version_label} the live version of this metric? It grades everything from here on. Reviews you have already given stay with the version they were made against." } %>
+                          data: { turbo_confirm: "Make #{v.version_label} the version to use? #{v.version_label} will be used in test runs using this metric now. Reviews you have already given stay with the version they were made against." } %>
                   <% end %>
                 </div>
               </div>
@@ -167,7 +167,7 @@
             <span class="ck-modal__foot-note">Roll this metric back to this version.</span>
             <%= button_to "Make #{v.version_label} current →", publish_draft_metric_path(@metric, draft_id: v.id),
                   method: :post, form_class: "inline-block", class: ck_button_classes(:dark),
-                  data: { turbo_confirm: "Make #{v.version_label} the live version of this metric? It grades everything from here on. Reviews you have already given stay with the version they were made against." } %>
+                  data: { turbo_confirm: "Make #{v.version_label} the version to use? #{v.version_label} will be used in test runs using this metric now. Reviews you have already given stay with the version they were made against." } %>
           <% end %>
         </footer>
       </article>
@@ -190,10 +190,13 @@
     <% elsif @improve_disagreement_count.positive? %>
       <div class="ck-cal-foot">
         <span class="ck-cal-foot__note"><%= pluralize(@improve_disagreement_count, "case") %> where a reviewer's score didn't match the judge.</span>
-        <%= button_to "Improve the metric →", suggest_variants_metric_path(@metric),
-              method: :post, form_class: "ck-cal-foot__form",
-              class: "ck-cal-link ck-cal-link--button",
-              data: { turbo_confirm: "Draft an improved version of this metric from the reviews where you disagreed with the judge? You can compare and publish it before it goes live." } %>
+        <%= button_to suggest_variants_metric_path(@metric),
+              method: :post, form_class: "inline-block",
+              class: ck_button_classes(:light, variant: :outline) + " ck-button--sm",
+              data: { turbo_confirm: "Draft an improved version of this metric from the reviews where you disagreed with the judge? You can compare and publish it before it goes live." } do %>
+          <%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>
+          Suggest improvements
+        <% end %>
       </div>
     <% end %>
   </section>
