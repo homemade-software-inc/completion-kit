@@ -146,7 +146,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(metric.reload.instruction).to eq(older.instruction)
   end
 
-  it "carries a revert-specific flash that names the prior current version and acknowledges pin + verdict continuity" do
+  it "carries a revert-specific flash that names the prior current version and acknowledges review continuity" do
     edit_metric_via_form(instruction: "v2 instruction")
     new_draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "edit").order(:created_at).last
     post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: new_draft.id }
@@ -155,9 +155,8 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     older = CompletionKit::MetricVersion.where(metric_id: metric.id).order(:version_number).first
     post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: older.id }
     follow_redirect!
-    expect(response.body).to include("Reverted to")
-    expect(response.body).to include("Pinned cases still flow to the judge")
-    expect(response.body).to include("calibration verdicts collected against v2")
+    expect(response.body).to include("Reverted")
+    expect(response.body).to include("Human reviews collected against v2")
   end
 
   it "points a pending draft to the Versions table on the metric show page and shows the draft banner on edit" do

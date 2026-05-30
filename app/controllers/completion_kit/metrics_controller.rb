@@ -161,7 +161,7 @@ module CompletionKit
         audit = version.revert!
         prior_label = previously_current.version_label
         redirect_to metric_path(@metric),
-                    notice: "Reverted to #{@metric.name} #{version.version_label} (now logged as #{audit.version_label}). Pinned cases still flow to the judge, and calibration verdicts collected against #{prior_label} stay tied to it."
+                    notice: "Reverted #{@metric.name} to #{version.version_label} (logged as #{audit.version_label}). Human reviews collected against #{prior_label} stay tied to it."
       else
         version.publish!
         redirect_to metric_path(@metric),
