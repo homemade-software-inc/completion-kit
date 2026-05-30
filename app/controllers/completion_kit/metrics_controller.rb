@@ -130,7 +130,11 @@ module CompletionKit
       end
       versions = generator.persist!(variants)
       new_version = versions.max_by(&:version_number)
-      redirect_to target, notice: "Drafted #{new_version.version_label} from your reviews. Open its change in the Versions table below to compare, then Publish to use it."
+      if params[:back_to] == "edit"
+        redirect_to edit_metric_path(@metric), notice: "Drafted #{new_version.version_label} from your reviews. Review the proposed changes below, then Publish to use it."
+      else
+        redirect_to metric_path(@metric, show_change: new_version.id), notice: "Drafted #{new_version.version_label} from your reviews."
+      end
     end
 
     def dismiss_suggestion

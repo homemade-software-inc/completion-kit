@@ -23,7 +23,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     add_disagree
     stub_llm("VARIANT:\nREASONING: tighter\nINSTRUCTION:\nbe sharper\nEND_VARIANT")
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
+    expect(response.location).to match(%r{/completion_kit/metrics/#{metric.id}\?show_change=\d+})
     follow_redirect!
     expect(response.body).to include("Drafted v")
     expect(response.body).to include("waiting in the Versions table above")

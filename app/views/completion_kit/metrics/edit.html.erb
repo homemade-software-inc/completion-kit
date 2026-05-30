@@ -14,13 +14,13 @@
   <div class="ck-suggestion-banner" role="status">
     <div class="ck-suggestion-banner__body">
       <p class="ck-kicker">Improve from reviews</p>
-      <p class="ck-meta-copy"><%= pluralize(@improve_disagreement_count, "case") %> where a reviewer's score didn't match the judge. Let the model propose changes you can edit here.</p>
+      <p class="ck-meta-copy">Based on human reviews, the model can propose changes to this metric.</p>
     </div>
     <div class="ck-suggestion-banner__actions">
       <%= button_to suggest_variants_metric_path(@metric, back_to: "edit"),
             method: :post, form_class: "inline-block",
             class: ck_button_classes(:light, variant: :outline) + " ck-button--sm",
-            data: { turbo_confirm: "Draft improvements from the reviews where you disagreed with the judge? You can edit or apply them here before publishing." } do %>
+            data: { turbo_confirm: "Draft improvements to this metric from your human reviews? You can edit or apply them here before publishing." } do %>
         <%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>
         Suggest improvements
       <% end %>

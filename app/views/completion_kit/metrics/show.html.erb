@@ -194,12 +194,21 @@
         <%= button_to suggest_variants_metric_path(@metric),
               method: :post, form_class: "inline-block",
               class: ck_button_classes(:light, variant: :outline) + " ck-button--sm",
-              data: { turbo_confirm: "Draft an improved version of this metric from the reviews where you disagreed with the judge? It stays a draft until you compare it and publish." } do %>
+              data: { turbo_confirm: "Draft improvements to this metric from your human reviews? It stays a draft until you compare it and publish." } do %>
           <%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>
           Suggest improvements
         <% end %>
       </div>
     <% end %>
   </section>
+<% end %>
+
+<% if params[:show_change].present? %>
+  <script>
+    (function () {
+      var dialog = document.getElementById("ck-mvdiff-<%= params[:show_change].to_i %>");
+      if (dialog && typeof dialog.showModal === "function") dialog.showModal();
+    })();
+  </script>
 <% end %>
 
