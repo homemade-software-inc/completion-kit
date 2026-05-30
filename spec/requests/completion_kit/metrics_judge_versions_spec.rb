@@ -93,7 +93,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
                                         state: "draft", source: "suggestion", current: false)
     get "/completion_kit/metrics/#{metric.id}/edit"
     expect(response.body).to include("Draft pending")
-    expect(response.body).to include("Proposed improvements")
+    expect(response.body).to include("Proposed changes")
   end
 
   it "tolerates a fresh metric with no published MetricVersion when persisting an in-place edit" do

@@ -784,6 +784,11 @@ tr:hover .ck-chip--publish {
   flex-shrink: 0;
   color: var(--ck-warning);
 }
+.ck-kicker--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
 
 .ck-button:hover {
   transform: translateY(-1px);

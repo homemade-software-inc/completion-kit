@@ -31,7 +31,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion").count).to eq(1)
 
     get "/completion_kit/metrics/#{metric.id}/edit"
-    expect(response.body).to include("Proposed improvements")
+    expect(response.body).to include("Proposed changes")
     expect(response.body).to include("Apply all")
     expect(response.body).to include('aria-label="Discard"')
     expect(response.body).to include('aria-label="Try again"')
