@@ -100,7 +100,15 @@
               <span class="<%= source_class %>"><%= source_label %></span>
             </td>
             <td class="ck-meta-copy">
-              <time datetime="<%= v.created_at.utc.iso8601 %>" data-relative-time><%= time_ago_in_words(v.created_at) %> ago</time>
+              <div class="ck-version-created">
+                <time datetime="<%= v.created_at.utc.iso8601 %>" data-relative-time><%= time_ago_in_words(v.created_at) %> ago</time>
+                <% if v.draft? %>
+                  <%= button_to dismiss_suggestion_metric_path(@metric, draft_id: v.id),
+                        method: :delete, form_class: "inline-block", class: "ck-icon-btn",
+                        title: "Discard draft #{v.version_label}", "aria-label": "Discard draft #{v.version_label}",
+                        data: { turbo_confirm: "Discard draft #{v.version_label}? This can't be undone." } do %><%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
+                <% end %>
+              </div>
             </td>
           </tr>
         <% end %>
@@ -147,8 +155,14 @@
             <span class="ck-modal__foot-note">This is the metric's published version.</span>
           <% elsif v.draft? %>
             <span class="ck-modal__foot-note">Happy with it? Publish to use <%= v.version_label %> for every grade from now on.</span>
-            <%= button_to "Publish #{v.version_label} →", publish_draft_metric_path(@metric, draft_id: v.id),
-                  method: :post, form_class: "inline-block", class: ck_button_classes(:dark) %>
+            <span class="ck-modal__foot-actions">
+              <%= button_to dismiss_suggestion_metric_path(@metric, draft_id: v.id),
+                    method: :delete, form_class: "inline-block", class: "ck-icon-btn",
+                    title: "Discard draft #{v.version_label}", "aria-label": "Discard draft #{v.version_label}",
+                    data: { turbo_confirm: "Discard draft #{v.version_label}? This can't be undone." } do %><%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
+              <%= button_to "Publish #{v.version_label} →", publish_draft_metric_path(@metric, draft_id: v.id),
+                    method: :post, form_class: "inline-block", class: ck_button_classes(:dark) %>
+            </span>
           <% else %>
             <span class="ck-modal__foot-note">Roll this metric back to this version.</span>
             <%= button_to "Make #{v.version_label} current →", publish_draft_metric_path(@metric, draft_id: v.id),

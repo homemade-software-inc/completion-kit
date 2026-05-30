@@ -676,6 +676,12 @@ tr:hover .ck-chip--publish {
   border-color: var(--ck-accent);
   color: var(--ck-accent-hover);
 }
+.ck-version-created {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
 .ck-version-state {
   font-family: var(--ck-mono);
   font-size: 0.66rem;
@@ -2583,6 +2589,15 @@ select.ck-input {
 .ck-modal__foot-note {
   color: var(--ck-dim);
   font-size: 0.86rem;
+}
+.ck-modal__foot-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.ck-modal__foot-actions .ck-icon-btn {
+  width: 2rem;
+  height: 2rem;
 }
 
 .ck-modal__close-btn {

@@ -134,9 +134,10 @@ module CompletionKit
 
     def dismiss_suggestion
       draft = MetricVersion.drafts.where(metric_id: @metric.id).find_by(id: params[:draft_id])
+      label = draft&.version_label
       draft&.destroy
       target = params[:back_to] == "edit" ? edit_metric_path(@metric) : metric_path(@metric)
-      redirect_to target, notice: "Dismissed."
+      redirect_to target, notice: label ? "Discarded draft #{label}." : "Draft already gone."
     end
 
     def publish_draft
