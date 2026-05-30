@@ -49,6 +49,7 @@ module CompletionKit
       @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @edit_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @published_metric_version = MetricVersion.published.where(metric_id: @metric.id, current: true).first
+      @improve_disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
 
       if @edit_draft
         @metric.instruction = @edit_draft.instruction

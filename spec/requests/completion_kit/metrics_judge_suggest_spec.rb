@@ -78,6 +78,18 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response.body).to match(%r{<form[^>]*action="/completion_kit/metrics/#{metric.id}/suggest_variants"})
   end
 
+  it "offers a Suggest-improvements button on the edit page when disagreements exist and no draft is pending" do
+    add_disagree
+    get "/completion_kit/metrics/#{metric.id}/edit"
+    expect(response.body).to include("Suggest improvements")
+    expect(response.body).to match(%r{<form[^>]*action="/completion_kit/metrics/#{metric.id}/suggest_variants})
+  end
+
+  it "hides the edit-page Suggest-improvements button when no disagreements exist" do
+    get "/completion_kit/metrics/#{metric.id}/edit"
+    expect(response.body).not_to include("Suggest improvements")
+  end
+
   it "renders inline rubric band suggestions on the edit form when the draft changes a band" do
     add_disagree
     rubric_block = <<~R
