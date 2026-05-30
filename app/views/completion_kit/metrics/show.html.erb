@@ -50,7 +50,7 @@
       <thead>
         <tr>
           <th scope="col">Version</th>
-          <th scope="col">Change</th>
+          <th scope="col">&Delta; Change</th>
           <th scope="col">Source</th>
           <th scope="col">Created</th>
         </tr>
@@ -64,17 +64,18 @@
                 <div class="ck-version-cell__label">
                   <strong><%= v.version_label %></strong>
                   <% if v.current? %>
-                    <span class="ck-chip">Published</span>
+                    <span class="ck-version-state ck-version-state--live">Published</span>
                   <% elsif v.draft? %>
-                    <span class="ck-chip ck-chip--draft">Draft</span>
+                    <span class="ck-version-state">Draft</span>
                     <%= button_to "Publish", publish_draft_metric_path(@metric, draft_id: v.id),
                           method: :post, form_class: "inline-block",
                           class: "ck-chip ck-chip--cta" %>
                   <% else %>
+                    <span class="ck-version-state">Past</span>
                     <%= button_to "Make current", publish_draft_metric_path(@metric, draft_id: v.id),
                           method: :post, form_class: "inline-block",
                           class: "ck-chip ck-chip--publish",
-                          data: { turbo_confirm: "Roll the live judge back to #{v.version_label}? Calibration verdicts collected against the current version stay tied to it." } %>
+                          data: { turbo_confirm: "Roll this metric back to #{v.version_label}? Human reviews collected against the current version stay tied to it." } %>
                   <% end %>
                 </div>
               </div>
@@ -82,12 +83,9 @@
             <td>
               <% summary = v.change_summary_against(pred) %>
               <% if summary %>
-                <button type="button" class="ck-change-summary ck-change-summary--<%= summary[:magnitude] %>"
-                        title="What changed from <%= pred.version_label %>"
-                        onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()">
-                  <span class="ck-change-summary__mag"><%= summary[:magnitude].to_s.capitalize %></span>
-                  <span class="ck-change-summary__parts"><%= summary[:parts].join(" · ") %></span>
-                </button>
+                <button type="button" class="ck-change-link ck-change-link--<%= summary[:magnitude] %>"
+                        title="Compare with <%= pred.version_label %>"
+                        onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()"><%= summary[:label] %></button>
               <% else %>
                 <span class="ck-meta-copy">—</span>
               <% end %>
@@ -146,16 +144,16 @@
         </div>
         <footer class="ck-modal__footer ck-modal__footer--split">
           <% if v.current? %>
-            <span class="ck-modal__foot-note">This is the live judge.</span>
+            <span class="ck-modal__foot-note">This is the metric's published version.</span>
           <% elsif v.draft? %>
-            <span class="ck-modal__foot-note">Happy with it? Publishing makes <%= v.version_label %> the judge that grades from now on.</span>
+            <span class="ck-modal__foot-note">Happy with it? Publish to use <%= v.version_label %> for every grade from now on.</span>
             <%= button_to "Publish #{v.version_label} →", publish_draft_metric_path(@metric, draft_id: v.id),
                   method: :post, form_class: "inline-block", class: ck_button_classes(:dark) %>
           <% else %>
-            <span class="ck-modal__foot-note">Roll the live judge back to this version.</span>
+            <span class="ck-modal__foot-note">Roll this metric back to this version.</span>
             <%= button_to "Make #{v.version_label} current →", publish_draft_metric_path(@metric, draft_id: v.id),
                   method: :post, form_class: "inline-block", class: ck_button_classes(:dark),
-                  data: { turbo_confirm: "Roll the live judge back to #{v.version_label}? Human reviews collected against the current version stay tied to it." } %>
+                  data: { turbo_confirm: "Roll this metric back to #{v.version_label}? Human reviews collected against the current version stay tied to it." } %>
           <% end %>
         </footer>
       </article>
@@ -166,19 +164,14 @@
 <% if CompletionKit.config.judge_calibration_enabled %>
   <section class="ck-card ck-card--spaced">
     <p class="ck-kicker">Calibration</p>
-    <p class="ck-meta-copy">This is a measure of how often the judge's scores match a human reviewer. Review its scores to build that signal; the ones you disagree with become the cases the model learns from when you improve the metric.</p>
+    <p class="ck-meta-copy">This is a measure of how often the judge's scores match a human reviewer. Review its scores to build that signal; the scores you disagree with become the cases the model learns from when you improve the metric.</p>
     <%= render "completion_kit/calibrations/trust_panel",
           stats: CompletionKit::MetricCalibrationStats.for(@metric),
           metric: @metric %>
-    <% if @suggestion_draft %>
+    <% draft = @suggestion_draft || @edit_draft %>
+    <% if draft %>
       <div class="ck-cal-foot">
-        <span class="ck-cal-foot__note">The model proposed improvements from the cases you flagged. They stay a draft until you publish.</span>
-        <%= link_to "Suggested metric improvements →", edit_metric_path(@metric), class: "ck-cal-link" %>
-      </div>
-    <% elsif @edit_draft %>
-      <div class="ck-cal-foot">
-        <span class="ck-cal-foot__note">An unpublished draft of this metric is saved.</span>
-        <%= link_to "Finish your draft →", edit_metric_path(@metric), class: "ck-cal-link" %>
+        <span class="ck-cal-foot__note">A draft improvement (<%= draft.version_label %>) is waiting in the Versions table above. Open its change to compare, then Publish to use it.</span>
       </div>
     <% elsif @improve_disagreement_count.positive? %>
       <div class="ck-cal-foot">

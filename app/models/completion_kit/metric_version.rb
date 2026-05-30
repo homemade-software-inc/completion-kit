@@ -47,9 +47,9 @@ module CompletionKit
       rubric_changes = rubric_band_change_count(previous)
       return nil unless instruction_changed || rubric_changes.positive?
 
-      parts = []
-      parts << "Instruction" if instruction_changed
-      parts << "#{rubric_changes} #{"rubric band".pluralize(rubric_changes)}" if rubric_changes.positive?
+      dimensions = []
+      dimensions << "instruction" if instruction_changed
+      dimensions << "rubric" if rubric_changes.positive?
 
       words_changed = 0
       if instruction_changed
@@ -66,7 +66,7 @@ module CompletionKit
         :trivial
       end
 
-      { magnitude: magnitude, parts: parts }
+      { magnitude: magnitude, label: "#{magnitude.to_s.capitalize} #{dimensions.to_sentence} changes" }
     end
 
     def publish!

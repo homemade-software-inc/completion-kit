@@ -676,8 +676,15 @@ tr:hover .ck-chip--publish {
   border-color: var(--ck-accent);
   color: var(--ck-accent-hover);
 }
-.ck-chip--draft {
+.ck-version-state {
+  font-family: var(--ck-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   color: var(--ck-dim);
+}
+.ck-version-state--live {
+  color: var(--ck-text);
 }
 
 .ck-chip--soft {
@@ -3612,81 +3619,52 @@ select.ck-input {
 .ck-metric-versions-table th:nth-child(3), .ck-metric-versions-table td:nth-child(3) { width: 9rem; white-space: nowrap; }
 .ck-metric-versions-table th:nth-child(4), .ck-metric-versions-table td:nth-child(4) { width: 9rem; white-space: nowrap; }
 
-.ck-change-summary {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
+.ck-change-link {
   background: none;
   border: 0;
   padding: 0;
   cursor: pointer;
-  font: inherit;
+  font-family: inherit;
+  font-size: 0.86rem;
   text-align: left;
-}
-.ck-change-summary__mag {
-  font-family: var(--ck-mono);
-  font-size: 0.64rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 1px 7px;
-  border-radius: 3px;
-  border: 1px solid var(--ck-line);
-  color: var(--ck-dim);
-}
-.ck-change-summary__parts {
-  font-size: 0.82rem;
   color: var(--ck-text);
 }
-.ck-change-summary:hover .ck-change-summary__parts,
-.ck-change-summary:focus-visible .ck-change-summary__parts {
+.ck-change-link:hover,
+.ck-change-link:focus-visible {
   color: var(--ck-accent);
+  text-decoration: underline;
 }
-.ck-change-summary--minor .ck-change-summary__mag {
-  border-color: rgba(56, 189, 248, 0.35);
-  color: var(--ck-accent);
+.ck-change-link--trivial {
+  color: var(--ck-dim);
 }
-.ck-change-summary--major .ck-change-summary__mag {
-  border-color: rgba(245, 158, 11, 0.4);
-  background: rgba(245, 158, 11, 0.08);
+.ck-change-link--major {
   color: rgb(217, 119, 6);
 }
 
 .ck-source-chip {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
   font-family: var(--ck-mono);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  border: 1px solid var(--ck-line-strong);
-  background: var(--ck-surface-soft);
   color: var(--ck-muted);
 }
 .ck-source-chip--ai {
-  border-color: rgba(56, 189, 248, 0.35);
-  background: rgba(56, 189, 248, 0.08);
   color: var(--ck-accent);
 }
 .ck-source-chip--manual {
-  border-color: var(--ck-line-strong);
   color: var(--ck-text);
 }
 .ck-source-chip--initial {
-  border-color: var(--ck-line);
   color: var(--ck-dim);
 }
 .ck-source-chip--revert {
-  border-color: rgba(245, 158, 11, 0.35);
-  background: rgba(245, 158, 11, 0.08);
   color: rgb(217, 119, 6);
 }
 .ck-source-chip--current {
-  border-color: var(--ck-line-strong);
   color: var(--ck-text);
 }
 .ck-source-chip--past {
-  border-color: var(--ck-line);
   color: var(--ck-dim);
 }
 .ck-suggestions-table th:nth-child(1), .ck-suggestions-table td:nth-child(1) { width: 16rem; white-space: nowrap; }

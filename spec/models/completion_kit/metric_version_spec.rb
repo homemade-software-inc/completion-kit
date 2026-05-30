@@ -122,7 +122,7 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       curr = version(instruction: "Be fair now", bands: [])
       s = curr.change_summary_against(prev)
       expect(s[:magnitude]).to eq(:trivial)
-      expect(s[:parts]).to eq(["Instruction"])
+      expect(s[:label]).to eq("Trivial instruction changes")
     end
 
     it "flags a single rubric band edit as minor" do
@@ -130,7 +130,7 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       curr = version(instruction: "same", bands: [{ "stars" => 5, "description" => "excellent and complete" }])
       s = curr.change_summary_against(prev)
       expect(s[:magnitude]).to eq(:minor)
-      expect(s[:parts]).to eq(["1 rubric band"])
+      expect(s[:label]).to eq("Minor rubric changes")
     end
 
     it "flags instruction plus rubric changes as major" do
@@ -138,7 +138,7 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       curr = version(instruction: "Brand new instruction text", bands: [{ "stars" => 5, "description" => "totally different bar" }])
       s = curr.change_summary_against(prev)
       expect(s[:magnitude]).to eq(:major)
-      expect(s[:parts]).to eq(["Instruction", "1 rubric band"])
+      expect(s[:label]).to eq("Major instruction and rubric changes")
     end
 
     it "flags two or more rubric band edits as major" do
@@ -146,7 +146,7 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       curr = version(instruction: "same", bands: [{ "stars" => 5, "description" => "x" }, { "stars" => 4, "description" => "y" }])
       s = curr.change_summary_against(prev)
       expect(s[:magnitude]).to eq(:major)
-      expect(s[:parts]).to eq(["2 rubric bands"])
+      expect(s[:label]).to eq("Major rubric changes")
     end
   end
 

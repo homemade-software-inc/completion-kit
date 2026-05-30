@@ -16,7 +16,7 @@ module CompletionKit
           handler: :list
         },
         "metric_versions_publish" => {
-          description: "Publish a MetricVersion as the live judge for its metric. Works for both 'draft → published' and 'revert to an older published version → current'. Transactionally flips current, demotes peers, and writes the version's instruction + rubric_bands back onto the metric so the judge actually uses them.",
+          description: "Publish a MetricVersion as the live version of its metric. Works for both 'draft → published' and 'revert to an older published version → current'. Transactionally flips current, demotes peers, and writes the version's instruction + rubric_bands back onto the metric so the judge grades against it.",
           inputSchema: {
             type: "object",
             properties: {

@@ -121,7 +121,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(response.body).to include(versions.last.version_label)
     expect(response.body).to include("Published")
     expect(response.body).to include("Make current")
-    expect(response.body).to include("ck-change-summary")
+    expect(response.body).to include("ck-change-link")
     expect(response.body).to include("ck-mvdiff-#{versions.last.id}")
   end
 
@@ -160,11 +160,11 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(response.body).to include("calibration verdicts collected against v2")
   end
 
-  it "shows a 'Finish your draft →' affordance on the metric show page and the draft banner on edit" do
+  it "points a pending draft to the Versions table on the metric show page and shows the draft banner on edit" do
     edit_metric_via_form(instruction: "score it carefully")
     get "/completion_kit/metrics/#{metric.id}"
     expect(response.body).not_to include("Draft pending")
-    expect(response.body).to include("Finish your draft")
+    expect(response.body).to include("waiting in the Versions table above")
 
     get "/completion_kit/metrics/#{metric.id}/edit"
     expect(response.body).to include("Draft pending")

@@ -105,7 +105,7 @@
             <span class="ck-review-card__metric"><% if review.metric %><%= link_to review.metric_name, metric_path(review.metric), class: "ck-link" %><% else %><%= review.metric_name %><% end %></span>
             <div class="ck-inline">
               <% if review_version %>
-                <span class="ck-source-chip <%= stale ? "ck-source-chip--past" : "ck-source-chip--current" %>" title="<%= stale ? "Score produced by #{review_version.version_label} of this metric. The live judge has changed since." : "Score produced by the live judge (#{review_version.version_label})." %>"><%= review_version.version_label %></span>
+                <span class="ck-source-chip <%= stale ? "ck-source-chip--past" : "ck-source-chip--current" %>" title="<%= stale ? "Scored against #{review_version.version_label} of this metric. The metric has been republished since." : "Scored against the metric's current version (#{review_version.version_label})." %>"><%= review_version.version_label %></span>
               <% end %>
               <% if review.ai_score %>
                 <% 5.times do |i| %>
@@ -117,7 +117,7 @@
             </div>
           </div>
           <% if stale %>
-            <p class="ck-review-card__stale-note">Scored against a superseded version of this metric. The live judge may score this differently.</p>
+            <p class="ck-review-card__stale-note">Scored against a superseded version of this metric. Its current version may score this differently.</p>
           <% end %>
           <% if review.ai_feedback.present? %>
             <p class="ck-review-card__feedback"><%= review.ai_feedback %></p>

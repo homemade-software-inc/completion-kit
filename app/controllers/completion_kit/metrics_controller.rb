@@ -97,7 +97,7 @@ module CompletionKit
           state: "draft", source: "edit", current: false
         )
         redirect_to edit_metric_path(@metric),
-                    notice: "Saved as draft #{draft.version_label}. Publish to push these changes to the live judge."
+                    notice: "Saved as draft #{draft.version_label}. Publish to make these changes the metric's live version."
       else
         @metric.update!(instruction: new_instruction, rubric_bands: new_rubric)
         current_pub = MetricVersion.published.where(metric_id: @metric.id, current: true).first
@@ -129,7 +129,7 @@ module CompletionKit
       end
       versions = generator.persist!(variants)
       new_version = versions.max_by(&:version_number)
-      redirect_to target, notice: "Drafted #{new_version.version_label} from your reviews. Open its change in the Versions table below to compare, then Publish to make it the live judge."
+      redirect_to target, notice: "Drafted #{new_version.version_label} from your reviews. Open its change in the Versions table below to compare, then Publish to use it."
     end
 
     def dismiss_suggestion
