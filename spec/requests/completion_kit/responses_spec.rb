@@ -149,7 +149,7 @@ RSpec.describe "CompletionKit responses", type: :request do
 
       post "/completion_kit/runs/#{run.id}/regrade"
       follow_redirect!
-      expect(response.body).to include("Re-grading existing responses with the current judge")
+      expect(response.body).to include("Re-grading existing responses against the current metrics")
       expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).with(response_with_output.id, metric.id, run.id)
     end
 
@@ -179,7 +179,7 @@ RSpec.describe "CompletionKit responses", type: :request do
     get "/completion_kit/runs/#{run.id}"
 
     expect(response.body).to include("ck-stale-versions-banner")
-    expect(response.body).to include("Re-grade with current judge")
+    expect(response.body).to include("Re-grade with current metrics")
     expect(response.body).to include("Re-run from scratch")
     expect(response.body).to include(metric.name)
   end
@@ -208,7 +208,7 @@ RSpec.describe "CompletionKit responses", type: :request do
     get "/completion_kit/runs/#{run.id}"
 
     expect(response.body).to include("ck-stale-versions-banner")
-    expect(response.body).not_to include("Re-grade with current judge")
+    expect(response.body).not_to include("Re-grade with current metrics")
     expect(response.body).not_to include("Re-run from scratch")
   end
 

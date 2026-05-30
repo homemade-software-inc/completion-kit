@@ -95,7 +95,7 @@ module CompletionKit
 
     def regrade
       if @run.regrade!
-        redirect_to run_path(@run), notice: "Re-grading existing responses with the current judge."
+        redirect_to run_path(@run), notice: "Re-grading existing responses against the current metrics."
       else
         redirect_to run_path(@run), alert: "Nothing to re-grade. The run has no succeeded responses or no metrics attached."
       end
@@ -151,7 +151,7 @@ module CompletionKit
     def retry_failures
       if @run.stale_review_summary.any?
         redirect_to run_path(@run),
-                    alert: "The judge has changed since this run executed. Retrying failed cases would mix scores from two metric versions in the same run. Use 'Re-run with current judge' to refresh everything against the live judge."
+                    alert: "A metric has a newer version than the one this run was scored against. Retrying failed cases would mix scores from two versions in the same run. Use 'Re-run from scratch' to refresh everything against the current metrics."
         return
       end
 

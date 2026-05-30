@@ -75,7 +75,7 @@
                     <%= button_to "Make current", publish_draft_metric_path(@metric, draft_id: v.id),
                           method: :post, form_class: "inline-block",
                           class: "ck-chip ck-chip--publish",
-                          data: { turbo_confirm: "Roll this metric back to #{v.version_label}? Human reviews collected against the current version stay tied to it." } %>
+                          data: { turbo_confirm: "Make #{v.version_label} the live version of this metric? It grades everything from here on. Reviews you have already given stay with the version they were made against." } %>
                   <% end %>
                 </div>
               </div>
@@ -167,7 +167,7 @@
             <span class="ck-modal__foot-note">Roll this metric back to this version.</span>
             <%= button_to "Make #{v.version_label} current →", publish_draft_metric_path(@metric, draft_id: v.id),
                   method: :post, form_class: "inline-block", class: ck_button_classes(:dark),
-                  data: { turbo_confirm: "Roll this metric back to #{v.version_label}? Human reviews collected against the current version stay tied to it." } %>
+                  data: { turbo_confirm: "Make #{v.version_label} the live version of this metric? It grades everything from here on. Reviews you have already given stay with the version they were made against." } %>
           <% end %>
         </footer>
       </article>

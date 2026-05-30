@@ -26,7 +26,7 @@ RSpec.describe "POST /completion_kit/runs/:id/retry_failures", type: :request do
 
     expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
     follow_redirect!
-    expect(response.body).to include("Re-grade with current judge")
+    expect(response.body).to include("Re-grade with current metrics")
     expect(failed_row.reload.status).to eq("failed")
     expect(run.reload.status).to eq("completed")
     expect(CompletionKit::GenerateRowJob).not_to have_received(:perform_later)
