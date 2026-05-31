@@ -223,4 +223,33 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(first_count).to eq(1)
     expect(second_count).to eq(1)
   end
+
+  def suggestion_draft_with(summary)
+    CompletionKit::MetricVersion.ensure_current_for(metric)
+    CompletionKit::MetricVersion.create!(
+      metric: metric, instruction: "v2 instruction", rubric_bands: metric.rubric_bands || [],
+      state: "draft", source: "suggestion", current: false, validation_summary: summary
+    )
+  end
+
+  it "renders the validation scoreboard for a suggestion draft that has a summary" do
+    suggestion_draft_with({ "before" => 1, "after" => 4, "total" => 5, "tested" => 5, "fixes" => 3, "keeps" => 1, "breaks" => 1, "still_off" => 0, "capped" => false, "rows" => [] })
+    get "/completion_kit/metrics/#{metric.id}"
+    expect(response.body).to include("ck-scoreboard")
+    expect(response.body).to include("Matches you on")
+    expect(response.body).to include("4 of 5")
+    expect(response.body).to include("Breaks")
+  end
+
+  it "warns when publishing a net-negative candidate" do
+    suggestion_draft_with({ "before" => 3, "after" => 1, "total" => 5, "tested" => 5, "fixes" => 1, "keeps" => 0, "breaks" => 3, "still_off" => 1, "capped" => false, "rows" => [] })
+    get "/completion_kit/metrics/#{metric.id}"
+    expect(response.body).to include("Publish anyway?")
+  end
+
+  it "notes when the answer key was capped at 30" do
+    suggestion_draft_with({ "before" => 10, "after" => 25, "total" => 30, "tested" => 30, "fixes" => 15, "keeps" => 10, "breaks" => 1, "still_off" => 4, "capped" => true, "rows" => [] })
+    get "/completion_kit/metrics/#{metric.id}"
+    expect(response.body).to include("Tested against your 30 most recent reviews")
+  end
 end

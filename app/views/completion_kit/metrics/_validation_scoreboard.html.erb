@@ -1,0 +1,12 @@
+<% s = summary %>
+<div class="ck-scoreboard">
+  <p class="ck-scoreboard__headline">Matches you on <strong><%= s["after"] %> of <%= s["tested"] %></strong> of your reviews <span class="ck-scoreboard__was">was <%= s["before"] %> of <%= s["tested"] %></span></p>
+  <ul class="ck-scoreboard__tally">
+    <li class="ck-scoreboard__stat ck-scoreboard__stat--fix">Fixes <strong><%= s["fixes"] %></strong></li>
+    <li class="ck-scoreboard__stat ck-scoreboard__stat--keep">Keeps <strong><%= s["keeps"] %></strong></li>
+    <li class="ck-scoreboard__stat ck-scoreboard__stat--break">Breaks <strong><%= s["breaks"] %></strong></li>
+  </ul>
+  <% if s["capped"] %>
+    <p class="ck-scoreboard__note">Tested against your 30 most recent reviews.</p>
+  <% end %>
+</div>
