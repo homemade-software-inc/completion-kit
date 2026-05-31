@@ -83,22 +83,6 @@ module CompletionKit
       self
     end
 
-    def revert!
-      raise ArgumentError, "only a published version can be reverted to" unless published?
-      audit = nil
-      MetricVersion.transaction do
-        audit = self.class.create!(
-          metric: metric,
-          instruction: instruction,
-          rubric_bands: rubric_bands,
-          state: "draft",
-          source: "revert"
-        )
-        audit.publish!
-      end
-      audit
-    end
-
     def as_json(options = {})
       {
         id: id,
