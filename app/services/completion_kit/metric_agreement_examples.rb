@@ -1,5 +1,5 @@
 module CompletionKit
-  module MetricCalibrationExamples
+  module MetricAgreementExamples
     DEFAULT_JUDGE_EXAMPLE_LIMIT = 5
 
     module_function

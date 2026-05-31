@@ -1,5 +1,5 @@
 module CompletionKit
-  module CalibrationMath
+  module AgreementMath
     Z_95 = 1.959963984540054
 
     module_function

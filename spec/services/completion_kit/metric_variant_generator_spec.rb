@@ -212,7 +212,7 @@ RSpec.describe CompletionKit::MetricVariantGenerator, type: :service do
     end
   end
 
-  describe CompletionKit::MetricCalibrationExamples do
+  describe CompletionKit::MetricAgreementExamples do
     it "returns the latest disagreement examples with judge + human context" do
       run = create(:completion_kit_run)
       response = create(:completion_kit_response, run: run, input_data: "Q?", response_text: "A.")

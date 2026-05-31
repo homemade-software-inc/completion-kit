@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe CompletionKit::MetricCalibrationExamples do
+RSpec.describe CompletionKit::MetricAgreementExamples do
   def disagreement(metric, score: 2.0, judge: 4.0, response: nil, excluded: false)
     response ||= create(:completion_kit_response)
     create(:completion_kit_review, response: response, metric: metric, ai_score: judge, ai_feedback: "judge said")

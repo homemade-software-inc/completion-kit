@@ -41,8 +41,8 @@ module CompletionKit
     private
 
     def build_meta_prompt
-      disagreements = MetricCalibrationExamples.disagreements_for(@metric)
-      borderlines = MetricCalibrationExamples.borderlines_for(@metric)
+      disagreements = MetricAgreementExamples.disagreements_for(@metric)
+      borderlines = MetricAgreementExamples.borderlines_for(@metric)
       sections = []
       sections << "You are an expert evaluator. The judge below is misaligned with humans. Propose #{@count == 1 ? "a single" : "#{@count}"} concrete rewrite that closes the gap."
       sections << ""

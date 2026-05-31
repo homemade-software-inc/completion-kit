@@ -254,7 +254,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     it "passes human_examples to the judge when the flag is on" do
       CompletionKit.config.judge_examples_from_reviews = true
       examples = [{ output: "x", judge_score: 4.0, human_score: 2.0, human_note: "n" }]
-      allow(CompletionKit::MetricCalibrationExamples).to receive(:judge_examples_for)
+      allow(CompletionKit::MetricAgreementExamples).to receive(:judge_examples_for)
         .with(metric, exclude_response_id: response.id).and_return(examples)
 
       judge = instance_double(CompletionKit::JudgeService)

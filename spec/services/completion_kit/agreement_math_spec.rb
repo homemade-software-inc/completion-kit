@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe CompletionKit::CalibrationMath do
+RSpec.describe CompletionKit::AgreementMath do
   describe ".wilson_interval" do
     it "returns nil triples when n is zero" do
       expect(described_class.wilson_interval(successes: 0, n: 0)).to eq(point: nil, low: nil, high: nil)

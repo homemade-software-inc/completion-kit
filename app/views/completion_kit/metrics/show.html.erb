@@ -198,7 +198,7 @@
     <div id="ck-suggestion-status-<%= @metric.id %>" class="ck-suggestion-status"></div>
     <p class="ck-meta-copy">How often the judge lands on the same score you would. Review its scores to build that signal, and improve the metric to raise it.</p>
     <%= render "completion_kit/calibrations/trust_panel",
-          stats: CompletionKit::MetricCalibrationStats.for(@metric),
+          stats: CompletionKit::MetricAgreementStats.for(@metric),
           metric: @metric %>
     <% if CompletionKit.config.judge_examples_from_reviews %>
       <%= render "completion_kit/metrics/guiding_examples", metric: @metric, examples: @guiding_examples %>

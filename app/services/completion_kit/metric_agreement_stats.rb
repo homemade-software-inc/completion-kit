@@ -1,5 +1,5 @@
 module CompletionKit
-  class MetricCalibrationStats
+  class MetricAgreementStats
     PROVISIONAL_MIN = 10
     FIRM_MIN = 30
 
@@ -62,12 +62,12 @@ module CompletionKit
       disagrees = verdicts.count { |v, _, _| v == "disagree" }
       borderlines = verdicts.count { |v, _, _| v == "borderline" }
 
-      ci = CalibrationMath.wilson_interval(successes: agrees, n: n)
+      ci = AgreementMath.wilson_interval(successes: agrees, n: n)
 
       pairs = score_pairs(verdicts)
-      mae_value = CalibrationMath.mae(pairs)
-      pearson_value = CalibrationMath.pearson(pairs)
-      kappa_value = CalibrationMath.quadratic_weighted_kappa(pairs, categories: 1..5)
+      mae_value = AgreementMath.mae(pairs)
+      pearson_value = AgreementMath.pearson(pairs)
+      kappa_value = AgreementMath.quadratic_weighted_kappa(pairs, categories: 1..5)
 
       Result.new(
         sample_size: n,

@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe CompletionKit::MetricCalibrationStats, type: :service do
+RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
   let(:metric) { create(:completion_kit_metric) }
   let(:run) { create(:completion_kit_run) }
   let(:metric_version) { CompletionKit::MetricVersion.ensure_current_for(metric) }

@@ -41,7 +41,7 @@ module CompletionKit
       @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @improve_disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
       @versions = MetricVersion.where(metric_id: @metric.id).order(version_number: :desc).to_a
-      @guiding_examples = CompletionKit.config.judge_examples_from_reviews ? MetricCalibrationExamples.judge_examples_for(@metric) : []
+      @guiding_examples = CompletionKit.config.judge_examples_from_reviews ? MetricAgreementExamples.judge_examples_for(@metric) : []
     end
 
     def new
@@ -150,7 +150,7 @@ module CompletionKit
       render turbo_stream: turbo_stream.replace(
         "ck-guiding-#{@metric.id}",
         partial: "completion_kit/metrics/guiding_examples",
-        locals: { metric: @metric, examples: MetricCalibrationExamples.judge_examples_for(@metric) }
+        locals: { metric: @metric, examples: MetricAgreementExamples.judge_examples_for(@metric) }
       )
     end
 

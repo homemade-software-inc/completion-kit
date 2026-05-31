@@ -33,7 +33,7 @@ module CompletionKit
           handler: :replay
         },
         "judges_compare" => {
-          description: "Compare two metric versions' calibration stats side by side. Pass either two metric_version_ids or one metric_id with metric_version_a_id / metric_version_b_id.",
+          description: "Compare two metric versions' agreement stats side by side. Pass either two metric_version_ids or one metric_id with metric_version_a_id / metric_version_b_id.",
           inputSchema: {
             type: "object",
             properties: {
@@ -77,8 +77,8 @@ module CompletionKit
         metric = CompletionKit::Metric.find(args["metric_id"])
         a = CompletionKit::MetricVersion.where(metric_id: metric.id).find(args["metric_version_a_id"])
         b = CompletionKit::MetricVersion.where(metric_id: metric.id).find(args["metric_version_b_id"])
-        stats_a = CompletionKit::MetricCalibrationStats.for(metric, metric_version: a)
-        stats_b = CompletionKit::MetricCalibrationStats.for(metric, metric_version: b)
+        stats_a = CompletionKit::MetricAgreementStats.for(metric, metric_version: a)
+        stats_b = CompletionKit::MetricAgreementStats.for(metric, metric_version: b)
         text_result({
           metric_id: metric.id,
           a: metric_version_payload(a, stats_a),

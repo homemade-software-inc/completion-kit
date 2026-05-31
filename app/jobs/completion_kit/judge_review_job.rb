@@ -85,7 +85,7 @@ module CompletionKit
       return nil unless CompletionKit.config.judge_calibration_enabled
       return nil unless CompletionKit.config.judge_examples_from_reviews
 
-      MetricCalibrationExamples.judge_examples_for(metric, exclude_response_id: response.id)
+      MetricAgreementExamples.judge_examples_for(metric, exclude_response_id: response.id)
     end
 
     def confirm_judging_capability(judge_model_id)
