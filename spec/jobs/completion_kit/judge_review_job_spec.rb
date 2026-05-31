@@ -236,11 +236,11 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   describe "review-grounded examples" do
     around do |example|
       original_examples = CompletionKit.config.judge_examples_from_reviews
-      original_calibration = CompletionKit.config.judge_calibration_enabled
+      original_agreement = CompletionKit.config.judge_agreement_enabled
       example.run
     ensure
       CompletionKit.config.judge_examples_from_reviews = original_examples
-      CompletionKit.config.judge_calibration_enabled = original_calibration
+      CompletionKit.config.judge_agreement_enabled = original_agreement
     end
 
     let(:run) { create(:completion_kit_run, judge_model: "gpt-4.1") }
@@ -277,9 +277,9 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
       described_class.new.perform(response.id, metric.id, run.id)
     end
 
-    it "passes no examples when calibration is disabled" do
+    it "passes no examples when agreement is disabled" do
       CompletionKit.config.judge_examples_from_reviews = true
-      CompletionKit.config.judge_calibration_enabled = false
+      CompletionKit.config.judge_agreement_enabled = false
       judge = instance_double(CompletionKit::JudgeService)
       allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
       expect(judge).to receive(:evaluate)

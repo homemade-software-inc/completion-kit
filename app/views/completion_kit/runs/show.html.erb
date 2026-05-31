@@ -18,7 +18,7 @@
   <% dataset_preview_lines = dataset_lines.first(50) %>
 <% end %>
 
-<% if CompletionKit.config.judge_calibration_enabled %>
+<% if CompletionKit.config.judge_agreement_enabled %>
   <% stale_summary = @run.stale_review_summary %>
   <% if stale_summary.any? %>
     <div class="ck-stale-versions-banner" role="status">

@@ -11,7 +11,7 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
     response
   end
 
-  def add_calibration(response, verdict:, corrected_score: nil, created_by: SecureRandom.uuid)
+  def add_agreement(response, verdict:, corrected_score: nil, created_by: SecureRandom.uuid)
     create(:completion_kit_agreement,
            run: run, response: response, metric: metric,
            metric_version: metric_version, verdict: verdict,
@@ -20,7 +20,7 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
 
   describe ".for" do
     it "returns a counter gate below 10 verdicts" do
-      3.times { add_calibration(add_response(ai_score: 4), verdict: "agree") }
+      3.times { add_agreement(add_response(ai_score: 4), verdict: "agree") }
       stats = described_class.for(metric)
       expect(stats.gate).to eq(:counter)
       expect(stats.counter_only?).to be(true)
@@ -29,7 +29,7 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
     end
 
     it "returns a provisional gate at 10..29 verdicts with a Wilson interval" do
-      10.times { |i| add_calibration(add_response(ai_score: 4), verdict: (i < 8 ? "agree" : "disagree"), corrected_score: 3) }
+      10.times { |i| add_agreement(add_response(ai_score: 4), verdict: (i < 8 ? "agree" : "disagree"), corrected_score: 3) }
       stats = described_class.for(metric)
       expect(stats.gate).to eq(:provisional)
       expect(stats.provisional?).to be(true)
@@ -41,16 +41,16 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
     end
 
     it "returns a firm gate at 30+ verdicts" do
-      30.times { |i| add_calibration(add_response(ai_score: 4), verdict: (i < 24 ? "agree" : "disagree"), corrected_score: 3) }
+      30.times { |i| add_agreement(add_response(ai_score: 4), verdict: (i < 24 ? "agree" : "disagree"), corrected_score: 3) }
       stats = described_class.for(metric)
       expect(stats.gate).to eq(:firm)
       expect(stats.firm?).to be(true)
     end
 
     it "computes MAE, Pearson, and kappa over agree+disagree pairs, skipping borderlines" do
-      5.times { add_calibration(add_response(ai_score: 4), verdict: "agree") }
-      5.times { add_calibration(add_response(ai_score: 5), verdict: "disagree", corrected_score: 3) }
-      2.times { add_calibration(add_response(ai_score: 4), verdict: "borderline") }
+      5.times { add_agreement(add_response(ai_score: 4), verdict: "agree") }
+      5.times { add_agreement(add_response(ai_score: 5), verdict: "disagree", corrected_score: 3) }
+      2.times { add_agreement(add_response(ai_score: 4), verdict: "borderline") }
 
       stats = described_class.for(metric)
       expect(stats.borderline_rate).to be_within(0.001).of(2.0 / 12)
@@ -72,7 +72,7 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
     it "scopes to a specific metric_version when one is passed" do
       newer_version = CompletionKit::MetricVersion.create!(metric: metric, instruction: "updated", current: false)
       response = add_response(ai_score: 4)
-      add_calibration(response, verdict: "agree", created_by: "alice")
+      add_agreement(response, verdict: "agree", created_by: "alice")
       create(:completion_kit_agreement,
              run: run, response: response, metric: metric,
              metric_version: newer_version, verdict: "disagree", corrected_score: 2, created_by: "bob")
@@ -133,7 +133,7 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
       expect(stats.gate).to eq(:counter)
     end
 
-    it "returns zero sample_size with nil interval bounds when no calibrations exist" do
+    it "returns zero sample_size with nil interval bounds when no agreements exist" do
       stats = described_class.for(metric)
       expect(stats.sample_size).to eq(0)
       expect(stats.agreement_point).to be_nil
@@ -141,14 +141,14 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
       expect(stats.borderline_rate).to be_nil
     end
 
-    it "defensively skips a disagree calibration whose corrected_score was nulled out" do
+    it "defensively skips a disagree agreement whose corrected_score was nulled out" do
       response = add_response(ai_score: 4)
-      cal = CompletionKit::Agreement.new(
+      agreement = CompletionKit::Agreement.new(
         run: run, response: response, metric: metric,
         metric_version: metric_version, verdict: "disagree",
         corrected_score: nil, created_by: "nulled"
       )
-      cal.save(validate: false)
+      agreement.save(validate: false)
       stats = described_class.for(metric)
       expect(stats.disagree_count).to eq(1)
       expect(stats.mae).to be_nil

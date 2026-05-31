@@ -35,7 +35,7 @@ module CompletionKit
         McpTools::MetricVersions.definitions +
         McpTools::ProviderCredentials.definitions +
         McpTools::Tags.definitions +
-        McpTools::Calibrations.definitions +
+        McpTools::Agreements.definitions +
         McpTools::Judges.definitions
     end
 
@@ -50,7 +50,7 @@ module CompletionKit
       when /\Ametrics_/              then McpTools::Metrics.call(name, arguments)
       when /\Aprovider_credentials_/ then McpTools::ProviderCredentials.call(name, arguments)
       when /\Atags_/                 then McpTools::Tags.call(name, arguments)
-      when /\Acalibrations_/         then McpTools::Calibrations.call(name, arguments)
+      when /\Aagreements_/           then McpTools::Agreements.call(name, arguments)
       when /\Ajudges_/               then McpTools::Judges.call(name, arguments)
       else raise MethodNotFound, "Unknown tool: #{name}"
       end

@@ -4,7 +4,7 @@ module CompletionKit
     before_action :set_scope
 
     def create
-      created_by = calibration_creator
+      created_by = agreement_creator
       existing = Agreement.find_by(
         run_id: @run.id, response_id: @response.id, metric_id: @metric.id, created_by: created_by
       )
@@ -14,23 +14,23 @@ module CompletionKit
         return
       end
 
-      calibration = existing || Agreement.new(
+      agreement = existing || Agreement.new(
         run: @run, response: @response, metric: @metric, created_by: created_by
       )
-      calibration.assign_attributes(
+      agreement.assign_attributes(
         metric_version: MetricVersion.ensure_current_for(@metric),
         verdict: params[:verdict],
         corrected_score: params[:corrected_score].presence,
         note: params[:note].presence
       )
 
-      if calibration.save
-        render_agreement(agreement: calibration, just_saved: true)
+      if agreement.save
+        render_agreement(agreement: agreement, just_saved: true)
       else
         render_agreement(
           agreement: existing,
           pending_verdict: params[:verdict],
-          error: calibration.errors.full_messages.to_sentence,
+          error: agreement.errors.full_messages.to_sentence,
           status: :unprocessable_entity
         )
       end
@@ -57,7 +57,7 @@ module CompletionKit
     end
 
     def ensure_agreement_enabled
-      head :not_found unless CompletionKit.config.judge_calibration_enabled
+      head :not_found unless CompletionKit.config.judge_agreement_enabled
     end
 
     def set_scope
@@ -70,7 +70,7 @@ module CompletionKit
       @response.reviews.find_by(metric_id: @metric.id)
     end
 
-    def calibration_creator
+    def agreement_creator
       request.env["HTTP_X_REMOTE_USER"].presence || CompletionKit.config.username.presence || "operator"
     end
   end

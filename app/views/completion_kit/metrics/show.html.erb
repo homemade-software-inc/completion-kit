@@ -42,7 +42,7 @@
   </div>
 </section>
 
-<% if CompletionKit.config.judge_calibration_enabled && @versions.any? %>
+<% if CompletionKit.config.judge_agreement_enabled && @versions.any? %>
   <% predecessor_of = @versions.index_with { |v| @versions.detect { |o| o.version_number < v.version_number } } %>
   <section class="ck-card ck-card--spaced">
     <p class="ck-kicker">Versions</p>
@@ -179,7 +179,7 @@
   <% end %>
 <% end %>
 
-<% if CompletionKit.config.judge_calibration_enabled %>
+<% if CompletionKit.config.judge_agreement_enabled %>
   <% draft = @suggestion_draft || @edit_draft %>
   <section class="ck-card ck-card--spaced">
     <div class="ck-prompt-preview__header">

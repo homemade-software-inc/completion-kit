@@ -28,3 +28,6 @@ settings.local.json
 completion-kit-*.gem
 /*.png
 /docs/social-preview.png
+
+# local bundler config in the standalone host
+standalone/.bundle/

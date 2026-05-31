@@ -1,11 +1,11 @@
 require "rails_helper"
 
-RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
+RSpec.describe "CompletionKit metrics (agreement surfaces)", type: :request do
   let(:metric) { create(:completion_kit_metric, name: "Helpfulness") }
   let(:run) { create(:completion_kit_run, name: "Smoke run") }
 
   describe "GET metric show" do
-    it "titles the card Agreement and drops the word Calibration" do
+    it "titles the card Agreement and uses no old label" do
       get "/completion_kit/metrics/#{metric.id}"
       expect(response.body).to include("Agreement")
       expect(response.body).not_to include(">Calibration<")
@@ -58,7 +58,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
   end
 
   describe "trust panel borderline severity" do
-    def add_borderline_calibrations(n)
+    def add_borderline_agreements(n)
       n.times do
         r = create(:completion_kit_response, run: run)
         create(:completion_kit_agreement,
@@ -68,7 +68,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       end
     end
 
-    def add_agree_calibrations(n)
+    def add_agree_agreements(n)
       n.times do
         r = create(:completion_kit_response, run: run)
         create(:completion_kit_agreement,
@@ -79,22 +79,22 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
     end
 
     it "uses the warning level class when borderline rate is between 15% and 30%" do
-      add_agree_calibrations(8)
-      add_borderline_calibrations(2)
+      add_agree_agreements(8)
+      add_borderline_agreements(2)
       get "/completion_kit/metrics/#{metric.id}"
       expect(response.body).to include("ck-trust-line__borderline--warning")
     end
 
     it "uses the danger level class when borderline rate exceeds 30%" do
-      add_agree_calibrations(5)
-      add_borderline_calibrations(5)
+      add_agree_agreements(5)
+      add_borderline_agreements(5)
       get "/completion_kit/metrics/#{metric.id}"
       expect(response.body).to include("ck-trust-line__borderline--danger")
     end
 
     it "stays at the ok level when borderline rate is at or below 15%" do
-      add_agree_calibrations(14)
-      add_borderline_calibrations(1)
+      add_agree_agreements(14)
+      add_borderline_agreements(1)
       get "/completion_kit/metrics/#{metric.id}"
       expect(response.body).to include("ck-trust-line__borderline--ok")
     end

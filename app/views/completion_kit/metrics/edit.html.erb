@@ -10,7 +10,7 @@
   </div>
 </section>
 
-<% if CompletionKit.config.judge_calibration_enabled && @suggestion_draft.nil? && @edit_draft.nil? && @improve_disagreement_count.to_i.positive? %>
+<% if CompletionKit.config.judge_agreement_enabled && @suggestion_draft.nil? && @edit_draft.nil? && @improve_disagreement_count.to_i.positive? %>
   <div class="ck-suggestion-banner" role="status">
     <div class="ck-suggestion-banner__body">
       <p class="ck-kicker">Improve from reviews</p>

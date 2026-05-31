@@ -124,7 +124,7 @@
           <% if review.ai_feedback.present? %>
             <p class="ck-review-card__feedback"><%= review.ai_feedback %></p>
           <% end %>
-          <% if CompletionKit.config.judge_calibration_enabled && review.metric && review.ai_score %>
+          <% if CompletionKit.config.judge_agreement_enabled && review.metric && review.ai_score %>
             <% existing = CompletionKit::Agreement.find_by(
                  response_id: @response.id, metric_id: review.metric_id,
                  created_by: CompletionKit.config.username.presence || "operator"

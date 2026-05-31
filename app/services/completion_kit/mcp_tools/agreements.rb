@@ -1,11 +1,11 @@
 module CompletionKit
   module McpTools
-    module Calibrations
+    module Agreements
       extend Base
 
       TOOLS = {
-        "calibrations_list" => {
-          description: "List calibrations. Filter by run_id, response_id, metric_id, or created_by.",
+        "agreements_list" => {
+          description: "List agreements. Filter by run_id, response_id, metric_id, or created_by.",
           inputSchema: {
             type: "object",
             properties: {
@@ -18,8 +18,8 @@ module CompletionKit
           },
           handler: :list
         },
-        "calibrations_create" => {
-          description: "Upsert a calibration for (run, response, metric, created_by). Verdict is one of agree, disagree, borderline. corrected_score (1..5) is required when verdict is 'disagree'.",
+        "agreements_create" => {
+          description: "Upsert an agreement for (run, response, metric, created_by). Verdict is one of agree, disagree, borderline. corrected_score (1..5) is required when verdict is 'disagree'.",
           inputSchema: {
             type: "object",
             properties: {
@@ -52,20 +52,20 @@ module CompletionKit
         metric = CompletionKit::Metric.find(args["metric_id"])
         created_by = args["created_by"].presence || "mcp"
 
-        calibration = CompletionKit::Agreement.find_or_initialize_by(
+        agreement = CompletionKit::Agreement.find_or_initialize_by(
           run_id: run.id, response_id: response.id, metric_id: metric.id, created_by: created_by
         )
-        calibration.assign_attributes(
+        agreement.assign_attributes(
           metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
           verdict: args["verdict"],
           corrected_score: args["corrected_score"],
           note: args["note"]
         )
 
-        if calibration.save
-          text_result(calibration.as_json)
+        if agreement.save
+          text_result(agreement.as_json)
         else
-          error_result(calibration.errors.full_messages.join(", "))
+          error_result(agreement.errors.full_messages.join(", "))
         end
       end
     end

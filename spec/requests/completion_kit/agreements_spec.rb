@@ -114,22 +114,22 @@ RSpec.describe "CompletionKit agreements (web)", type: :request do
     expect(CompletionKit::Agreement.count).to eq(0)
   end
 
-  it "returns 404 when the judge_calibration_enabled flag is off" do
-    original = CompletionKit.config.judge_calibration_enabled
-    CompletionKit.config.judge_calibration_enabled = false
+  it "returns 404 when the judge_agreement_enabled flag is off" do
+    original = CompletionKit.config.judge_agreement_enabled
+    CompletionKit.config.judge_agreement_enabled = false
     post base_path, params: { metric_id: metric.id, verdict: "agree" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     expect(response).to have_http_status(:not_found)
     expect(CompletionKit::Agreement.count).to eq(0)
   ensure
-    CompletionKit.config.judge_calibration_enabled = original
+    CompletionKit.config.judge_agreement_enabled = original
   end
 
   it "hides the verdict buttons on the response page when the flag is off" do
-    original = CompletionKit.config.judge_calibration_enabled
-    CompletionKit.config.judge_calibration_enabled = false
+    original = CompletionKit.config.judge_agreement_enabled
+    CompletionKit.config.judge_agreement_enabled = false
     get "/completion_kit/runs/#{run.id}/responses/#{response_row.id}"
     expect(response.body).not_to include("Your verdict")
   ensure
-    CompletionKit.config.judge_calibration_enabled = original
+    CompletionKit.config.judge_agreement_enabled = original
   end
 end

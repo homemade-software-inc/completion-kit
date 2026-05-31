@@ -38,7 +38,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response.body).to include("Mark at least one case as Disagree")
   end
 
-  it "shows no Suggest-improvements affordance when no disagreements exist (the calibration card guides toward verdicts instead)" do
+  it "shows no Suggest-improvements affordance when no disagreements exist (the agreement card guides toward verdicts instead)" do
     get "/completion_kit/metrics/#{metric.id}"
     expect(response.body).not_to include("Suggest improvements")
     expect(response.body).to include("Agreement")

@@ -82,7 +82,7 @@ RSpec.describe CompletionKit::MetricImprovementValidator do
     expect(summary["total"]).to eq(1)
   end
 
-  it "excludes an agree calibration with no review for the metric from the answer key" do
+  it "excludes an agree agreement with no review for the metric from the answer key" do
     no_review_response = create(:completion_kit_response, run: run)
     create(:completion_kit_agreement,
            metric: metric, response: no_review_response, run: run,

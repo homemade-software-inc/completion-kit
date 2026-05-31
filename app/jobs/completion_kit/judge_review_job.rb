@@ -82,7 +82,7 @@ module CompletionKit
     private
 
     def review_examples_for(metric, response)
-      return nil unless CompletionKit.config.judge_calibration_enabled
+      return nil unless CompletionKit.config.judge_agreement_enabled
       return nil unless CompletionKit.config.judge_examples_from_reviews
 
       MetricAgreementExamples.judge_examples_for(metric, exclude_response_id: response.id)

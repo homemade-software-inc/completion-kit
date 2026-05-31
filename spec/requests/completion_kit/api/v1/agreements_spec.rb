@@ -136,12 +136,12 @@ RSpec.describe "API V1 Agreements", type: :request do
     end
 
     it "returns 404 when the agreement feature flag is off" do
-      original = CompletionKit.config.judge_calibration_enabled
-      CompletionKit.config.judge_calibration_enabled = false
+      original = CompletionKit.config.judge_agreement_enabled
+      CompletionKit.config.judge_agreement_enabled = false
       post base_path, headers: headers, params: { verdict: "agree" }.to_json
       expect(response).to have_http_status(:not_found)
     ensure
-      CompletionKit.config.judge_calibration_enabled = original
+      CompletionKit.config.judge_agreement_enabled = original
     end
   end
 

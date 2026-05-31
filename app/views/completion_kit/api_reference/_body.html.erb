@@ -17,7 +17,7 @@
   <input type="radio" name="ck-api-tab" id="ck-tab-datasets" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-metrics" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-metric-groups" class="ck-api-tabs__radio">
-  <input type="radio" name="ck-api-tab" id="ck-tab-calibrations" class="ck-api-tabs__radio">
+  <input type="radio" name="ck-api-tab" id="ck-tab-agreements" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-tags" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-providers" class="ck-api-tabs__radio">
 
@@ -29,7 +29,7 @@
     <label for="ck-tab-datasets" class="ck-api-tabs__label">Datasets <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-metrics" class="ck-api-tabs__label">Metrics <span class="ck-api-tabs__count">10</span></label>
     <label for="ck-tab-metric-groups" class="ck-api-tabs__label">Metric Groups <span class="ck-api-tabs__count">5</span></label>
-    <label for="ck-tab-calibrations" class="ck-api-tabs__label">Calibrations <span class="ck-api-tabs__count">3</span></label>
+    <label for="ck-tab-agreements" class="ck-api-tabs__label">Agreements <span class="ck-api-tabs__count">3</span></label>
     <label for="ck-tab-tags" class="ck-api-tabs__label">Tags <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-providers" class="ck-api-tabs__label">Providers <span class="ck-api-tabs__count">5</span></label>
   </nav>
@@ -238,8 +238,8 @@
             } %>
 
       <div class="ck-api-endpoint" style="padding-top: 1.5rem;">
-        <p class="ck-kicker" style="margin-bottom: 0.5rem;">Calibration loop</p>
-        <p class="ck-meta-copy">Drive metric improvement from disagree-flagged calibrations: ask the model to rewrite the instruction and rubric into a new draft version.</p>
+        <p class="ck-kicker" style="margin-bottom: 0.5rem;">Agreement loop</p>
+        <p class="ck-meta-copy">Drive metric improvement from disagree-flagged agreements: ask the model to rewrite the instruction and rubric into a new draft version.</p>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics/:id/suggest_variants</p>
@@ -250,7 +250,7 @@
 
       <div class="ck-api-endpoint" style="padding-top: 1.5rem;">
         <p class="ck-kicker" style="margin-bottom: 0.5rem;">Metric versions</p>
-        <p class="ck-meta-copy">Every metric carries a history of versions (the current published one, prior published ones, and any draft suggestions). Reviews and calibrations record the version they ran against, so the API can surface stale state and let you revert.</p>
+        <p class="ck-meta-copy">Every metric carries a history of versions (the current published one, prior published ones, and any draft suggestions). Reviews and agreements record the version they ran against, so the API can surface stale state and let you revert.</p>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/metrics/:metric_id/metric_versions</p>
@@ -294,23 +294,23 @@
     </div>
 
     <div class="ck-api-tabs__panel">
-      <h2 class="ck-section-title">Calibrations</h2>
-      <p class="ck-copy">Per-verdict feedback events on a response/metric pair: agree, disagree (with a corrected score and note), or borderline. Calibrations capture the metric version that was current when the verdict was cast, which is what drives the trust signal and the "stale" indicators across the rest of the API.</p>
+      <h2 class="ck-section-title">Agreements</h2>
+      <p class="ck-copy">Per-verdict feedback events on a response/metric pair: agree, disagree (with a corrected score and note), or borderline. Agreements capture the metric version that was current when the verdict was cast, which is what drives the trust signal and the "stale" indicators across the rest of the API.</p>
       <div class="ck-api-endpoint">
-        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/calibrations</p>
-        <p class="ck-meta-copy">List calibrations across all runs. Supports filtering by any combination of the query params below.</p>
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/agreements</p>
+        <p class="ck-meta-copy">List agreements across all runs. Supports filtering by any combination of the query params below.</p>
         <p class="ck-api-params"><strong>Optional filters:</strong>&ensp;<code>run_id</code>, <code>response_id</code>, <code>metric_id</code>, <code>metric_version_id</code>, <code>created_by</code>, <code>verdict</code> (<code>agree</code>, <code>disagree</code>, or <code>borderline</code>)</p>
-        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl \"#{base_url}/api/v1/calibrations?metric_id=1&verdict=disagree\" \\\n  -H \"Authorization: Bearer #{token}\"" %>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl \"#{base_url}/api/v1/agreements?metric_id=1&verdict=disagree\" \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
-        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:run_id/responses/:response_id/metrics/:metric_id/calibrations</p>
-        <p class="ck-meta-copy">Cast a calibration on a specific response/metric pair. The metric version on the record is set automatically from the run's review.</p>
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:run_id/responses/:response_id/metrics/:metric_id/agreements</p>
+        <p class="ck-meta-copy">Cast an agreement on a specific response/metric pair. The metric version on the record is set automatically from the run's review.</p>
         <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>verdict</code>, <code>created_by</code>&emsp;<strong>Optional:</strong>&ensp;<code>corrected_score</code>, <code>note</code></p>
-        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/responses/42/metrics/3/calibrations \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"verdict\": \"disagree\", \"corrected_score\": 3, \"note\": \"too generous\", \"created_by\": \"alice\"}'" %>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/responses/42/metrics/3/agreements \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"verdict\": \"disagree\", \"corrected_score\": 3, \"note\": \"too generous\", \"created_by\": \"alice\"}'" %>
       </div>
       <div class="ck-api-endpoint">
-        <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/calibrations/:id</p>
-        <p class="ck-meta-copy">Delete a calibration. Returns 204 No Content.</p>
+        <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/agreements/:id</p>
+        <p class="ck-meta-copy">Delete an agreement. Returns 204 No Content.</p>
       </div>
     </div>
 

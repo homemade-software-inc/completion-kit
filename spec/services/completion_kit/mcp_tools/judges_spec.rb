@@ -47,7 +47,7 @@ RSpec.describe CompletionKit::McpTools::Judges do
       CompletionKit::MetricVersion.create!(metric: metric, instruction: "fresh", current: false, state: "draft", source: "edit")
     end
 
-    def add_calibration(version, verdict:, response: nil, corrected: nil, created_by: SecureRandom.uuid)
+    def add_agreement(version, verdict:, response: nil, corrected: nil, created_by: SecureRandom.uuid)
       response ||= create(:completion_kit_response, run: run)
       create(:completion_kit_agreement,
              run: run, response: response, metric: metric,
@@ -56,9 +56,9 @@ RSpec.describe CompletionKit::McpTools::Judges do
     end
 
     it "returns side-by-side stats and a recommendation when both versions clear the data gate" do
-      20.times { add_calibration(published_version, verdict: "agree") }
-      18.times { add_calibration(draft_version, verdict: "agree") }
-      2.times  { add_calibration(draft_version, verdict: "disagree", corrected: 3) }
+      20.times { add_agreement(published_version, verdict: "agree") }
+      18.times { add_agreement(draft_version, verdict: "agree") }
+      2.times  { add_agreement(draft_version, verdict: "disagree", corrected: 3) }
 
       result = described_class.call("judges_compare", {
         "metric_id" => metric.id,
@@ -73,7 +73,7 @@ RSpec.describe CompletionKit::McpTools::Judges do
     end
 
     it "flags need_more_data when combined sample is under 30" do
-      5.times { add_calibration(published_version, verdict: "agree") }
+      5.times { add_agreement(published_version, verdict: "agree") }
       result = described_class.call("judges_compare", {
         "metric_id" => metric.id,
         "metric_version_a_id" => published_version.id,
@@ -84,9 +84,9 @@ RSpec.describe CompletionKit::McpTools::Judges do
     end
 
     it "returns recommend when B's agreement is materially higher than A's" do
-      20.times { add_calibration(published_version, verdict: "agree") }
-      4.times { add_calibration(published_version, verdict: "disagree", corrected: 3) }
-      20.times { add_calibration(draft_version, verdict: "agree") }
+      20.times { add_agreement(published_version, verdict: "agree") }
+      4.times { add_agreement(published_version, verdict: "disagree", corrected: 3) }
+      20.times { add_agreement(draft_version, verdict: "agree") }
       result = described_class.call("judges_compare", {
         "metric_id" => metric.id,
         "metric_version_a_id" => published_version.id,
@@ -97,8 +97,8 @@ RSpec.describe CompletionKit::McpTools::Judges do
     end
 
     it "returns no_change when the lift sits inside the noise band" do
-      20.times { add_calibration(published_version, verdict: "agree") }
-      20.times { add_calibration(draft_version, verdict: "agree") }
+      20.times { add_agreement(published_version, verdict: "agree") }
+      20.times { add_agreement(draft_version, verdict: "agree") }
       result = described_class.call("judges_compare", {
         "metric_id" => metric.id,
         "metric_version_a_id" => published_version.id,
@@ -109,7 +109,7 @@ RSpec.describe CompletionKit::McpTools::Judges do
     end
 
     it "returns no_change when one version has no verdicts even after clearing the combined gate" do
-      30.times { add_calibration(published_version, verdict: "agree") }
+      30.times { add_agreement(published_version, verdict: "agree") }
       result = described_class.call("judges_compare", {
         "metric_id" => metric.id,
         "metric_version_a_id" => published_version.id,

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (breaking)
+- Renamed the "calibration" concept to "agreement" throughout. The `Calibration` model and `completion_kit_calibrations` table are now `Agreement` / `completion_kit_agreements`. The REST API resource is now `/agreements` (was `/calibrations`), the MCP tools are `agreements_list` / `agreements_create` (were `calibrations_*`), and the config flag is `judge_agreement_enabled` (was `judge_calibration_enabled`). No aliases are kept; update API and MCP callers accordingly.
+
 ## [0.11.0] - 2026-05-31
 
 ### Added

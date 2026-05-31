@@ -93,8 +93,8 @@ RSpec.describe CompletionKit::McpDispatcher do
       expect(content.first["provider"]).to eq("openai")
     end
 
-    it "calls a calibrations tool through dispatcher" do
-      result = described_class.dispatch("tools/call", {"name" => "calibrations_list", "arguments" => {}})
+    it "calls an agreements tool through dispatcher" do
+      result = described_class.dispatch("tools/call", {"name" => "agreements_list", "arguments" => {}})
       content = JSON.parse(result[:content].first[:text])
       expect(content).to eq([])
     end

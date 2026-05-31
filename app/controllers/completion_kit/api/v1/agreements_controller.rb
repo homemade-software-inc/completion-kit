@@ -4,7 +4,7 @@ module CompletionKit
       class AgreementsController < BaseController
         before_action :ensure_agreement_enabled
         before_action :set_nested_scope, only: [:create]
-        before_action :load_calibration, only: [:destroy]
+        before_action :load_agreement, only: [:destroy]
 
         def index
           scope = Agreement.all
@@ -18,31 +18,31 @@ module CompletionKit
         end
 
         def create
-          calibration = scope_calibrations.find_or_initialize_by(created_by: created_by_param)
-          calibration.assign_attributes(
+          agreement = scope_agreements.find_or_initialize_by(created_by: created_by_param)
+          agreement.assign_attributes(
             run: @run,
             response: @response,
             metric: @metric,
             metric_version: MetricVersion.ensure_current_for(@metric),
-            **calibration_params
+            **agreement_params
           )
 
-          if calibration.save
-            render json: calibration, status: calibration.previously_new_record? ? :created : :ok
+          if agreement.save
+            render json: agreement, status: agreement.previously_new_record? ? :created : :ok
           else
-            render_validation_errors(calibration)
+            render_validation_errors(agreement)
           end
         end
 
         def destroy
-          @calibration.destroy!
+          @agreement.destroy!
           head :no_content
         end
 
         private
 
         def ensure_agreement_enabled
-          render_error("Agreement disabled", status: :not_found) unless CompletionKit.config.judge_calibration_enabled
+          render_error("Agreement disabled", status: :not_found) unless CompletionKit.config.judge_agreement_enabled
         end
 
         def set_nested_scope
@@ -53,17 +53,17 @@ module CompletionKit
           not_found
         end
 
-        def load_calibration
-          @calibration = Agreement.find(params[:id])
+        def load_agreement
+          @agreement = Agreement.find(params[:id])
         rescue ActiveRecord::RecordNotFound
           not_found
         end
 
-        def scope_calibrations
+        def scope_agreements
           Agreement.where(run_id: @run.id, response_id: @response.id, metric_id: @metric.id)
         end
 
-        def calibration_params
+        def agreement_params
           params.permit(:verdict, :corrected_score, :note).to_h.symbolize_keys
         end
 

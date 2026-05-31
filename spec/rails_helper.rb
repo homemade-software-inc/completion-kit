@@ -282,7 +282,7 @@ RSpec.configure do |config|
   config.filter_rails_from_backtrace!
   config.include FactoryBot::Syntax::Methods
   config.before { Rails.cache.clear }
-  config.before { CompletionKit.config.judge_calibration_enabled = true }
+  config.before { CompletionKit.config.judge_agreement_enabled = true }
   config.before do
     server = ActionCable.server
     adapter = ActionCable::SubscriptionAdapter::Test.new(server)
