@@ -171,13 +171,12 @@ module CompletionKit
       reverting = was_published_already && !version.current?
       previously_current = MetricVersion.current.find_by(metric_id: @metric.id)
 
+      version.publish!
+
       if reverting
-        audit = version.revert!
-        prior_label = previously_current.version_label
         redirect_to metric_path(@metric),
-                    notice: "Reverted #{@metric.name} to #{version.version_label} (logged as #{audit.version_label}). Human reviews collected against #{prior_label} stay tied to it."
+                    notice: "#{@metric.name} is back on #{version.version_label}. Its reviews count again; the ones you gave on #{previously_current.version_label} stay with that version."
       else
-        version.publish!
         redirect_to metric_path(@metric),
                     notice: "#{@metric.name} #{version.version_label} is now the published version."
       end

@@ -125,7 +125,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(response.body).to include("ck-mvdiff-#{versions.last.id}")
   end
 
-  it "lets the user revert to an older published version via Make current" do
+  it "reverts to an older published version in place via Make current, creating no new version" do
     edit_metric_via_form(instruction: "v2 instruction")
     draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id).order(:created_at).last
     post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: draft.id }
@@ -137,16 +137,14 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
 
     expect {
       post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: older.id }
-    }.to change { CompletionKit::MetricVersion.where(metric_id: metric.id, source: "revert").count }.by(1)
-    audit = CompletionKit::MetricVersion.where(metric_id: metric.id, source: "revert").order(:version_number).last
-    expect(audit.current?).to be(true)
-    expect(audit.published?).to be(true)
-    expect(audit.instruction).to eq(older.instruction)
-    expect(older.reload.current?).to be(false)
+    }.not_to change { CompletionKit::MetricVersion.where(metric_id: metric.id).count }
+
+    expect(older.reload.current?).to be(true)
     expect(metric.reload.instruction).to eq(older.instruction)
+    expect(CompletionKit::MetricVersion.where(metric_id: metric.id, source: "revert").count).to eq(0)
   end
 
-  it "carries a revert-specific flash that names the prior current version and acknowledges review continuity" do
+  it "carries an in-place revert flash naming the version returned to and the one left behind" do
     edit_metric_via_form(instruction: "v2 instruction")
     new_draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "edit").order(:created_at).last
     post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: new_draft.id }
@@ -155,8 +153,10 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     older = CompletionKit::MetricVersion.where(metric_id: metric.id).order(:version_number).first
     post "/completion_kit/metrics/#{metric.id}/publish_draft", params: { draft_id: older.id }
     follow_redirect!
-    expect(response.body).to include("Reverted")
-    expect(response.body).to include("Human reviews collected against v2")
+    displaced = CompletionKit::MetricVersion.where(metric_id: metric.id).order(:version_number).last
+    expect(response.body).to include("is back on #{older.version_label}")
+    expect(response.body).to include("you gave on #{displaced.version_label}")
+    expect(response.body).to include("stay with that version")
   end
 
   it "points a pending draft to the Versions table on the metric show page and shows the draft banner on edit" do
