@@ -182,6 +182,8 @@
         <% end %>
       <% end %>
     </div>
+    <%= turbo_stream_from "metric_#{@metric.id}_suggestion" %>
+    <div id="ck-suggestion-status-<%= @metric.id %>" class="ck-suggestion-status"></div>
     <p class="ck-meta-copy">This is a measure of how often the judge's scores match a human reviewer. Review its scores to build that signal; the scores you disagree with become the cases the model learns from when you improve the metric.</p>
     <%= render "completion_kit/calibrations/trust_panel",
           stats: CompletionKit::MetricCalibrationStats.for(@metric),

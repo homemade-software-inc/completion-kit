@@ -123,20 +123,16 @@ module CompletionKit
         return
       end
 
-      MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").destroy_all
+      MetricSuggestionJob.perform_later(@metric.id)
 
-      generator = MetricVariantGenerator.new(@metric, count: 1)
-      variants = generator.call
-      if variants.empty?
-        redirect_to target, alert: "The model returned no usable variants. Try again with a different model."
-        return
-      end
-      versions = generator.persist!(variants)
-      new_version = versions.max_by(&:version_number)
       if params[:back_to] == "edit"
-        redirect_to edit_metric_path(@metric), notice: "Drafted #{new_version.version_label} from your reviews. Review the proposed changes below, then Publish to use it."
+        redirect_to edit_metric_path(@metric), notice: "Drafting a change from your reviews. It will appear here once it's tested."
       else
-        redirect_to metric_path(@metric, show_change: new_version.id), notice: "Drafted #{new_version.version_label} from your reviews."
+        render turbo_stream: turbo_stream.replace(
+          "ck-suggestion-status-#{@metric.id}",
+          partial: "completion_kit/metrics/suggestion_pending",
+          locals: { metric: @metric, count: Calibration.where(metric_id: @metric.id, verdict: %w[agree disagree]).count }
+        )
       end
     end
 

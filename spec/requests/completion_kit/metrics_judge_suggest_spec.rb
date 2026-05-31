@@ -19,50 +19,29 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
            corrected_score: corrected, note: note, created_by: SecureRandom.uuid)
   end
 
-  it "drafts a single new suggestion and redirects back to the metric page" do
+  it "enqueues the suggestion job and shows a pending state on the metric page" do
     add_disagree
-    stub_llm("VARIANT:\nREASONING: tighter\nINSTRUCTION:\nbe sharper\nEND_VARIANT")
-    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    expect(response.location).to match(%r{/completion_kit/metrics/#{metric.id}\?show_change=\d+})
+    expect {
+      post "/completion_kit/metrics/#{metric.id}/suggest_variants", headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    }.to have_enqueued_job(CompletionKit::MetricSuggestionJob).with(metric.id)
+    expect(response.body).to include("ck-suggestion-status-#{metric.id}")
+    expect(response.body).to include("Drafting a change")
+  end
+
+  it "enqueues and redirects with a notice when posted from the edit page" do
+    add_disagree
+    expect {
+      post "/completion_kit/metrics/#{metric.id}/suggest_variants", params: { back_to: "edit" }
+    }.to have_enqueued_job(CompletionKit::MetricSuggestionJob).with(metric.id)
+    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/edit")
     follow_redirect!
-    expect(response.body).to include("Drafted v")
-    expect(response.body).to include("waiting in the Versions table above")
-    expect(response.body).not_to include('value="Improve the metric"')
-    expect(CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion").count).to eq(1)
-
-    get "/completion_kit/metrics/#{metric.id}/edit"
-    expect(response.body).to include("Proposed changes")
-    expect(response.body).to include("Apply all")
-    expect(response.body).to include('aria-label="Discard"')
-    expect(response.body).to include('aria-label="Try again"')
-    expect(response.body).to include("Suggested wording")
-    expect(response.body).to include("Use this wording")
+    expect(response.body).to include("Drafting a change")
   end
 
-  it "replaces an existing suggestion draft instead of stacking new ones" do
-    add_disagree
-    stub_llm("VARIANT:\nREASONING: a\nINSTRUCTION:\nfirst\nEND_VARIANT")
-    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    stub_llm("VARIANT:\nREASONING: b\nINSTRUCTION:\nsecond\nEND_VARIANT")
-    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    drafts = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion")
-    expect(drafts.count).to eq(1)
-    expect(drafts.first.instruction).to eq("second")
-  end
-
-  it "refuses to call the model when no disagreements exist yet" do
-    expect(CompletionKit::LlmClient).not_to receive(:for_model)
+  it "still refuses when there are no disagreements" do
     post "/completion_kit/metrics/#{metric.id}/suggest_variants"
     follow_redirect!
     expect(response.body).to include("Mark at least one case as Disagree")
-  end
-
-  it "redirects with an alert when the model returns nothing usable" do
-    add_disagree
-    stub_llm("nothing parseable")
-    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    follow_redirect!
-    expect(response.body).to include("no usable variants")
   end
 
   it "shows no Suggest-improvements affordance when no disagreements exist (the calibration card guides toward verdicts instead)" do
@@ -90,23 +69,28 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response.body).not_to include("Suggest improvements")
   end
 
+  def create_suggestion_draft(instruction: "be sharper", rubric_bands: nil)
+    jv = CompletionKit::MetricVersion.ensure_current_for(metric)
+    CompletionKit::MetricVersion.create!(
+      metric: metric,
+      instruction: instruction,
+      rubric_bands: rubric_bands || metric.rubric_bands,
+      state: "draft",
+      source: "suggestion",
+      current: false
+    )
+  end
+
   it "renders inline rubric band suggestions on the edit form when the draft changes a band" do
     add_disagree
-    rubric_block = <<~R
-      VARIANT:
-      REASONING: rubric tighter
-      INSTRUCTION:
-      same instruction
-      RUBRIC:
-      5: pristine and fully verifiable
-      4: one minor lapse, no harm
-      3: a couple of soft claims
-      2: meaningful inaccuracies
-      1: dangerously wrong
-      END_VARIANT
-    R
-    stub_llm(rubric_block)
-    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
+    new_bands = [
+      { "stars" => 5, "description" => "pristine and fully verifiable" },
+      { "stars" => 4, "description" => "one minor lapse, no harm" },
+      { "stars" => 3, "description" => "a couple of soft claims" },
+      { "stars" => 2, "description" => "meaningful inaccuracies" },
+      { "stars" => 1, "description" => "dangerously wrong" }
+    ]
+    create_suggestion_draft(instruction: "same instruction", rubric_bands: new_bands)
     get "/completion_kit/metrics/#{metric.id}/edit"
     expect(response.body).to include("Suggested band")
     expect(response.body).to include("Use this band")
@@ -116,9 +100,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
 
   it "dismisses the inline suggestion via the dedicated route" do
     add_disagree
-    stub_llm("VARIANT:\nREASONING: r\nINSTRUCTION:\ndoomed\nEND_VARIANT")
-    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion").first
+    draft = create_suggestion_draft
 
     delete "/completion_kit/metrics/#{metric.id}/dismiss_suggestion", params: { draft_id: draft.id }
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
@@ -130,28 +112,14 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
   end
 
-  it "redirects back to edit when suggest_variants is called with back_to=edit" do
-    add_disagree
-    stub_llm("VARIANT:\nREASONING: r\nINSTRUCTION:\nnext\nEND_VARIANT")
-    post "/completion_kit/metrics/#{metric.id}/suggest_variants", params: { back_to: "edit" }
-    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/edit")
-  end
-
-  it "still routes the no-disagreement and empty-variant alerts back to edit when back_to=edit" do
-    post "/completion_kit/metrics/#{metric.id}/suggest_variants", params: { back_to: "edit" }
-    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/edit")
-
-    add_disagree
-    stub_llm("nothing parseable")
+  it "routes the no-disagreement alert back to edit when back_to=edit" do
     post "/completion_kit/metrics/#{metric.id}/suggest_variants", params: { back_to: "edit" }
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/edit")
   end
 
   it "redirects back to edit when dismiss_suggestion is called with back_to=edit" do
     add_disagree
-    stub_llm("VARIANT:\nREASONING: r\nINSTRUCTION:\ndoomed\nEND_VARIANT")
-    post "/completion_kit/metrics/#{metric.id}/suggest_variants"
-    draft = CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion").first
+    draft = create_suggestion_draft
 
     delete "/completion_kit/metrics/#{metric.id}/dismiss_suggestion",
            params: { draft_id: draft.id, back_to: "edit" }
