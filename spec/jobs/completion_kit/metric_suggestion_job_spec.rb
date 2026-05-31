@@ -40,4 +40,11 @@ RSpec.describe CompletionKit::MetricSuggestionJob do
     expect { described_class.new.perform(metric.id) }
       .not_to change { CompletionKit::MetricVersion.drafts.where(metric_id: metric.id).count }
   end
+
+  it "broadcasts the failure status and does not raise when generation errors" do
+    allow_any_instance_of(CompletionKit::MetricVariantGenerator).to receive(:call).and_raise(StandardError, "boom")
+    expect(Turbo::StreamsChannel).to receive(:broadcast_replace_to)
+      .with("metric_#{metric.id}_suggestion", hash_including(target: "ck-suggestion-status-#{metric.id}"))
+    expect { described_class.perform_now(metric.id) }.not_to raise_error
+  end
 end
