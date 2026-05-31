@@ -48,7 +48,7 @@ RSpec.describe "API V1 MetricVersions", type: :request do
       expect(metric.reload.instruction).to eq("v2 instruction")
     end
 
-    it "reverts to an older published version by recording a new revert audit row" do
+    it "reverts to an older published version in place, creating no new version" do
       v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
       v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
       v2.publish!
@@ -56,14 +56,15 @@ RSpec.describe "API V1 MetricVersions", type: :request do
 
       expect {
         post "/completion_kit/api/v1/metrics/#{metric.id}/metric_versions/#{v1.id}/publish", headers: headers
-      }.to change { CompletionKit::MetricVersion.where(metric_id: metric.id, source: "revert").count }.by(1)
+      }.not_to change { CompletionKit::MetricVersion.where(metric_id: metric.id).count }
+
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
-      expect(body["source"]).to eq("revert")
+      expect(body["id"]).to eq(v1.id)
       expect(body["current"]).to be(true)
-      expect(body["instruction"]).to eq("v1 instruction")
-      expect(v1.reload.current).to be(false)
+      expect(body["source"]).not_to eq("revert")
       expect(metric.reload.instruction).to eq("v1 instruction")
+      expect(v2.reload.current).to be(false)
     end
   end
 

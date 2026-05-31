@@ -47,13 +47,8 @@ module CompletionKit
 
       def self.publish(args)
         version = CompletionKit::MetricVersion.find(args["metric_version_id"])
-        if version.published? && !version.current?
-          audit = version.revert!
-          text_result(audit.as_json)
-        else
-          version.publish!
-          text_result(version.reload.as_json)
-        end
+        version.publish!
+        text_result(version.reload.as_json)
       end
 
       def self.dismiss(args)

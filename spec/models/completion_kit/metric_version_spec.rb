@@ -156,6 +156,22 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       draft = CompletionKit::MetricVersion.create!(metric: metric, instruction: "draft", rubric_bands: [], state: "draft", source: "edit")
       expect { draft.revert! }.to raise_error(ArgumentError, /published/)
     end
+
+    it "creates a new revert audit row and makes it current" do
+      metric = create(:completion_kit_metric, instruction: "original")
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+      v2.publish!
+
+      audit = nil
+      expect {
+        audit = v1.reload.revert!
+      }.to change { CompletionKit::MetricVersion.where(metric_id: metric.id, source: "revert").count }.by(1)
+
+      expect(audit.source).to eq("revert")
+      expect(audit.current).to be(true)
+      expect(audit.instruction).to eq("original")
+    end
   end
 
   describe "validation_summary" do
