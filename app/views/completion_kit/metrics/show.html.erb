@@ -50,7 +50,6 @@
       <thead>
         <tr>
           <th scope="col">Version</th>
-          <th scope="col">&Delta; Change</th>
           <th scope="col">Source</th>
           <th scope="col">Created</th>
         </tr>
@@ -60,35 +59,27 @@
           <% pred = predecessor_of[v] %>
           <tr>
             <td>
+              <% summary = v.change_summary_against(pred) %>
               <div class="ck-version-cell">
                 <div class="ck-version-cell__label">
                   <strong><%= v.version_label %></strong>
                   <% if v.current? %>
-                    <span class="ck-version-state ck-version-state--live">Published</span>
+                    <span class="ck-chip">Published</span>
                   <% elsif v.draft? %>
-                    <span class="ck-version-state">Draft</span>
                     <%= button_to "Publish", publish_draft_metric_path(@metric, draft_id: v.id),
                           method: :post, form_class: "inline-block",
-                          class: "ck-chip ck-chip--cta" %>
+                          class: "ck-chip ck-chip--publish" %>
                   <% else %>
-                    <span class="ck-version-state">Past</span>
                     <%= button_to "Make current", publish_draft_metric_path(@metric, draft_id: v.id),
                           method: :post, form_class: "inline-block",
                           class: "ck-chip ck-chip--publish",
                           data: { turbo_confirm: "Make #{v.version_label} the version to use? #{v.version_label} will be used in test runs using this metric now. Reviews you have already given stay with the version they were made against." } %>
                   <% end %>
                 </div>
+                <% if summary %>
+                  <button type="button" class="ck-cell-link ck-cell-link--delta" title="What changed from <%= pred.version_label %>" onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()">&Delta;</button>
+                <% end %>
               </div>
-            </td>
-            <td>
-              <% summary = v.change_summary_against(pred) %>
-              <% if summary %>
-                <button type="button" class="ck-change-link ck-change-link--<%= summary[:magnitude] %>"
-                        title="Compare with <%= pred.version_label %>"
-                        onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()"><%= summary[:label] %></button>
-              <% else %>
-                <span class="ck-meta-copy">—</span>
-              <% end %>
             </td>
             <td>
               <% source_label, source_class = case v.source

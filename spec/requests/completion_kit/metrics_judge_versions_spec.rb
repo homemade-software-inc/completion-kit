@@ -121,7 +121,7 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(response.body).to include(versions.last.version_label)
     expect(response.body).to include("Published")
     expect(response.body).to include("Make current")
-    expect(response.body).to include("ck-change-link")
+    expect(response.body).to include("ck-cell-link--delta")
     expect(response.body).to include("ck-mvdiff-#{versions.last.id}")
   end
 

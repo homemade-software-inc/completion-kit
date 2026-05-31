@@ -686,16 +686,6 @@ tr:hover .ck-chip--publish {
   justify-content: space-between;
   gap: 10px;
 }
-.ck-version-state {
-  font-family: var(--ck-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--ck-dim);
-}
-.ck-version-state--live {
-  color: var(--ck-text);
-}
 
 .ck-chip--soft {
   background: var(--ck-accent-soft);
@@ -3630,31 +3620,9 @@ select.ck-input {
 .ck-prompt-versions-table th:nth-child(4), .ck-prompt-versions-table td:nth-child(4) { width: auto; }
 
 .ck-metric-versions-table th:nth-child(1), .ck-metric-versions-table td:nth-child(1) { width: 14rem; }
-.ck-metric-versions-table th:nth-child(2), .ck-metric-versions-table td:nth-child(2) { width: auto; }
-.ck-metric-versions-table th:nth-child(3), .ck-metric-versions-table td:nth-child(3) { width: 9rem; white-space: nowrap; }
-.ck-metric-versions-table th:nth-child(4), .ck-metric-versions-table td:nth-child(4) { width: 9rem; white-space: nowrap; }
+.ck-metric-versions-table th:nth-child(2), .ck-metric-versions-table td:nth-child(2) { width: 12rem; white-space: nowrap; }
+.ck-metric-versions-table th:nth-child(3), .ck-metric-versions-table td:nth-child(3) { width: auto; white-space: nowrap; }
 
-.ck-change-link {
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.86rem;
-  text-align: left;
-  color: var(--ck-text);
-}
-.ck-change-link:hover,
-.ck-change-link:focus-visible {
-  color: var(--ck-accent);
-  text-decoration: underline;
-}
-.ck-change-link--trivial {
-  color: var(--ck-dim);
-}
-.ck-change-link--major {
-  color: rgb(217, 119, 6);
-}
 
 .ck-source-chip {
   display: inline-block;
