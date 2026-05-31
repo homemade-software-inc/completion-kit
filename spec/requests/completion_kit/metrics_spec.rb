@@ -92,12 +92,18 @@ RSpec.describe "CompletionKit metrics", type: :request do
     expect(response.body).to include("Filter by tag")
   end
 
-  it "shows each metric's published version in the index" do
-    metric = create(:completion_kit_metric, name: "Versioned metric")
-    version = CompletionKit::MetricVersion.ensure_current_for(metric)
+  it "shows each metric's published version in the index, defaulting to v1" do
+    versioned = create(:completion_kit_metric, name: "Versioned metric")
+    CompletionKit::MetricVersion.ensure_current_for(versioned)
+    v2 = CompletionKit::MetricVersion.create!(metric: versioned, instruction: "v2 instruction", rubric_bands: versioned.rubric_bands || [], state: "draft", source: "edit")
+    v2.publish!
+    create(:completion_kit_metric, name: "Unversioned metric")
+
     get base_path
-    expect(response.body).to include("Version")
-    expect(response.body).to include(version.version_label)
+
+    expect(response.body).to include("ck-chip--soft")
+    expect(response.body).to include("v2")
+    expect(response.body).to include("v1")
   end
 
 end

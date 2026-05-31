@@ -37,7 +37,7 @@
           </td>
           <td data-label="Version">
             <% v = @current_versions[metric.id] %>
-            <% if v %><strong><%= v.version_label %></strong><% else %><span class="ck-metrics-table__dim">—</span><% end %>
+            <span class="ck-chip ck-chip--soft"><%= v ? v.version_label : "v1" %></span>
           </td>
           <td data-label="Instruction" class="ck-meta-copy"><div class="ck-clamp-2"><%= metric.instruction.presence || "—" %></div></td>
           <td data-label="In groups">
