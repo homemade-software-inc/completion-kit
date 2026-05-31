@@ -32,6 +32,22 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
       expect(response.body).to include("responses/#{current_resp.id}#helpfulness")
       expect(response.body).not_to include("responses/#{stale_resp.id}#helpfulness")
     end
+
+    it "names the current version in the not-measured hint and notes earlier-version reviews below it" do
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      r = create(:completion_kit_response, run: run)
+      create(:completion_kit_calibration, run: run, response: r, metric: metric,
+             metric_version: v1, verdict: "agree", created_by: SecureRandom.uuid)
+      v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+      v2.publish!
+
+      get "/completion_kit/metrics/#{metric.id}"
+
+      expect(response.body).to include("v2 needs")
+      expect(response.body).to include("ck-trust-line__aside")
+      expect(response.body).to include("from an earlier version")
+      expect(response.body).not_to include("kept on file")
+    end
   end
 
   describe "trust panel borderline severity" do

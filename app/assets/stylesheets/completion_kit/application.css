@@ -5623,6 +5623,11 @@ a.tag-mark {
 .ck-trust-line__hint {
   color: var(--ck-dim);
 }
+.ck-trust-line__aside {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--ck-muted);
+}
 .ck-cal-stat {
   display: inline-flex;
   align-items: baseline;

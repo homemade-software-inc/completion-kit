@@ -20,7 +20,7 @@
 <p class="ck-trust-line ck-trust-line--<%= stats.gate %>">
   <% if stats.sample_size.zero? %>
     <span class="ck-trust-line__lead">Not measured yet.</span>
-    <span class="ck-trust-line__hint">Needs <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> human reviews of the judge's scores.<% if prior_version_verdicts > 0 %> (<%= pluralize(prior_version_verdicts, "earlier-version review") %> kept on file.)<% end %></span>
+    <span class="ck-trust-line__hint"><%= current_metric_version ? "#{current_metric_version.version_label} needs" : "Needs" %> <%= CompletionKit::MetricCalibrationStats::PROVISIONAL_MIN %> human reviews of the judge's scores.</span>
     <% if target_response %>
       <%= link_to "Review a judge's score →", run_response_path(target_response.run, target_response, anchor: anchor), class: "ck-cal-link" %>
     <% end %>
@@ -41,3 +41,6 @@
     <% end %>
   <% end %>
 </p>
+<% if stats.sample_size.zero? && prior_version_verdicts > 0 %>
+  <p class="ck-trust-line__aside"><%= pluralize(prior_version_verdicts, "review") %> from an earlier version <%= prior_version_verdicts == 1 ? "doesn't" : "don't" %> count toward this version.</p>
+<% end %>
