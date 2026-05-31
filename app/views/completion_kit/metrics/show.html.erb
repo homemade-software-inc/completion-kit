@@ -73,7 +73,7 @@
                     <%= button_to "Make current", publish_draft_metric_path(@metric, draft_id: v.id),
                           method: :post, form_class: "inline-block",
                           class: "ck-chip ck-chip--publish",
-                          data: { turbo_confirm: "Make #{v.version_label} the version to use? #{v.version_label} will be used in test runs using this metric now. Reviews you have already given stay with the version they were made against." } %>
+                          data: { turbo_confirm: "Make #{v.version_label} the version to use? It becomes the version used in test runs, and the reviews you gave on it count again. Reviews on the version you're leaving stay with it." } %>
                   <% end %>
                 </div>
                 <% vs = v.validation_summary %>
@@ -171,7 +171,7 @@
             <span class="ck-modal__foot-note">Roll this metric back to this version.</span>
             <%= button_to "Make #{v.version_label} current →", publish_draft_metric_path(@metric, draft_id: v.id),
                   method: :post, form_class: "inline-block", class: ck_button_classes(:dark),
-                  data: { turbo_confirm: "Make #{v.version_label} the version to use? #{v.version_label} will be used in test runs using this metric now. Reviews you have already given stay with the version they were made against." } %>
+                  data: { turbo_confirm: "Make #{v.version_label} the version to use? It becomes the version used in test runs, and the reviews you gave on it count again. Reviews on the version you're leaving stay with it." } %>
           <% end %>
         </footer>
       </article>

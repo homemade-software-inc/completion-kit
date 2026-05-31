@@ -226,6 +226,20 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).to include(">v1<")
   end
 
+  it "shows the metric version chip for a judged review" do
+    run = create(:completion_kit_run, prompt: prompt)
+    response_row = create(:completion_kit_response, run: run)
+    metric = create(:completion_kit_metric)
+    version = CompletionKit::MetricVersion.ensure_current_for(metric)
+    create(:completion_kit_review, response: response_row, metric: metric, metric_version: version, ai_score: 4.0)
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_row.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("ck-source-chip")
+    expect(response.body).to include(version.version_label)
+  end
+
   it "renders show for a judge-only run (no prompt) without crashing" do
     dataset = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
     judge_only_run = create(:completion_kit_run, prompt: nil, dataset: dataset, output_column: "actual_output", name: "Judge baseline")
