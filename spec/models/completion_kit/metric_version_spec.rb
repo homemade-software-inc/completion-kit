@@ -157,4 +157,15 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       expect { draft.revert! }.to raise_error(ArgumentError, /published/)
     end
   end
+
+  describe "validation_summary" do
+    it "stores and reads a validation_summary hash" do
+      v = create(:completion_kit_metric_version, validation_summary: { "before" => 1, "after" => 4 })
+      expect(v.reload.validation_summary).to eq({ "before" => 1, "after" => 4 })
+    end
+
+    it "defaults validation_summary to nil" do
+      expect(create(:completion_kit_metric_version).validation_summary).to be_nil
+    end
+  end
 end

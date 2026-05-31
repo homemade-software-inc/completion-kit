@@ -237,6 +237,7 @@ ActiveRecord::Schema.define do
     t.string :source
     t.integer :version_number
     t.datetime :published_at
+    t.text :validation_summary
     t.timestamps
   end
   add_index :completion_kit_metric_versions, [:metric_id, :current], name: "index_ck_metric_versions_on_metric_current"

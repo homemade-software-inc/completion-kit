@@ -6,6 +6,7 @@ module CompletionKit
     has_many :calibrations, dependent: :destroy
 
     serialize :rubric_bands, coder: JSON
+    serialize :validation_summary, coder: JSON
 
     before_validation :assign_version_number, on: :create
 
