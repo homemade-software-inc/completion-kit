@@ -4,7 +4,7 @@ RSpec.describe CompletionKit::MetricAgreementExamples do
   def disagreement(metric, score: 2.0, judge: 4.0, response: nil, excluded: false)
     response ||= create(:completion_kit_response)
     create(:completion_kit_review, response: response, metric: metric, ai_score: judge, ai_feedback: "judge said")
-    create(:completion_kit_calibration,
+    create(:completion_kit_agreement,
            metric: metric, response: response, run: response.run,
            verdict: "disagree", corrected_score: score, note: "too high",
            excluded_from_examples: excluded)
@@ -47,7 +47,7 @@ RSpec.describe CompletionKit::MetricAgreementExamples do
 
   it "drops cases that have no judge score" do
     response = create(:completion_kit_response)
-    create(:completion_kit_calibration,
+    create(:completion_kit_agreement,
            metric: metric, response: response, run: response.run,
            verdict: "disagree", corrected_score: 2.0, note: "no review")
     expect(described_class.judge_examples_for(metric)).to eq([])

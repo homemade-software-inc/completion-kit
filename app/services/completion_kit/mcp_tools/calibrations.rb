@@ -38,7 +38,7 @@ module CompletionKit
       }.freeze
 
       def self.list(args)
-        scope = CompletionKit::Calibration.all
+        scope = CompletionKit::Agreement.all
         scope = scope.where(run_id: args["run_id"]) if args["run_id"]
         scope = scope.where(response_id: args["response_id"]) if args["response_id"]
         scope = scope.where(metric_id: args["metric_id"]) if args["metric_id"]
@@ -52,7 +52,7 @@ module CompletionKit
         metric = CompletionKit::Metric.find(args["metric_id"])
         created_by = args["created_by"].presence || "mcp"
 
-        calibration = CompletionKit::Calibration.find_or_initialize_by(
+        calibration = CompletionKit::Agreement.find_or_initialize_by(
           run_id: run.id, response_id: response.id, metric_id: metric.id, created_by: created_by
         )
         calibration.assign_attributes(

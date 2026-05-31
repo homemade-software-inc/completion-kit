@@ -14,7 +14,7 @@ RSpec.describe "Metric review-grounded examples", type: :request do
   def disagreement(metric)
     response = create(:completion_kit_response)
     create(:completion_kit_review, response: response, metric: metric, ai_score: 4.0)
-    create(:completion_kit_calibration,
+    create(:completion_kit_agreement,
            metric: metric, response: response, run: response.run,
            verdict: "disagree", corrected_score: 2.0, note: "too high")
   end

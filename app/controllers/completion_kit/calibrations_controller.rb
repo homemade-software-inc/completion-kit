@@ -5,7 +5,7 @@ module CompletionKit
 
     def create
       created_by = calibration_creator
-      existing = Calibration.find_by(
+      existing = Agreement.find_by(
         run_id: @run.id, response_id: @response.id, metric_id: @metric.id, created_by: created_by
       )
 
@@ -14,7 +14,7 @@ module CompletionKit
         return
       end
 
-      calibration = existing || Calibration.new(
+      calibration = existing || Agreement.new(
         run: @run, response: @response, metric: @metric, created_by: created_by
       )
       calibration.assign_attributes(

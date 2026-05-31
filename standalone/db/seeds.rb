@@ -425,8 +425,8 @@ end
 
 current_operator = CompletionKit.config.username.presence || "operator"
 
-CompletionKit::Calibration.where(created_by: %w[operator_1 operator_2 operator_3]).delete_all
-CompletionKit::Calibration.where(created_by: current_operator).delete_all
+CompletionKit::Agreement.where(created_by: %w[operator_1 operator_2 operator_3]).delete_all
+CompletionKit::Agreement.where(created_by: current_operator).delete_all
 %w[Tone Accuracy Helpfulness Confidence Urgency\ Calibration Clarity Completeness Brevity Category\ Accuracy].each do |raw|
   name = raw.tr("\\", "")
   m = CompletionKit::Metric.find_by(name: name)
@@ -523,7 +523,7 @@ borderline_notes = {
   ]
 }.freeze
 
-seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
+seed_agreements = lambda do |metric_name:, agree:, disagree:, borderline:|
   metric = CompletionKit::Metric.find_by!(name: metric_name)
   jv = CompletionKit::MetricVersion.ensure_current_for(metric)
   reviewed_responses = CompletionKit::Response.joins(:reviews)
@@ -548,7 +548,7 @@ seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
                 "borderline"
               end
 
-    next if CompletionKit::Calibration.exists?(response_id: resp.id, metric_id: metric.id, created_by: current_operator)
+    next if CompletionKit::Agreement.exists?(response_id: resp.id, metric_id: metric.id, created_by: current_operator)
 
     attrs = { run: resp.run, response: resp, metric: metric, metric_version: jv, verdict: verdict, created_by: current_operator }
     if verdict == "disagree"
@@ -561,42 +561,42 @@ seed_calibrations = lambda do |metric_name:, agree:, disagree:, borderline:|
       attrs[:note] = metric_borderline_notes[borderline_index % metric_borderline_notes.size]
       borderline_index += 1
     end
-    CompletionKit::Calibration.create!(attrs)
+    CompletionKit::Agreement.create!(attrs)
   end
 end
 
-seed_calibrations.call(metric_name: "Tone",                agree: 3,  disagree: 1, borderline: 0)
-seed_calibrations.call(metric_name: "Accuracy",            agree: 5,  disagree: 3, borderline: 2)
-seed_calibrations.call(metric_name: "Confidence",          agree: 10, disagree: 3, borderline: 1)
-seed_calibrations.call(metric_name: "Urgency Calibration", agree: 5,  disagree: 2, borderline: 5)
-seed_calibrations.call(metric_name: "Clarity",             agree: 8,  disagree: 2, borderline: 1)
-seed_calibrations.call(metric_name: "Category Accuracy",   agree: 6,  disagree: 0, borderline: 0)
+seed_agreements.call(metric_name: "Tone",                agree: 3,  disagree: 1, borderline: 0)
+seed_agreements.call(metric_name: "Accuracy",            agree: 5,  disagree: 3, borderline: 2)
+seed_agreements.call(metric_name: "Confidence",          agree: 10, disagree: 3, borderline: 1)
+seed_agreements.call(metric_name: "Urgency Calibration", agree: 5,  disagree: 2, borderline: 5)
+seed_agreements.call(metric_name: "Clarity",             agree: 8,  disagree: 2, borderline: 1)
+seed_agreements.call(metric_name: "Category Accuracy",   agree: 6,  disagree: 0, borderline: 0)
 
-pin_few_shot = lambda do |metric, calibration|
-  return unless calibration
-  return if Array(metric.few_shot_examples).any? { |fs| fs["calibration_id"] == calibration.id }
-  resp = calibration.response
+pin_few_shot = lambda do |metric, agreement|
+  return unless agreement
+  return if Array(metric.few_shot_examples).any? { |fs| fs["agreement_id"] == agreement.id }
+  resp = agreement.response
   review = resp.reviews.find_by(metric_id: metric.id)
   examples = Array(metric.few_shot_examples) + [{
     "input" => resp.input_data.to_s.truncate(2000),
     "response" => resp.response_text.to_s.truncate(2000),
     "judge_score" => review&.ai_score&.to_f,
     "judge_feedback" => review&.ai_feedback.to_s.truncate(1000),
-    "human_score" => calibration.corrected_score&.to_f,
-    "human_note" => calibration.note.to_s.truncate(1000),
-    "calibration_id" => calibration.id,
+    "human_score" => agreement.corrected_score&.to_f,
+    "human_note" => agreement.note.to_s.truncate(1000),
+    "agreement_id" => agreement.id,
     "added_at" => Time.current.utc.iso8601
   }]
   metric.update!(few_shot_examples: examples)
 end
 
 accuracy_metric = CompletionKit::Metric.find_by!(name: "Accuracy")
-accuracy_disagrees = CompletionKit::Calibration.where(metric_id: accuracy_metric.id, verdict: "disagree").order(:id).to_a
+accuracy_disagrees = CompletionKit::Agreement.where(metric_id: accuracy_metric.id, verdict: "disagree").order(:id).to_a
 pin_few_shot.call(accuracy_metric, accuracy_disagrees[0])
 pin_few_shot.call(accuracy_metric, accuracy_disagrees[1])
 
 confidence_metric = CompletionKit::Metric.find_by!(name: "Confidence")
-confidence_disagree = CompletionKit::Calibration.where(metric_id: confidence_metric.id, verdict: "disagree").order(:id).first
+confidence_disagree = CompletionKit::Agreement.where(metric_id: confidence_metric.id, verdict: "disagree").order(:id).first
 pin_few_shot.call(confidence_metric, confidence_disagree)
 
 CompletionKit::MetricVersion.create!(
@@ -639,4 +639,4 @@ CompletionKit::MetricVersion.create!(
   state: "draft", source: "edit", current: false
 )
 
-puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews, #{CompletionKit::Tag.count} tags, #{CompletionKit::Calibration.count} calibrations, #{CompletionKit::MetricVersion.drafts.count} draft metric versions"
+puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews, #{CompletionKit::Tag.count} tags, #{CompletionKit::Agreement.count} agreements, #{CompletionKit::MetricVersion.drafts.count} draft metric versions"

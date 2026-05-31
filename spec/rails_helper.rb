@@ -244,7 +244,7 @@ ActiveRecord::Schema.define do
   add_index :completion_kit_metric_versions, [:metric_id, :state], name: "index_ck_metric_versions_on_metric_state"
   add_index :completion_kit_metric_versions, [:metric_id, :version_number], name: "index_ck_metric_versions_on_metric_vnum"
 
-  create_table :completion_kit_calibrations, force: true do |t|
+  create_table :completion_kit_agreements, force: true do |t|
     t.references :run, null: false
     t.references :response, null: false
     t.references :metric, null: false
@@ -256,10 +256,10 @@ ActiveRecord::Schema.define do
     t.boolean :excluded_from_examples, null: false, default: false
     t.timestamps
   end
-  add_index :completion_kit_calibrations,
+  add_index :completion_kit_agreements,
             [:response_id, :metric_id, :created_by],
             unique: true,
-            name: "index_ck_calibrations_on_response_metric_user"
+            name: "index_ck_agreements_on_response_metric_user"
 
   create_table :completion_kit_starter_metric_dismissals, force: true do |t|
     t.string :starter_key, null: false

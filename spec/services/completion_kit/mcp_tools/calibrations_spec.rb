@@ -12,7 +12,7 @@ RSpec.describe CompletionKit::McpTools::Calibrations do
         "verdict" => "agree", "created_by" => "alice"
       })
       expect(result[:content].first[:text]).to include("agree", "alice")
-      expect(CompletionKit::Calibration.count).to eq(1)
+      expect(CompletionKit::Agreement.count).to eq(1)
     end
 
     it "upserts on a repeat call with the same identity triple" do
@@ -25,8 +25,8 @@ RSpec.describe CompletionKit::McpTools::Calibrations do
         "verdict" => "disagree", "corrected_score" => 3.0, "note" => "off by a star",
         "created_by" => "alice"
       })
-      expect(CompletionKit::Calibration.count).to eq(1)
-      expect(CompletionKit::Calibration.first.verdict).to eq("disagree")
+      expect(CompletionKit::Agreement.count).to eq(1)
+      expect(CompletionKit::Agreement.first.verdict).to eq("disagree")
     end
 
     it "defaults created_by to 'mcp'" do
@@ -34,7 +34,7 @@ RSpec.describe CompletionKit::McpTools::Calibrations do
         "run_id" => run.id, "response_id" => response_row.id, "metric_id" => metric.id,
         "verdict" => "borderline"
       })
-      expect(CompletionKit::Calibration.first.created_by).to eq("mcp")
+      expect(CompletionKit::Agreement.first.created_by).to eq("mcp")
     end
 
     it "returns isError on validation failure" do
@@ -50,13 +50,13 @@ RSpec.describe CompletionKit::McpTools::Calibrations do
     it "filters by run_id, response_id, metric_id, and created_by" do
       other_response = create(:completion_kit_response, run: run)
       jv = CompletionKit::MetricVersion.ensure_current_for(metric)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response_row, metric: metric, metric_version: jv,
              created_by: "alice", verdict: "agree")
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: other_response, metric: metric, metric_version: jv,
              created_by: "alice", verdict: "disagree", corrected_score: 2.0)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response_row, metric: metric, metric_version: jv,
              created_by: "bob", verdict: "borderline")
 

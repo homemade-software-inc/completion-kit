@@ -4,7 +4,7 @@
   <% active_verdict = pending_verdict || current_verdict %>
   <% error = local_assigns[:error] %>
   <% me = CompletionKit.config.username.presence || "operator" %>
-  <% other_calibrations = CompletionKit::Calibration
+  <% other_calibrations = CompletionKit::Agreement
         .where(response_id: response_row.id, metric_id: metric.id)
         .where.not(created_by: me)
         .order(created_at: :asc).to_a %>
@@ -24,7 +24,7 @@
          "disagree" => "The score is wrong — you'll pick the right one.",
          "borderline" => "The rubric is unclear here; either score could be defensible."
        } %>
-    <% CompletionKit::Calibration::VERDICTS.each do |verdict| %>
+    <% CompletionKit::Agreement::VERDICTS.each do |verdict| %>
       <%= button_to run_response_calibrations_path(run, response_row, metric_id: metric.id, verdict: verdict),
               method: :post,
               form: { data: { turbo: "true" } },

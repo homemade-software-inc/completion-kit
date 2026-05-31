@@ -3,7 +3,7 @@ module CompletionKit
     STATES = %w[draft published].freeze
 
     belongs_to :metric
-    has_many :calibrations, dependent: :destroy
+    has_many :agreements, dependent: :destroy
 
     serialize :rubric_bands, coder: JSON
     serialize :validation_summary, coder: JSON

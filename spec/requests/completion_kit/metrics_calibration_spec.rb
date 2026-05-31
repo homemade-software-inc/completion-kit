@@ -15,7 +15,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
     it "no longer renders a 'Cases to learn from' / few-shot section even when disagreements exist" do
       r1 = create(:completion_kit_response, run: run)
       create(:completion_kit_review, response: r1, metric: metric, metric_name: metric.name, metric_version_id: CompletionKit::MetricVersion.ensure_current_for(metric).id, ai_score: 5.0, ai_feedback: "judge said so")
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: r1, metric: metric,
              metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
              verdict: "disagree", corrected_score: 3.0, note: "off", created_by: SecureRandom.uuid)
@@ -43,7 +43,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
     it "names the current version in the not-measured hint and notes earlier-version reviews below it" do
       v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
       r = create(:completion_kit_response, run: run)
-      create(:completion_kit_calibration, run: run, response: r, metric: metric,
+      create(:completion_kit_agreement, run: run, response: r, metric: metric,
              metric_version: v1, verdict: "agree", created_by: SecureRandom.uuid)
       v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
       v2.publish!
@@ -61,7 +61,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
     def add_borderline_calibrations(n)
       n.times do
         r = create(:completion_kit_response, run: run)
-        create(:completion_kit_calibration,
+        create(:completion_kit_agreement,
                run: run, response: r, metric: metric,
                metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
                verdict: "borderline", created_by: SecureRandom.uuid)
@@ -71,7 +71,7 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
     def add_agree_calibrations(n)
       n.times do
         r = create(:completion_kit_response, run: run)
-        create(:completion_kit_calibration,
+        create(:completion_kit_agreement,
                run: run, response: r, metric: metric,
                metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
                verdict: "agree", created_by: SecureRandom.uuid)

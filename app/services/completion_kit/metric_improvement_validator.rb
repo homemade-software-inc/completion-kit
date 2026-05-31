@@ -28,7 +28,7 @@ module CompletionKit
       current = MetricVersion.current.find_by(metric_id: @metric.id)
       return [] unless current
 
-      base = Calibration.where(metric_id: @metric.id, metric_version_id: current.id, verdict: %w[agree disagree])
+      base = Agreement.where(metric_id: @metric.id, metric_version_id: current.id, verdict: %w[agree disagree])
       @key_size_before_cap = base.count
       base.includes(response: :reviews)
           .order(created_at: :desc)

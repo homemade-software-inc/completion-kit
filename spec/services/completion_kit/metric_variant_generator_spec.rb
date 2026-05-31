@@ -163,7 +163,7 @@ RSpec.describe CompletionKit::MetricVariantGenerator, type: :service do
       response = create(:completion_kit_response, run: run, input_data: "Q?", response_text: "A.")
       create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 5, ai_feedback: "perfect")
       jv = CompletionKit::MetricVersion.ensure_current_for(metric)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response, metric: metric, metric_version: jv,
              verdict: "disagree", corrected_score: 3, note: "missed nuance", created_by: "alice")
 
@@ -189,10 +189,10 @@ RSpec.describe CompletionKit::MetricVariantGenerator, type: :service do
       create(:completion_kit_review, response: r1, metric: metric, metric_name: metric.name, ai_score: 4, ai_feedback: "hmm")
       create(:completion_kit_review, response: r2, metric: metric, metric_name: metric.name, ai_score: 4, ai_feedback: "hmm")
       jv = CompletionKit::MetricVersion.ensure_current_for(metric)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: r1, metric: metric, metric_version: jv,
              verdict: "borderline", note: "two bands overlap here", created_by: "alice")
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: r2, metric: metric, metric_version: jv,
              verdict: "borderline", note: nil, created_by: "bob")
 
@@ -218,7 +218,7 @@ RSpec.describe CompletionKit::MetricVariantGenerator, type: :service do
       response = create(:completion_kit_response, run: run, input_data: "Q?", response_text: "A.")
       create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 5, ai_feedback: "perfect")
       jv = CompletionKit::MetricVersion.ensure_current_for(metric)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response, metric: metric, metric_version: jv,
              verdict: "disagree", corrected_score: 3, note: "missed nuance", created_by: "alice")
 
@@ -233,7 +233,7 @@ RSpec.describe CompletionKit::MetricVariantGenerator, type: :service do
       run = create(:completion_kit_run)
       response = create(:completion_kit_response, run: run, input_data: "Q?", response_text: "A.")
       jv = CompletionKit::MetricVersion.ensure_current_for(metric)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response, metric: metric, metric_version: jv,
              verdict: "disagree", corrected_score: 3, note: "no review", created_by: "ghost")
 

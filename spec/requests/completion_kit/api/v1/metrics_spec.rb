@@ -120,7 +120,7 @@ RSpec.describe "API V1 Metrics", type: :request do
 
     def add_disagree(corrected: 3, note: "off")
       jv = CompletionKit::MetricVersion.ensure_current_for(metric)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response_row, metric: metric,
              metric_version: jv, verdict: "disagree",
              corrected_score: corrected, note: note, created_by: SecureRandom.uuid)

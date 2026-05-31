@@ -12,7 +12,7 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
   end
 
   def add_calibration(response, verdict:, corrected_score: nil, created_by: SecureRandom.uuid)
-    create(:completion_kit_calibration,
+    create(:completion_kit_agreement,
            run: run, response: response, metric: metric,
            metric_version: metric_version, verdict: verdict,
            corrected_score: corrected_score, created_by: created_by)
@@ -61,7 +61,7 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
 
     it "yields nil score-pair stats when there are no scored reviews" do
       response = create(:completion_kit_response, run: run)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response, metric: metric,
              metric_version: metric_version, verdict: "agree", created_by: "alice")
       stats = described_class.for(metric)
@@ -73,7 +73,7 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
       newer_version = CompletionKit::MetricVersion.create!(metric: metric, instruction: "updated", current: false)
       response = add_response(ai_score: 4)
       add_calibration(response, verdict: "agree", created_by: "alice")
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response, metric: metric,
              metric_version: newer_version, verdict: "disagree", corrected_score: 2, created_by: "bob")
 
@@ -86,10 +86,10 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
     it "defaults to the metric's current published judge version, ignoring verdicts on superseded versions" do
       old_version = CompletionKit::MetricVersion.ensure_current_for(metric)
       r1 = add_response(ai_score: 4)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: r1, metric: metric,
              metric_version: old_version, verdict: "agree", created_by: "alice")
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: add_response(ai_score: 3), metric: metric,
              metric_version: old_version, verdict: "agree", created_by: "bob")
 
@@ -98,18 +98,18 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
         metric: metric, instruction: "rewritten",
         rubric_bands: metric.rubric_bands, state: "published", current: true
       )
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: add_response(ai_score: 5), metric: metric,
              metric_version: new_version, verdict: "agree", created_by: "casey")
 
       stats = described_class.for(metric)
       expect(stats.sample_size).to eq(1)
-      expect(CompletionKit::Calibration.where(metric_id: metric.id).count).to eq(3)
+      expect(CompletionKit::Agreement.where(metric_id: metric.id).count).to eq(3)
     end
 
     it "returns lifetime stats across all versions when metric_version: nil is passed explicitly" do
       old_version = CompletionKit::MetricVersion.ensure_current_for(metric)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: add_response(ai_score: 4), metric: metric,
              metric_version: old_version, verdict: "agree", created_by: "alice")
       old_version.update!(current: false)
@@ -117,7 +117,7 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
         metric: metric, instruction: "rewritten",
         rubric_bands: metric.rubric_bands, state: "published", current: true
       )
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: add_response(ai_score: 5), metric: metric,
              metric_version: new_version, verdict: "agree", created_by: "bob")
 
@@ -143,7 +143,7 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
 
     it "defensively skips a disagree calibration whose corrected_score was nulled out" do
       response = add_response(ai_score: 4)
-      cal = CompletionKit::Calibration.new(
+      cal = CompletionKit::Agreement.new(
         run: run, response: response, metric: metric,
         metric_version: metric_version, verdict: "disagree",
         corrected_score: nil, created_by: "nulled"

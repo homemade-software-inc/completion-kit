@@ -49,7 +49,7 @@ RSpec.describe CompletionKit::McpTools::Judges do
 
     def add_calibration(version, verdict:, response: nil, corrected: nil, created_by: SecureRandom.uuid)
       response ||= create(:completion_kit_response, run: run)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response, metric: metric,
              metric_version: version, verdict: verdict,
              corrected_score: corrected, created_by: created_by)

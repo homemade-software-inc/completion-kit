@@ -4,7 +4,7 @@
 <% current_metric_version = metric && CompletionKit::MetricVersion.current.find_by(metric_id: metric.id) %>
 <% target_response = if (stats.sample_size.zero? || stats.counter_only?) && metric && current_metric_version
      created_by = CompletionKit.config.username.presence || "operator"
-     verdicted_ids = CompletionKit::Calibration.where(metric_id: metric.id, created_by: created_by, metric_version_id: current_metric_version.id).pluck(:response_id)
+     verdicted_ids = CompletionKit::Agreement.where(metric_id: metric.id, created_by: created_by, metric_version_id: current_metric_version.id).pluck(:response_id)
      CompletionKit::Response.joins(:reviews)
        .where(reviews: { metric_id: metric.id, metric_version_id: current_metric_version.id })
        .where.not(reviews: { ai_score: nil })
@@ -12,7 +12,7 @@
        .order(created_at: :desc).first
    end %>
 <% prior_version_verdicts = if stats.sample_size.zero? && metric && current_metric_version
-     CompletionKit::Calibration.where(metric_id: metric.id).where.not(metric_version_id: current_metric_version.id).count
+     CompletionKit::Agreement.where(metric_id: metric.id).where.not(metric_version_id: current_metric_version.id).count
    else
      0
    end %>

@@ -7,7 +7,7 @@ module CompletionKit
         before_action :load_calibration, only: [:destroy]
 
         def index
-          scope = Calibration.all
+          scope = Agreement.all
           scope = scope.where(run_id: params[:run_id]) if params[:run_id].present?
           scope = scope.where(response_id: params[:response_id]) if params[:response_id].present?
           scope = scope.where(metric_id: params[:metric_id]) if params[:metric_id].present?
@@ -54,13 +54,13 @@ module CompletionKit
         end
 
         def load_calibration
-          @calibration = Calibration.find(params[:id])
+          @calibration = Agreement.find(params[:id])
         rescue ActiveRecord::RecordNotFound
           not_found
         end
 
         def scope_calibrations
-          Calibration.where(run_id: @run.id, response_id: @response.id, metric_id: @metric.id)
+          Agreement.where(run_id: @run.id, response_id: @response.id, metric_id: @metric.id)
         end
 
         def calibration_params

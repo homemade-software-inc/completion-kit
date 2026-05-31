@@ -39,7 +39,7 @@ module CompletionKit
     def show
       @edit_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
-      @improve_disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
+      @improve_disagreement_count = Agreement.where(metric_id: @metric.id, verdict: "disagree").count
       @versions = MetricVersion.where(metric_id: @metric.id).order(version_number: :desc).to_a
       @guiding_examples = CompletionKit.config.judge_examples_from_reviews ? MetricAgreementExamples.judge_examples_for(@metric) : []
     end
@@ -52,7 +52,7 @@ module CompletionKit
       @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @edit_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @published_metric_version = MetricVersion.published.where(metric_id: @metric.id, current: true).first
-      @improve_disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
+      @improve_disagreement_count = Agreement.where(metric_id: @metric.id, verdict: "disagree").count
 
       if @edit_draft
         @metric.instruction = @edit_draft.instruction
@@ -117,7 +117,7 @@ module CompletionKit
 
     def suggest_variants
       target = params[:back_to] == "edit" ? edit_metric_path(@metric) : metric_path(@metric)
-      counts = Calibration.where(metric_id: @metric.id, verdict: %w[agree disagree]).group(:verdict).count
+      counts = Agreement.where(metric_id: @metric.id, verdict: %w[agree disagree]).group(:verdict).count
       if counts["disagree"].to_i.zero?
         redirect_to target, alert: "Mark at least one case as Disagree before asking the model to suggest a change."
         return
@@ -145,7 +145,7 @@ module CompletionKit
     end
 
     def exclude_example
-      calibration = Calibration.where(metric_id: @metric.id).find(params[:calibration_id])
+      calibration = Agreement.where(metric_id: @metric.id).find(params[:calibration_id])
       calibration.update!(excluded_from_examples: true)
       render turbo_stream: turbo_stream.replace(
         "ck-guiding-#{@metric.id}",

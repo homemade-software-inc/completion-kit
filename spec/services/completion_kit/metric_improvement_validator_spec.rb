@@ -7,7 +7,7 @@ RSpec.describe CompletionKit::MetricImprovementValidator do
   def reviewed(verdict:, ai:, corrected: nil)
     response = create(:completion_kit_response, run: run)
     create(:completion_kit_review, response: response, metric: metric, ai_score: ai)
-    create(:completion_kit_calibration,
+    create(:completion_kit_agreement,
            metric: metric, response: response, run: run,
            metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
            verdict: verdict, corrected_score: corrected, created_by: SecureRandom.uuid)
@@ -72,7 +72,7 @@ RSpec.describe CompletionKit::MetricImprovementValidator do
     blank_response = create(:completion_kit_response, run: run)
     blank_response.update_column(:response_text, "")
     create(:completion_kit_review, response: blank_response, metric: metric, ai_score: 3.0)
-    create(:completion_kit_calibration,
+    create(:completion_kit_agreement,
            metric: metric, response: blank_response, run: run,
            metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
            verdict: "agree", corrected_score: nil, created_by: SecureRandom.uuid)
@@ -84,7 +84,7 @@ RSpec.describe CompletionKit::MetricImprovementValidator do
 
   it "excludes an agree calibration with no review for the metric from the answer key" do
     no_review_response = create(:completion_kit_response, run: run)
-    create(:completion_kit_calibration,
+    create(:completion_kit_agreement,
            metric: metric, response: no_review_response, run: run,
            metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
            verdict: "agree", corrected_score: nil, created_by: SecureRandom.uuid)
@@ -110,7 +110,7 @@ RSpec.describe CompletionKit::MetricImprovementValidator do
                             output_column: "actual_output")
     response = create(:completion_kit_response, run: promptless_run)
     create(:completion_kit_review, response: response, metric: metric, ai_score: 4.0)
-    create(:completion_kit_calibration,
+    create(:completion_kit_agreement,
            metric: metric, response: response, run: promptless_run,
            metric_version: CompletionKit::MetricVersion.ensure_current_for(metric),
            verdict: "disagree", corrected_score: 2.0, created_by: SecureRandom.uuid)

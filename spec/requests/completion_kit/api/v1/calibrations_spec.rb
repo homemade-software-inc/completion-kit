@@ -23,13 +23,13 @@ RSpec.describe "API V1 Calibrations", type: :request do
     before do
       mv = CompletionKit::MetricVersion.ensure_current_for(metric)
       mv_other = CompletionKit::MetricVersion.ensure_current_for(other_metric)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response_row, metric: metric, metric_version: mv,
              verdict: "agree", created_by: "alice")
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response_row, metric: metric, metric_version: mv,
              verdict: "disagree", corrected_score: 2.0, created_by: "bob")
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: other_run, response: other_response, metric: other_metric, metric_version: mv_other,
              verdict: "borderline", created_by: "alice")
     end
@@ -75,12 +75,12 @@ RSpec.describe "API V1 Calibrations", type: :request do
   describe "DELETE /api/v1/calibrations/:id" do
     it "destroys a calibration and returns 204" do
       mv = CompletionKit::MetricVersion.ensure_current_for(metric)
-      cal = create(:completion_kit_calibration,
+      cal = create(:completion_kit_agreement,
                    run: run, response: response_row, metric: metric, metric_version: mv,
                    verdict: "agree", created_by: "alice")
       delete "/completion_kit/api/v1/calibrations/#{cal.id}", headers: headers
       expect(response).to have_http_status(:no_content)
-      expect(CompletionKit::Calibration.where(id: cal.id)).to be_empty
+      expect(CompletionKit::Agreement.where(id: cal.id)).to be_empty
     end
 
     it "returns 404 when the calibration does not exist" do
@@ -148,10 +148,10 @@ RSpec.describe "API V1 Calibrations", type: :request do
   describe "GET" do
     it "lists calibrations for the (run, response, metric) triple" do
       jv = CompletionKit::MetricVersion.ensure_current_for(metric)
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response_row, metric: metric,
              metric_version: jv, created_by: "alice")
-      create(:completion_kit_calibration,
+      create(:completion_kit_agreement,
              run: run, response: response_row, metric: metric,
              metric_version: jv, created_by: "bob", verdict: "borderline")
       get base_path, headers: headers

@@ -41,10 +41,10 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
   end
 
   describe "associations" do
-    it "belongs to a metric and has many calibrations" do
+    it "belongs to a metric and has many agreements" do
       jv = create(:completion_kit_metric_version)
       expect(jv.metric).to be_present
-      expect(jv.calibrations).to eq([])
+      expect(jv.agreements).to eq([])
     end
   end
 

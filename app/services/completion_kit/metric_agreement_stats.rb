@@ -49,7 +49,7 @@ module CompletionKit
     end
 
     def call
-      scope = Calibration.where(metric_id: @metric.id)
+      scope = Agreement.where(metric_id: @metric.id)
       if @metric_version
         scope = scope.where(metric_version_id: @metric_version.id)
       elsif !@all_versions

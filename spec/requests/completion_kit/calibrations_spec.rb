@@ -22,8 +22,8 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
   it "creates an agree calibration via the web endpoint" do
     post base_path, params: { metric_id: metric.id, verdict: "agree" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     expect(response).to have_http_status(:ok)
-    expect(CompletionKit::Calibration.count).to eq(1)
-    expect(CompletionKit::Calibration.first.verdict).to eq("agree")
+    expect(CompletionKit::Agreement.count).to eq(1)
+    expect(CompletionKit::Agreement.first.verdict).to eq("agree")
   end
 
   it "flashes the Save button green (ck-button--just-saved) after a successful disagree save" do
@@ -47,8 +47,8 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
   it "upserts the same user's verdict on a repeat POST" do
     post base_path, params: { metric_id: metric.id, verdict: "agree" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     post base_path, params: { metric_id: metric.id, verdict: "borderline", note: "rubric ambiguous" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
-    expect(CompletionKit::Calibration.count).to eq(1)
-    cal = CompletionKit::Calibration.first
+    expect(CompletionKit::Agreement.count).to eq(1)
+    cal = CompletionKit::Agreement.first
     expect(cal.verdict).to eq("borderline")
     expect(cal.note).to eq("rubric ambiguous")
   end
@@ -90,15 +90,15 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
                      headers: { "Accept" => "text/vnd.turbo-stream.html", "HTTP_X_REMOTE_USER" => "alice" }
     post base_path, params: { metric_id: metric.id, verdict: "disagree", corrected_score: 2.0 },
                      headers: { "Accept" => "text/vnd.turbo-stream.html", "HTTP_X_REMOTE_USER" => "bob" }
-    expect(CompletionKit::Calibration.count).to eq(2)
-    expect(CompletionKit::Calibration.pluck(:created_by)).to contain_exactly("alice", "bob")
+    expect(CompletionKit::Agreement.count).to eq(2)
+    expect(CompletionKit::Agreement.pluck(:created_by)).to contain_exactly("alice", "bob")
   end
 
   it "reveals the score form inline (no save, no flash) when disagree is clicked without a corrected_score" do
     post base_path, params: { metric_id: metric.id, verdict: "disagree" },
                      headers: { "Accept" => "text/vnd.turbo-stream.html" }
     expect(response).to have_http_status(:ok)
-    expect(CompletionKit::Calibration.count).to eq(0)
+    expect(CompletionKit::Agreement.count).to eq(0)
     expect(response.body).to include("What should the score have been?")
     expect(response.body).to include('class="ck-star-picker"')
     expect(response.body).to include('name="corrected_score"')
@@ -111,7 +111,7 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
     expect(response.body).to include("must be between 1 and 5")
     expect(response.body).to include('class="ck-calibration__error"')
-    expect(CompletionKit::Calibration.count).to eq(0)
+    expect(CompletionKit::Agreement.count).to eq(0)
   end
 
   it "returns 404 when the judge_calibration_enabled flag is off" do
@@ -119,7 +119,7 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     CompletionKit.config.judge_calibration_enabled = false
     post base_path, params: { metric_id: metric.id, verdict: "agree" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     expect(response).to have_http_status(:not_found)
-    expect(CompletionKit::Calibration.count).to eq(0)
+    expect(CompletionKit::Agreement.count).to eq(0)
   ensure
     CompletionKit.config.judge_calibration_enabled = original
   end

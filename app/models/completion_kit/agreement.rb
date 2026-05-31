@@ -1,5 +1,5 @@
 module CompletionKit
-  class Calibration < ApplicationRecord
+  class Agreement < ApplicationRecord
     VERDICTS = %w[agree disagree borderline].freeze
 
     belongs_to :run
