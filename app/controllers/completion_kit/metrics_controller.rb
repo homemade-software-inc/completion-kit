@@ -117,8 +117,8 @@ module CompletionKit
 
     def suggest_variants
       target = params[:back_to] == "edit" ? edit_metric_path(@metric) : metric_path(@metric)
-      disagreement_count = Calibration.where(metric_id: @metric.id, verdict: "disagree").count
-      if disagreement_count.zero?
+      counts = Calibration.where(metric_id: @metric.id, verdict: %w[agree disagree]).group(:verdict).count
+      if counts["disagree"].to_i.zero?
         redirect_to target, alert: "Mark at least one case as Disagree before asking the model to suggest a change."
         return
       end
@@ -131,7 +131,7 @@ module CompletionKit
         render turbo_stream: turbo_stream.replace(
           "ck-suggestion-status-#{@metric.id}",
           partial: "completion_kit/metrics/suggestion_pending",
-          locals: { metric: @metric, count: Calibration.where(metric_id: @metric.id, verdict: %w[agree disagree]).count }
+          locals: { metric: @metric, count: counts.values.sum }
         )
       end
     end

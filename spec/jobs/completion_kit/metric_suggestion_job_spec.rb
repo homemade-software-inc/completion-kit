@@ -47,4 +47,16 @@ RSpec.describe CompletionKit::MetricSuggestionJob do
       .with("metric_#{metric.id}_suggestion", hash_including(target: "ck-suggestion-status-#{metric.id}"))
     expect { described_class.perform_now(metric.id) }.not_to raise_error
   end
+
+  it "replaces an existing suggestion draft" do
+    old = CompletionKit::MetricVersion.create!(metric: metric, instruction: "old", rubric_bands: metric.rubric_bands || [], state: "draft", source: "suggestion")
+    variant = CompletionKit::MetricVariantGenerator::Variant.new(reasoning: "r", instruction: "tighter", rubric_bands: nil)
+    allow_any_instance_of(CompletionKit::MetricVariantGenerator).to receive(:call).and_return([variant])
+    allow_any_instance_of(CompletionKit::MetricImprovementValidator).to receive(:call).and_return({ "after" => 1 })
+
+    described_class.new.perform(metric.id)
+
+    expect(CompletionKit::MetricVersion.exists?(old.id)).to be(false)
+    expect(CompletionKit::MetricVersion.drafts.where(metric_id: metric.id, source: "suggestion").count).to eq(1)
+  end
 end

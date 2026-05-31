@@ -5,12 +5,6 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
   let(:run) { create(:completion_kit_run) }
   let(:response_row) { create(:completion_kit_response, run: run) }
 
-  def stub_llm(text)
-    client = instance_double("CompletionKit::OpenAiClient")
-    allow(client).to receive(:generate_completion).and_return(text)
-    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
-  end
-
   def add_disagree(corrected: 3, note: "off")
     jv = CompletionKit::MetricVersion.ensure_current_for(metric)
     create(:completion_kit_calibration,
