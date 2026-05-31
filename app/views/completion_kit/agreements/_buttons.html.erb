@@ -1,4 +1,4 @@
-<div id="agreement_<%= response_row.id %>_<%= metric.id %>" class="ck-calibration">
+<div id="agreement_<%= response_row.id %>_<%= metric.id %>" class="ck-agreement">
   <% current_verdict = agreement&.verdict %>
   <% pending_verdict = local_assigns[:pending_verdict] %>
   <% active_verdict = pending_verdict || current_verdict %>
@@ -9,15 +9,15 @@
         .where.not(created_by: me)
         .order(created_at: :asc).to_a %>
   <% verdict_icons = { "agree" => "hand-thumb-up", "disagree" => "hand-thumb-down", "borderline" => "scale" } %>
-  <p class="ck-calibration__prompt">
-    <span class="ck-calibration__label">Your verdict</span>
+  <p class="ck-agreement__prompt">
+    <span class="ck-agreement__label">Your verdict</span>
     <% if other_agreements.any? %>
-      <span class="ck-calibration__meta"><%= pluralize(other_agreements.size, "other verdict") %> on this score</span>
-      <span class="ck-calibration__sep">·</span>
+      <span class="ck-agreement__meta"><%= pluralize(other_agreements.size, "other verdict") %> on this score</span>
+      <span class="ck-agreement__sep">·</span>
     <% end %>
-    <%= link_to metric_path(metric), class: "ck-calibration__meta-link" do %><%= heroicon_tag "adjustments-horizontal", variant: :outline, "aria-hidden": "true" %>Calibration →<% end %>
+    <%= link_to metric_path(metric, anchor: "agreement"), class: "ck-agreement__meta-link" do %><%= heroicon_tag "adjustments-horizontal", variant: :outline, "aria-hidden": "true" %>Agreement →<% end %>
   </p>
-  <div class="ck-calibration__buttons">
+  <div class="ck-agreement__buttons">
     <% verdict_icons = { "agree" => "hand-thumb-up", "disagree" => "hand-thumb-down", "borderline" => "scale" } %>
     <% verdict_hints = {
          "agree" => "The score looks right.",
@@ -28,7 +28,7 @@
       <%= button_to run_response_agreements_path(run, response_row, metric_id: metric.id, verdict: verdict),
               method: :post,
               form: { data: { turbo: "true" } },
-              class: "ck-calibration__pill ck-calibration__pill--#{verdict}#{' is-active' if verdict == active_verdict}",
+              class: "ck-agreement__pill ck-agreement__pill--#{verdict}#{' is-active' if verdict == active_verdict}",
               "aria-pressed": (verdict == active_verdict).to_s,
               title: verdict_hints[verdict] do %>
         <%= heroicon_tag verdict_icons[verdict], variant: :outline, size: 14, "aria-hidden": "true" %>
@@ -38,26 +38,26 @@
   </div>
 
   <% if error.present? %>
-    <p class="ck-calibration__error" role="alert"><%= error %></p>
+    <p class="ck-agreement__error" role="alert"><%= error %></p>
   <% end %>
 
   <% if other_agreements.any? %>
-    <details class="ck-calibration__others">
-      <summary class="ck-calibration__others-summary">
+    <details class="ck-agreement__others">
+      <summary class="ck-agreement__others-summary">
         <%= heroicon_tag "chevron-right", variant: :outline, size: 14, "aria-hidden": "true" %>
         <span>What others said (<%= other_agreements.size %>)</span>
       </summary>
-      <ul class="ck-calibration__others-list">
+      <ul class="ck-agreement__others-list">
         <% other_agreements.each do |other| %>
-          <li class="ck-calibration__others-item ck-calibration__others-item--<%= other.verdict %>">
-            <div class="ck-calibration__others-row">
-              <span class="ck-calibration__others-verdict">
+          <li class="ck-agreement__others-item ck-agreement__others-item--<%= other.verdict %>">
+            <div class="ck-agreement__others-row">
+              <span class="ck-agreement__others-verdict">
                 <%= heroicon_tag verdict_icons[other.verdict], variant: :outline, size: 14, "aria-hidden": "true" %>
                 <%= other.verdict %>
               </span>
-              <span class="ck-calibration__others-by"><%= other.created_by %></span>
+              <span class="ck-agreement__others-by"><%= other.created_by %></span>
               <% if other.corrected_score %>
-                <span class="ck-calibration__others-stars" aria-label="<%= pluralize(other.corrected_score.to_i, 'star') %>" title="<%= pluralize(other.corrected_score.to_i, 'star') %>">
+                <span class="ck-agreement__others-stars" aria-label="<%= pluralize(other.corrected_score.to_i, 'star') %>" title="<%= pluralize(other.corrected_score.to_i, 'star') %>">
                   <% 5.times do |i| %>
                     <svg viewBox="0 0 24 24" width="12" height="12" stroke-width="1.75" class="ck-star <%= i < other.corrected_score.to_i ? "ck-star--filled" : "ck-star--empty" %>" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                   <% end %>
@@ -65,7 +65,7 @@
               <% end %>
             </div>
             <% if other.note.to_s.present? %>
-              <p class="ck-calibration__others-note">"<%= other.note.to_s.truncate(140) %>"</p>
+              <p class="ck-agreement__others-note">"<%= other.note.to_s.truncate(140) %>"</p>
             <% end %>
           </li>
         <% end %>
@@ -77,7 +77,7 @@
     <% existing_score = (agreement&.corrected_score || review&.ai_score)&.round %>
     <%= form_with url: run_response_agreements_path(run, response_row),
                   method: :post, local: false,
-                  class: "ck-calibration__detail" do |f| %>
+                  class: "ck-agreement__detail" do |f| %>
       <%= hidden_field_tag :metric_id, metric.id %>
       <%= hidden_field_tag :verdict, "disagree" %>
       <p class="ck-label">What should the score have been?</p>
@@ -99,7 +99,7 @@
   <% elsif active_verdict == "borderline" %>
     <%= form_with url: run_response_agreements_path(run, response_row),
                   method: :post, local: false,
-                  class: "ck-calibration__detail" do |f| %>
+                  class: "ck-agreement__detail" do |f| %>
       <%= hidden_field_tag :metric_id, metric.id %>
       <%= hidden_field_tag :verdict, "borderline" %>
       <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="What made this borderline? (optional)"><%= agreement&.note %></textarea>

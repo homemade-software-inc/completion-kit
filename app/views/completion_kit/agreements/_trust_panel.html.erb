@@ -17,7 +17,7 @@
      0
    end %>
 
-<p class="ck-trust-line ck-trust-line--<%= stats.gate %>">
+<p id="agreement" class="ck-trust-line ck-trust-line--<%= stats.gate %>">
   <% if stats.sample_size.zero? %>
     <span class="ck-trust-line__lead">Not measured yet.</span>
     <span class="ck-trust-line__hint"><%= current_metric_version ? "#{current_metric_version.version_label} needs" : "Needs" %> <%= CompletionKit::MetricAgreementStats::PROVISIONAL_MIN %> human reviews of the judge's scores.</span>

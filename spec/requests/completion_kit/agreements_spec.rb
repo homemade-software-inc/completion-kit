@@ -110,7 +110,7 @@ RSpec.describe "CompletionKit agreements (web)", type: :request do
                      headers: { "Accept" => "text/vnd.turbo-stream.html" }
     expect(response).to have_http_status(:unprocessable_entity)
     expect(response.body).to include("must be between 1 and 5")
-    expect(response.body).to include('class="ck-calibration__error"')
+    expect(response.body).to include('class="ck-agreement__error"')
     expect(CompletionKit::Agreement.count).to eq(0)
   end
 
