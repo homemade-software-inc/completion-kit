@@ -168,23 +168,11 @@
 <% end %>
 
 <% if CompletionKit.config.judge_calibration_enabled %>
+  <% draft = @suggestion_draft || @edit_draft %>
   <section class="ck-card ck-card--spaced">
-    <p class="ck-kicker">Calibration</p>
-    <p class="ck-meta-copy">This is a measure of how often the judge's scores match a human reviewer. Review its scores to build that signal; the scores you disagree with become the cases the model learns from when you improve the metric.</p>
-    <%= render "completion_kit/calibrations/trust_panel",
-          stats: CompletionKit::MetricCalibrationStats.for(@metric),
-          metric: @metric %>
-    <% if CompletionKit.config.judge_examples_from_reviews %>
-      <%= render "completion_kit/metrics/guiding_examples", metric: @metric, examples: @guiding_examples %>
-    <% end %>
-    <% draft = @suggestion_draft || @edit_draft %>
-    <% if draft %>
-      <div class="ck-cal-foot">
-        <span class="ck-cal-foot__note">A draft improvement (<%= draft.version_label %>) is waiting in the Versions table above. Open its change to compare, then Publish to use it.</span>
-      </div>
-    <% elsif @improve_disagreement_count.positive? %>
-      <div class="ck-cal-foot">
-        <span class="ck-cal-foot__note"><%= pluralize(@improve_disagreement_count, "case") %> where a reviewer's score didn't match the judge.</span>
+    <div class="ck-prompt-preview__header">
+      <p class="ck-kicker">Calibration</p>
+      <% if draft.nil? && @improve_disagreement_count.positive? %>
         <%= button_to suggest_variants_metric_path(@metric),
               method: :post, form_class: "inline-block",
               class: ck_button_classes(:light, variant: :outline) + " ck-button--sm",
@@ -192,6 +180,18 @@
           <%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>
           Suggest improvements
         <% end %>
+      <% end %>
+    </div>
+    <p class="ck-meta-copy">This is a measure of how often the judge's scores match a human reviewer. Review its scores to build that signal; the scores you disagree with become the cases the model learns from when you improve the metric.</p>
+    <%= render "completion_kit/calibrations/trust_panel",
+          stats: CompletionKit::MetricCalibrationStats.for(@metric),
+          metric: @metric %>
+    <% if CompletionKit.config.judge_examples_from_reviews %>
+      <%= render "completion_kit/metrics/guiding_examples", metric: @metric, examples: @guiding_examples %>
+    <% end %>
+    <% if draft %>
+      <div class="ck-cal-foot">
+        <span class="ck-cal-foot__note">A draft improvement (<%= draft.version_label %>) is waiting in the Versions table above. Open its change to compare, then Publish to use it.</span>
       </div>
     <% end %>
   </section>
