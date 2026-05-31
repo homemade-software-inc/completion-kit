@@ -5,6 +5,13 @@ RSpec.describe "CompletionKit metrics (calibration surfaces)", type: :request do
   let(:run) { create(:completion_kit_run, name: "Smoke run") }
 
   describe "GET metric show" do
+    it "titles the card Agreement and drops the word Calibration" do
+      get "/completion_kit/metrics/#{metric.id}"
+      expect(response.body).to include("Agreement")
+      expect(response.body).not_to include(">Calibration<")
+      expect(response.body).not_to include("This is a measure of how often the judge's scores match a human reviewer")
+    end
+
     it "no longer renders a 'Cases to learn from' / few-shot section even when disagreements exist" do
       r1 = create(:completion_kit_response, run: run)
       create(:completion_kit_review, response: r1, metric: metric, metric_name: metric.name, metric_version_id: CompletionKit::MetricVersion.ensure_current_for(metric).id, ai_score: 5.0, ai_feedback: "judge said so")

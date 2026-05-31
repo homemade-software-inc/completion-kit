@@ -171,7 +171,7 @@
   <% draft = @suggestion_draft || @edit_draft %>
   <section class="ck-card ck-card--spaced">
     <div class="ck-prompt-preview__header">
-      <p class="ck-kicker">Calibration</p>
+      <p class="ck-kicker">Agreement</p>
       <% if draft.nil? && @improve_disagreement_count.positive? %>
         <%= button_to suggest_variants_metric_path(@metric),
               method: :post, form_class: "inline-block",
@@ -184,7 +184,7 @@
     </div>
     <%= turbo_stream_from "metric_#{@metric.id}_suggestion" %>
     <div id="ck-suggestion-status-<%= @metric.id %>" class="ck-suggestion-status"></div>
-    <p class="ck-meta-copy">This is a measure of how often the judge's scores match a human reviewer. Review its scores to build that signal; the scores you disagree with become the cases the model learns from when you improve the metric.</p>
+    <p class="ck-meta-copy">How often the judge lands on the same score you would. Review its scores to build that signal, and improve the metric to raise it.</p>
     <%= render "completion_kit/calibrations/trust_panel",
           stats: CompletionKit::MetricCalibrationStats.for(@metric),
           metric: @metric %>

@@ -41,7 +41,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
   it "shows no Suggest-improvements affordance when no disagreements exist (the calibration card guides toward verdicts instead)" do
     get "/completion_kit/metrics/#{metric.id}"
     expect(response.body).not_to include("Suggest improvements")
-    expect(response.body).to include("Calibration")
+    expect(response.body).to include("Agreement")
   end
 
   it "enables the Suggest-improvements button as soon as a disagreement is collected" do
