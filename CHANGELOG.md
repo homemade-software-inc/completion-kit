@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-05-31
+
+### Added
+
+- **Validated metric improvements.** When you ask the model to improve a metric, the suggested change is re-scored against the cases you have already reviewed and shown as a before/after scoreboard before you publish: how many of your reviews the candidate now matches, with a Fixes / Keeps / Breaks breakdown. "Breaks" (agreements the candidate would regress) is the honest, semi-held-out signal, since the candidate is generated from your disagreements. Publishing a net-negative candidate warns. The flow runs in a background job (`MetricSuggestionJob`) with a Turbo-streamed pending state, retries on transient LLM errors, and a failure state so a click never strands on a spinner. The candidate is validated against the current version's reviewed cases (the 30 most recent), and the result is stored on the draft as `validation_summary`.
+
+### Changed
+
+- **"Calibration" is reframed as "Agreement"** across the metric page. The card, the one-line description, the measured-state stat ("Agrees with you ~X% of N reviews"), and the version source chip ("AI suggestion") drop the ML jargon for plain language: how often the judge lands on the same score you would.
+- **Suggest improvements runs asynchronously.** Instead of blocking the request on the model, it enqueues the job and shows a pending state that resolves in place over Turbo. Triggered from the edit page, it now lands you on the metric page where the comparison appears.
+
 ## [0.10.0] - 2026-05-30
 
 ### Added
