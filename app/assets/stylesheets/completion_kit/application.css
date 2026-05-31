@@ -6001,3 +6001,55 @@ a.tag-mark {
   width: 2rem;
   height: 2rem;
 }
+
+.ck-suggestion-status:empty { display: none; }
+.ck-suggestion-status {
+  margin-top: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ck-scoreboard {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ck-line);
+}
+.ck-scoreboard__headline {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: var(--ck-text);
+}
+.ck-scoreboard__was {
+  font-family: var(--ck-mono);
+  font-size: 0.74rem;
+  color: var(--ck-muted);
+  margin-left: 6px;
+}
+.ck-scoreboard__tally {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 18px;
+}
+.ck-scoreboard__stat {
+  font-family: var(--ck-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ck-muted);
+}
+.ck-scoreboard__stat strong { color: var(--ck-text); }
+.ck-scoreboard__stat--break strong { color: var(--ck-warning); }
+.ck-scoreboard__note {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: var(--ck-muted);
+}
+.ck-version-score {
+  font-family: var(--ck-mono);
+  font-size: 0.74rem;
+  color: var(--ck-dim);
+}
