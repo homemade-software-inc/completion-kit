@@ -35,7 +35,7 @@ module CompletionKit
           .limit(ANSWER_KEY_LIMIT)
           .filter_map do |cal|
         response = cal.response
-        next unless response&.response_text.present?
+        next unless response.response_text.present?
         review = response.reviews.find { |r| r.metric_id == @metric.id }
         position = cal.verdict == "disagree" ? cal.corrected_score : review&.ai_score
         next if position.nil?

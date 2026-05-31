@@ -28,6 +28,11 @@ RSpec.describe CompletionKit::MetricSuggestionJob do
     described_class.new.perform(metric.id)
   end
 
+  it "does nothing when the metric does not exist" do
+    expect(Turbo::StreamsChannel).not_to receive(:broadcast_replace_to)
+    expect { described_class.new.perform(0) }.not_to change { CompletionKit::MetricVersion.count }
+  end
+
   it "broadcasts a failure status when the model returns no usable variant" do
     allow_any_instance_of(CompletionKit::MetricVariantGenerator).to receive(:call).and_return([])
     expect(Turbo::StreamsChannel).to receive(:broadcast_replace_to)
