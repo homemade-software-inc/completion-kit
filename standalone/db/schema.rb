@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_31_200103) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_31_200401) do
   create_table "completion_kit_calibrations", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -393,6 +393,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_200103) do
   add_foreign_key "completion_kit_metric_group_memberships", "completion_kit_metrics", column: "metric_id"
   add_foreign_key "completion_kit_metric_versions", "completion_kit_metrics", column: "metric_id", on_delete: :cascade
   add_foreign_key "completion_kit_responses", "completion_kit_runs", column: "run_id"
+  add_foreign_key "completion_kit_reviews", "completion_kit_metric_versions", column: "metric_version_id", on_delete: :nullify
   add_foreign_key "completion_kit_reviews", "completion_kit_metrics", column: "metric_id"
   add_foreign_key "completion_kit_reviews", "completion_kit_responses", column: "response_id"
   add_foreign_key "completion_kit_run_metrics", "completion_kit_metrics", column: "metric_id"
