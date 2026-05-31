@@ -91,7 +91,8 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = create(:completion_kit_run)
       metric = create(:completion_kit_metric)
       response = create(:completion_kit_response, run: run)
-      create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 4, metric_version_id: nil)
+      review = build(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 4, metric_version: nil)
+      review.save(validate: false)
       expect(run.stale_review_summary).to eq({})
     end
 
@@ -479,7 +480,8 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = create(:completion_kit_run, prompt: prompt)
       CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
       response = run.responses.create!(status: "succeeded", response_text: "done")
-      response.reviews.create!(metric: metric, status: "pending", metric_name: metric.name)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      response.reviews.create!(metric: metric, status: "pending", metric_name: metric.name, metric_version: v1)
       expect(run.outstanding_work_zero?).to be false
     end
 
@@ -487,7 +489,8 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = create(:completion_kit_run, prompt: prompt)
       CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
       response = run.responses.create!(status: "succeeded", response_text: "done")
-      response.reviews.create!(metric: metric, status: "succeeded", metric_name: metric.name)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      response.reviews.create!(metric: metric, status: "succeeded", metric_name: metric.name, metric_version: v1)
       expect(run.outstanding_work_zero?).to be true
     end
 
@@ -511,7 +514,8 @@ RSpec.describe CompletionKit::Run, type: :model do
       run.responses.create!(status: "failed")
       run.responses.create!(status: "pending")
 
-      r1.reviews.create!(metric: metric, status: "succeeded", metric_name: metric.name)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      r1.reviews.create!(metric: metric, status: "succeeded", metric_name: metric.name, metric_version: v1)
 
       snapshot = run.progress_snapshot
 
@@ -531,8 +535,10 @@ RSpec.describe CompletionKit::Run, type: :model do
       CompletionKit::RunMetric.create!(run: run, metric: metric_b, position: 2)
 
       r1 = run.responses.create!(status: "succeeded", response_text: "done")
-      r1.reviews.create!(metric: metric_a, status: "succeeded", metric_name: metric_a.name)
-      r1.reviews.create!(metric: metric_b, status: "pending", metric_name: metric_b.name)
+      r1.reviews.create!(metric: metric_a, status: "succeeded", metric_name: metric_a.name,
+                         metric_version: CompletionKit::MetricVersion.ensure_current_for(metric_a))
+      r1.reviews.create!(metric: metric_b, status: "pending", metric_name: metric_b.name,
+                         metric_version: CompletionKit::MetricVersion.ensure_current_for(metric_b))
 
       snapshot = run.progress_snapshot
 
@@ -549,8 +555,10 @@ RSpec.describe CompletionKit::Run, type: :model do
       CompletionKit::RunMetric.create!(run: run, metric: metric_b, position: 2)
 
       r1 = run.responses.create!(status: "succeeded", response_text: "done")
-      r1.reviews.create!(metric: metric_a, status: "succeeded", metric_name: metric_a.name)
-      r1.reviews.create!(metric: metric_b, status: "failed", metric_name: metric_b.name)
+      r1.reviews.create!(metric: metric_a, status: "succeeded", metric_name: metric_a.name,
+                         metric_version: CompletionKit::MetricVersion.ensure_current_for(metric_a))
+      r1.reviews.create!(metric: metric_b, status: "failed", metric_name: metric_b.name,
+                         metric_version: CompletionKit::MetricVersion.ensure_current_for(metric_b))
 
       snapshot = run.progress_snapshot
 

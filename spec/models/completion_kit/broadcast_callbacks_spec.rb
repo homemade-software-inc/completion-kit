@@ -33,6 +33,7 @@ RSpec.describe "model-driven Turbo broadcasts", type: :model do
     metric = create(:completion_kit_metric)
     expect_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update).at_least(:once).and_call_original
     expect_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress).at_least(:once)
-    response.reviews.create!(metric: metric, metric_name: metric.name, status: "succeeded", ai_score: 4)
+    response.reviews.create!(metric: metric, metric_name: metric.name, status: "succeeded", ai_score: 4,
+                             metric_version: CompletionKit::MetricVersion.ensure_current_for(metric))
   end
 end

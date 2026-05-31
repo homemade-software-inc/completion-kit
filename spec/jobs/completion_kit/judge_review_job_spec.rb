@@ -125,7 +125,8 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
 
     response.reviews.create!(metric: metric, metric_name: metric.name, status: "failed",
                               error_provider: "anthropic", error_class: "Stale",
-                              error_message: "previous failure")
+                              error_message: "previous failure",
+                              metric_version: CompletionKit::MetricVersion.ensure_current_for(metric))
 
     expect {
       described_class.perform_now(response.id, metric.id)

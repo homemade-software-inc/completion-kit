@@ -23,7 +23,8 @@ RSpec.describe "End-to-end judging pipeline", type: :model do
     )
     CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
     response = run.responses.create!(status: "succeeded", response_text: "done")
-    response.reviews.create!(metric: metric, status: "succeeded", metric_name: metric.name)
+    v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+    response.reviews.create!(metric: metric, status: "succeeded", metric_name: metric.name, metric_version: v1)
 
     expect(run.outstanding_work_zero?).to be true
   end
@@ -35,7 +36,8 @@ RSpec.describe "End-to-end judging pipeline", type: :model do
     )
     CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
     response = run.responses.create!(status: "succeeded", response_text: "done")
-    response.reviews.create!(metric: metric, status: "pending", metric_name: metric.name)
+    v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+    response.reviews.create!(metric: metric, status: "pending", metric_name: metric.name, metric_version: v1)
 
     expect(run.outstanding_work_zero?).to be false
   end

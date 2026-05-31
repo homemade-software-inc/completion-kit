@@ -30,6 +30,20 @@ RSpec.describe CompletionKit::Review, type: :model do
     end
   end
 
+  describe "metric version requirement" do
+    it "is invalid without a metric version when it has a metric" do
+      response = create(:completion_kit_response)
+      metric = create(:completion_kit_metric)
+      review = build(:completion_kit_review, response: response, metric: metric, metric_version: nil)
+      expect(review).not_to be_valid
+      expect(review.errors[:metric_version]).to be_present
+    end
+
+    it "is valid with a metric version" do
+      expect(create(:completion_kit_review)).to be_valid
+    end
+  end
+
   describe "#error_payload" do
     let(:response) { create(:completion_kit_response) }
 

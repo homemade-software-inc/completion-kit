@@ -8,6 +8,7 @@ module CompletionKit
     has_many :dashboard_dismissals, as: :dismissable, dependent: :destroy
 
     validates :metric_name, presence: true
+    validates :metric_version, presence: true
     validates :ai_score, numericality: { greater_than_or_equal_to: 1, less_than_or_equal_to: 5 }, allow_nil: true
 
     before_validation :set_default_status

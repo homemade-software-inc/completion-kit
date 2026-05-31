@@ -52,8 +52,9 @@ RSpec.describe CompletionKit::DashboardStats, type: :service do
       recent = create(:completion_kit_response)
       old = create(:completion_kit_response)
       create(:completion_kit_review, response: recent, metric: accuracy, ai_score: 4.0)
-      create(:completion_kit_review, response: recent, metric: nil, metric_name: "Orphan",
-                                     status: "failed", ai_score: nil)
+      orphan = build(:completion_kit_review, response: recent, metric: nil, metric_name: "Orphan",
+                                            status: "failed", ai_score: nil)
+      orphan.save(validate: false)
       create(:completion_kit_review, response: old, metric: stale, ai_score: 1.0,
                                      created_at: 40.days.ago)
 

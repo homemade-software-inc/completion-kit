@@ -6,7 +6,8 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
     let(:response_row) { create(:completion_kit_response) }
 
     it "returns false when the review carries no metric_version_id" do
-      review = create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4)
+      review = build(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4, metric_version: nil)
+      review.save(validate: false)
       expect(review.stale_against_current_judge?).to be(false)
     end
 
