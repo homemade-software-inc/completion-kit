@@ -283,4 +283,9 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
   config.before { Rails.cache.clear }
   config.before { CompletionKit.config.judge_calibration_enabled = true }
+  config.before do
+    server = ActionCable.server
+    adapter = ActionCable::SubscriptionAdapter::Test.new(server)
+    server.instance_variable_set(:@pubsub, adapter)
+  end
 end

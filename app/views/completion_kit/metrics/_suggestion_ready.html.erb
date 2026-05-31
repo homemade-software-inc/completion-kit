@@ -1,0 +1,4 @@
+<div id="ck-suggestion-status-<%= metric.id %>" class="ck-suggestion-status ck-suggestion-status--ready">
+  <span class="ck-cal-foot__note">Drafted <%= draft.version_label %> and tested it against your reviews.</span>
+  <%= link_to "Compare and publish →", CompletionKit::Engine.routes.url_helpers.metric_path(metric, show_change: draft.id), class: "ck-cal-link" %>
+</div>
