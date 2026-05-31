@@ -76,12 +76,14 @@
                           data: { turbo_confirm: "Make #{v.version_label} the version to use? #{v.version_label} will be used in test runs using this metric now. Reviews you have already given stay with the version they were made against." } %>
                   <% end %>
                 </div>
-                <% if summary %>
-                  <button type="button" class="ck-cell-link ck-cell-link--delta" title="What changed from <%= pred.version_label %>" onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()">&Delta;</button>
-                <% end %>
                 <% vs = v.validation_summary %>
-                <% if summary && v.draft? && vs.present? %>
-                  <span class="ck-version-score" title="Matches you on <%= vs["after"] %> of <%= vs["tested"] %> of your reviews"><%= vs["after"] %>/<%= vs["tested"] %></span>
+                <% if summary %>
+                  <div class="ck-version-change">
+                    <% if v.draft? && vs.present? %>
+                      <span class="ck-version-score"><span class="ck-version-score__label">Match</span> <%= vs["after"] %>/<%= vs["tested"] %></span>
+                    <% end %>
+                    <button type="button" class="ck-cell-link ck-cell-link--delta" title="What changed from <%= pred.version_label %>" onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()">&Delta;</button>
+                  </div>
                 <% end %>
               </div>
             </td>
