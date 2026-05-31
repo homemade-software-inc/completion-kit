@@ -129,8 +129,8 @@
                  response_id: @response.id, metric_id: review.metric_id,
                  created_by: CompletionKit.config.username.presence || "operator"
                ) %>
-            <%= render "completion_kit/calibrations/buttons",
-                  review: review, calibration: existing, run: @run,
+            <%= render "completion_kit/agreements/buttons",
+                  review: review, agreement: existing, run: @run,
                   response_row: @response, metric: review.metric %>
           <% end %>
         </div>

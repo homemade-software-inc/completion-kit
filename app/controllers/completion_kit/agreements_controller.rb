@@ -1,6 +1,6 @@
 module CompletionKit
-  class CalibrationsController < ApplicationController
-    before_action :ensure_calibration_enabled
+  class AgreementsController < ApplicationController
+    before_action :ensure_agreement_enabled
     before_action :set_scope
 
     def create
@@ -10,7 +10,7 @@ module CompletionKit
       )
 
       if params[:verdict] == "disagree" && params[:corrected_score].blank?
-        render_calibration(calibration: existing, pending_verdict: "disagree")
+        render_agreement(agreement: existing, pending_verdict: "disagree")
         return
       end
 
@@ -25,10 +25,10 @@ module CompletionKit
       )
 
       if calibration.save
-        render_calibration(calibration: calibration, just_saved: true)
+        render_agreement(agreement: calibration, just_saved: true)
       else
-        render_calibration(
-          calibration: existing,
+        render_agreement(
+          agreement: existing,
           pending_verdict: params[:verdict],
           error: calibration.errors.full_messages.to_sentence,
           status: :unprocessable_entity
@@ -38,10 +38,10 @@ module CompletionKit
 
     private
 
-    def render_calibration(calibration:, pending_verdict: nil, error: nil, just_saved: false, status: :ok)
+    def render_agreement(agreement:, pending_verdict: nil, error: nil, just_saved: false, status: :ok)
       locals = {
         review: review_for_metric,
-        calibration: calibration,
+        agreement: agreement,
         run: @run,
         response_row: @response,
         metric: @metric,
@@ -50,13 +50,13 @@ module CompletionKit
         just_saved: just_saved
       }
       render turbo_stream: turbo_stream.replace(
-        "calibration_#{@response.id}_#{@metric.id}",
-        partial: "completion_kit/calibrations/buttons",
+        "agreement_#{@response.id}_#{@metric.id}",
+        partial: "completion_kit/agreements/buttons",
         locals: locals
       ), status: status
     end
 
-    def ensure_calibration_enabled
+    def ensure_agreement_enabled
       head :not_found unless CompletionKit.config.judge_calibration_enabled
     end
 

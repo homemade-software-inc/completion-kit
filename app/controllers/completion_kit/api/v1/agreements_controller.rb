@@ -1,8 +1,8 @@
 module CompletionKit
   module Api
     module V1
-      class CalibrationsController < BaseController
-        before_action :ensure_calibration_enabled
+      class AgreementsController < BaseController
+        before_action :ensure_agreement_enabled
         before_action :set_nested_scope, only: [:create]
         before_action :load_calibration, only: [:destroy]
 
@@ -41,8 +41,8 @@ module CompletionKit
 
         private
 
-        def ensure_calibration_enabled
-          render_error("Calibration disabled", status: :not_found) unless CompletionKit.config.judge_calibration_enabled
+        def ensure_agreement_enabled
+          render_error("Agreement disabled", status: :not_found) unless CompletionKit.config.judge_calibration_enabled
         end
 
         def set_nested_scope

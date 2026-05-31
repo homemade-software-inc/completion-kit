@@ -41,7 +41,7 @@ CompletionKit::Engine.routes.draw do
       get :compare
     end
     resources :responses, only: [:show] do
-      resources :calibrations, only: [:create]
+      resources :agreements, only: [:create]
     end
   end
 
@@ -75,7 +75,7 @@ CompletionKit::Engine.routes.draw do
         end
         resources :responses, only: [:index, :show] do
           resources :metrics, only: [] do
-            resources :calibrations, only: [:index, :create]
+            resources :agreements, only: [:index, :create]
           end
         end
       end
@@ -93,7 +93,7 @@ CompletionKit::Engine.routes.draw do
       resources :metric_groups
       resources :tags
       resources :provider_credentials
-      resources :calibrations, only: [:index, :destroy]
+      resources :agreements, only: [:index, :destroy]
     end
   end
 

@@ -24,7 +24,7 @@ RSpec.describe "Metric review-grounded examples", type: :request do
     expect(CompletionKit::MetricAgreementExamples.judge_examples_for(metric).size).to eq(1)
 
     post "/completion_kit/metrics/#{metric.id}/exclude_example",
-         params: { calibration_id: cal.id },
+         params: { agreement_id: cal.id },
          headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     expect(response).to have_http_status(:ok)
@@ -37,7 +37,7 @@ RSpec.describe "Metric review-grounded examples", type: :request do
     cal = disagreement(metric)
     CompletionKit.config.judge_examples_from_reviews = false
 
-    post "/completion_kit/metrics/#{metric.id}/exclude_example", params: { calibration_id: cal.id }
+    post "/completion_kit/metrics/#{metric.id}/exclude_example", params: { agreement_id: cal.id }
 
     expect(response).to have_http_status(:not_found)
     expect(cal.reload.excluded_from_examples).to eq(false)

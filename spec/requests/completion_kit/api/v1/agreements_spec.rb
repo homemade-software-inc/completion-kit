@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "API V1 Calibrations", type: :request do
+RSpec.describe "API V1 Agreements", type: :request do
   let(:token) { "test-api-token" }
   let(:headers) { {"Authorization" => "Bearer #{token}", "Content-Type" => "application/json"} }
 
@@ -12,10 +12,10 @@ RSpec.describe "API V1 Calibrations", type: :request do
   let(:metric) { create(:completion_kit_metric) }
 
   def base_path
-    "/completion_kit/api/v1/runs/#{run.id}/responses/#{response_row.id}/metrics/#{metric.id}/calibrations"
+    "/completion_kit/api/v1/runs/#{run.id}/responses/#{response_row.id}/metrics/#{metric.id}/agreements"
   end
 
-  describe "GET /api/v1/calibrations (flat index)" do
+  describe "GET /api/v1/agreements (flat index)" do
     let(:other_run) { create(:completion_kit_run) }
     let(:other_response) { create(:completion_kit_response, run: other_run) }
     let(:other_metric) { create(:completion_kit_metric, name: "Other") }
@@ -34,63 +34,63 @@ RSpec.describe "API V1 Calibrations", type: :request do
              verdict: "borderline", created_by: "alice")
     end
 
-    it "returns every calibration when no filter is supplied" do
-      get "/completion_kit/api/v1/calibrations", headers: headers
+    it "returns every agreement when no filter is supplied" do
+      get "/completion_kit/api/v1/agreements", headers: headers
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body).size).to eq(3)
     end
 
     it "filters by metric_id" do
-      get "/completion_kit/api/v1/calibrations", params: { metric_id: metric.id }, headers: headers
+      get "/completion_kit/api/v1/agreements", params: { metric_id: metric.id }, headers: headers
       expect(JSON.parse(response.body).size).to eq(2)
     end
 
     it "filters by run_id" do
-      get "/completion_kit/api/v1/calibrations", params: { run_id: run.id }, headers: headers
+      get "/completion_kit/api/v1/agreements", params: { run_id: run.id }, headers: headers
       expect(JSON.parse(response.body).size).to eq(2)
     end
 
     it "filters by response_id" do
-      get "/completion_kit/api/v1/calibrations", params: { response_id: response_row.id }, headers: headers
+      get "/completion_kit/api/v1/agreements", params: { response_id: response_row.id }, headers: headers
       expect(JSON.parse(response.body).size).to eq(2)
     end
 
     it "filters by metric_version_id" do
       mv = CompletionKit::MetricVersion.current.find_by(metric_id: metric.id)
-      get "/completion_kit/api/v1/calibrations", params: { metric_version_id: mv.id }, headers: headers
+      get "/completion_kit/api/v1/agreements", params: { metric_version_id: mv.id }, headers: headers
       expect(JSON.parse(response.body).size).to eq(2)
     end
 
     it "filters by created_by" do
-      get "/completion_kit/api/v1/calibrations", params: { created_by: "alice" }, headers: headers
+      get "/completion_kit/api/v1/agreements", params: { created_by: "alice" }, headers: headers
       expect(JSON.parse(response.body).size).to eq(2)
     end
 
     it "filters by verdict" do
-      get "/completion_kit/api/v1/calibrations", params: { verdict: "disagree" }, headers: headers
+      get "/completion_kit/api/v1/agreements", params: { verdict: "disagree" }, headers: headers
       expect(JSON.parse(response.body).size).to eq(1)
     end
   end
 
-  describe "DELETE /api/v1/calibrations/:id" do
-    it "destroys a calibration and returns 204" do
+  describe "DELETE /api/v1/agreements/:id" do
+    it "destroys an agreement and returns 204" do
       mv = CompletionKit::MetricVersion.ensure_current_for(metric)
       cal = create(:completion_kit_agreement,
                    run: run, response: response_row, metric: metric, metric_version: mv,
                    verdict: "agree", created_by: "alice")
-      delete "/completion_kit/api/v1/calibrations/#{cal.id}", headers: headers
+      delete "/completion_kit/api/v1/agreements/#{cal.id}", headers: headers
       expect(response).to have_http_status(:no_content)
       expect(CompletionKit::Agreement.where(id: cal.id)).to be_empty
     end
 
-    it "returns 404 when the calibration does not exist" do
-      delete "/completion_kit/api/v1/calibrations/9999999", headers: headers
+    it "returns 404 when the agreement does not exist" do
+      delete "/completion_kit/api/v1/agreements/9999999", headers: headers
       expect(response).to have_http_status(:not_found)
     end
   end
 
   describe "POST" do
-    it "creates an agree calibration without a corrected score" do
+    it "creates an agree agreement without a corrected score" do
       post base_path, headers: headers,
                       params: { verdict: "agree", created_by: "alice" }.to_json
       expect(response).to have_http_status(:created)
@@ -129,13 +129,13 @@ RSpec.describe "API V1 Calibrations", type: :request do
     end
 
     it "returns 404 when the run, response, or metric is missing" do
-      post "/completion_kit/api/v1/runs/999/responses/999/metrics/999/calibrations",
+      post "/completion_kit/api/v1/runs/999/responses/999/metrics/999/agreements",
            headers: headers,
            params: { verdict: "agree" }.to_json
       expect(response).to have_http_status(:not_found)
     end
 
-    it "returns 404 when the calibration feature flag is off" do
+    it "returns 404 when the agreement feature flag is off" do
       original = CompletionKit.config.judge_calibration_enabled
       CompletionKit.config.judge_calibration_enabled = false
       post base_path, headers: headers, params: { verdict: "agree" }.to_json
@@ -146,7 +146,7 @@ RSpec.describe "API V1 Calibrations", type: :request do
   end
 
   describe "GET" do
-    it "lists calibrations for the (run, response, metric) triple" do
+    it "lists agreements for the (run, response, metric) triple" do
       jv = CompletionKit::MetricVersion.ensure_current_for(metric)
       create(:completion_kit_agreement,
              run: run, response: response_row, metric: metric,

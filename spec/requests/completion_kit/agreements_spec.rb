@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "CompletionKit calibrations (web)", type: :request do
+RSpec.describe "CompletionKit agreements (web)", type: :request do
   let(:metric) { create(:completion_kit_metric) }
   let(:prompt) { create(:completion_kit_prompt) }
   let(:run) { create(:completion_kit_run, prompt: prompt) }
@@ -8,7 +8,7 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
   let!(:review) { create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 4.0, ai_feedback: "looks good") }
 
   def base_path
-    "/completion_kit/runs/#{run.id}/responses/#{response_row.id}/calibrations"
+    "/completion_kit/runs/#{run.id}/responses/#{response_row.id}/agreements"
   end
 
   it "renders verdict buttons under each scored review on the response page" do
@@ -19,7 +19,7 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     expect(response.body).to include("borderline")
   end
 
-  it "creates an agree calibration via the web endpoint" do
+  it "creates an agree agreement via the web endpoint" do
     post base_path, params: { metric_id: metric.id, verdict: "agree" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     expect(response).to have_http_status(:ok)
     expect(CompletionKit::Agreement.count).to eq(1)
@@ -105,7 +105,7 @@ RSpec.describe "CompletionKit calibrations (web)", type: :request do
     expect(response.body).to include('aria-pressed="true"')
   end
 
-  it "renders the inline error inside the calibration block when a save genuinely fails" do
+  it "renders the inline error inside the agreement block when a save genuinely fails" do
     post base_path, params: { metric_id: metric.id, verdict: "disagree", corrected_score: 9.0 },
                      headers: { "Accept" => "text/vnd.turbo-stream.html" }
     expect(response).to have_http_status(:unprocessable_entity)

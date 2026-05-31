@@ -145,8 +145,8 @@ module CompletionKit
     end
 
     def exclude_example
-      calibration = Agreement.where(metric_id: @metric.id).find(params[:calibration_id])
-      calibration.update!(excluded_from_examples: true)
+      agreement = Agreement.where(metric_id: @metric.id).find(params[:agreement_id])
+      agreement.update!(excluded_from_examples: true)
       render turbo_stream: turbo_stream.replace(
         "ck-guiding-#{@metric.id}",
         partial: "completion_kit/metrics/guiding_examples",

@@ -12,7 +12,7 @@
             <span class="ck-guiding__output"><%= truncate(example[:output].to_s, length: 90) %></span>
             <span class="ck-guiding__scores"><span class="ck-guiding__judge"><%= example[:judge_score].to_i %></span> &rarr; <span class="ck-guiding__human"><%= example[:human_score].to_i %></span></span>
           <% end %>
-          <%= button_to exclude_example_metric_path(metric, calibration_id: example[:id]),
+          <%= button_to exclude_example_metric_path(metric, agreement_id: example[:id]),
                 method: :post, form_class: "inline-block", class: "ck-icon-btn",
                 title: "Stop using this case", "aria-label": "Stop using this case",
                 data: { turbo_confirm: "Stop using this corrected case to guide the judge?" } do %><%= heroicon_tag "x-mark", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>

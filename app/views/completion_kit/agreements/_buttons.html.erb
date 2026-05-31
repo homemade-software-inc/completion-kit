@@ -1,18 +1,18 @@
-<div id="calibration_<%= response_row.id %>_<%= metric.id %>" class="ck-calibration">
-  <% current_verdict = calibration&.verdict %>
+<div id="agreement_<%= response_row.id %>_<%= metric.id %>" class="ck-calibration">
+  <% current_verdict = agreement&.verdict %>
   <% pending_verdict = local_assigns[:pending_verdict] %>
   <% active_verdict = pending_verdict || current_verdict %>
   <% error = local_assigns[:error] %>
   <% me = CompletionKit.config.username.presence || "operator" %>
-  <% other_calibrations = CompletionKit::Agreement
+  <% other_agreements = CompletionKit::Agreement
         .where(response_id: response_row.id, metric_id: metric.id)
         .where.not(created_by: me)
         .order(created_at: :asc).to_a %>
   <% verdict_icons = { "agree" => "hand-thumb-up", "disagree" => "hand-thumb-down", "borderline" => "scale" } %>
   <p class="ck-calibration__prompt">
     <span class="ck-calibration__label">Your verdict</span>
-    <% if other_calibrations.any? %>
-      <span class="ck-calibration__meta"><%= pluralize(other_calibrations.size, "other verdict") %> on this score</span>
+    <% if other_agreements.any? %>
+      <span class="ck-calibration__meta"><%= pluralize(other_agreements.size, "other verdict") %> on this score</span>
       <span class="ck-calibration__sep">·</span>
     <% end %>
     <%= link_to metric_path(metric), class: "ck-calibration__meta-link" do %><%= heroicon_tag "adjustments-horizontal", variant: :outline, "aria-hidden": "true" %>Calibration →<% end %>
@@ -25,7 +25,7 @@
          "borderline" => "The rubric is unclear here; either score could be defensible."
        } %>
     <% CompletionKit::Agreement::VERDICTS.each do |verdict| %>
-      <%= button_to run_response_calibrations_path(run, response_row, metric_id: metric.id, verdict: verdict),
+      <%= button_to run_response_agreements_path(run, response_row, metric_id: metric.id, verdict: verdict),
               method: :post,
               form: { data: { turbo: "true" } },
               class: "ck-calibration__pill ck-calibration__pill--#{verdict}#{' is-active' if verdict == active_verdict}",
@@ -41,14 +41,14 @@
     <p class="ck-calibration__error" role="alert"><%= error %></p>
   <% end %>
 
-  <% if other_calibrations.any? %>
+  <% if other_agreements.any? %>
     <details class="ck-calibration__others">
       <summary class="ck-calibration__others-summary">
         <%= heroicon_tag "chevron-right", variant: :outline, size: 14, "aria-hidden": "true" %>
-        <span>What others said (<%= other_calibrations.size %>)</span>
+        <span>What others said (<%= other_agreements.size %>)</span>
       </summary>
       <ul class="ck-calibration__others-list">
-        <% other_calibrations.each do |other| %>
+        <% other_agreements.each do |other| %>
           <li class="ck-calibration__others-item ck-calibration__others-item--<%= other.verdict %>">
             <div class="ck-calibration__others-row">
               <span class="ck-calibration__others-verdict">
@@ -74,8 +74,8 @@
   <% end %>
 
   <% if active_verdict == "disagree" %>
-    <% existing_score = (calibration&.corrected_score || review&.ai_score)&.round %>
-    <%= form_with url: run_response_calibrations_path(run, response_row),
+    <% existing_score = (agreement&.corrected_score || review&.ai_score)&.round %>
+    <%= form_with url: run_response_agreements_path(run, response_row),
                   method: :post, local: false,
                   class: "ck-calibration__detail" do |f| %>
       <%= hidden_field_tag :metric_id, metric.id %>
@@ -93,16 +93,16 @@
           <% end %>
         </div>
       </fieldset>
-      <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="Why? (optional)"><%= calibration&.note %></textarea>
+      <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="Why? (optional)"><%= agreement&.note %></textarea>
       <%= f.submit "Save", class: "#{ck_button_classes(:dark)}#{' ck-button--just-saved' if local_assigns[:just_saved]}" %>
     <% end %>
   <% elsif active_verdict == "borderline" %>
-    <%= form_with url: run_response_calibrations_path(run, response_row),
+    <%= form_with url: run_response_agreements_path(run, response_row),
                   method: :post, local: false,
                   class: "ck-calibration__detail" do |f| %>
       <%= hidden_field_tag :metric_id, metric.id %>
       <%= hidden_field_tag :verdict, "borderline" %>
-      <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="What made this borderline? (optional)"><%= calibration&.note %></textarea>
+      <textarea name="note" rows="2" class="ck-input ck-input--area" placeholder="What made this borderline? (optional)"><%= agreement&.note %></textarea>
       <%= f.submit "Save", class: "#{ck_button_classes(:dark)}#{' ck-button--just-saved' if local_assigns[:just_saved]}" %>
     <% end %>
   <% end %>
