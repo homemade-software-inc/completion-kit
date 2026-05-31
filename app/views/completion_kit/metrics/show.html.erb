@@ -79,8 +79,9 @@
                 <% if summary %>
                   <button type="button" class="ck-cell-link ck-cell-link--delta" title="What changed from <%= pred.version_label %>" onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()">&Delta;</button>
                 <% end %>
-                <% if v.draft? && v.validation_summary.present? %>
-                  <span class="ck-version-score" title="Matches you on <%= v.validation_summary["after"] %> of <%= v.validation_summary["tested"] %> of your reviews"><%= v.validation_summary["after"] %>/<%= v.validation_summary["tested"] %></span>
+                <% vs = v.validation_summary %>
+                <% if summary && v.draft? && vs.present? %>
+                  <span class="ck-version-score" title="Matches you on <%= vs["after"] %> of <%= vs["tested"] %> of your reviews"><%= vs["after"] %>/<%= vs["tested"] %></span>
                 <% end %>
               </div>
             </td>
@@ -113,6 +114,7 @@
   <% @versions.each do |v| %>
     <% pred = predecessor_of[v] %>
     <% next unless v.change_summary_against(pred) %>
+    <% vs = v.validation_summary %>
     <dialog id="ck-mvdiff-<%= v.id %>" class="ck-modal" onclick="if(event.target===this)this.close()">
       <article class="ck-modal__panel" tabindex="-1" onclick="event.stopPropagation()">
         <header class="ck-modal__header">
@@ -123,8 +125,8 @@
           <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">&times;</button>
         </header>
         <div class="ck-modal__body">
-          <% if v.draft? && v.validation_summary.present? %>
-            <%= render "completion_kit/metrics/validation_scoreboard", summary: v.validation_summary %>
+          <% if v.draft? && vs.present? %>
+            <%= render "completion_kit/metrics/validation_scoreboard", summary: vs %>
           <% end %>
           <% if pred.instruction.to_s != v.instruction.to_s %>
             <div class="ck-suggest-diff">
@@ -158,7 +160,7 @@
                     title: "Discard draft #{v.version_label}", "aria-label": "Discard draft #{v.version_label}",
                     data: { turbo_confirm: "Discard draft #{v.version_label}? This can't be undone." } do %><%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
               <%= link_to "Edit", edit_metric_path(@metric), class: ck_button_classes(:light, variant: :outline) %>
-              <% net_negative = v.validation_summary.present? && (v.validation_summary["after"].to_i < v.validation_summary["before"].to_i || v.validation_summary["breaks"].to_i > v.validation_summary["fixes"].to_i) %>
+              <% net_negative = vs.present? && (vs["after"].to_i < vs["before"].to_i || vs["breaks"].to_i > vs["fixes"].to_i) %>
               <%= button_to "Publish #{v.version_label} →", publish_draft_metric_path(@metric, draft_id: v.id),
                     method: :post, form_class: "inline-block", class: ck_button_classes(:dark),
                     data: net_negative ? { turbo_confirm: "This agrees with you less than the current version. Publish anyway?" } : {} %>
