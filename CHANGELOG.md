@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-05-30
+
+### Added
+
+- **Review-grounded judging.** A new opt-in `judge_examples_from_reviews` config flag (off by default, meaningful only when `judge_calibration_enabled`) lets the judge see recent human corrections while it scores. When a reviewer disagrees with a score, that corrected case is harvested automatically (no pinning) and shown to the judge as a worked example on the next run, closing the loop from reviewing misses to better scoring. Examples are scoped to the metric's current published version with no fallback to superseded versions, never include the response being scored, drop cases that have no judge score, and are capped at five. The metric show page surfaces the active cases under "Guiding the judge", each linking to its review, with a per-case mute. The plumbing reuses the prompt-injection slot 0.9.0 removed, sourced from reviews rather than a hand-pinned set.
+- **Published-version column on the metrics table**, styled like the prompts table and defaulting to v1.
+
+### Changed
+
+- **The metric versions table now matches the prompts version table.** The version cell shows the label, a plain Published chip, and a small inline Δ that opens the diff modal; the separate "Δ Change" column and the bespoke version-state / magnitude styling are gone. Columns spread evenly instead of bunching to the left.
+- **Suggest improvements** moved into the calibration card header (top-right beside the kicker), consistent with where it sits on the prompt card.
+- **The stale-version notice on a review** is now a concise `vN → vN` chip with a tooltip, replacing the full-width amber paragraph and the colored left border.
+- **The not-measured calibration hint** names the version it is measuring ("v2 needs 10 human reviews of the judge's scores"), and reviews carried over from an earlier version are noted in a quieter line beneath it.
+
+### Fixed
+
+- **Calibration "review a score" links only target the current version.** "Review a judge's score" and "Review another score" now point at a response scored against the metric's current published version, so they no longer drop you onto a superseded-version review.
+
 ## [0.9.0] - 2026-05-30
 
 ### Changed
