@@ -27,7 +27,7 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect {
       post "/completion_kit/metrics/#{metric.id}/suggest_variants", params: { back_to: "edit" }
     }.to have_enqueued_job(CompletionKit::MetricSuggestionJob).with(metric.id)
-    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/edit")
+    expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
     follow_redirect!
     expect(response.body).to include("Drafting a change")
   end

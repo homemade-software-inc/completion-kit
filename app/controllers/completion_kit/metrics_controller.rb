@@ -126,7 +126,7 @@ module CompletionKit
       MetricSuggestionJob.perform_later(@metric.id)
 
       if params[:back_to] == "edit"
-        redirect_to edit_metric_path(@metric), notice: "Drafting a change from your reviews. It will appear here once it's tested."
+        redirect_to metric_path(@metric), notice: "Drafting a change from your reviews. It will appear here once it's tested."
       else
         render turbo_stream: turbo_stream.replace(
           "ck-suggestion-status-#{@metric.id}",
