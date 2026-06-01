@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-05-31
+
 ### Changed (breaking)
 - Renamed the "calibration" concept to "agreement" throughout. The `Calibration` model and `completion_kit_calibrations` table are now `Agreement` / `completion_kit_agreements`. The REST API resource is now `/agreements` (was `/calibrations`), the MCP tools are `agreements_list` / `agreements_create` (were `calibrations_*`), and the config flag is `judge_agreement_enabled` (was `judge_calibration_enabled`). No aliases are kept; update API and MCP callers accordingly.
+
+### Added
+- **Every judgement records the metric version it was scored under.** `Review` now requires a metric version, backed by a foreign key that nullifies on delete; reviews that pointed at deleted versions were backfilled to their metric's current version. The response page shows a version chip beside each judge score, with a `vN → vN` marker when the metric has moved on since the score was given.
+
+### Changed
+- **Reverting a metric version now happens in place.** Reverting to an older published version republishes that version instead of minting a copy, so the agreement signal and the validated-improvements answer key tied to it come back with it. `MetricVersion#revert!` is gone; the web, REST API, and MCP publish paths all revert in place.
 
 ## [0.11.0] - 2026-05-31
 
