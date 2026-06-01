@@ -431,7 +431,6 @@ CompletionKit::Agreement.where(created_by: current_operator).delete_all
   name = raw.tr("\\", "")
   m = CompletionKit::Metric.find_by(name: name)
   next unless m
-  m.update_columns(few_shot_examples: nil) if m.few_shot_examples.present?
   CompletionKit::MetricVersion.drafts.where(metric_id: m.id).destroy_all
   pubs = CompletionKit::MetricVersion.published.where(metric_id: m.id).order(:version_number).to_a
   if pubs.size > 1
@@ -571,33 +570,6 @@ seed_agreements.call(metric_name: "Confidence",          agree: 10, disagree: 3,
 seed_agreements.call(metric_name: "Urgency Calibration", agree: 5,  disagree: 2, borderline: 5)
 seed_agreements.call(metric_name: "Clarity",             agree: 8,  disagree: 2, borderline: 1)
 seed_agreements.call(metric_name: "Category Accuracy",   agree: 6,  disagree: 0, borderline: 0)
-
-pin_few_shot = lambda do |metric, agreement|
-  return unless agreement
-  return if Array(metric.few_shot_examples).any? { |fs| fs["agreement_id"] == agreement.id }
-  resp = agreement.response
-  review = resp.reviews.find_by(metric_id: metric.id)
-  examples = Array(metric.few_shot_examples) + [{
-    "input" => resp.input_data.to_s.truncate(2000),
-    "response" => resp.response_text.to_s.truncate(2000),
-    "judge_score" => review&.ai_score&.to_f,
-    "judge_feedback" => review&.ai_feedback.to_s.truncate(1000),
-    "human_score" => agreement.corrected_score&.to_f,
-    "human_note" => agreement.note.to_s.truncate(1000),
-    "agreement_id" => agreement.id,
-    "added_at" => Time.current.utc.iso8601
-  }]
-  metric.update!(few_shot_examples: examples)
-end
-
-accuracy_metric = CompletionKit::Metric.find_by!(name: "Accuracy")
-accuracy_disagrees = CompletionKit::Agreement.where(metric_id: accuracy_metric.id, verdict: "disagree").order(:id).to_a
-pin_few_shot.call(accuracy_metric, accuracy_disagrees[0])
-pin_few_shot.call(accuracy_metric, accuracy_disagrees[1])
-
-confidence_metric = CompletionKit::Metric.find_by!(name: "Confidence")
-confidence_disagree = CompletionKit::Agreement.where(metric_id: confidence_metric.id, verdict: "disagree").order(:id).first
-pin_few_shot.call(confidence_metric, confidence_disagree)
 
 CompletionKit::MetricVersion.create!(
   metric: accuracy_metric,
