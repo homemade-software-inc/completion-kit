@@ -1,0 +1,4 @@
+<% @provider_credentials.each do |pc| %>
+  <%= turbo_stream.replace "discovery_status_#{pc.id}" do %><%= render "discovery_status", provider_credential: pc %><% end %>
+  <%= turbo_stream.replace "provider_models_#{pc.id}" do %><%= render "models_card", provider_credential: pc %><% end %>
+<% end %>

@@ -142,6 +142,16 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     end
   end
 
+  describe "#broadcast_discovery_progress when rendering fails in a worker" do
+    it "logs and swallows the error so discovery is not aborted" do
+      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+      allow(credential).to receive(:render_partial).and_raise(StandardError, "render boom")
+
+      expect(Rails.logger).to receive(:error).with(/discovery broadcast render failed.*render boom/).at_least(:once)
+      expect { credential.broadcast_discovery_progress }.not_to raise_error
+    end
+  end
+
   describe "#broadcast_discovery_complete" do
     it "delegates to broadcast_discovery_progress and broadcast_model_dropdowns" do
       credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")

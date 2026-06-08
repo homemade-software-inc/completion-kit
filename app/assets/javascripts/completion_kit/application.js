@@ -5,6 +5,7 @@ document.addEventListener("turbo:load", function() {
   });
   ckTickRelativeTimes();
   ckAutoFocusFirstError();
+  if (ckDiscoveringInDom()) ckStartDiscoveryPolling(0);
 });
 
 document.addEventListener("input", function(e) {
@@ -120,6 +121,37 @@ function ckRefreshModels() {
     method: "POST",
     headers: { "X-CSRF-Token": csrfToken }
   });
+  ckStartDiscoveryPolling(8000);
+}
+
+var ckDiscoveryPollTimer = null;
+var ckDiscoveryPollUntil = 0;
+
+function ckDiscoveringInDom() {
+  return !!document.querySelector('[id^="discovery_status_"] .ck-discovery-bar:not(.ck-discovery-bar--failed):not(.ck-discovery-bar--completed)');
+}
+
+function ckPollDiscoveryOnce() {
+  fetch("/completion_kit/provider_credentials/statuses", { headers: { "Accept": "text/vnd.turbo-stream.html" } })
+    .then(function(r) { return r.ok ? r.text() : null; })
+    .then(function(html) {
+      if (html && window.Turbo && window.Turbo.renderStreamMessage) window.Turbo.renderStreamMessage(html);
+    })
+    .catch(function() {});
+}
+
+function ckStartDiscoveryPolling(graceMs) {
+  if (!document.querySelector('[id^="discovery_status_"]')) return;
+  ckDiscoveryPollUntil = Date.now() + (graceMs || 0);
+  if (ckDiscoveryPollTimer) return;
+  ckPollDiscoveryOnce();
+  ckDiscoveryPollTimer = setInterval(function() {
+    ckPollDiscoveryOnce();
+    if (!ckDiscoveringInDom() && Date.now() > ckDiscoveryPollUntil) {
+      clearInterval(ckDiscoveryPollTimer);
+      ckDiscoveryPollTimer = null;
+    }
+  }, 1500);
 }
 
 function ckUpdateRefreshProgress() {

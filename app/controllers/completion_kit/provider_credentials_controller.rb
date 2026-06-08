@@ -6,6 +6,11 @@ module CompletionKit
       @provider_credentials = ProviderCredential.order(:provider)
     end
 
+    def statuses
+      @provider_credentials = ProviderCredential.order(:provider)
+      respond_to { |format| format.turbo_stream }
+    end
+
     def new
       @provider_credential = ProviderCredential.new(provider: params[:provider])
     end

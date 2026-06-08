@@ -79,11 +79,13 @@ module CompletionKit
     end
 
     def broadcast_discovery_progress
-      broadcast_replace_to(
-        "completion_kit_provider_#{id}",
-        target: "discovery_status_#{id}",
-        html: render_partial("completion_kit/provider_credentials/discovery_status", provider_credential: self)
-      )
+      safely_broadcast do
+        broadcast_replace_to(
+          "completion_kit_provider_#{id}",
+          target: "discovery_status_#{id}",
+          html: render_partial("completion_kit/provider_credentials/discovery_status", provider_credential: self)
+        )
+      end
       broadcast_provider_models
     end
 
@@ -93,13 +95,15 @@ module CompletionKit
     end
 
     def broadcast_provider_models
-      Turbo::StreamsChannel.broadcast_action_to(
-        "completion_kit_provider_#{id}",
-        action: "replace",
-        target: "provider_models_#{id}",
-        method: "morph",
-        html: render_partial("completion_kit/provider_credentials/models_card", provider_credential: self)
-      )
+      safely_broadcast do
+        Turbo::StreamsChannel.broadcast_action_to(
+          "completion_kit_provider_#{id}",
+          action: "replace",
+          target: "provider_models_#{id}",
+          method: "morph",
+          html: render_partial("completion_kit/provider_credentials/models_card", provider_credential: self)
+        )
+      end
     end
 
     private
@@ -131,6 +135,12 @@ module CompletionKit
     def render_partial(partial, locals)
       CompletionKit::Engine.warm_routes!
       CompletionKit::ApplicationController.render(partial: partial, locals: locals)
+    end
+
+    def safely_broadcast
+      yield
+    rescue StandardError => e
+      Rails.logger.error("[CompletionKit] discovery broadcast render failed: #{e.class}: #{e.message}")
     end
 
     def api_endpoint_not_internal

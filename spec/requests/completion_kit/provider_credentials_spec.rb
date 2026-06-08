@@ -71,4 +71,18 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     cred.reload
     expect(cred.discovery_status).to eq("discovering")
   end
+
+  it "statuses renders turbo streams reflecting the persisted discovery state" do
+    cred = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+    cred.update_columns(discovery_status: "discovering", discovery_current: 2, discovery_total: 5)
+
+    get "#{base_path}/statuses", headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+    expect(response.body).to include("discovery_status_#{cred.id}")
+    expect(response.body).to include("provider_models_#{cred.id}")
+    expect(response.body).to include("Checking models")
+    expect(response.body).to include("2/5")
+  end
 end

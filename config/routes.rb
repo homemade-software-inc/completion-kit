@@ -53,6 +53,7 @@ CompletionKit::Engine.routes.draw do
 
   resources :provider_credentials, only: [:index, :new, :create, :edit, :update] do
     post :refresh, on: :member
+    get :statuses, on: :collection
   end
   post "refresh_models", to: "provider_credentials#refresh_all", as: :refresh_models
 
