@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-06-08
+
 ### Changed (breaking)
 - **Renamed the MCP tool `judges_suggest` to `metrics_suggest_variants`.** It rewrites a metric's judge instruction into draft variants, so it now lives in the metrics namespace next to the REST `metrics#suggest_variants`. No alias is kept — update MCP callers (clients that discover tools via `tools/list` pick up the new name automatically).
 
