@@ -530,6 +530,21 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(model.display_name).to eq("Claude 3.7 Sonnet")
     end
 
+    it "probes anthropic models with a max_tokens within Claude output caps (Haiku 4.5 rejects > 64000)" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "claude-haiku-4-5", display_name: "Claude Haiku 4.5" }] }.to_json
+      ))
+      probe_request = stub_faraday_post(faraday_response(
+        success: true,
+        body: { content: [{ type: "text", text: "PING-OK\nScore: 5\nFeedback: ok" }] }.to_json
+      ))
+
+      described_class.new(config: config).refresh!
+
+      expect(JSON.parse(probe_request.body)["max_tokens"]).to be <= 64_000
+    end
+
     it "marks anthropic model generation as failed on error" do
       stub_faraday_get(faraday_response(
         success: true,

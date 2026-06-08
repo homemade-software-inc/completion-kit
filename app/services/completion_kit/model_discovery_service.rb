@@ -220,7 +220,7 @@ module CompletionKit
 
     def probe_generation(model)
       probe_input = "Reply with exactly this token and nothing else: PING-OK"
-      response = send_probe(model.model_id, probe_input, 65536)
+      response = send_probe(model.model_id, probe_input, probe_max_output_tokens)
       if response.success?
         text = extract_text(response).to_s
         if text.blank?
@@ -251,7 +251,7 @@ module CompletionKit
         AI output to evaluate: The sky is blue.
       PROMPT
 
-      response = send_probe(model.model_id, judge_input, 65536)
+      response = send_probe(model.model_id, judge_input, probe_max_output_tokens)
       if response.success?
         text = extract_text(response).to_s
         if text.match?(/Score:\s*\d/i)
@@ -267,6 +267,13 @@ module CompletionKit
     rescue StandardError => e
       model.supports_judging = false
       model.judging_error = e.message
+    end
+
+    OPENAI_REASONING_PROBE_BUDGET = 65_536
+    CHAT_PROBE_BUDGET = 1_024
+
+    def probe_max_output_tokens
+      @provider == "openai" ? OPENAI_REASONING_PROBE_BUDGET : CHAT_PROBE_BUDGET
     end
 
     def send_probe(model_id, input, max_tokens)
