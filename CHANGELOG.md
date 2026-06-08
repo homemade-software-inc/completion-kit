@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.4] - 2026-06-08
+
 ### Fixed
 - **The MCP server now runs statelessly, so clients no longer get disconnected.** Previously every non-`initialize` request had to present a live `Mcp-Session-Id`; once a session passed its idle TTL, the next call was rejected with `-32000 "Session not initialized"` and the client had to reconnect. Per the Streamable HTTP transport spec, the server now serves `tools/call` and other operations without requiring a prior `initialize` or a valid session id. `initialize` still mints and returns an `Mcp-Session-Id` for clients that use one, and `DELETE` still tears a session down.
 
