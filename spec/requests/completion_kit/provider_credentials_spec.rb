@@ -45,7 +45,7 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
   it "refresh action enqueues discovery job and returns ok" do
     credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:broadcast_discovery_progress)
-    expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(credential.id)
+    expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(credential.id, force: true)
 
     post "#{base_path}/#{credential.id}/refresh"
     expect(response).to have_http_status(:ok)
@@ -56,8 +56,8 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     cred2 = create(:completion_kit_provider_credential, provider: "ollama", api_key: "ollama-key")
     allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:broadcast_discovery_progress)
 
-    expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(cred1.id)
-    expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(cred2.id)
+    expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(cred1.id, force: true)
+    expect(CompletionKit::ModelDiscoveryJob).to receive(:perform_later).with(cred2.id, force: true)
 
     post "/completion_kit/refresh_models"
     expect(response).to have_http_status(:ok)

@@ -31,6 +31,11 @@ RSpec.describe CompletionKit::ModelDiscoveryJob, type: :job do
     expect(credential.discovery_status).to eq("failed")
   end
 
+  it "passes force through to the discovery service" do
+    expect_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).with(force: true)
+    described_class.perform_now(credential.id, force: true)
+  end
+
   it "does nothing if credential not found" do
     expect { described_class.perform_now(-1) }.not_to raise_error
   end

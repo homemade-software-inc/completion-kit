@@ -40,7 +40,7 @@ module CompletionKit
       @provider_credential.update_columns(discovery_status: "discovering", discovery_current: 0, discovery_total: 0)
       @provider_credential.reload
       @provider_credential.broadcast_discovery_progress
-      ModelDiscoveryJob.perform_later(@provider_credential.id)
+      ModelDiscoveryJob.perform_later(@provider_credential.id, force: true)
       head :ok
     end
 
@@ -49,7 +49,7 @@ module CompletionKit
         cred.update_columns(discovery_status: "discovering", discovery_current: 0, discovery_total: 0)
         cred.reload
         cred.broadcast_discovery_progress
-        ModelDiscoveryJob.perform_later(cred.id)
+        ModelDiscoveryJob.perform_later(cred.id, force: true)
       end
 
       head :ok

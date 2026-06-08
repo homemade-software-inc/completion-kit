@@ -12,7 +12,7 @@ module CompletionKit
       @api_endpoint = config[:api_endpoint]
     end
 
-    def refresh!(&on_progress)
+    def refresh!(force: false, &on_progress)
       discovered = fetch_models
       reconcile(discovered)
       # OpenRouter publishes capability metadata (output modalities, etc.), so we
@@ -20,6 +20,7 @@ module CompletionKit
       # Judging stays unknown ("?") until a real run proves it.
       return if @provider == "openrouter"
 
+      reset_failed_generation if force
       probe_new_models(&on_progress)
     end
 
@@ -179,6 +180,11 @@ module CompletionKit
         attrs[:display_name] = meta[:display_name] if meta[:display_name].present?
         model.update!(attrs) if model.status == "retired" || meta[:display_name].present?
       end
+    end
+
+    def reset_failed_generation
+      Model.where(provider: @provider, status: %w[active failed], supports_generation: false)
+           .update_all(supports_generation: nil, generation_error: nil)
     end
 
     def probe_new_models(&on_progress)

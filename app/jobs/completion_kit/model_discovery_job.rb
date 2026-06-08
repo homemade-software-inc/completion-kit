@@ -24,7 +24,7 @@ module CompletionKit
       credential.broadcast_discovery_progress
     end
 
-    def perform(provider_credential_id)
+    def perform(provider_credential_id, force: false)
       credential = ProviderCredential.find_by(id: provider_credential_id)
       return unless credential
 
@@ -38,7 +38,7 @@ module CompletionKit
       credential.broadcast_discovery_progress
 
       service = ModelDiscoveryService.new(config: credential.config_hash)
-      service.refresh! do |current, total|
+      service.refresh!(force: force) do |current, total|
         credential.update_columns(discovery_current: current, discovery_total: total)
         credential.reload
         credential.broadcast_discovery_progress

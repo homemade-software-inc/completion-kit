@@ -83,6 +83,45 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(m.reload.probed_at).to be_within(2.seconds).of(1.hour.ago)
     end
 
+    it "re-probes a permanently-4xx-failed model when forced" do
+      CompletionKit::Model.create!(
+        provider: "openai", model_id: "gpt-was-broken", status: "failed",
+        supports_generation: false,
+        generation_error: "400 - {\"error\": {\"message\": \"max_tokens too large\"}}",
+        probed_at: 1.hour.ago, discovered_at: 1.day.ago
+      )
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-was-broken", object: "model" }] }.to_json
+      ))
+      stub_faraday_post(faraday_response(
+        success: true,
+        body: { output: [{ type: "message", content: [{ type: "output_text", text: "PING-OK\nScore: 4\nFeedback: ok" }] }] }.to_json
+      ))
+
+      described_class.new(config: config).refresh!(force: true)
+
+      m = CompletionKit::Model.find_by(model_id: "gpt-was-broken")
+      expect(m.supports_generation).to eq(true)
+      expect(m.generation_error).to be_nil
+      expect(m.status).to eq("active")
+    end
+
+    it "leaves confirmed-good models untouched when forced" do
+      good = CompletionKit::Model.create!(
+        provider: "openai", model_id: "gpt-good", status: "active",
+        supports_generation: true, supports_judging: true, probed_at: 1.hour.ago, discovered_at: 1.day.ago
+      )
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "gpt-good", object: "model" }] }.to_json
+      ))
+
+      described_class.new(config: config).refresh!(force: true)
+
+      expect(good.reload.probed_at).to be_within(2.seconds).of(1.hour.ago)
+    end
+
     it "does re-probe models that previously failed with a transient 429 rate limit" do
       CompletionKit::Model.create!(
         provider: "openai", model_id: "gpt-rate-limited", status: "failed",
