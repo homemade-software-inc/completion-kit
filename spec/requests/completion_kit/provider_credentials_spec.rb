@@ -85,4 +85,14 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(response.body).to include("Checking models")
     expect(response.body).to include("2/5")
   end
+
+  it "exposes the statuses polling url so the client polls the engine's actual mount path" do
+    credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+
+    get base_path
+    expect(response.body).to include(%(data-ck-statuses-url="#{base_path}/statuses"))
+
+    get "#{base_path}/#{credential.id}/edit"
+    expect(response.body).to include(%(data-ck-statuses-url="#{base_path}/statuses"))
+  end
 end

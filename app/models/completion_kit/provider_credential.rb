@@ -114,22 +114,24 @@ module CompletionKit
     end
 
     def broadcast_model_dropdowns
-      helper = ApplicationController.helpers
-      gen_html = helper.ck_model_options_html(:generation)
-      judge_html = '<option value="">None</option>' + helper.ck_model_options_html(:judging)
+      safely_broadcast do
+        helper = ApplicationController.helpers
+        gen_html = helper.ck_model_options_html(:generation)
+        judge_html = '<option value="">None</option>' + helper.ck_model_options_html(:judging)
 
-      Turbo::StreamsChannel.broadcast_action_to(
-        "completion_kit_provider_#{id}",
-        action: :replace,
-        target: "prompt_llm_model",
-        html: "<select name=\"prompt[llm_model]\" id=\"prompt_llm_model\" class=\"ck-input\">#{gen_html}</select>"
-      )
-      Turbo::StreamsChannel.broadcast_action_to(
-        "completion_kit_provider_#{id}",
-        action: :replace,
-        target: "run_judge_model",
-        html: "<select name=\"run[judge_model]\" id=\"run_judge_model\" class=\"ck-input\">#{judge_html}</select>"
-      )
+        Turbo::StreamsChannel.broadcast_action_to(
+          "completion_kit_provider_#{id}",
+          action: :replace,
+          target: "prompt_llm_model",
+          html: "<select name=\"prompt[llm_model]\" id=\"prompt_llm_model\" class=\"ck-input\">#{gen_html}</select>"
+        )
+        Turbo::StreamsChannel.broadcast_action_to(
+          "completion_kit_provider_#{id}",
+          action: :replace,
+          target: "run_judge_model",
+          html: "<select name=\"run[judge_model]\" id=\"run_judge_model\" class=\"ck-input\">#{judge_html}</select>"
+        )
+      end
     end
 
     def render_partial(partial, locals)

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Live model-discovery polling now works when the engine is mounted under a non-default path.** The polling request added in 0.12.1 hardcoded the engine's standalone mount (`/completion_kit/provider_credentials/statuses`), so a host that remounts the engine elsewhere (for example under a per-tenant URL scope) polled a path that 404s, and the providers page never updated. The poll URL is now rendered server-side from the `statuses` route helper into a `data-ck-statuses-url` attribute, so it follows whatever mount the host uses. The one remaining unguarded broadcast, `broadcast_model_dropdowns`, is now wrapped too, so a worker render failure logs and continues instead of aborting discovery completion.
+
 ## [0.12.1] - 2026-06-08
 
 ### Fixed

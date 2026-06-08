@@ -131,8 +131,15 @@ function ckDiscoveringInDom() {
   return !!document.querySelector('[id^="discovery_status_"] .ck-discovery-bar:not(.ck-discovery-bar--failed):not(.ck-discovery-bar--completed)');
 }
 
+function ckStatusesUrl() {
+  var el = document.querySelector("[data-ck-statuses-url]");
+  return el ? el.getAttribute("data-ck-statuses-url") : null;
+}
+
 function ckPollDiscoveryOnce() {
-  fetch("/completion_kit/provider_credentials/statuses", { headers: { "Accept": "text/vnd.turbo-stream.html" } })
+  var url = ckStatusesUrl();
+  if (!url) return;
+  fetch(url, { headers: { "Accept": "text/vnd.turbo-stream.html" } })
     .then(function(r) { return r.ok ? r.text() : null; })
     .then(function(html) {
       if (html && window.Turbo && window.Turbo.renderStreamMessage) window.Turbo.renderStreamMessage(html);
@@ -142,6 +149,7 @@ function ckPollDiscoveryOnce() {
 
 function ckStartDiscoveryPolling(graceMs) {
   if (!document.querySelector('[id^="discovery_status_"]')) return;
+  if (!ckStatusesUrl()) return;
   ckDiscoveryPollUntil = Date.now() + (graceMs || 0);
   if (ckDiscoveryPollTimer) return;
   ckPollDiscoveryOnce();

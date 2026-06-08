@@ -38,5 +38,7 @@
 
 <% if provider_credential.persisted? %>
   <%= turbo_stream_from "completion_kit_provider_#{provider_credential.id}" %>
-  <%= render "models_card", provider_credential: provider_credential %>
+  <div data-ck-statuses-url="<%= statuses_provider_credentials_path %>">
+    <%= render "models_card", provider_credential: provider_credential %>
+  </div>
 <% end %>

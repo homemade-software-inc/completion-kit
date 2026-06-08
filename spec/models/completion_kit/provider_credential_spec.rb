@@ -182,6 +182,27 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     end
   end
 
+  describe "#broadcast_model_dropdowns when broadcasting fails in a worker" do
+    it "logs and swallows the error so discovery completion is not aborted" do
+      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+      allow(Turbo::StreamsChannel).to receive(:broadcast_action_to).and_raise(StandardError, "dropdown boom")
+
+      expect(Rails.logger).to receive(:error).with(/discovery broadcast render failed.*dropdown boom/).at_least(:once)
+      expect { credential.send(:broadcast_model_dropdowns) }.not_to raise_error
+    end
+  end
+
+  describe "#broadcast_discovery_complete when a broadcast fails in a worker" do
+    it "does not raise so the persisted completed status survives" do
+      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+      allow(credential).to receive(:render_partial).and_raise(StandardError, "render boom")
+      allow(Turbo::StreamsChannel).to receive(:broadcast_action_to).and_raise(StandardError, "dropdown boom")
+      allow(Rails.logger).to receive(:error)
+
+      expect { credential.broadcast_discovery_complete }.not_to raise_error
+    end
+  end
+
   describe "api_endpoint SSRF validation" do
     def cred(endpoint)
       build(:completion_kit_provider_credential, provider: "ollama", api_endpoint: endpoint)
