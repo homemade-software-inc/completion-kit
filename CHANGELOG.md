@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-06-08
+
+### Fixed
+- **Model discovery no longer marks capable Claude models as unable to generate.** The capability probe sent `max_tokens: 65536`, which exceeds several Anthropic models' output caps (Haiku 4.5 and Sonnet-class models cap at 64000; Opus 4 / 4.1 at 32000) and returned a 400 — silently flagging those models as generation-incapable. The probe budget is now provider-aware: the large ceiling stays only for OpenAI reasoning models, while Anthropic and Ollama probe within model limits.
+- **Refreshing models now re-checks previously failed ones.** A non-retryable 4xx on the generation probe was cached as a permanent incapability that nothing could clear, so a model broken by a transient or since-fixed error stayed dead even on Refresh. The Refresh action now forces a re-probe of failed-generation models (resetting them to unknown) while leaving confirmed-good models untouched.
+- **Provider model-discovery progress updates live again.** Turbo broadcasts that rendered controller partials from the background worker could silently fail to publish, leaving the providers page with no discovery animation or progress. Live updates are now driven from a polled `statuses` endpoint rendered in request context, and worker broadcasts log-and-continue instead of risking the discovery job.
+
 ## [0.12.0] - 2026-05-31
 
 ### Changed (breaking)
