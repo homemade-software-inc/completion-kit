@@ -44,6 +44,19 @@ module CompletionKit
           description: "Delete a metric",
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :delete
+        },
+        "metrics_suggest_variants" => {
+          description: "Ask the model to rewrite the metric's judge instruction in N variants targeted at the recent disagreements. Each variant is saved as a draft MetricVersion with source=\"suggestion\". Returns the persisted drafts. Stripe-metering hooks fire via ActiveSupport::Notifications under completion_kit.judge_suggestion.generated.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              metric_id: {type: "integer"},
+              count: {type: "integer", description: "How many variants to request (default 1, max 3). One focused rewrite beats five reworded copies."},
+              model: {type: "string", description: "Override the model used to generate variants. Defaults to CompletionKit.config.judge_model."}
+            },
+            required: ["metric_id"]
+          },
+          handler: :suggest_variants
         }
       }.freeze
 
@@ -78,6 +91,15 @@ module CompletionKit
       def self.delete(args)
         Metric.find(args["id"]).destroy!
         text_result("Metric #{args["id"]} deleted")
+      end
+
+      def self.suggest_variants(args)
+        metric = Metric.find(args["metric_id"])
+        generator = MetricVariantGenerator.new(metric, count: args["count"].to_i, model: args["model"])
+        variants = generator.call
+        return error_result("Variant generator returned no parseable variants. Try again or change the model.") if variants.empty?
+        versions = generator.persist!(variants)
+        text_result(versions.map(&:as_json))
       end
     end
   end

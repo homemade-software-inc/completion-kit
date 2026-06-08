@@ -2,11 +2,11 @@ require "rails_helper"
 
 RSpec.describe CompletionKit::McpTools::Metrics do
   describe ".definitions" do
-    it "returns 5 tool definitions" do
+    it "returns 6 tool definitions" do
       defs = described_class.definitions
-      expect(defs.length).to eq(5)
+      expect(defs.length).to eq(6)
       expect(defs.map { |d| d[:name] }).to match_array(%w[
-        metrics_list metrics_get metrics_create metrics_update metrics_delete
+        metrics_list metrics_get metrics_create metrics_update metrics_delete metrics_suggest_variants
       ])
     end
   end

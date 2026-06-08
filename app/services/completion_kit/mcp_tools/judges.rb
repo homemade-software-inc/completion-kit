@@ -4,19 +4,6 @@ module CompletionKit
       extend Base
 
       TOOLS = {
-        "judges_suggest" => {
-          description: "Ask the model to rewrite the metric's judge instruction in N variants targeted at the recent disagreements. Each variant is saved as a draft MetricVersion with source=\"suggestion\". Returns the persisted drafts. Stripe-metering hooks fire via ActiveSupport::Notifications under completion_kit.judge_suggestion.generated.",
-          inputSchema: {
-            type: "object",
-            properties: {
-              metric_id: { type: "integer" },
-              count: { type: "integer", description: "How many variants to request (default 1, max 3). One focused rewrite beats five reworded copies." },
-              model: { type: "string", description: "Override the model used to generate variants. Defaults to CompletionKit.config.judge_model." }
-            },
-            required: ["metric_id"]
-          },
-          handler: :suggest
-        },
         "judges_replay" => {
           description: "Run the current judge against a dataset (judge-only run). Wraps runs_create with prompt_id omitted and output_column supplied. Re-judges existing dataset outputs so you can compare against human verdicts.",
           inputSchema: {
@@ -46,15 +33,6 @@ module CompletionKit
           handler: :compare
         }
       }.freeze
-
-      def self.suggest(args)
-        metric = CompletionKit::Metric.find(args["metric_id"])
-        generator = CompletionKit::MetricVariantGenerator.new(metric, count: args["count"].to_i, model: args["model"])
-        variants = generator.call
-        return error_result("Variant generator returned no parseable variants. Try again or change the model.") if variants.empty?
-        versions = generator.persist!(variants)
-        text_result(versions.map(&:as_json))
-      end
 
       def self.replay(args)
         metric = CompletionKit::Metric.find(args["metric_id"])

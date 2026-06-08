@@ -20,7 +20,7 @@ RSpec.describe CompletionKit::McpDispatcher do
     it "returns tool definitions for tools/list" do
       result = described_class.dispatch("tools/list", nil)
       expect(result[:tools]).to be_an(Array)
-      expect(result[:tools].length).to eq(47)
+      expect(result[:tools].length).to eq(48)
       expect(result[:tools].first).to have_key(:name)
       expect(result[:tools].first).to have_key(:description)
       expect(result[:tools].first).to have_key(:inputSchema)

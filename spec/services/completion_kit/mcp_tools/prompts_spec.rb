@@ -2,12 +2,12 @@ require "rails_helper"
 
 RSpec.describe CompletionKit::McpTools::Prompts do
   describe ".definitions" do
-    it "returns 6 tool definitions" do
+    it "returns 7 tool definitions" do
       defs = described_class.definitions
-      expect(defs.length).to eq(6)
+      expect(defs.length).to eq(7)
       expect(defs.map { |d| d[:name] }).to match_array(%w[
         prompts_list prompts_get prompts_create prompts_update
-        prompts_delete prompts_publish
+        prompts_delete prompts_publish prompts_suggest_improvement
       ])
     end
 
@@ -83,6 +83,34 @@ RSpec.describe CompletionKit::McpTools::Prompts do
 
     it "returns error for unknown tool" do
       expect { described_class.call("prompts_bogus", {}) }.to raise_error(KeyError)
+    end
+
+    it "suggests a prompt improvement from a run and persists a Suggestion" do
+      run = create(:completion_kit_run, prompt: prompt)
+      allow_any_instance_of(CompletionKit::PromptImprovementService).to receive(:suggest).and_return(
+        "reasoning" => "tighten the ask",
+        "suggested_template" => "Summarize clearly: {{content}}",
+        "original_template" => prompt.template
+      )
+
+      result = nil
+      expect {
+        result = described_class.call("prompts_suggest_improvement", {"run_id" => run.id})
+      }.to change(CompletionKit::Suggestion, :count).by(1)
+
+      payload = JSON.parse(result[:content].first[:text])
+      expect(payload["reasoning"]).to eq("tighten the ask")
+      expect(payload["suggested_template"]).to eq("Summarize clearly: {{content}}")
+      expect(payload["suggestion_id"]).to eq(CompletionKit::Suggestion.last.id)
+    end
+
+    it "returns isError for a judge-only run with no prompt to improve" do
+      judge_run = create(:completion_kit_run, prompt: nil, output_column: "expected_output")
+
+      result = described_class.call("prompts_suggest_improvement", {"run_id" => judge_run.id})
+
+      expect(result[:isError]).to be(true)
+      expect(CompletionKit::Suggestion.count).to eq(0)
     end
 
     it "round-trips tag_names on prompts_create with auto-create" do

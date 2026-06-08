@@ -50,6 +50,15 @@ module CompletionKit
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :publish
         },
+        "prompts_suggest_improvement" => {
+          description: "Suggest an improved version of a prompt, grounded in a run's test results and judge feedback. Analyzes the run's responses, scores, and reviews, then returns reasoning plus a rewritten template (preserving {{variables}}) and persists it as a Suggestion. Requires a run that has a prompt (not a judge-only run).",
+          inputSchema: {
+            type: "object",
+            properties: {run_id: {type: "integer", description: "The run whose results ground the improvement."}},
+            required: ["run_id"]
+          },
+          handler: :suggest_improvement
+        },
       }.freeze
 
       def self.list(_args)
@@ -95,6 +104,26 @@ module CompletionKit
         prompt = Prompt.find(args["id"])
         prompt.publish!
         text_result(prompt.reload.as_json)
+      end
+
+      def self.suggest_improvement(args)
+        run = Run.find(args["run_id"])
+        return error_result("Judge-only runs don't have a prompt to improve.") if run.prompt.nil?
+
+        result = PromptImprovementService.new(run).suggest
+        suggestion = run.suggestions.create!(
+          prompt: run.prompt,
+          reasoning: result["reasoning"],
+          suggested_template: result["suggested_template"],
+          original_template: result["original_template"]
+        )
+        text_result(
+          suggestion_id: suggestion.id,
+          prompt_id: run.prompt.id,
+          reasoning: suggestion.reasoning,
+          suggested_template: suggestion.suggested_template,
+          original_template: suggestion.original_template
+        )
       end
     end
   end

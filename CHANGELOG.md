@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (breaking)
+- **Renamed the MCP tool `judges_suggest` to `metrics_suggest_variants`.** It rewrites a metric's judge instruction into draft variants, so it now lives in the metrics namespace next to the REST `metrics#suggest_variants`. No alias is kept — update MCP callers (clients that discover tools via `tools/list` pick up the new name automatically).
+
+### Added
+- **New MCP tool `prompts_suggest_improvement`.** Suggests an improved prompt template grounded in a run's test results and judge feedback (the same engine behind the web "Suggest improvements"): it returns the reasoning and rewritten template and persists a `Suggestion`. Takes a `run_id` and rejects judge-only runs that have no prompt.
+
 ## [0.12.4] - 2026-06-08
 
 ### Fixed
