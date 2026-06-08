@@ -46,7 +46,7 @@
       <% else %>
         <p class="ck-meta-copy">No models available. <%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %> or click refresh after configuring a provider.</p>
       <% end %>
-      <div hidden data-refresh-progress-carriers>
+      <div hidden data-refresh-progress-carriers data-ck-refresh-url="<%= refresh_models_path %>" data-ck-statuses-url="<%= statuses_provider_credentials_path %>">
         <% CompletionKit::ProviderCredential.find_each do |pc| %>
           <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
           <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: pc, show_completed: false %>

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.3] - 2026-06-08
+
+### Fixed
+- **The "Refresh models" button on the prompt and run forms now works when the engine is mounted under a non-default path.** Like the discovery poll fixed in 0.12.2, the button's `refresh_models` POST was hardcoded to the standalone mount, so it 404'd on hosts that remount the engine (such as a per-tenant Cloud scope) and never started discovery. The button URL and the live-progress poll URL are now rendered from their route helpers into `data-*` attributes, so both follow whatever mount the host uses.
+
 ## [0.12.2] - 2026-06-08
 
 ### Fixed

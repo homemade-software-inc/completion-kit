@@ -111,13 +111,19 @@ function ckSetRefreshButtonsBusy(busy) {
     btn.disabled = busy;
   });
 }
+function ckRefreshUrl() {
+  var el = document.querySelector("[data-ck-refresh-url]");
+  return el ? el.getAttribute("data-ck-refresh-url") : null;
+}
 function ckRefreshModels() {
   if (ckRefreshing) return;
+  var url = ckRefreshUrl();
+  if (!url) return;
   ckRefreshing = true;
   ckSetRefreshButtonsBusy(true);
   ckUpdateRefreshProgress();
   var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-  fetch("/completion_kit/refresh_models", {
+  fetch(url, {
     method: "POST",
     headers: { "X-CSRF-Token": csrfToken }
   });

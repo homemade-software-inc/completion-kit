@@ -43,6 +43,15 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).not_to include("saving creates a new version")
   end
 
+  it "exposes the refresh and statuses urls from route helpers so model refresh works on any mount path" do
+    create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+
+    get "#{base_path}/new"
+
+    expect(response.body).to include(%(data-ck-refresh-url="/completion_kit/refresh_models"))
+    expect(response.body).to include(%(data-ck-statuses-url="/completion_kit/provider_credentials/statuses"))
+  end
+
   it "offers a per-version diff modal from the versions table, with a template word-diff when the template changed" do
     create(:completion_kit_prompt, name: "Diffed", family_key: "fam-diff", version_number: 1, current: false, template: "Summarise {{content}}.", llm_model: "gpt-4o")
     v2 = create(:completion_kit_prompt, name: "Diffed", family_key: "fam-diff", version_number: 2, current: true, template: "Summarise {{content}} in two sentences.", llm_model: "gpt-4o")
