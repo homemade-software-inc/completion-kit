@@ -35,21 +35,28 @@ RSpec.describe "MCP endpoint", type: :request do
     end
   end
 
-  describe "session validation" do
-    it "returns error for tools/list without session" do
+  describe "stateless operation" do
+    it "serves tools/list without a session id" do
       post mcp_path, params: {jsonrpc: "2.0", method: "tools/list", id: 2}.to_json, headers: auth_headers
-      expect(response).to have_http_status(:bad_request)
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["result"]["tools"]).to be_an(Array)
     end
 
-    it "allows tools/list with valid session" do
+    it "serves tools/list even with an unknown or expired session id" do
+      post mcp_path, params: {jsonrpc: "2.0", method: "tools/list", id: 2}.to_json,
+        headers: auth_headers.merge("Mcp-Session-Id" => "expired-or-unknown")
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["result"]["tools"]).to be_an(Array)
+    end
+
+    it "still accepts a session id minted by initialize" do
       post mcp_path, params: {jsonrpc: "2.0", method: "initialize", id: 1}.to_json, headers: auth_headers
       session_id = response.headers["Mcp-Session-Id"]
 
       post mcp_path, params: {jsonrpc: "2.0", method: "tools/list", id: 2}.to_json,
         headers: auth_headers.merge("Mcp-Session-Id" => session_id)
       expect(response).to have_http_status(:ok)
-      body = JSON.parse(response.body)
-      expect(body["result"]["tools"]).to be_an(Array)
+      expect(JSON.parse(response.body)["result"]["tools"]).to be_an(Array)
     end
   end
 
@@ -59,16 +66,14 @@ RSpec.describe "MCP endpoint", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "clears the session" do
+    it "removes the session row on delete" do
       post mcp_path, params: {jsonrpc: "2.0", method: "initialize", id: 1}.to_json, headers: auth_headers
       session_id = response.headers["Mcp-Session-Id"]
+      expect(CompletionKit::McpSession.active?(session_id)).to be(true)
 
       delete mcp_path, headers: auth_headers.merge("Mcp-Session-Id" => session_id)
       expect(response).to have_http_status(:ok)
-
-      post mcp_path, params: {jsonrpc: "2.0", method: "tools/list", id: 2}.to_json,
-        headers: auth_headers.merge("Mcp-Session-Id" => session_id)
-      expect(response).to have_http_status(:bad_request)
+      expect(CompletionKit::McpSession.active?(session_id)).to be(false)
     end
   end
 

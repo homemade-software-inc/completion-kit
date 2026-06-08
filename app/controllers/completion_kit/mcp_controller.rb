@@ -16,12 +16,6 @@ module CompletionKit
         return
       end
 
-      session_id = request.headers["Mcp-Session-Id"]
-      unless McpSession.active?(session_id)
-        render json: jsonrpc_error(request_body["id"], -32000, "Session not initialized. Send initialize first."), status: :bad_request
-        return
-      end
-
       result = McpDispatcher.dispatch(request_body["method"], request_body["params"])
       render json: jsonrpc_response(request_body["id"], result)
     rescue JSON::ParserError
