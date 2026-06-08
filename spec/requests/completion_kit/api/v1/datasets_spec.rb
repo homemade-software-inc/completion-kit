@@ -40,6 +40,19 @@ RSpec.describe "API V1 Datasets", type: :request do
       post "/completion_kit/api/v1/datasets", params: {name: ""}.to_json, headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
     end
+
+    it "creates a dataset from an uploaded CSV file" do
+      file = Rack::Test::UploadedFile.new(StringIO.new("content,expected_output\nhi,hello\n"), "text/csv", original_filename: "data.csv")
+
+      expect do
+        post "/completion_kit/api/v1/datasets",
+          params: {name: "Uploaded", file: file},
+          headers: {"Authorization" => "Bearer #{token}"}
+      end.to change(CompletionKit::Dataset, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+      expect(CompletionKit::Dataset.last.csv_data).to include("content,expected_output")
+    end
   end
 
   describe "PATCH /api/v1/datasets/:id" do

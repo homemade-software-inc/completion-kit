@@ -45,7 +45,10 @@ module CompletionKit
         end
 
         def dataset_params
-          params.permit(:name, :csv_data, tag_names: [])
+          permitted = params.permit(:name, :csv_data, tag_names: [])
+          upload = params[:file]
+          permitted[:csv_data] = upload.read.to_s.force_encoding("UTF-8") if upload.respond_to?(:read)
+          permitted
         end
       end
     end

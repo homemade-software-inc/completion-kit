@@ -1,7 +1,11 @@
+require "faraday"
+
 module CompletionKit
   module McpTools
     module Datasets
       extend Base
+
+      MAX_CSV_BYTES = 10 * 1024 * 1024
 
       TOOLS = {
         "datasets_list" => {
@@ -36,6 +40,19 @@ module CompletionKit
           description: "Delete a dataset",
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :delete
+        },
+        "datasets_create_from_url" => {
+          description: "Create a dataset by downloading CSV from a URL instead of inlining it. Use this for large datasets: pass a public http(s) URL and the server fetches the CSV directly, so the data never has to pass through the tool-call arguments. The URL is SSRF-checked and the download is capped at 10MB.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              name: {type: "string"},
+              url: {type: "string", description: "Public http(s) URL of the CSV file to download."},
+              tag_names: {type: "array", items: {type: "string"}}
+            },
+            required: ["name", "url"]
+          },
+          handler: :create_from_url
         }
       }.freeze
 
@@ -70,6 +87,35 @@ module CompletionKit
       def self.delete(args)
         Dataset.find(args["id"]).destroy!
         text_result("Dataset #{args["id"]} deleted")
+      end
+
+      def self.create_from_url(args)
+        issues = ProviderEndpoint.validate(args["url"])
+        return error_result("URL is not allowed (#{issues.join(", ")}).") if issues.any?
+
+        response = csv_connection.get(args["url"])
+        return error_result("Could not download CSV (HTTP #{response.status}).") unless response.success?
+
+        body = response.body.to_s
+        return error_result("CSV is larger than the #{MAX_CSV_BYTES / (1024 * 1024)}MB limit.") if body.bytesize > MAX_CSV_BYTES
+
+        dataset = Dataset.new(name: args["name"], csv_data: body.dup.force_encoding("UTF-8"))
+        dataset.tag_names = args["tag_names"] if args.key?("tag_names")
+        if dataset.save
+          text_result(dataset.reload.as_json)
+        else
+          error_result(dataset.errors.full_messages.join(", "))
+        end
+      rescue Faraday::Error => e
+        error_result("Could not download CSV: #{e.message}")
+      end
+
+      def self.csv_connection
+        Faraday.new do |f|
+          f.options.timeout = 30
+          f.options.open_timeout = 5
+          f.adapter Faraday.default_adapter
+        end
       end
     end
   end
