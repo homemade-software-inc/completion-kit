@@ -28,7 +28,7 @@ module CompletionKit
           handler: :create
         },
         "prompts_update" => {
-          description: "Update a prompt",
+          description: "Update a prompt. If the prompt already has runs, this creates a new DRAFT version (current=false) rather than editing in place or publishing — promote it with prompts_publish — so an agent's edits don't go live without a gate. If it has no runs, it is updated in place.",
           inputSchema: {
             type: "object",
             properties: {
@@ -84,7 +84,6 @@ module CompletionKit
         attrs = args.except("id").slice("name", "description", "template", "llm_model")
         if prompt.runs.exists?
           new_prompt = prompt.clone_as_new_version(attrs)
-          new_prompt.publish!
           new_prompt.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(new_prompt.reload.as_json)
         elsif prompt.update(attrs)

@@ -154,7 +154,6 @@ function ckPollDiscoveryOnce() {
 }
 
 function ckStartDiscoveryPolling(graceMs) {
-  if (!document.querySelector('[id^="discovery_status_"]')) return;
   if (!ckStatusesUrl()) return;
   ckDiscoveryPollUntil = Date.now() + (graceMs || 0);
   if (ckDiscoveryPollTimer) return;

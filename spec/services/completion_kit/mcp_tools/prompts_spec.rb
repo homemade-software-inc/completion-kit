@@ -62,13 +62,14 @@ RSpec.describe CompletionKit::McpTools::Prompts do
       expect(content["current"]).to be true
     end
 
-    it "auto-versions on update when prompt has runs" do
+    it "drafts a new version (does not auto-publish) when updating a prompt that has runs" do
       create(:completion_kit_run, prompt: prompt)
       result = described_class.call("prompts_update", {"id" => prompt.id, "template" => "New {{content}}"})
       content = JSON.parse(result[:content].first[:text])
       expect(content["version_number"]).to eq(2)
-      expect(content["current"]).to be true
+      expect(content["current"]).to be false
       expect(CompletionKit::Prompt.count).to eq(2)
+      expect(prompt.reload.current).to be true
     end
 
     it "returns error on invalid create" do

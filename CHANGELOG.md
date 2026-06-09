@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **MCP `prompts_update` no longer auto-publishes a revision (#58).** Updating a prompt that already has runs now creates the new version as a DRAFT (`current=false`) and leaves promotion to `prompts_publish`, matching the draft-then-publish model used for metric versions. Agent-driven flows get a review gate instead of shipping every edit straight to current. (Prompts with no runs are still updated in place.)
+
+### Fixed
+- **Refresh on the provider edit page now shows live progress (#63).** `ckStartDiscoveryPolling` bailed when the page had no `#discovery_status_` element — exactly the completed-state edit page where you click Refresh — so the icon never spun and no progress appeared. Polling now gates on the statuses URL instead, so the edit-page refresh starts polling and the card morphs into the discovering state.
+
 ## [0.14.0] - 2026-06-08
 
 ### Added
