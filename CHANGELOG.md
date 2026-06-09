@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-06-09
+
 ### Changed
 - **MCP `prompts_update` no longer auto-publishes a revision (#58).** Updating a prompt that already has runs now creates the new version as a DRAFT (`current=false`) and leaves promotion to `prompts_publish`, matching the draft-then-publish model used for metric versions. Agent-driven flows get a review gate instead of shipping every edit straight to current. (Prompts with no runs are still updated in place.)
 
