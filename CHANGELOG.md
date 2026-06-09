@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-06-08
+
 ### Added
 - **CSV file upload for datasets over the REST API.** `POST /api/v1/datasets` and `PATCH /api/v1/datasets/:id` now accept a multipart `file` field as an alternative to an inline `csv_data` string, so a CLI/SDK/UI can upload a CSV file directly instead of embedding it in the request body.
 - **New MCP tool `datasets_create_from_url`.** Creates a dataset by downloading CSV from a public http(s) URL server-side, so large datasets no longer have to pass through the tool-call arguments (which an LLM client otherwise has to emit token-by-token). The URL is SSRF-checked and the download is capped at 10MB.
