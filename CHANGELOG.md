@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Anthropic capability probe no longer mis-flags thinking-by-default models as unusable for judging.** `extract_text` read `content[0].text`, but newer Claude models (e.g. `claude-fable-5`) emit a `thinking` content block before the answer on the more involved judge prompt, so `content[0]` was the thinking block, the probe saw empty text, and judging was marked unsupported. It now finds the `text` block past any leading thinking block, matching how the OpenAI path already skips reasoning items. (A normal refresh re-probes affected models, so they recover without a reset.)
+
 ## [0.15.0] - 2026-06-09
 
 ### Changed

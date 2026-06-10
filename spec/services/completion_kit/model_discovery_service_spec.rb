@@ -584,6 +584,43 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(JSON.parse(probe_request.body)["max_tokens"]).to be <= 64_000
     end
 
+    it "reads the text block past a leading thinking block (thinking-by-default models like claude-fable-5)" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "claude-fable-5", display_name: "Claude Fable 5" }] }.to_json
+      ))
+      stub_faraday_post(faraday_response(
+        success: true,
+        body: { content: [
+          { type: "thinking", thinking: "" },
+          { type: "text", text: "PING-OK\nScore: 5\nFeedback: clear" }
+        ] }.to_json
+      ))
+
+      described_class.new(config: config).refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "claude-fable-5")
+      expect(model.supports_generation).to eq(true)
+      expect(model.supports_judging).to eq(true)
+    end
+
+    it "marks anthropic generation failed when the response carries no text block" do
+      stub_faraday_get(faraday_response(
+        success: true,
+        body: { data: [{ id: "claude-thinky" }] }.to_json
+      ))
+      stub_faraday_post(faraday_response(
+        success: true,
+        body: { content: [{ type: "thinking", thinking: "hmm" }] }.to_json
+      ))
+
+      described_class.new(config: config).refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "claude-thinky")
+      expect(model.supports_generation).to eq(false)
+      expect(model.generation_error).to eq("Empty response")
+    end
+
     it "marks anthropic model generation as failed on error" do
       stub_faraday_get(faraday_response(
         success: true,

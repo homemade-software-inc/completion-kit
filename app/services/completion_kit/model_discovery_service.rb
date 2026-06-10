@@ -297,7 +297,7 @@ module CompletionKit
       when "openai"
         message = Array(data["output"]).find { |o| o["type"] == "message" }
         message&.dig("content", 0, "text")
-      when "anthropic" then data.dig("content", 0, "text")
+      when "anthropic" then Array(data["content"]).find { |b| b["type"] == "text" }&.dig("text")
       else data.dig("choices", 0, "message", "content")
       end
     end
