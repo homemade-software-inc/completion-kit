@@ -10,10 +10,12 @@ module CompletionKit
       @metric = metric
       n = count.to_i
       @count = n < 1 ? DEFAULT_VARIANT_COUNT : [n, MAX_VARIANT_COUNT].min
-      @model = model || CompletionKit.config.judge_model
+      @model = model.presence || ApiConfig.default_judge_model
     end
 
     def call
+      raise CompletionKit::ConfigurationError, "No judging model available; set CompletionKit.config.judge_model or add a provider with a judging model" if @model.blank?
+
       client = LlmClient.for_model(@model, ApiConfig.for_model(@model))
       raw = client.generate_completion(build_meta_prompt, model: @model, max_tokens: 2500, temperature: DEFAULT_TEMPERATURE)
       parse(raw).first(@count)

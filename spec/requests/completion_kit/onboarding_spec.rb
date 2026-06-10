@@ -104,6 +104,8 @@ RSpec.describe "CompletionKit onboarding", type: :request do
 
   describe "POST /onboarding/sample-data" do
     it "loads the canned dataset + prompt and returns to the onboarding checklist with a notice" do
+      create(:completion_kit_model, provider: "anthropic", model_id: "claude-gen", supports_generation: true)
+
       expect { post "/completion_kit/onboarding/sample-data" }
         .to change(CompletionKit::Dataset, :count).by(1)
         .and change(CompletionKit::Prompt, :count).by(1)

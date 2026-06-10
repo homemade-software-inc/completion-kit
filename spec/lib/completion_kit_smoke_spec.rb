@@ -78,7 +78,7 @@ RSpec.describe "CompletionKit boot smoke" do
     expect(config.anthropic_api_key).to eq("env-anthropic")
     expect(config.ollama_api_key).to eq("env-ollama")
     expect(config.ollama_api_endpoint).to eq("https://env-ollama.example.test")
-    expect(config.judge_model).to eq("gpt-4.1")
+    expect(config.judge_model).to be_nil
     expect(config.high_quality_threshold).to eq(4)
     expect(config.medium_quality_threshold).to eq(3)
     expect(config.judge_examples_from_reviews).to eq(false)

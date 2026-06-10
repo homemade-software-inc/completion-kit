@@ -39,14 +39,20 @@ module CompletionKit
       available_match = available_models.find { |model| model[:id] == model_name.to_s }
       return available_match[:provider] if available_match
 
-      case model_name.to_s
-      when /\Agpt-/
-        "openai"
-      when /\Aclaude-/
-        "anthropic"
-      else
-        nil
-      end
+      guess = case model_name.to_s
+              when /\Agpt-/ then "openai"
+              when /\Aclaude-/ then "anthropic"
+              end
+      configured = ProviderCredential.distinct.pluck(:provider)
+      return guess if configured.empty?
+
+      guess if guess && configured.include?(guess)
+    end
+
+    def self.default_judge_model
+      configured = CompletionKit.config.judge_model
+      configured = configured.call if configured.respond_to?(:call)
+      configured.presence || Model.for_judging.order(:provider, :display_name).first&.model_id
     end
 
     def self.valid_for_model?(model_name)

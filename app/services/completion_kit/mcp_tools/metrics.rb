@@ -52,7 +52,7 @@ module CompletionKit
             properties: {
               metric_id: {type: "integer"},
               count: {type: "integer", description: "How many variants to request (default 1, max 3). One focused rewrite beats five reworded copies."},
-              model: {type: "string", description: "Override the model used to generate variants. Defaults to CompletionKit.config.judge_model."}
+              model: {type: "string", description: "Override the model used to generate variants. Defaults to the configured judge model or an available judging model."}
             },
             required: ["metric_id"]
           },

@@ -21,7 +21,7 @@ module CompletionKit
       @ollama_api_key = ENV['OLLAMA_API_KEY']
       @ollama_api_endpoint = ENV['OLLAMA_API_ENDPOINT']
 
-      @judge_model = "gpt-4.1"
+      @judge_model = nil
       @high_quality_threshold = 4
       @medium_quality_threshold = 3
 

@@ -3,6 +3,14 @@ require "rails_helper"
 RSpec.describe CompletionKit::McpTools::Metrics do
   let(:metric) { create(:completion_kit_metric) }
 
+  around do |example|
+    original = CompletionKit.config.judge_model
+    CompletionKit.config.judge_model = "claude-judge-default"
+    example.run
+  ensure
+    CompletionKit.config.judge_model = original
+  end
+
   def stub_llm(response_text)
     client = instance_double("CompletionKit::OpenAiClient")
     allow(client).to receive(:generate_completion).and_return(response_text)

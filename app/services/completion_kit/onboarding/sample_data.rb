@@ -15,8 +15,7 @@ module CompletionKit
       SAMPLE_PROMPT = {
         name: "Sample: Support reply",
         description: "A starter prompt. Drafts a warm, professional reply to a customer support ticket. Edit it or delete it; it's just here to get you going.",
-        template: "You are a senior customer-support specialist. Write a warm, professional reply to this ticket. Acknowledge the customer's situation, be specific about next steps, and don't be defensive.\n\nTicket:\n{{ticket}}",
-        llm_model: "gpt-4o-mini"
+        template: "You are a senior customer-support specialist. Write a warm, professional reply to this ticket. Acknowledge the customer's situation, be specific about next steps, and don't be defensive.\n\nTicket:\n{{ticket}}"
       }.freeze
 
       module_function
@@ -25,11 +24,15 @@ module CompletionKit
         return if CompletionKit::Prompt.exists? || CompletionKit::Dataset.exists?
 
         CompletionKit::Dataset.create!(name: "Sample: Customer tickets", csv_data: SAMPLE_CSV)
+
+        model = CompletionKit::Model.for_generation.order(:provider, :display_name).first&.model_id
+        return unless model
+
         CompletionKit::Prompt.create!(
           name: SAMPLE_PROMPT[:name],
           description: SAMPLE_PROMPT[:description],
           template: SAMPLE_PROMPT[:template],
-          llm_model: SAMPLE_PROMPT[:llm_model]
+          llm_model: model
         )
       end
     end

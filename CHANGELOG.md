@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Provider-neutral defaults — the engine no longer assumes OpenAI (#65).** `CompletionKit.config.judge_model` now defaults to `nil` (was `"gpt-4.1"`) and accepts a callable, so a multi-tenant host can inject a per-org default the way `tenant_scope` already does. When no judge model is supplied, the judge and metric-suggestion paths resolve an available judging model from the registry instead of falling back to OpenAI; if none can be resolved they raise a clear `ConfigurationError` rather than silently calling OpenAI. The onboarding sample prompt now picks an available generation model (and is skipped when none exists) instead of hardcoding `gpt-4o-mini`, and provider inference no longer forces a `gpt-`/`claude-` id onto a provider that isn't configured. Hosts that relied on the implicit `gpt-4.1` default should set `config.judge_model` explicitly.
+
 ## [0.15.1] - 2026-06-09
 
 ### Fixed

@@ -3,6 +3,14 @@ require "rails_helper"
 RSpec.describe CompletionKit::MetricVariantGenerator, type: :service do
   let(:metric) { create(:completion_kit_metric, instruction: "Be fair") }
 
+  around do |example|
+    original = CompletionKit.config.judge_model
+    CompletionKit.config.judge_model = "claude-judge-default"
+    example.run
+  ensure
+    CompletionKit.config.judge_model = original
+  end
+
   def stub_llm(response_text)
     client = instance_double("CompletionKit::OpenAiClient")
     allow(client).to receive(:generate_completion).and_return(response_text)
@@ -240,6 +248,23 @@ RSpec.describe CompletionKit::MetricVariantGenerator, type: :service do
       examples = described_class.for(metric)
       expect(examples.first[:judge_score]).to be_nil
       expect(examples.first[:judge_feedback]).to be_nil
+    end
+  end
+
+  describe "default judge-model resolution" do
+    it "resolves a judging model from the registry when neither a model nor config is set" do
+      CompletionKit.config.judge_model = nil
+      create(:completion_kit_model, provider: "anthropic", model_id: "claude-resolved", supports_judging: true)
+      client = instance_double("CompletionKit::OpenAiClient", generate_completion: "VARIANT:\nREASONING: r\nINSTRUCTION:\nx\nEND_VARIANT")
+      expect(CompletionKit::LlmClient).to receive(:for_model).with("claude-resolved", anything).and_return(client)
+
+      described_class.new(metric).call
+    end
+
+    it "raises ConfigurationError when no judging model can be resolved" do
+      CompletionKit.config.judge_model = nil
+
+      expect { described_class.new(metric).call }.to raise_error(CompletionKit::ConfigurationError, /No judging model/)
     end
   end
 end

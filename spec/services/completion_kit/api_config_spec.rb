@@ -81,7 +81,7 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
 
     allow(described_class).to receive(:available_models).and_return([])
     expect(described_class.provider_for_model("gpt-fallback")).to eq("openai")
-    expect(described_class.provider_for_model("claude-fallback")).to eq("anthropic")
+    expect(described_class.provider_for_model("claude-fallback")).to be_nil
 
     credential.destroy!
   end
@@ -122,5 +122,36 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
     create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-fail")
     allow(CompletionKit::LlmClient).to receive(:for_provider).with("anthropic", anything).and_raise(StandardError, "API down")
     expect(described_class.available_models).to eq([])
+  end
+
+  it "does not force a gpt- id onto OpenAI when only another provider is configured" do
+    create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-test")
+    allow(described_class).to receive(:available_models).and_return([])
+
+    expect(described_class.provider_for_model("gpt-something-unknown")).to be_nil
+    expect(described_class.provider_for_model("claude-unknown")).to eq("anthropic")
+  end
+
+  describe ".default_judge_model" do
+    after { CompletionKit.config.judge_model = nil }
+
+    it "returns a configured judge_model string" do
+      CompletionKit.config.judge_model = "claude-x"
+      expect(described_class.default_judge_model).to eq("claude-x")
+    end
+
+    it "calls a configured callable judge_model (e.g. a per-tenant resolver)" do
+      CompletionKit.config.judge_model = -> { "claude-callable" }
+      expect(described_class.default_judge_model).to eq("claude-callable")
+    end
+
+    it "falls back to the first available judging model from the registry when unconfigured" do
+      create(:completion_kit_model, provider: "anthropic", model_id: "claude-judge", supports_judging: true)
+      expect(described_class.default_judge_model).to eq("claude-judge")
+    end
+
+    it "returns nil when no judge model is configured or available" do
+      expect(described_class.default_judge_model).to be_nil
+    end
   end
 end

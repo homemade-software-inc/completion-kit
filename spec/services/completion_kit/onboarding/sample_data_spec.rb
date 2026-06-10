@@ -4,7 +4,9 @@ module CompletionKit
   module Onboarding
     RSpec.describe SampleData do
       describe ".install!" do
-        it "creates exactly one canned dataset and one canned prompt" do
+        it "creates one canned dataset and one canned prompt using an available generation model" do
+          create(:completion_kit_model, provider: "anthropic", model_id: "claude-gen", supports_generation: true)
+
           expect { described_class.install! }
             .to change(CompletionKit::Dataset, :count).by(1)
             .and change(CompletionKit::Prompt, :count).by(1)
@@ -16,11 +18,17 @@ module CompletionKit
           prompt = CompletionKit::Prompt.last
           expect(prompt).to have_attributes(
             name: "Sample: Support reply",
-            llm_model: "gpt-4o-mini"
+            llm_model: "claude-gen"
           )
           expect(prompt.template).to include("{{ticket}}")
           expect(prompt.family_key).to be_present
           expect(prompt.version_number).to eq(1)
+        end
+
+        it "creates only the dataset when no generation model is available" do
+          expect { described_class.install! }
+            .to change(CompletionKit::Dataset, :count).by(1)
+            .and change(CompletionKit::Prompt, :count).by(0)
         end
 
         it "does not create a provider credential or a run" do

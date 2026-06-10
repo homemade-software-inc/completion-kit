@@ -6,7 +6,7 @@ module CompletionKit
   class JudgeService
     def initialize(config = {})
       @config = config
-      @judge_model = config[:judge_model] || CompletionKit.config.judge_model
+      @judge_model = config[:judge_model].presence || ApiConfig.default_judge_model
       @judge_client = LlmClient.for_model(@judge_model, ApiConfig.for_model(@judge_model))
     end
 
