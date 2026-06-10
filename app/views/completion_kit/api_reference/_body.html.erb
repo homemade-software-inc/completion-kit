@@ -46,7 +46,7 @@
             <span class="ck-mcp-install-card__icon">&#9654;</span>
             Claude Code
           </div>
-          <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "claude mcp add completion-kit \\\n  --transport http \\\n  --url #{base_url}/mcp \\\n  --header \"Authorization: Bearer #{token}\"" %>
+          <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "claude mcp add --transport http completion-kit \\\n  #{base_url}/mcp \\\n  --header \"Authorization: Bearer #{token}\"" %>
         </div>
         <div class="ck-mcp-install-card">
           <div class="ck-mcp-install-card__header">
@@ -199,9 +199,10 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/datasets</p>
-        <p class="ck-meta-copy">Create a dataset.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>, <code>csv_data</code></p>
+        <p class="ck-meta-copy">Create a dataset from inline CSV or an uploaded CSV file.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>, and either <code>csv_data</code> (inline CSV) or a multipart <code>file</code> (CSV upload, preferred for large datasets)</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/datasets \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"tickets\", \"csv_data\": \"text,expected_output\\\\nHello,Hi\"}'" %>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/datasets \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -F \"name=tickets\" \\\n  -F \"file=@tickets.csv\"" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/datasets/:id</p>
