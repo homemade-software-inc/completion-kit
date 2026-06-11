@@ -387,18 +387,14 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("run_status_header")
   end
 
-  it "suggest action creates a suggestion and redirects to its show page" do
+  it "suggest action creates a pending suggestion, enqueues the validating job, and redirects" do
     run = create(:completion_kit_run, prompt: prompt)
-    service = instance_double(CompletionKit::PromptImprovementService)
-    allow(CompletionKit::PromptImprovementService).to receive(:new).with(run).and_return(service)
-    allow(service).to receive(:suggest).and_return({
-      "reasoning" => "Improve clarity",
-      "suggested_template" => "Better prompt",
-      "original_template" => prompt.template
-    })
 
-    expect { post "#{base_path}/#{run.id}/suggest" }.to change(CompletionKit::Suggestion, :count).by(1)
+    expect { post "#{base_path}/#{run.id}/suggest" }
+      .to have_enqueued_job(CompletionKit::PromptSuggestionJob)
     suggestion = CompletionKit::Suggestion.order(:id).last
+    expect(suggestion).to be_pending
+    expect(suggestion.original_template).to eq(prompt.template)
     expect(response).to redirect_to("/completion_kit/suggestions/#{suggestion.id}?from=run")
   end
 

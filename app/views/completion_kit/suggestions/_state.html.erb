@@ -1,0 +1,56 @@
+<div id="ck-suggestion-status-<%= suggestion.id %>" class="ck-suggestion-state">
+  <% if suggestion.pending? %>
+    <div class="ck-suggest-progress">
+      <p class="ck-kicker">Validating</p>
+      <p class="ck-meta-copy">Drafting a stronger prompt and re-scoring it against this run's responses. This page updates on its own when it finishes.</p>
+    </div>
+  <% elsif suggestion.failed? %>
+    <div class="ck-suggest-progress">
+      <p class="ck-kicker">Try again</p>
+      <p class="ck-meta-copy">We couldn't produce a validated rewrite this time. Review a few more responses, then try again.</p>
+      <%= button_to "Try again", suggest_run_path(run), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
+    </div>
+  <% else %>
+    <% if suggestion.validation_summary.present? %>
+      <%= render "completion_kit/suggestions/scoreboard", summary: suggestion.validation_summary %>
+    <% end %>
+
+    <div class="ck-suggest-reasoning">
+      <p class="ck-kicker">Why these changes</p>
+      <div class="ck-suggest-reasoning__body"><%= simple_format(suggestion.reasoning) %></div>
+    </div>
+
+    <div class="ck-suggest-diff">
+      <div class="ck-suggest-diff__pane">
+        <div class="ck-suggest-diff__header">
+          <span class="ck-suggest-diff__label ck-suggest-diff__label--before">Original prompt</span>
+          <span class="ck-suggest-diff__version"><%= suggestion.prompt.version_label %></span>
+        </div>
+        <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(suggestion.original_template, suggestion.suggested_template) %></pre>
+      </div>
+      <div class="ck-suggest-diff__pane">
+        <div class="ck-suggest-diff__header">
+          <span class="ck-suggest-diff__label ck-suggest-diff__label--after">Suggested prompt</span>
+        </div>
+        <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(suggestion.original_template, suggestion.suggested_template) %></pre>
+      </div>
+    </div>
+
+    <div class="ck-suggest-full">
+      <p class="ck-kicker">Full suggested prompt</p>
+      <pre class="ck-code ck-code--dark"><%= suggestion.suggested_template %></pre>
+    </div>
+
+    <div class="ck-actions">
+      <% if suggestion.applied_at? %>
+        <span class="ck-chip" style="background: var(--ck-success-soft); color: var(--ck-success);">Applied</span>
+      <% elsif !suggestion.validated? %>
+        <%= button_to "Apply anyway", apply_suggestion_path(suggestion), method: :post, class: ck_button_classes(:light, variant: :outline), form: { class: "inline-block", data: { turbo_confirm: "This rewrite couldn't be re-scored against the run's responses. Apply it anyway?" } } %>
+      <% elsif suggestion.net_negative? %>
+        <%= button_to "Apply anyway", apply_suggestion_path(suggestion), method: :post, class: ck_button_classes(:light, variant: :outline), form: { class: "inline-block", data: { turbo_confirm: "This rewrite scored lower than the original on the held-out responses. Apply it anyway?" } } %>
+      <% else %>
+        <%= button_to "Apply suggestion", apply_suggestion_path(suggestion), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

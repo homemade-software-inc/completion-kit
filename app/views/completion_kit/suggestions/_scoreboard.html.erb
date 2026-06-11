@@ -1,0 +1,16 @@
+<% s = summary %>
+<div class="ck-scoreboard">
+  <% if s["after_avg"] && s["before_avg"] %>
+    <p class="ck-scoreboard__headline">Scored <strong><%= s["after_avg"] %></strong> across <%= pluralize(s["tested"], "held-out response") %> <span class="ck-scoreboard__was">was <%= s["before_avg"] %></span></p>
+    <ul class="ck-scoreboard__tally">
+      <li class="ck-scoreboard__stat ck-scoreboard__stat--fix">Improved <strong><%= s["improved"] %></strong></li>
+      <li class="ck-scoreboard__stat ck-scoreboard__stat--keep">Held <strong><%= s["unchanged"] %></strong></li>
+      <li class="ck-scoreboard__stat ck-scoreboard__stat--break">Regressed <strong><%= s["regressed"] %></strong></li>
+    </ul>
+  <% else %>
+    <p class="ck-scoreboard__headline">Couldn't re-score this rewrite against the run's responses.</p>
+  <% end %>
+  <% if s["capped"] %>
+    <p class="ck-scoreboard__note">Tested against this run's 30 most recent responses.</p>
+  <% end %>
+</div>

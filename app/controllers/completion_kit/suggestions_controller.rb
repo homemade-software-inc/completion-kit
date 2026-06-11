@@ -8,6 +8,16 @@ module CompletionKit
     end
 
     def apply
+      if @suggestion.applied_at?
+        redirect_to suggestion_path(@suggestion), notice: "Suggestion already applied."
+        return
+      end
+
+      unless @suggestion.ready?
+        redirect_to suggestion_path(@suggestion), alert: "This suggestion isn't ready to apply yet."
+        return
+      end
+
       run = @suggestion.run
       new_prompt = run.prompt.clone_as_new_version(template: @suggestion.suggested_template)
       new_prompt.publish!

@@ -137,14 +137,12 @@ module CompletionKit
         return
       end
 
-      service = PromptImprovementService.new(@run)
-      result = service.suggest
       suggestion = @run.suggestions.create!(
         prompt: @run.prompt,
-        reasoning: result["reasoning"],
-        suggested_template: result["suggested_template"],
-        original_template: result["original_template"]
+        original_template: @run.prompt.template,
+        status: "pending"
       )
+      PromptSuggestionJob.perform_later(suggestion.id)
       redirect_to suggestion_path(suggestion, from: "run")
     end
 

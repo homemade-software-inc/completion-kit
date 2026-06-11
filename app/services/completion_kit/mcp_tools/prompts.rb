@@ -110,18 +110,25 @@ module CompletionKit
         return error_result("Judge-only runs don't have a prompt to improve.") if run.prompt.nil?
 
         result = PromptImprovementService.new(run).suggest
+        return error_result("The model didn't return a usable rewrite.") if result["suggested_template"].blank?
+
+        validation = PromptImprovementValidator.new(run, result["suggested_template"]).call
         suggestion = run.suggestions.create!(
           prompt: run.prompt,
           reasoning: result["reasoning"],
           suggested_template: result["suggested_template"],
-          original_template: result["original_template"]
+          original_template: result["original_template"],
+          validation_summary: validation,
+          status: "ready"
         )
         text_result(
           suggestion_id: suggestion.id,
           prompt_id: run.prompt.id,
           reasoning: suggestion.reasoning,
           suggested_template: suggestion.suggested_template,
-          original_template: suggestion.original_template
+          original_template: suggestion.original_template,
+          validation: validation,
+          net_negative: suggestion.net_negative?
         )
       end
     end

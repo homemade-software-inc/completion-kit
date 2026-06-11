@@ -176,6 +176,8 @@ ActiveRecord::Schema.define do
     t.text :suggested_template
     t.text :original_template
     t.datetime :applied_at
+    t.text :validation_summary
+    t.string :status, default: "ready", null: false
     t.timestamps
   end
 

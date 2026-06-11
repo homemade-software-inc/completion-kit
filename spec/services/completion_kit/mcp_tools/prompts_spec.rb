@@ -86,12 +86,16 @@ RSpec.describe CompletionKit::McpTools::Prompts do
       expect { described_class.call("prompts_bogus", {}) }.to raise_error(KeyError)
     end
 
-    it "suggests a prompt improvement from a run and persists a Suggestion" do
+    it "suggests a prompt improvement, validates it, and persists a ready Suggestion" do
       run = create(:completion_kit_run, prompt: prompt)
       allow_any_instance_of(CompletionKit::PromptImprovementService).to receive(:suggest).and_return(
         "reasoning" => "tighten the ask",
         "suggested_template" => "Summarize clearly: {{content}}",
         "original_template" => prompt.template
+      )
+      allow_any_instance_of(CompletionKit::PromptImprovementValidator).to receive(:call).and_return(
+        "before_avg" => 3.0, "after_avg" => 4.0, "improved" => 2, "regressed" => 0,
+        "unchanged" => 1, "tested" => 3, "capped" => false, "rows" => []
       )
 
       result = nil
@@ -103,6 +107,21 @@ RSpec.describe CompletionKit::McpTools::Prompts do
       expect(payload["reasoning"]).to eq("tighten the ask")
       expect(payload["suggested_template"]).to eq("Summarize clearly: {{content}}")
       expect(payload["suggestion_id"]).to eq(CompletionKit::Suggestion.last.id)
+      expect(payload["validation"]["after_avg"]).to eq(4.0)
+      expect(payload["net_negative"]).to be(false)
+      expect(CompletionKit::Suggestion.last).to be_ready
+    end
+
+    it "returns isError and persists nothing when the model returns no usable rewrite" do
+      run = create(:completion_kit_run, prompt: prompt)
+      allow_any_instance_of(CompletionKit::PromptImprovementService).to receive(:suggest).and_return(
+        "reasoning" => nil, "suggested_template" => "", "original_template" => prompt.template
+      )
+
+      result = described_class.call("prompts_suggest_improvement", {"run_id" => run.id})
+
+      expect(result[:isError]).to be(true)
+      expect(CompletionKit::Suggestion.count).to eq(0)
     end
 
     it "returns isError for a judge-only run with no prompt to improve" do

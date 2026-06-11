@@ -4116,6 +4116,23 @@ table.ck-runs-table {
   height: 14px;
 }
 
+.ck-suggest-progress {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius-lg);
+  background: var(--ck-surface);
+}
+
+.ck-suggest-progress .ck-meta-copy {
+  margin: 0.5rem 0 0;
+  max-width: 62ch;
+}
+
+.ck-suggest-progress form {
+  margin-top: 1rem;
+}
+
 .ck-suggest-reasoning {
   margin: 1.5rem 0;
   padding: 1.25rem 1.5rem;

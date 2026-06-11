@@ -19,8 +19,6 @@
       &middot; <%= @run.responses.count %> responses scored
       <% if @run.avg_score %>
         <span class="<%= ck_badge_classes(ck_score_kind(@run.avg_score)) %>"><%= @run.avg_score %></span>
-      <% else %>
-        &mdash;
       <% end %>
     </p>
   </div>
@@ -30,36 +28,8 @@
     <% else %>
       <%= link_to "Back to prompt", prompt_path(@run.prompt), class: ck_button_classes(:light, variant: :outline) %>
     <% end %>
-    <% if @suggestion.applied_at? %>
-      <span class="ck-chip" style="background: var(--ck-success-soft); color: var(--ck-success);">Applied</span>
-    <% else %>
-      <%= button_to "Apply suggestion", apply_suggestion_path(@suggestion), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
-    <% end %>
   </div>
 </section>
 
-<div class="ck-suggest-reasoning">
-  <p class="ck-kicker">Why these changes</p>
-  <div class="ck-suggest-reasoning__body"><%= simple_format(@suggestion.reasoning) %></div>
-</div>
-
-<div class="ck-suggest-diff">
-  <div class="ck-suggest-diff__pane">
-    <div class="ck-suggest-diff__header">
-      <span class="ck-suggest-diff__label ck-suggest-diff__label--before">Original prompt</span>
-      <span class="ck-suggest-diff__version"><%= @suggestion.prompt.version_label %></span>
-    </div>
-    <pre class="ck-suggest-diff__code"><%= ck_word_diff_old(@suggestion.original_template, @suggestion.suggested_template) %></pre>
-  </div>
-  <div class="ck-suggest-diff__pane">
-    <div class="ck-suggest-diff__header">
-      <span class="ck-suggest-diff__label ck-suggest-diff__label--after">Suggested prompt</span>
-    </div>
-    <pre class="ck-suggest-diff__code"><%= ck_word_diff_new(@suggestion.original_template, @suggestion.suggested_template) %></pre>
-  </div>
-</div>
-
-<div class="ck-suggest-full">
-  <p class="ck-kicker">Full suggested prompt</p>
-  <pre class="ck-code ck-code--dark"><%= @suggestion.suggested_template %></pre>
-</div>
+<%= turbo_stream_from "completion_kit_suggestion_#{@suggestion.id}" %>
+<%= render "completion_kit/suggestions/state", suggestion: @suggestion, run: @run %>
