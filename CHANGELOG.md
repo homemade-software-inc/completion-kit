@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Require Ruby >= 3.2.0.** The gemspec claimed `>= 3.1.0`, but the dependencies (Rails 7+, bundler, and net-imap 0.6+) already require Ruby 3.2. Correcting the floor also unblocks the root Dependabot security-update job, which resolves against the declared minimum and was failing because the net-imap/puma patches need Ruby 3.2.
+
 ## [0.16.1] - 2026-06-12
 
 ### Fixed
