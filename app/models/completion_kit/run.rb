@@ -174,8 +174,10 @@ module CompletionKit
         RunCompletionCheckJob.perform_later(id) if judge_only?
       end
 
-      broadcast_ui
-      broadcast_clear_responses
+      safely_broadcast do
+        broadcast_ui
+        broadcast_clear_responses
+      end
       true
     end
 
@@ -357,6 +359,12 @@ module CompletionKit
         partial: partial,
         locals: locals
       )
+    end
+
+    def safely_broadcast
+      yield
+    rescue StandardError => e
+      Rails.logger.error("[CompletionKit] run ##{id} broadcast failed: #{e.class}: #{e.message}")
     end
 
     def set_default_status

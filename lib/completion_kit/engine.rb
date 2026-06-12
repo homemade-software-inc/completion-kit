@@ -19,6 +19,8 @@ module CompletionKit
         return if @routes_warmed
         routes.url_helpers.root_path
         @routes_warmed = true
+      rescue ActionController::UrlGenerationError
+        @routes_warmed = true
       end
     end
 

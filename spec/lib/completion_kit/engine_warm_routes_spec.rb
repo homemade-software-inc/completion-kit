@@ -37,4 +37,17 @@ RSpec.describe "CompletionKit::Engine.warm_routes!" do
 
     expect(results).to all(eq(:ok))
   end
+
+  it "still warms (and does not raise) when a parameterized mount makes the bare helper raise" do
+    CompletionKit::Engine.instance_variable_set(:@routes_warmed, false)
+    helpers = CompletionKit::Engine.routes.url_helpers
+    allow(helpers).to receive(:root_path)
+      .and_raise(ActionController::UrlGenerationError.new("missing required keys: [:org_slug]"))
+    allow(CompletionKit::Engine.routes).to receive(:url_helpers).and_return(helpers)
+
+    expect { CompletionKit::Engine.warm_routes! }.not_to raise_error
+    expect(CompletionKit::Engine.instance_variable_get(:@routes_warmed)).to be(true)
+  ensure
+    CompletionKit::Engine.instance_variable_set(:@routes_warmed, true)
+  end
 end

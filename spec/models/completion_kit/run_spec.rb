@@ -276,6 +276,16 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(run.reload.status).to eq("running")
     end
 
+    it "still reports success when the post-start UI broadcast raises (no started run leaks as an API error)" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: nil)
+      allow(run).to receive(:broadcast_ui)
+        .and_raise(ActionController::UrlGenerationError.new("missing required keys: [:org_slug]"))
+
+      expect(run.start!).to be(true)
+      expect(run.reload.status).to eq("running")
+      expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).once
+    end
+
     it "returns false and sets failure_summary when dataset has no rows" do
       dataset = create(:completion_kit_dataset, csv_data: "header\n")
       run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
