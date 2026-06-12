@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Validated prompt suggestions, with a gated publish (#67).** A prompt-improvement suggestion now re-runs the candidate prompt against a held-out slice of the run's reviewed responses (capped at 30), re-judges each one, and shows a before/after scoreboard (improved, held, regressed) before you publish. One-click apply is gated: a rewrite that scored net-negative, or that could not be re-scored, asks for confirmation first. The MCP `prompts_suggest_improvement` tool returns the same measured delta plus a `net_negative` flag.
+
 ### Changed
+- **The judge no longer grades against the prompt outside a metric's scope (#66).** The judge used to receive the full prompt instruction text on every review, so a rule a prompt added (a banned-word list, a length limit) could move scores for metrics whose stated scope said nothing about it, and could corrupt version-to-version comparison. The judge now keeps the prompt only as scoped reference: it weighs the prompt for adherence dimensions (instruction-following, format or schema, tone or persona) and judges intrinsic-quality dimensions (correctness, conciseness) on the output alone. Held-out validation for both metric and prompt suggestions inherits the same scoping. Scores for output-quality metrics may shift as the prompt stops biasing them.
 - **Provider-neutral defaults — the engine no longer assumes OpenAI (#65).** `CompletionKit.config.judge_model` now defaults to `nil` (was `"gpt-4.1"`) and accepts a callable, so a multi-tenant host can inject a per-org default the way `tenant_scope` already does. When no judge model is supplied, the judge and metric-suggestion paths resolve an available judging model from the registry instead of falling back to OpenAI; if none can be resolved they raise a clear `ConfigurationError` rather than silently calling OpenAI. The onboarding sample prompt now picks an available generation model (and is skipped when none exists) instead of hardcoding `gpt-4o-mini`, and provider inference no longer forces a `gpt-`/`claude-` id onto a provider that isn't configured. Hosts that relied on the implicit `gpt-4.1` default should set `config.judge_model` explicitly.
 
 ## [0.15.1] - 2026-06-09

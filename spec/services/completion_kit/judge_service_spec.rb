@@ -103,6 +103,39 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     ).to eq(score: 3.0, feedback: "Calibrated")
   end
 
+  it "scopes the judge to the metric's dimension and tells it to ignore prompt rules unrelated to that dimension" do
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(client).to receive(:generate_completion).with(
+      include(
+        "Score strictly on the dimension",
+        "Weigh it only when the dimension you are scoring is about adherence",
+        "intrinsic quality",
+        "do not lower the score for breaking it",
+        "Original prompt: Summarize releases, never mention pricing",
+        "Reminder: score only the dimension"
+      ),
+      model: "gpt-4.1"
+    ).and_return("Score: 4\nFeedback: Scoped")
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+
+    service = described_class.new
+    expect(
+      service.evaluate("actual", "expected", "Summarize releases, never mention pricing", criteria: "Is every claim factually correct?")
+    ).to eq(score: 4.0, feedback: "Scoped")
+  end
+
+  it "omits the prompt and its scoping guidance for judge-only runs with no prompt" do
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(client).to receive(:generate_completion).with(
+      satisfy { |p| !p.include?("Original prompt") && !p.include?("Weigh it only when the dimension") },
+      model: "gpt-4.1"
+    ).and_return("Score: 3\nFeedback: No prompt")
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+
+    service = described_class.new
+    expect(service.evaluate("actual", "expected", nil, criteria: "Quality?")).to eq(score: 3.0, feedback: "No prompt")
+  end
+
   it "includes input_data in the judge prompt when provided" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion)
