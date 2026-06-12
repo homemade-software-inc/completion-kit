@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-06-12
+
+### Fixed
+- **`runs_generate` no longer returns an error for a run that already started (#68).** On a host that remounts the engine under a parameterized scope (such as `/orgs/:org_slug`), `Run#start!` raised `UrlGenerationError` from `warm_routes!` after the row jobs were already enqueued, so an MCP-driven agent saw a failure for a run that was in fact running and could retry into a double-generate. `warm_routes!` now survives parameterized mounts (the route set finalizes before the throwaway helper call), and `start!` treats its UI broadcasts as best-effort so a broadcast failure can never turn a started run into an API error.
+
 ## [0.16.0] - 2026-06-12
 
 ### Added
