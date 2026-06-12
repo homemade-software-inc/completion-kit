@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-06-12
+
 ### Added
 - **Validated prompt suggestions, with a gated publish (#67).** A prompt-improvement suggestion now re-runs the candidate prompt against a held-out slice of the run's reviewed responses (capped at 30), re-judges each one, and shows a before/after scoreboard (improved, held, regressed) before you publish. One-click apply is gated: a rewrite that scored net-negative, or that could not be re-scored, asks for confirmation first. The MCP `prompts_suggest_improvement` tool returns the same measured delta plus a `net_negative` flag.
 
