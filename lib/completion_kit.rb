@@ -10,6 +10,7 @@ module CompletionKit
     attr_accessor :username, :password, :auth_strategy, :api_token
     attr_accessor :tenant_scope, :tenant_scope_columns
     attr_accessor :api_reference_authentication_partial
+    attr_accessor :runs_index_scope, :runs_index_footer_partial
     attr_accessor :api_rate_limit, :web_rate_limit
     attr_accessor :allow_loopback_endpoints
     attr_accessor :judge_agreement_enabled

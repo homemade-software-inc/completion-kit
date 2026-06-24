@@ -22,6 +22,30 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("Run A")
   end
 
+  it "filters the index list through a host-configured runs_index_scope" do
+    create(:completion_kit_run, prompt: prompt, name: "Recent Run")
+    create(:completion_kit_run, prompt: prompt, name: "Old Run", created_at: 90.days.ago)
+    CompletionKit.config.runs_index_scope = -> { where(created_at: 30.days.ago..) }
+
+    get base_path
+
+    expect(response.body).to include("Recent Run")
+    expect(response.body).not_to include("Old Run")
+  ensure
+    CompletionKit.config.runs_index_scope = nil
+  end
+
+  it "renders a host-configured runs_index_footer_partial below the list" do
+    create(:completion_kit_run, prompt: prompt, name: "Run A")
+    CompletionKit.config.runs_index_footer_partial = "spec_host/runs_footer"
+
+    get base_path
+
+    expect(response.body).to include("spec-host-runs-footer")
+  ensure
+    CompletionKit.config.runs_index_footer_partial = nil
+  end
+
   it "renders the new-run form with no prompt preselected" do
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)
