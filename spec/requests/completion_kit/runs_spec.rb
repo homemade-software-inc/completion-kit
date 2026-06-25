@@ -35,15 +35,19 @@ RSpec.describe "CompletionKit runs", type: :request do
     CompletionKit.config.runs_index_scope = nil
   end
 
-  it "renders a host-configured runs_index_footer_partial below the list" do
-    create(:completion_kit_run, prompt: prompt, name: "Run A")
+  it "passes the shown (post-scope) runs to the host-configured runs_index_footer_partial as a local" do
+    create(:completion_kit_run, prompt: prompt, name: "Recent A")
+    create(:completion_kit_run, prompt: prompt, name: "Recent B")
+    create(:completion_kit_run, prompt: prompt, name: "Old Run", created_at: 90.days.ago)
+    CompletionKit.config.runs_index_scope = -> { where(created_at: 30.days.ago..) }
     CompletionKit.config.runs_index_footer_partial = "spec_host/runs_footer"
 
     get base_path
 
-    expect(response.body).to include("spec-host-runs-footer")
+    expect(response.body).to include("spec-host-runs-footer: 2 runs in view")
   ensure
     CompletionKit.config.runs_index_footer_partial = nil
+    CompletionKit.config.runs_index_scope = nil
   end
 
   it "renders the new-run form with no prompt preselected" do

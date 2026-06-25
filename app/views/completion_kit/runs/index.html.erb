@@ -24,5 +24,5 @@
 <% end %>
 
 <% if CompletionKit.config.runs_index_footer_partial %>
-  <%= render CompletionKit.config.runs_index_footer_partial %>
+  <%= render CompletionKit.config.runs_index_footer_partial, runs: @runs %>
 <% end %>
