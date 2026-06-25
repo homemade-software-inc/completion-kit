@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.3] - 2026-06-24
+
 ### Added
 - **Host integration hooks for the runs list (`runs_index_scope`, `runs_index_footer_partial`).** A host app can now filter the runs index and append its own footer to the list through supported config seams, instead of reaching into the controller or overriding the view. `config.runs_index_scope` takes a callable evaluated against the index relation, so a multi-tenant host can apply something like run-history retention to the list only, rather than a global `default_scope` that would null `Run` associations everywhere else. `config.runs_index_footer_partial` names a partial rendered below the list, for an "older runs are hidden, upgrade to see them" notice; it receives the shown runs as a `runs` local. Both default to off, so standalone behaviour is unchanged.
 
