@@ -5,7 +5,7 @@ module CompletionKit
         before_action :set_run, only: [:show, :update, :destroy, :generate, :retry_failures, :rerun, :regrade, :compare]
 
         def index
-          scope = Run.includes(:tags)
+          scope = Run.includes(:tags).display_scoped
           scope = scope.where(status: params[:status]) if params[:status].present?
           scope = scope.where(prompt_id: params[:prompt_id]) if params[:prompt_id].present?
           scope = scope.where(dataset_id: params[:dataset_id]) if params[:dataset_id].present?

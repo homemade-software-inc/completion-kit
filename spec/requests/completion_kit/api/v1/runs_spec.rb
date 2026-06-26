@@ -17,6 +17,19 @@ RSpec.describe "API V1 Runs", type: :request do
       expect(ids).to eq([recent.id, old.id])
     end
 
+    it "excludes display-scoped-out runs from the list and the X-Total-Count header" do
+      create(:completion_kit_run, name: "Recent API Run")
+      create(:completion_kit_run, name: "Old API Run", created_at: 90.days.ago)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      get "/completion_kit/api/v1/runs", headers: headers
+
+      expect(JSON.parse(response.body).map { |r| r["name"] }).to contain_exactly("Recent API Run")
+      expect(response.headers["X-Total-Count"]).to eq("1")
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
     it "filters by status" do
       create(:completion_kit_run, status: "pending")
       done = create(:completion_kit_run, status: "completed")
