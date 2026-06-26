@@ -270,16 +270,20 @@ end
 
 `tenant_scope` runs as each engine model's `default_scope` (use `unscoped` to bypass). `tenant_scope_columns` is appended to every engine uniqueness validation. Adding the tenant columns and composite unique indexes lives in your host migrations. Both defaults (`nil`, `[]`) are no-ops.
 
-Two further hooks let a host shape the runs index page without overriding the controller or the view:
+One hook lets a host apply run-history retention everywhere the engine lists, counts, or traverses runs, without overriding controllers or views:
 
 ```ruby
 CompletionKit.configure do |config|
-  config.runs_index_scope = -> { where(created_at: 90.days.ago..) }
-  config.runs_index_footer_partial = "runs/retention_notice"
+  config.runs_display_scope = -> { where(created_at: 90.days.ago..) }
+  config.runs_display_footer_partial = "runs/retention_notice"
 end
 ```
 
-`runs_index_scope` is a callable evaluated against the runs index relation, in the same bare-`where` style as `tenant_scope` (it runs via `instance_exec`, so write it zero-arg with the relation as `self`, like a Rails `scope` lambda). It must return a relation: a callable that returns `nil` or anything non-chainable raises when the list renders. Use it to apply list-only filters such as run-history retention, rather than a global `default_scope` that would also null `Run` associations everywhere they are traversed. `runs_index_footer_partial` names a partial rendered below the list; it receives the shown runs as a `runs` local. Use it for a notice like "older runs are hidden, upgrade to see them" — your host owns the retention rule in `runs_index_scope`, so it computes the hidden count itself. Both default to `nil` (no-ops), leaving standalone behaviour unchanged.
+`runs_display_scope` is a callable evaluated against a `Run` relation, in the same bare-`where` style as `tenant_scope` (it runs via `instance_exec`, so write it zero-arg with the relation as `self`, like a Rails `scope` lambda). It must return a relation: a callable that returns `nil` or anything non-chainable raises when a list renders. The engine applies it through `Run.display_scoped` at every run list and count it owns (the runs index, prompt and dataset show pages, the compare picker, new-run tag defaults, the v1 API index and its `X-Total-Count`, the MCP `runs_list` tool, the API reference recent-runs panel, and provider-credential usage stats) and through `Run.visible_run_ids` for child records that traverse runs (the metric trust-panel sample and the agreement examples shown on a metric page). Use it for list-only retention rather than a global `default_scope`, which would null `Run` associations everywhere they are traversed.
+
+Deliberately exempt, because they must still see every run: id-addressed single-run lookups (`runs#show`, the MCP `runs_get` tool, the v1 API show), delete-confirmation cascade counts, the auto-generated run-name counter, and the judge few-shot seeding that learns from corrected examples even on hidden runs.
+
+`runs_display_footer_partial` names a partial rendered below the runs list on the index and the prompt and dataset show pages; it receives the shown runs as a `runs` local. Use it for a notice like "older runs are hidden, upgrade to see them" — your host owns the retention rule in `runs_display_scope`, so it computes the hidden count itself. Both default to `nil` (no-ops), leaving standalone behaviour unchanged.
 
 ## Contributing
 

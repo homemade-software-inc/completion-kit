@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Run-history retention is now an engine-wide seam.** The 0.16.3 `runs_index_scope` / `runs_index_footer_partial` hooks are replaced by `runs_display_scope` / `runs_display_footer_partial`. The scope is honored everywhere the engine lists or counts runs (runs index, prompt and dataset show pages, compare picker, new-run tag defaults, v1 API index and its `X-Total-Count`, MCP `runs_list`, API reference recent-runs, provider-credential stats) and across child records that traverse runs (trust-panel sample, agreement examples on a metric page) via `Run.display_scoped` and `Run.visible_run_ids`. The footer partial now renders below the runs list on the index and the prompt and dataset show pages. Id-addressed lookups, delete-cascade counts, the auto-name counter, and judge few-shot seeding deliberately still see every run.
+
 ## [0.16.3] - 2026-06-24
 
 ### Added
