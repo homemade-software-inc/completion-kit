@@ -1,5 +1,11 @@
 module CompletionKit
   module ApplicationHelper
+    def ck_runs_display_footer(runs)
+      partial = CompletionKit.config.runs_display_footer_partial
+      return unless partial
+      render partial, runs: runs
+    end
+
     def ck_button_classes(tone = :dark, variant: :solid)
       base = "ck-button"
 

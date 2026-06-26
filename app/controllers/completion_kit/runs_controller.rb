@@ -5,9 +5,7 @@ module CompletionKit
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
-      scope = Run.includes(:prompt, :dataset, :tags, responses: :reviews).order(created_at: :desc)
-      index_scope = CompletionKit.config.runs_index_scope
-      scope = scope.instance_exec(&index_scope) if index_scope
+      scope = Run.includes(:prompt, :dataset, :tags, responses: :reviews).order(created_at: :desc).display_scoped
       @runs = apply_tag_filter(scope)
     end
 
