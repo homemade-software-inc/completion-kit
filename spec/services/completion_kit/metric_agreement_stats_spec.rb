@@ -154,4 +154,20 @@ RSpec.describe CompletionKit::MetricAgreementStats, type: :service do
       expect(stats.mae).to be_nil
     end
   end
+
+  describe "with runs_display_scope" do
+    it "excludes verdicts on runs hidden by runs_display_scope from the sample size" do
+      hidden_run = create(:completion_kit_run, created_at: 90.days.ago)
+      hidden_response = create(:completion_kit_response, run: hidden_run)
+      create(:completion_kit_review, response: hidden_response, metric: metric, metric_name: metric.name, ai_score: 4)
+      create(:completion_kit_agreement, run: hidden_run, response: hidden_response, metric: metric,
+             metric_version: metric_version, verdict: "agree", created_by: SecureRandom.uuid)
+      add_agreement(add_response(ai_score: 4), verdict: "agree")
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      expect(described_class.for(metric).sample_size).to eq(1)
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+  end
 end

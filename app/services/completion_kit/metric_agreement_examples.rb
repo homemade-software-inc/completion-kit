@@ -29,7 +29,7 @@ module CompletionKit
     end
 
     def agreements_for(metric, verdict:, limit:)
-      base = Agreement.where(metric_id: metric.id, verdict: verdict)
+      base = Agreement.where(metric_id: metric.id, verdict: verdict, run_id: Run.visible_run_ids)
       current_version = MetricVersion.current.find_by(metric_id: metric.id)
       scoped = current_version ? base.where(metric_version_id: current_version.id) : base
       effective = scoped.exists? ? scoped : base

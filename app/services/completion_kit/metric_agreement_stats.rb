@@ -49,7 +49,7 @@ module CompletionKit
     end
 
     def call
-      scope = Agreement.where(metric_id: @metric.id)
+      scope = Agreement.where(metric_id: @metric.id, run_id: Run.visible_run_ids)
       if @metric_version
         scope = scope.where(metric_version_id: @metric_version.id)
       elsif !@all_versions

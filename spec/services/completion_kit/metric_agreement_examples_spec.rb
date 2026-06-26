@@ -62,4 +62,21 @@ RSpec.describe CompletionKit::MetricAgreementExamples do
     newer.publish!
     expect(described_class.judge_examples_for(metric)).to eq([])
   end
+
+  describe "with runs_display_scope" do
+    it "hides display examples on hidden runs but keeps them for judge seeding" do
+      old_run = create(:completion_kit_run, created_at: 90.days.ago)
+      response = create(:completion_kit_response, run: old_run)
+      disagreement(metric, response: response)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      display = described_class.disagreements_for(metric)
+      seeding = described_class.judge_examples_for(metric)
+
+      expect(display.map { |e| e[:run_id] }).not_to include(old_run.id)
+      expect(seeding.map { |e| e[:run_id] }).to include(old_run.id)
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+  end
 end
