@@ -5,6 +5,30 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
   end
 
+  describe "display-scoped run stats" do
+    let(:credential) { create(:completion_kit_provider_credential, provider: "openai") }
+
+    before { create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1") }
+
+    it "judge_count ignores runs hidden by runs_display_scope" do
+      create(:completion_kit_run, judge_model: "gpt-4.1", created_at: 90.days.ago)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      expect(credential.judge_count).to eq(0)
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
+    it "last_used_at ignores runs hidden by runs_display_scope" do
+      create(:completion_kit_run, judge_model: "gpt-4.1", status: "completed", created_at: 90.days.ago)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      expect(credential.last_used_at).to be_nil
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+  end
+
   describe "PROVIDERS and PROVIDER_LABELS" do
     it "includes openrouter as a valid provider" do
       expect(CompletionKit::ProviderCredential::PROVIDERS).to include("openrouter")
