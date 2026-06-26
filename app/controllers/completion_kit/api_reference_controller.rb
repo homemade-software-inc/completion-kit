@@ -2,7 +2,7 @@ module CompletionKit
   class ApiReferenceController < ApplicationController
     def index
       @published_prompts = Prompt.current_versions.order(name: :asc)
-      @recent_runs = Run.includes(:prompt).order(created_at: :desc).limit(10)
+      @recent_runs = Run.includes(:prompt).display_scoped.order(created_at: :desc).limit(10)
       @datasets = Dataset.order(name: :asc)
       @metrics = Metric.order(name: :asc)
       @metric_groups = MetricGroup.includes(:metrics).order(name: :asc)

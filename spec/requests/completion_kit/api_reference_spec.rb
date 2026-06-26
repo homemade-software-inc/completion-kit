@@ -17,6 +17,20 @@ RSpec.describe "CompletionKit API reference", type: :request do
     expect(response.body).to include("ck-api-copy")
   end
 
+  it "omits display-scoped-out runs from the recent-runs panel" do
+    prompt = create(:completion_kit_prompt, name: "Doc Prompt")
+    create(:completion_kit_run, prompt: prompt, name: "Recent Doc Run")
+    create(:completion_kit_run, prompt: prompt, name: "Old Doc Run", created_at: 90.days.ago)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+    get "/completion_kit/api_reference"
+
+    expect(response.body).to include("Recent Doc Run")
+    expect(response.body).not_to include("Old Doc Run")
+  ensure
+    CompletionKit.config.runs_display_scope = nil
+  end
+
   it "shows published prompts inside the Prompts section" do
     create(:completion_kit_prompt, name: "Summarizer", current: true)
     get "/completion_kit/api_reference"
