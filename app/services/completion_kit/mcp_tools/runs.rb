@@ -57,7 +57,7 @@ module CompletionKit
       }.freeze
 
       def self.list(_args)
-        text_result(Run.order(created_at: :desc).map(&:as_json))
+        text_result(Run.display_scoped.order(created_at: :desc).map(&:as_json))
       end
 
       def self.get(args)

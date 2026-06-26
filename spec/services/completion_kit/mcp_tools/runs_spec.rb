@@ -33,6 +33,18 @@ RSpec.describe CompletionKit::McpTools::Runs do
       expect(content.first["name"]).to eq("Test Run")
     end
 
+    it "lists only display-scoped runs" do
+      create(:completion_kit_run, prompt: prompt, name: "Old MCP Run", created_at: 90.days.ago)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      result = described_class.call("runs_list", {})
+      names = JSON.parse(result[:content].first[:text]).map { |r| r["name"] }
+
+      expect(names).to contain_exactly("Test Run")
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
     it "gets a run by id" do
       result = described_class.call("runs_get", {"id" => run.id})
       content = JSON.parse(result[:content].first[:text])
