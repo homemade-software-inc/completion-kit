@@ -271,4 +271,19 @@ RSpec.describe "CompletionKit prompts", type: :request do
     CompletionKit.config.runs_display_scope = nil
   end
 
+  it "scopes the index best-score badge to display-scoped runs" do
+    prompt = create(:completion_kit_prompt, name: "Scored Prompt")
+    create(:completion_kit_review, response: create(:completion_kit_response, run: create(:completion_kit_run, prompt: prompt)), ai_score: 2.0)
+    old = create(:completion_kit_run, prompt: prompt, created_at: 90.days.ago)
+    create(:completion_kit_review, response: create(:completion_kit_response, run: old), ai_score: 5.0)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+    get "/completion_kit/prompts"
+
+    expect(response.body).to include(">2.0<")
+    expect(response.body).not_to include(">5.0<")
+  ensure
+    CompletionKit.config.runs_display_scope = nil
+  end
+
 end

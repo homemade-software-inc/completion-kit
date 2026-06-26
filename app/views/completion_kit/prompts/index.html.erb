@@ -52,7 +52,7 @@
           </td>
           <td><span class="ck-chip"><%= prompt.llm_model %></span></td>
           <% family_runs = CompletionKit::Run.where(prompt_id: prompt.family_versions.select(:id)).display_scoped %>
-          <% current_version_runs = prompt.runs.includes(responses: :reviews) %>
+          <% current_version_runs = prompt.runs.display_scoped.includes(responses: :reviews) %>
           <% best_score = current_version_runs.map(&:avg_score).compact.max %>
           <td>
             <% if best_score %>

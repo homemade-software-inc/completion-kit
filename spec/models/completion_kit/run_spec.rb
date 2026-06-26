@@ -29,6 +29,27 @@ RSpec.describe CompletionKit::Run, type: :model do
       CompletionKit.config.runs_display_scope = nil
     end
 
+    it "preserves the receiving relation's own conditions while applying the filter" do
+      keep = create(:completion_kit_run)
+      create(:completion_kit_run)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      expect(CompletionKit::Run.where(id: keep.id).display_scoped).to eq([keep])
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
+    it "preserves an association scope when filtering a dataset's runs" do
+      dataset = create(:completion_kit_dataset)
+      mine = create(:completion_kit_run, dataset: dataset)
+      create(:completion_kit_run)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      expect(dataset.runs.display_scoped).to eq([mine])
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
     it "exposes visible_run_ids as a subquery usable by child records" do
       recent = create(:completion_kit_run)
       create(:completion_kit_run, created_at: 90.days.ago)

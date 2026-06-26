@@ -64,7 +64,7 @@
       </thead>
       <tbody>
         <% versions.each do |v| %>
-          <% best_score = v.runs.map(&:avg_score).compact.max %>
+          <% best_score = v.runs.display_scoped.map(&:avg_score).compact.max %>
           <% pred = predecessor_of[v] %>
           <tr class="<%= "ck-results-table__row--active" if v.id == @prompt.id %>" onclick="window.location='<%= prompt_path(v) %>'" style="cursor: pointer;">
             <td>
