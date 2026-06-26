@@ -31,7 +31,7 @@ module CompletionKit
       @run = Run.new(prompt_id: params[:prompt_id])
       prompt = Prompt.find_by(id: @run.prompt_id)
       if prompt
-        last_run = Run.where(prompt_id: prompt.family_versions.ids).order(created_at: :desc).first
+        last_run = Run.where(prompt_id: prompt.family_versions.ids).display_scoped.order(created_at: :desc).first
         @run.tag_names = last_run.tag_names if last_run
       end
     end
@@ -84,6 +84,7 @@ module CompletionKit
       if other_id.blank?
         @other_runs = Run.where(dataset_id: @run.dataset_id, prompt_id: @run.prompt_id)
                           .where.not(id: @run.id)
+                          .display_scoped
                           .order(created_at: :desc)
                           .limit(50)
         return render(:compare_picker)

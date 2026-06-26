@@ -50,6 +50,30 @@ RSpec.describe "CompletionKit runs", type: :request do
     CompletionKit.config.runs_display_scope = nil
   end
 
+  it "excludes runs hidden by runs_display_scope from the compare picker" do
+    dataset = create(:completion_kit_dataset)
+    anchor = create(:completion_kit_run, prompt: prompt, dataset: dataset, status: "completed")
+    create(:completion_kit_run, prompt: prompt, dataset: dataset, name: "Old Candidate", created_at: 90.days.ago, status: "completed")
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+    get "#{base_path}/#{anchor.id}/compare"
+
+    expect(response.body).not_to include("Old Candidate")
+  ensure
+    CompletionKit.config.runs_display_scope = nil
+  end
+
+  it "does not seed new-run tags from a run hidden by runs_display_scope" do
+    create(:completion_kit_run, prompt: prompt, created_at: 90.days.ago, tag_names: ["stale"])
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+    get "#{base_path}/new", params: { prompt_id: prompt.id }
+
+    expect(response.body).not_to match(/value="stale"[^>]*\bchecked\b/)
+  ensure
+    CompletionKit.config.runs_display_scope = nil
+  end
+
   it "renders the new-run form with no prompt preselected" do
     get "#{base_path}/new"
     expect(response).to have_http_status(:ok)
