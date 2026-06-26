@@ -241,4 +241,34 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).to include("Filter by tag")
   end
 
+  it "scopes the prompt's run list and renders the display footer with shown runs" do
+    prompt = create(:completion_kit_prompt, name: "Prompt A")
+    create(:completion_kit_run, prompt: prompt, name: "Recent Prompt Run")
+    create(:completion_kit_run, prompt: prompt, name: "Old Prompt Run", created_at: 90.days.ago)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+    CompletionKit.config.runs_display_footer_partial = "spec_host/runs_footer"
+
+    get "/completion_kit/prompts/#{prompt.id}"
+
+    expect(response.body).to include("Recent Prompt Run")
+    expect(response.body).not_to include("Old Prompt Run")
+    expect(response.body).to include("spec-host-runs-footer: 1 runs in view")
+  ensure
+    CompletionKit.config.runs_display_footer_partial = nil
+    CompletionKit.config.runs_display_scope = nil
+  end
+
+  it "scopes the prompt family run count cell to display-scoped runs" do
+    prompt = create(:completion_kit_prompt, name: "Counted Prompt")
+    create(:completion_kit_run, prompt: prompt)
+    create(:completion_kit_run, prompt: prompt, created_at: 90.days.ago)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+    get "/completion_kit/prompts"
+
+    expect(response.body).to match(/ck-prompts-table__runs-count">1</)
+  ensure
+    CompletionKit.config.runs_display_scope = nil
+  end
+
 end

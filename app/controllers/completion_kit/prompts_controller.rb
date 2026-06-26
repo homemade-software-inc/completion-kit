@@ -11,6 +11,7 @@ module CompletionKit
       @runs = Run.where(prompt_id: @prompt.family_versions.select(:id))
                  .includes(:prompt, :dataset, responses: :reviews)
                  .order(created_at: :desc)
+                 .display_scoped
     end
     
     def new

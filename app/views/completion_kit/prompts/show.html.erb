@@ -143,6 +143,8 @@
   </section>
 <% end %>
 
+<%= ck_runs_display_footer(@runs) %>
+
 <% suggestions = CompletionKit::Suggestion.where(prompt_id: @prompt.family_versions.select(:id)).order(created_at: :desc) %>
 <% if suggestions.any? %>
   <section class="ck-card--spaced">

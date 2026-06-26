@@ -148,4 +148,34 @@ RSpec.describe "CompletionKit datasets", type: :request do
     expect(response.body).to include("Filter by tag")
   end
 
+  it "scopes the dataset's run list and renders the display footer with shown runs" do
+    dataset = create(:completion_kit_dataset)
+    create(:completion_kit_run, dataset: dataset, name: "Recent DS Run")
+    create(:completion_kit_run, dataset: dataset, name: "Old DS Run", created_at: 90.days.ago)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+    CompletionKit.config.runs_display_footer_partial = "spec_host/runs_footer"
+
+    get "/completion_kit/datasets/#{dataset.id}"
+
+    expect(response.body).to include("Recent DS Run")
+    expect(response.body).not_to include("Old DS Run")
+    expect(response.body).to include("spec-host-runs-footer: 1 runs in view")
+  ensure
+    CompletionKit.config.runs_display_footer_partial = nil
+    CompletionKit.config.runs_display_scope = nil
+  end
+
+  it "scopes the dataset used-in run count cell to display-scoped runs" do
+    dataset = create(:completion_kit_dataset)
+    create(:completion_kit_run, dataset: dataset)
+    create(:completion_kit_run, dataset: dataset, created_at: 90.days.ago)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+    get "/completion_kit/datasets"
+
+    expect(response.body).to include('data-label="Used in">1<')
+  ensure
+    CompletionKit.config.runs_display_scope = nil
+  end
+
 end

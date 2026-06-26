@@ -8,7 +8,7 @@ module CompletionKit
     end
 
     def show
-      @runs = @dataset.runs.includes(:prompt, :responses).order(created_at: :desc)
+      @runs = @dataset.runs.includes(:prompt, :responses).order(created_at: :desc).display_scoped
       respond_to do |format|
         format.html
         format.csv do

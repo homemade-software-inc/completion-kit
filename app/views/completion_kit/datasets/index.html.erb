@@ -36,7 +36,7 @@
             <% end %>
           </td>
           <td data-label="Rows"><%= dataset.row_count %></td>
-          <td data-label="Used in"><%= dataset.runs.count %></td>
+          <td data-label="Used in"><%= dataset.runs.display_scoped.count %></td>
           <td data-label="Created" class="ck-meta-copy"><time datetime="<%= dataset.created_at.iso8601 %>"><%= dataset.created_at.strftime("%b %-d, %Y") %></time></td>
           <td class="ck-results-table__arrow">&rarr;</td>
         </tr>
