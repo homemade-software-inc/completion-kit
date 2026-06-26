@@ -21,6 +21,15 @@ module CompletionKit
     before_validation :set_default_status, on: :create
     before_validation :set_auto_name, on: :create
 
+    def self.display_scoped
+      filter = CompletionKit.config.runs_display_scope
+      filter ? all.instance_exec(&filter) : all
+    end
+
+    def self.visible_run_ids
+      display_scoped.select(:id)
+    end
+
     # A judge-only run grades a pre-existing column on the dataset instead of
     # generating new outputs. No prompt is attached; the response text is read
     # from row[output_column]; no LLM generation happens.

@@ -12,6 +12,34 @@ RSpec.describe CompletionKit::Run, type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_clear_responses)
   end
 
+  describe ".display_scoped" do
+    it "returns all runs when no runs_display_scope is configured" do
+      recent = create(:completion_kit_run)
+      old = create(:completion_kit_run, created_at: 90.days.ago)
+      expect(CompletionKit::Run.display_scoped).to match_array([recent, old])
+    end
+
+    it "applies the configured callable to the current relation" do
+      recent = create(:completion_kit_run)
+      create(:completion_kit_run, created_at: 90.days.ago)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      expect(CompletionKit::Run.display_scoped).to eq([recent])
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
+    it "exposes visible_run_ids as a subquery usable by child records" do
+      recent = create(:completion_kit_run)
+      create(:completion_kit_run, created_at: 90.days.ago)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      expect(CompletionKit::Run.where(id: CompletionKit::Run.visible_run_ids)).to eq([recent])
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+  end
+
   describe "#regrade!" do
     let(:run) { create(:completion_kit_run, judge_model: "gpt-4.1") }
     let(:metric) { create(:completion_kit_metric) }
