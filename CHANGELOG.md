@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-06-29
+
+### Fixed
+- **The dashboard now honors `runs_display_scope` like every other run surface (#81).** Its recent-runs list and the "Runs" stat-card count route through `Run.display_scoped`, and the recent-runs table now renders `runs_display_footer_partial` below it, so a host with run-history retention sees consistent visibility and its hidden-runs notice on the page users land on first. The stat-card visibility gate deliberately keys off the unscoped run total, so a long-tenured workspace whose runs have all aged past retention still sees its activity cards rather than a blank dashboard. Hosts that carried a `DashboardController#show` prepend to patch this can drop it.
+
 ## [0.17.0] - 2026-06-26
 
 ### Changed
