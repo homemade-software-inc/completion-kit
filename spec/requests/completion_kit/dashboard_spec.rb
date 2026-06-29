@@ -80,6 +80,78 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       expect(response.body).to include("is-loss")
     end
 
+    it "filters the recent-runs list through a host-configured runs_display_scope" do
+      cookies[:ck_onboarding_dismissed] = "1"
+      prompt = create(:completion_kit_prompt)
+      dataset = create(:completion_kit_dataset)
+      create(:completion_kit_run, prompt: prompt, dataset: dataset, name: "Dashboard Recent")
+      create(:completion_kit_run, prompt: prompt, dataset: dataset, name: "Dashboard Old", created_at: 90.days.ago)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      get dashboard
+
+      expect(response.body).to include("Dashboard Recent")
+      expect(response.body).not_to include("Dashboard Old")
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
+    it "passes the shown (post-scope) recent runs to the host runs_display_footer_partial" do
+      cookies[:ck_onboarding_dismissed] = "1"
+      prompt = create(:completion_kit_prompt)
+      dataset = create(:completion_kit_dataset)
+      create_list(:completion_kit_run, 2, prompt: prompt, dataset: dataset)
+      create(:completion_kit_run, prompt: prompt, dataset: dataset, created_at: 90.days.ago)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+      CompletionKit.config.runs_display_footer_partial = "spec_host/runs_footer"
+
+      get dashboard
+
+      expect(response.body).to include("spec-host-runs-footer: 2 runs in view")
+    ensure
+      CompletionKit.config.runs_display_footer_partial = nil
+      CompletionKit.config.runs_display_scope = nil
+    end
+
+    it "shows the display-scoped run count on the Runs stat card" do
+      cookies[:ck_onboarding_dismissed] = "1"
+      prompt = create(:completion_kit_prompt)
+      dataset = create(:completion_kit_dataset)
+      create_list(:completion_kit_run, 6, prompt: prompt, dataset: dataset, created_at: 90.days.ago)
+      create_list(:completion_kit_run, 2, prompt: prompt, dataset: dataset)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+      allow(CompletionKit::DashboardStats).to receive(:activity).and_return([{ date: Date.new(2026, 5, 3), count: 1 }])
+      allow(CompletionKit::DashboardStats).to receive(:worst_metric).and_return(nil)
+      allow(CompletionKit::DashboardStats).to receive(:failures).and_return(count: 0, items: [])
+      allow(CompletionKit::DashboardStats).to receive(:prompt_changes).and_return([])
+
+      get dashboard
+
+      expect(response.body).to include('<span class="ck-statbar__value">2</span>')
+      expect(response.body).not_to include('<span class="ck-statbar__value">8</span>')
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
+    it "keeps the stat cards gated on the unscoped run total when retention hides most runs" do
+      cookies[:ck_onboarding_dismissed] = "1"
+      prompt = create(:completion_kit_prompt)
+      dataset = create(:completion_kit_dataset)
+      create_list(:completion_kit_run, 6, prompt: prompt, dataset: dataset, created_at: 90.days.ago)
+      create_list(:completion_kit_run, 2, prompt: prompt, dataset: dataset)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+      allow(CompletionKit::DashboardStats).to receive(:activity).and_return([{ date: Date.new(2026, 5, 3), count: 1 }])
+      allow(CompletionKit::DashboardStats).to receive(:worst_metric).and_return(nil)
+      allow(CompletionKit::DashboardStats).to receive(:failures).and_return(count: 0, items: [])
+      allow(CompletionKit::DashboardStats).to receive(:prompt_changes).and_return([])
+
+      get dashboard
+
+      expect(response.body).to include("Activity · last 14 days")
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
     it "renders an all-zero sparkline and the empty prompt-changes state" do
       ready_workspace!(run_count: 6)
       allow(CompletionKit::DashboardStats).to receive(:activity).and_return(

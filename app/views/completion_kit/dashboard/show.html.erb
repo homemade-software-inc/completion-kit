@@ -88,4 +88,6 @@
   <% else %>
     <div class="ck-empty">No runs yet.&ensp;<%= link_to "Create your first run →", new_run_path, class: "ck-link" %></div>
   <% end %>
+
+  <%= ck_runs_display_footer(@recent_runs) %>
 </section>
