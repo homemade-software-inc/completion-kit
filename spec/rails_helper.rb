@@ -57,6 +57,8 @@ ActiveRecord::Schema.define do
     t.text :instruction
     t.text :rubric_bands
     t.string :key
+    t.string :metric_type, null: false, default: "llm_judge"
+    t.text :check_config
     t.timestamps
   end
 
@@ -143,6 +145,7 @@ ActiveRecord::Schema.define do
     t.text :instruction
     t.string :status
     t.decimal :ai_score, precision: 4, scale: 1
+    t.boolean :passed
     t.text :ai_feedback
     t.string :error_provider
     t.string :error_class
@@ -240,6 +243,8 @@ ActiveRecord::Schema.define do
     t.integer :version_number
     t.datetime :published_at
     t.text :validation_summary
+    t.string :metric_type, null: false, default: "llm_judge"
+    t.text :check_config
     t.timestamps
   end
   add_index :completion_kit_metric_versions, [:metric_id, :current], name: "index_ck_metric_versions_on_metric_current"

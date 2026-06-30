@@ -26,6 +26,117 @@ RSpec.describe CompletionKit::Metric, type: :model do
     expect(metric.rubric_bands.last).to include("stars" => 1)
   end
 
+  describe "metric_type" do
+    it "defaults a new metric to llm_judge" do
+      expect(described_class.new.metric_type).to eq("llm_judge")
+      expect(described_class.new).to be_llm_judge
+      expect(described_class.new).not_to be_check
+    end
+
+    it "recognizes a check metric" do
+      metric = build(:completion_kit_metric, :check)
+      expect(metric).to be_check
+      expect(metric).not_to be_llm_judge
+    end
+
+    it "rejects an unknown metric_type" do
+      metric = build(:completion_kit_metric, metric_type: "bogus")
+      expect(metric).not_to be_valid
+      expect(metric.errors[:metric_type]).to be_present
+    end
+  end
+
+  describe "check metrics" do
+    it "does not stamp phantom rubric defaults on a check" do
+      metric = create(:completion_kit_metric, :check)
+      expect(metric.rubric_bands).to be_nil
+      expect(metric.instruction).to be_nil
+    end
+
+    it "round-trips check_config as a hash" do
+      metric = create(:completion_kit_metric, :check,
+                      check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "ok" })
+      expect(metric.reload.check_config).to eq({ "check_kind" => "contains", "target" => "response_text", "value" => "ok" })
+    end
+
+    it "is invalid when check_config is not a hash" do
+      metric = build(:completion_kit_metric, :check, check_config: "nope")
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config]).to be_present
+    end
+
+    it "is invalid for an unknown check_kind" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "telepathy", "target" => "response_text" })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("check_kind")
+    end
+
+    it "is invalid when a required per-kind key is missing" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "contains", "target" => "response_text" })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("value")
+    end
+
+    it "is invalid for an unknown target" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "telepathy" })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("target")
+    end
+
+    it "requires target_path when target is json_path" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "json_path" })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("target_path")
+    end
+
+    it "is invalid when a regex pattern will not compile" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "regex", "target" => "response_text", "pattern" => "(" })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("regular expression")
+    end
+
+    it "requires at least one bound for length_bounds" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "length_bounds", "target" => "response_text" })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("min or max")
+    end
+
+    it "rejects length_bounds where min exceeds max" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "length_bounds", "target" => "response_text", "min" => 9, "max" => 2 })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("less than or equal")
+    end
+
+    it "accepts a valid length_bounds with both bounds" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "length_bounds", "target" => "response_text", "min" => 2, "max" => 9 })
+      expect(metric).to be_valid
+    end
+
+    it "accepts json_path_equals only when expected is present even if falsey" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "json_path_equals", "target" => "response_text", "json_path" => "ok", "expected" => false })
+      expect(metric).to be_valid
+    end
+
+    it "is invalid when json_path_equals omits expected entirely" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "json_path_equals", "target" => "response_text", "json_path" => "ok" })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("expected")
+    end
+  end
+
+  describe "#in_use?" do
+    it "is false until a run references the metric" do
+      expect(create(:completion_kit_metric)).not_to be_in_use
+    end
+
+    it "is true once a run references the metric" do
+      metric = create(:completion_kit_metric)
+      run = create(:completion_kit_run)
+      run.run_metrics.create!(metric: metric, position: 1)
+      expect(metric.reload).to be_in_use
+    end
+  end
+
   it "generates rubric text from star bands" do
     metric = described_class.create!(name: "Test metric")
 

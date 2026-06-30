@@ -64,6 +64,48 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       second = described_class.ensure_current_for(metric)
       expect(second.id).to eq(first.id)
     end
+
+    it "snapshots metric_type and check_config for a check metric" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "ok" })
+      jv = described_class.ensure_current_for(metric)
+      expect(jv.metric_type).to eq("check")
+      expect(jv.check_config).to eq({ "check_kind" => "contains", "target" => "response_text", "value" => "ok" })
+    end
+  end
+
+  describe "#publish! for a check" do
+    it "writes check_config back onto the live metric without stamping rubric bands" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text" })
+      version = described_class.create!(
+        metric: metric, metric_type: "check",
+        check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "ok" },
+        state: "draft", current: false
+      )
+
+      version.publish!
+      metric.reload
+
+      expect(metric.check_config).to eq({ "check_kind" => "contains", "target" => "response_text", "value" => "ok" })
+      expect(metric.metric_type).to eq("check")
+      expect(metric.rubric_bands).to be_nil
+    end
+  end
+
+  describe "#change_summary_against for a check" do
+    it "is nil when the check_config is unchanged" do
+      config = { "check_kind" => "contains", "target" => "response_text", "value" => "ok" }
+      previous = build(:completion_kit_metric_version, :check, check_config: config)
+      current = build(:completion_kit_metric_version, :check, check_config: config)
+      expect(current.change_summary_against(previous)).to be_nil
+    end
+
+    it "reports a change when the check_config differs" do
+      previous = build(:completion_kit_metric_version, :check, check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "ok" })
+      current = build(:completion_kit_metric_version, :check, check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "done" })
+      summary = current.change_summary_against(previous)
+      expect(summary).not_to be_nil
+      expect(summary[:label]).to match(/check/i)
+    end
   end
 
   describe "#as_json" do
@@ -77,7 +119,17 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
         current: true
       )
       expect(payload[:rubric_bands]).to be_an(Array)
+      expect(payload[:metric_type]).to eq("llm_judge")
       expect(payload[:created_at]).to be_present
+    end
+
+    it "emits metric_type and check_config and omits rubric_bands/instruction for a check" do
+      jv = create(:completion_kit_metric_version, :check)
+      payload = jv.as_json
+      expect(payload).to include(metric_type: "check")
+      expect(payload).to have_key(:check_config)
+      expect(payload).not_to have_key(:rubric_bands)
+      expect(payload).not_to have_key(:instruction)
     end
   end
 

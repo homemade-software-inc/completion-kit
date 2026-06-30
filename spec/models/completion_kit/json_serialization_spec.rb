@@ -39,7 +39,15 @@ RSpec.describe "JSON serialization" do
 
     it "includes expected attributes" do
       json = metric.as_json
-      expect(json.keys).to match_array(%i[id name key instruction rubric_bands created_at updated_at tags])
+      expect(json.keys).to match_array(%i[id name key instruction rubric_bands metric_type created_at updated_at tags])
+      expect(json[:metric_type]).to eq("llm_judge")
+    end
+
+    it "emits check_config and omits rubric_bands/instruction for a check" do
+      json = create(:completion_kit_metric, :check).as_json
+      expect(json.keys).to match_array(%i[id name key metric_type check_config created_at updated_at tags])
+      expect(json[:metric_type]).to eq("check")
+      expect(json[:check_config]).to include("check_kind" => "valid_json")
     end
   end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_31_212650) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_30_005721) do
   create_table "completion_kit_agreements", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -73,10 +73,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_212650) do
   end
 
   create_table "completion_kit_metric_versions", force: :cascade do |t|
+    t.text "check_config"
     t.datetime "created_at", null: false
     t.boolean "current", default: true, null: false
     t.text "instruction"
     t.integer "metric_id", null: false
+    t.string "metric_type", default: "llm_judge", null: false
     t.datetime "published_at"
     t.text "rubric_bands"
     t.string "source"
@@ -91,9 +93,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_212650) do
   end
 
   create_table "completion_kit_metrics", force: :cascade do |t|
+    t.text "check_config"
     t.datetime "created_at", null: false
     t.text "instruction"
     t.string "key"
+    t.string "metric_type", default: "llm_judge", null: false
     t.string "name", null: false
     t.text "rubric_bands"
     t.datetime "updated_at", null: false
@@ -113,6 +117,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_212650) do
     t.string "status", default: "active", null: false
     t.boolean "supports_generation"
     t.boolean "supports_judging"
+    t.boolean "supports_reasoning_effort"
     t.datetime "updated_at", null: false
     t.index ["provider", "model_id"], name: "index_completion_kit_models_on_provider_and_model_id", unique: true
   end
@@ -177,6 +182,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_212650) do
     t.integer "metric_id"
     t.string "metric_name"
     t.bigint "metric_version_id"
+    t.boolean "passed"
     t.integer "response_id", null: false
     t.string "status"
     t.datetime "updated_at", null: false
@@ -229,8 +235,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_212650) do
     t.integer "prompt_id", null: false
     t.text "reasoning"
     t.integer "run_id", null: false
+    t.string "status", default: "ready", null: false
     t.text "suggested_template"
     t.datetime "updated_at", null: false
+    t.text "validation_summary"
     t.index ["prompt_id"], name: "index_completion_kit_suggestions_on_prompt_id"
     t.index ["run_id"], name: "index_completion_kit_suggestions_on_run_id"
   end

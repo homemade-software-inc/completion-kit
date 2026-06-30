@@ -6,6 +6,7 @@ module CompletionKit
     has_many :agreements, dependent: :destroy
 
     serialize :rubric_bands, coder: JSON
+    serialize :check_config, coder: JSON
     serialize :validation_summary, coder: JSON
 
     before_validation :assign_version_number, on: :create
@@ -23,10 +24,16 @@ module CompletionKit
         metric: metric,
         instruction: metric.instruction,
         rubric_bands: metric.rubric_bands,
+        metric_type: metric.metric_type,
+        check_config: metric.check_config,
         current: true,
         state: "published",
         published_at: Time.current
       )
+    end
+
+    def check?
+      metric_type == "check"
     end
 
     def draft?
@@ -43,6 +50,7 @@ module CompletionKit
 
     def change_summary_against(previous)
       return nil if previous.nil?
+      return check_change_summary_against(previous) if check?
 
       instruction_changed = previous.instruction.to_s.strip != instruction.to_s.strip
       rubric_changes = rubric_band_change_count(previous)
@@ -75,30 +83,45 @@ module CompletionKit
         self.class.where(metric_id: metric_id).where.not(id: id).update_all(current: false)
         reload
         update!(state: "published", current: true, published_at: published_at || Time.current)
-        metric.update_columns(
-          instruction: instruction,
-          rubric_bands: Array(rubric_bands).to_json
-        )
+        if check?
+          metric.update_columns(metric_type: "check", check_config: check_config)
+        else
+          metric.update_columns(
+            metric_type: "llm_judge",
+            instruction: instruction,
+            rubric_bands: Array(rubric_bands).to_json
+          )
+        end
       end
       self
     end
 
     def as_json(options = {})
-      {
+      base = {
         id: id,
         metric_id: metric_id,
         version_number: version_number,
-        instruction: instruction,
-        rubric_bands: rubric_bands,
+        metric_type: metric_type,
         current: current,
         state: state,
         source: source,
         published_at: published_at,
         created_at: created_at
       }
+      if check?
+        base.merge(check_config: check_config)
+      else
+        base.merge(instruction: instruction, rubric_bands: rubric_bands)
+      end
     end
 
     private
+
+    def check_change_summary_against(previous)
+      return nil if check_config == previous.check_config
+
+      { magnitude: :minor, label: "Check configuration changes" }
+    end
 
     def rubric_band_change_count(previous)
       prev = Metric.normalize_rubric_bands(previous.rubric_bands)
