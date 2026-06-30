@@ -3,8 +3,8 @@ module CompletionKit
     class LengthBounds
       def call(target, config)
         length = target.to_s.length
-        min = config["min"]
-        max = config["max"]
+        min = config["min"] && config["min"].to_i
+        max = config["max"] && config["max"].to_i
 
         if min && length < min
           Result.new(passed: false, detail: "length #{length} below min #{min}")

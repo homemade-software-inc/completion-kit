@@ -6,6 +6,16 @@ RSpec.describe CompletionKit::McpTools::Agreements do
   let(:response_row) { create(:completion_kit_response, run: run) }
 
   describe "agreements_create" do
+    it "refuses a check metric and creates no agreement" do
+      check = create(:completion_kit_metric, :check)
+      result = described_class.call("agreements_create", {
+        "run_id" => run.id, "response_id" => response_row.id, "metric_id" => check.id,
+        "verdict" => "agree", "created_by" => "alice"
+      })
+      expect(result[:isError]).to be(true)
+      expect(CompletionKit::Agreement.count).to eq(0)
+    end
+
     it "creates a new agreement and returns its payload" do
       result = described_class.call("agreements_create", {
         "run_id" => run.id, "response_id" => response_row.id, "metric_id" => metric.id,

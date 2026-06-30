@@ -560,6 +560,16 @@ RSpec.describe CompletionKit::Run, type: :model do
         expect(run.responses.first.response_text).to be_nil
         expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).once
       end
+
+      it "regrades despite nil response_text on its responses" do
+        run = CompletionKit::Run.new(prompt: nil, dataset: dataset_no_output, name: "input check")
+        run.run_metrics.build(metric: input_check, position: 1)
+        run.save!
+        response_row = create(:completion_kit_response, run: run, status: "succeeded", response_text: nil)
+
+        expect(run.regrade!).to be(true)
+        expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).with(response_row.id, input_check.id, run.id)
+      end
     end
 
     describe "#regrade! with checks" do
@@ -580,6 +590,32 @@ RSpec.describe CompletionKit::Run, type: :model do
         expect(review.reload.passed).to be_nil
         expect(review.reload.status).to eq("pending")
         expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).with(response_row.id, check_metric.id, run.id)
+      end
+    end
+
+    describe "completion ignores an un-gradable llm metric" do
+      it "does not count an llm metric with no configured judge in outstanding work" do
+        run = create(:completion_kit_run, judge_model: nil, progress_total: 1)
+        run.run_metrics.create!(metric: llm_metric, position: 1)
+        run.run_metrics.create!(metric: check_metric, position: 2)
+        response_row = create(:completion_kit_response, run: run, status: "succeeded", response_text: "ok")
+        response_row.reviews.create!(metric: check_metric, metric_name: check_metric.name,
+                                    metric_version_id: CompletionKit::MetricVersion.ensure_current_for(check_metric).id,
+                                    status: "succeeded", passed: true, ai_score: nil)
+
+        expect(run.outstanding_work_zero?).to be(true)
+      end
+
+      it "reports the check as judged_done in progress even though an un-gradable llm metric is attached" do
+        run = create(:completion_kit_run, judge_model: nil, progress_total: 1)
+        run.run_metrics.create!(metric: llm_metric, position: 1)
+        run.run_metrics.create!(metric: check_metric, position: 2)
+        response_row = create(:completion_kit_response, run: run, status: "succeeded", response_text: "ok")
+        response_row.reviews.create!(metric: check_metric, metric_name: check_metric.name,
+                                    metric_version_id: CompletionKit::MetricVersion.ensure_current_for(check_metric).id,
+                                    status: "succeeded", passed: true, ai_score: nil)
+
+        expect(run.progress_snapshot[:judged_done]).to eq(1)
       end
     end
 
@@ -646,6 +682,8 @@ RSpec.describe CompletionKit::Run, type: :model do
     let(:prompt) { create(:completion_kit_prompt) }
     let(:metric) { create(:completion_kit_metric) }
 
+    before { allow(CompletionKit::ApiConfig).to receive(:valid_for_model?).and_return(true) }
+
     it "returns true when all responses are terminal and no metrics" do
       run = create(:completion_kit_run, prompt: prompt)
       run.responses.create!(status: "succeeded", response_text: "done")
@@ -659,7 +697,7 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
 
     it "returns false when a response is succeeded but review is non-terminal" do
-      run = create(:completion_kit_run, prompt: prompt)
+      run = create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4o")
       CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
       response = run.responses.create!(status: "succeeded", response_text: "done")
       v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
@@ -668,7 +706,7 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
 
     it "returns true when all responses and reviews are terminal" do
-      run = create(:completion_kit_run, prompt: prompt)
+      run = create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4o")
       CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
       response = run.responses.create!(status: "succeeded", response_text: "done")
       v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
@@ -677,7 +715,7 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
 
     it "returns true when metrics exist but all responses failed (no succeeded responses)" do
-      run = create(:completion_kit_run, prompt: prompt)
+      run = create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4o")
       CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
       run.responses.create!(status: "failed")
       expect(run.outstanding_work_zero?).to be true
@@ -688,8 +726,10 @@ RSpec.describe CompletionKit::Run, type: :model do
     let(:prompt) { create(:completion_kit_prompt) }
     let(:metric) { create(:completion_kit_metric) }
 
+    before { allow(CompletionKit::ApiConfig).to receive(:valid_for_model?).and_return(true) }
+
     it "returns correct counts for both phases" do
-      run = create(:completion_kit_run, prompt: prompt, progress_total: 3)
+      run = create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4o", progress_total: 3)
       CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
 
       r1 = run.responses.create!(status: "succeeded", response_text: "done")
@@ -712,7 +752,7 @@ RSpec.describe CompletionKit::Run, type: :model do
     it "does not count a row as judged_done until all metric reviews are terminal" do
       metric_a = create(:completion_kit_metric, name: "A")
       metric_b = create(:completion_kit_metric, name: "B")
-      run = create(:completion_kit_run, prompt: prompt, progress_total: 1)
+      run = create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4o", progress_total: 1)
       CompletionKit::RunMetric.create!(run: run, metric: metric_a, position: 1)
       CompletionKit::RunMetric.create!(run: run, metric: metric_b, position: 2)
 
@@ -732,7 +772,7 @@ RSpec.describe CompletionKit::Run, type: :model do
     it "counts a row as judged_failed when any of its metric reviews failed" do
       metric_a = create(:completion_kit_metric, name: "A")
       metric_b = create(:completion_kit_metric, name: "B")
-      run = create(:completion_kit_run, prompt: prompt, progress_total: 1)
+      run = create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4o", progress_total: 1)
       CompletionKit::RunMetric.create!(run: run, metric: metric_a, position: 1)
       CompletionKit::RunMetric.create!(run: run, metric: metric_b, position: 2)
 

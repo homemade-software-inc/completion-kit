@@ -29,6 +29,22 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(config["min"]).to eq(2)
       expect(config["max"]).to eq(9)
     end
+
+    it "coerces a numeric json_path_equals expected so it can match numeric JSON" do
+      post base_path, params: { metric: { name: "Status code", metric_type: "check",
+                                          check_config: { check_kind: "json_path_equals", target: "response_text", json_path: "code", expected: "200" } } }
+
+      config = CompletionKit::Metric.find_by(name: "Status code").check_config
+      expect(config["expected"]).to eq(200)
+    end
+
+    it "keeps a non-JSON json_path_equals expected as a string" do
+      post base_path, params: { metric: { name: "Status word", metric_type: "check",
+                                          check_config: { check_kind: "json_path_equals", target: "response_text", json_path: "state", expected: "active" } } }
+
+      config = CompletionKit::Metric.find_by(name: "Status word").check_config
+      expect(config["expected"]).to eq("active")
+    end
   end
 
   describe "web update versioning" do

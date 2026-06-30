@@ -163,6 +163,18 @@ RSpec.describe CompletionKit::Metric, type: :model do
       metric.metric_type = "llm_judge"
       expect(metric.save).to be(true)
     end
+
+    it "stays type-locked after the referencing run is deleted because a version snapshot survives" do
+      metric = create(:completion_kit_metric, :check)
+      run = create(:completion_kit_run)
+      run.run_metrics.create!(metric: metric, position: 1)
+      CompletionKit::MetricVersion.ensure_current_for(metric)
+      run.destroy!
+
+      expect(metric.reload).to be_in_use
+      metric.metric_type = "llm_judge"
+      expect(metric.save).to be(false)
+    end
   end
 
   it "generates rubric text from star bands" do

@@ -51,10 +51,16 @@ module CompletionKit
       broadcast_ui
     end
 
+    def gradable_metric_ids
+      ids = check_metrics.pluck(:id)
+      ids += llm_metrics.pluck(:id) if llm_judge_configured?
+      ids
+    end
+
     def outstanding_work_zero?
       return false if responses.where.not(status: HasJobStatus::TERMINAL_STATUSES).exists?
 
-      metric_ids = metrics.pluck(:id)
+      metric_ids = gradable_metric_ids
       return true if metric_ids.empty?
 
       succeeded_response_ids = responses.where(status: "succeeded").pluck(:id)
@@ -242,7 +248,8 @@ module CompletionKit
     def regrade!
       return false if metrics.empty? || !gradable?
 
-      eligible_responses = responses.where(status: "succeeded").where.not(response_text: nil)
+      eligible_responses = responses.where(status: "succeeded")
+      eligible_responses = eligible_responses.where.not(response_text: nil) unless judge_only_input_data_checks?
       response_ids = eligible_responses.pluck(:id)
       return false if response_ids.empty?
 
@@ -277,14 +284,14 @@ module CompletionKit
       generated_failed = responses.where(status: "failed").count
       generated_total = progress_total
 
-      metric_count = metrics.count
+      metric_ids = gradable_metric_ids
+      metric_count = metric_ids.size
       judged_total = metric_count > 0 ? generated_done : 0
       judged_done = 0
       judged_failed = 0
 
       if metric_count > 0 && judged_total > 0
         succeeded_response_ids = responses.where(status: "succeeded").pluck(:id)
-        metric_ids = metrics.pluck(:id)
         review_counts = Review
           .where(response_id: succeeded_response_ids, metric_id: metric_ids)
           .group(:response_id, :status)

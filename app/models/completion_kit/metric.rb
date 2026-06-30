@@ -89,7 +89,7 @@ module CompletionKit
     end
 
     def in_use?
-      RunMetric.exists?(metric_id: id) || reviews.exists?
+      RunMetric.exists?(metric_id: id) || reviews.exists? || metric_versions.exists?
     end
 
     def as_json(options = {})
@@ -169,7 +169,7 @@ module CompletionKit
         max = config["max"]
         if min.nil? && max.nil?
           errors.add(:check_config, "length_bounds requires at least one of min or max")
-        elsif min && max && min > max
+        elsif min && max && min.to_i > max.to_i
           errors.add(:check_config, "min must be less than or equal to max")
         end
       end

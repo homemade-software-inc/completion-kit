@@ -28,8 +28,8 @@ RSpec.describe CompletionKit::CheckReviewJob, type: :job do
     expect(review.metric_version_id).to eq(CompletionKit::MetricVersion.ensure_current_for(metric).id)
   end
 
-  it "records passed:false (not a job failure) when the target cannot be resolved" do
-    metric.update!(check_config: { "check_kind" => "valid_json", "target" => "json_path", "target_path" => "a" })
+  it "records passed:false with a resolution detail when the target cannot be resolved" do
+    metric.update!(check_config: { "check_kind" => "not_contains", "target" => "json_path", "target_path" => "a", "value" => "x" })
     response.update!(response_text: "not json at all")
 
     described_class.perform_now(response.id, metric.id, run.id)
@@ -37,6 +37,7 @@ RSpec.describe CompletionKit::CheckReviewJob, type: :job do
     review = response.reviews.find_by(metric_id: metric.id)
     expect(review.status).to eq("succeeded")
     expect(review.passed).to be(false)
+    expect(review.ai_feedback).to eq("could not resolve target")
   end
 
   it "records a genuine internal exception as failed and still enqueues the completion check" do

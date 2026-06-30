@@ -50,6 +50,8 @@ module CompletionKit
         run = CompletionKit::Run.find(args["run_id"])
         response = run.responses.find(args["response_id"])
         metric = CompletionKit::Metric.find(args["metric_id"])
+        return error_result("Checks have nothing to calibrate; agreements are only for llm_judge metrics.") if metric.check?
+
         created_by = args["created_by"].presence || "mcp"
 
         agreement = CompletionKit::Agreement.find_or_initialize_by(
