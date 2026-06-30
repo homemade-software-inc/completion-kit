@@ -3,6 +3,28 @@ module CompletionKit
     module Metrics
       extend Base
 
+      CHECK_CONFIG_SCHEMA = {
+        type: "object",
+        properties: {
+          check_kind: {type: "string", enum: CompletionKit::Checks::Registry.kinds},
+          target: {type: "string", enum: CompletionKit::Checks::TargetResolver::TARGETS},
+          target_path: {type: "string"},
+          value: {type: "string"},
+          pattern: {type: "string"},
+          json_path: {type: "string"},
+          expected: {},
+          min: {type: "integer"},
+          max: {type: "integer"},
+          case_sensitive: {type: "boolean"},
+          multiline: {type: "boolean"},
+          trim: {type: "boolean"}
+        }
+      }.freeze
+
+      CHECK_CONFIG_HINT = "For a deterministic check set metric_type:\"check\" and check_config. Per-kind required keys: " \
+        "value (contains/not_contains/equals), pattern (regex), json_path+expected (json_path_equals), " \
+        "min and/or max (length_bounds); valid_json and no_refusal take no extra keys. target_path is required when target is json_path."
+
       TOOLS = {
         "metrics_list" => {
           description: "List all metrics",
@@ -15,12 +37,14 @@ module CompletionKit
           handler: :get
         },
         "metrics_create" => {
-          description: "Create a metric with evaluation criteria",
+          description: "Create a metric with evaluation criteria. #{CHECK_CONFIG_HINT}",
           inputSchema: {
             type: "object",
             properties: {
               name: {type: "string"}, instruction: {type: "string"},
+              metric_type: {type: "string", enum: CompletionKit::Metric::METRIC_TYPES},
               rubric_bands: {type: "array", items: {type: "object", properties: {stars: {type: "integer"}, description: {type: "string"}}}},
+              check_config: CHECK_CONFIG_SCHEMA,
               tag_names: {type: "array", items: {type: "string"}}
             },
             required: ["name"]
@@ -28,12 +52,14 @@ module CompletionKit
           handler: :create
         },
         "metrics_update" => {
-          description: "Update a metric",
+          description: "Update a metric. #{CHECK_CONFIG_HINT}",
           inputSchema: {
             type: "object",
             properties: {
               id: {type: "integer"}, name: {type: "string"}, instruction: {type: "string"},
+              metric_type: {type: "string", enum: CompletionKit::Metric::METRIC_TYPES},
               rubric_bands: {type: "array", items: {type: "object", properties: {stars: {type: "integer"}, description: {type: "string"}}}},
+              check_config: CHECK_CONFIG_SCHEMA,
               tag_names: {type: "array", items: {type: "string"}}
             },
             required: ["id"]
@@ -69,7 +95,7 @@ module CompletionKit
       end
 
       def self.create(args)
-        metric = Metric.new(args.slice("name", "instruction", "rubric_bands"))
+        metric = Metric.new(args.slice("name", "instruction", "rubric_bands", "metric_type", "check_config"))
         metric.tag_names = args["tag_names"] if args.key?("tag_names")
         if metric.save
           text_result(metric.reload.as_json)
@@ -80,7 +106,7 @@ module CompletionKit
 
       def self.update(args)
         metric = Metric.find(args["id"])
-        if metric.update(args.except("id").slice("name", "instruction", "rubric_bands"))
+        if metric.update(args.except("id").slice("name", "instruction", "rubric_bands", "metric_type", "check_config"))
           metric.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(metric.reload.as_json)
         else

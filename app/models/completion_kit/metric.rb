@@ -25,6 +25,7 @@ module CompletionKit
     validates :key, tenant_scoped_uniqueness: { allow_nil: true }
     validates :metric_type, inclusion: { in: METRIC_TYPES }
     validate :validate_check_config, if: :check?
+    validate :metric_type_immutable_once_in_use, on: :update
 
     before_validation :generate_key
     before_validation :normalize_rubric_bands, if: :llm_judge?
@@ -108,6 +109,13 @@ module CompletionKit
 
     def generate_key
       self.key ||= name.parameterize if name.present?
+    end
+
+    def metric_type_immutable_once_in_use
+      return unless metric_type_changed?
+      return unless in_use?
+
+      errors.add(:metric_type, "cannot change once the metric has been used in a run")
     end
 
     def validate_check_config

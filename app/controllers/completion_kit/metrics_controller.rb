@@ -24,7 +24,9 @@ module CompletionKit
       metric = Metric.create!(
         name: starter.name,
         instruction: starter.instruction,
-        rubric_bands: starter.rubric_bands
+        rubric_bands: starter.rubric_bands,
+        metric_type: starter.metric_type || "llm_judge",
+        check_config: starter.check_config
       )
       redirect_to metric_path(metric), notice: "Added the \"#{starter.name}\" starter. Tweak any band before you run a judge against it."
     end
@@ -71,42 +73,16 @@ module CompletionKit
     end
 
     def update
-      judge_keys = %i[instruction rubric_bands]
-      meta_attrs = metric_params.except(*judge_keys)
-      proposed_instruction = metric_params[:instruction]
-      proposed_rubric = metric_params[:rubric_bands]
+      meta_attrs = metric_params.except(:instruction, :rubric_bands, :check_config)
 
       unless @metric.update(meta_attrs)
         return render(:edit, status: :unprocessable_entity)
       end
 
-      current_instruction = @metric.instruction.to_s
-      current_rubric = @metric.rubric_bands || []
-      normalized_proposed_rubric = normalize_rubric_bands_for_update(proposed_rubric)
-
-      instruction_changed = !proposed_instruction.nil? && proposed_instruction.to_s != current_instruction
-      rubric_changed = !normalized_proposed_rubric.nil? && normalized_proposed_rubric != current_rubric
-
-      unless instruction_changed || rubric_changed
-        return redirect_to(metric_path(@metric), notice: "Metric was successfully updated.")
-      end
-
-      new_instruction = instruction_changed ? proposed_instruction.to_s : current_instruction
-      new_rubric = rubric_changed ? normalized_proposed_rubric : current_rubric
-
-      if @metric.reviews.exists?
-        MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").destroy_all
-        draft = MetricVersion.create!(
-          metric: @metric, instruction: new_instruction, rubric_bands: new_rubric,
-          state: "draft", source: "edit", current: false
-        )
-        redirect_to edit_metric_path(@metric),
-                    notice: "Saved as draft #{draft.version_label}. Publish to make these changes the metric's live version."
+      if @metric.check?
+        update_check_definition
       else
-        @metric.update!(instruction: new_instruction, rubric_bands: new_rubric)
-        current_pub = MetricVersion.published.where(metric_id: @metric.id, current: true).first
-        current_pub&.update!(instruction: @metric.instruction, rubric_bands: @metric.rubric_bands)
-        redirect_to metric_path(@metric), notice: "Metric was successfully updated."
+        update_judge_definition
       end
     end
 
@@ -188,13 +164,81 @@ module CompletionKit
       head :not_found unless CompletionKit.config.judge_examples_from_reviews
     end
 
+    def update_judge_definition
+      proposed_instruction = metric_params[:instruction]
+      proposed_rubric = metric_params[:rubric_bands]
+      current_instruction = @metric.instruction.to_s
+      current_rubric = @metric.rubric_bands || []
+      normalized_proposed_rubric = normalize_rubric_bands_for_update(proposed_rubric)
+
+      instruction_changed = !proposed_instruction.nil? && proposed_instruction.to_s != current_instruction
+      rubric_changed = !normalized_proposed_rubric.nil? && normalized_proposed_rubric != current_rubric
+
+      unless instruction_changed || rubric_changed
+        return redirect_to(metric_path(@metric), notice: "Metric was successfully updated.")
+      end
+
+      new_instruction = instruction_changed ? proposed_instruction.to_s : current_instruction
+      new_rubric = rubric_changed ? normalized_proposed_rubric : current_rubric
+
+      if @metric.reviews.exists?
+        MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").destroy_all
+        draft = MetricVersion.create!(
+          metric: @metric, instruction: new_instruction, rubric_bands: new_rubric,
+          state: "draft", source: "edit", current: false
+        )
+        redirect_to edit_metric_path(@metric),
+                    notice: "Saved as draft #{draft.version_label}. Publish to make these changes the metric's live version."
+      else
+        @metric.update!(instruction: new_instruction, rubric_bands: new_rubric)
+        current_pub = MetricVersion.published.where(metric_id: @metric.id, current: true).first
+        current_pub&.update!(instruction: @metric.instruction, rubric_bands: @metric.rubric_bands)
+        redirect_to metric_path(@metric), notice: "Metric was successfully updated."
+      end
+    end
+
+    def update_check_definition
+      raw = metric_params[:check_config]
+      proposed = raw.nil? ? nil : normalize_check_config(raw)
+
+      unless !proposed.nil? && proposed != @metric.check_config
+        return redirect_to(metric_path(@metric), notice: "Metric was successfully updated.")
+      end
+
+      if @metric.reviews.exists?
+        MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").destroy_all
+        draft = MetricVersion.create!(
+          metric: @metric, metric_type: "check", check_config: proposed,
+          state: "draft", source: "edit", current: false
+        )
+        redirect_to edit_metric_path(@metric),
+                    notice: "Saved as draft #{draft.version_label}. Publish to make these changes the metric's live version."
+      else
+        @metric.update!(check_config: proposed)
+        current_pub = MetricVersion.published.where(metric_id: @metric.id, current: true).first
+        current_pub&.update!(metric_type: "check", check_config: proposed)
+        redirect_to metric_path(@metric), notice: "Metric was successfully updated."
+      end
+    end
+
     def set_metric
       @metric = Metric.find(params[:id])
     end
 
     def metric_params
-      params.require(:metric).permit(:name, :instruction,
-        rubric_bands: [:stars, :description], tag_names: [])
+      permitted = params.require(:metric).permit(:name, :instruction, :metric_type,
+        rubric_bands: [:stars, :description],
+        check_config: %i[check_kind target target_path value pattern json_path expected min max case_sensitive multiline trim],
+        tag_names: [])
+      permitted[:check_config] = normalize_check_config(permitted[:check_config]) if permitted.key?(:check_config)
+      permitted
+    end
+
+    def normalize_check_config(config)
+      hash = config.to_unsafe_h.stringify_keys
+      %w[min max].each { |key| hash[key] = hash[key].to_i if hash[key].present? }
+      %w[case_sensitive multiline trim].each { |key| hash[key] = ActiveModel::Type::Boolean.new.cast(hash[key]) if hash.key?(key) }
+      hash.reject { |_, value| value.nil? || value == "" }
     end
 
     def normalize_rubric_bands_for_update(bands)

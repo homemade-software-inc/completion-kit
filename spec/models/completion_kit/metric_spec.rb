@@ -137,6 +137,34 @@ RSpec.describe CompletionKit::Metric, type: :model do
     end
   end
 
+  describe "metric_type immutability" do
+    it "rejects changing metric_type once the metric is in use" do
+      metric = create(:completion_kit_metric, :check)
+      run = create(:completion_kit_run)
+      run.run_metrics.create!(metric: metric, position: 1)
+
+      metric.metric_type = "llm_judge"
+      expect(metric.save).to be(false)
+      expect(metric.errors[:metric_type]).to be_present
+    end
+
+    it "allows non-type edits on an in-use metric" do
+      metric = create(:completion_kit_metric, :check)
+      run = create(:completion_kit_run)
+      run.run_metrics.create!(metric: metric, position: 1)
+
+      metric.name = "Renamed Check"
+      expect(metric.save).to be(true)
+    end
+
+    it "allows changing metric_type while the metric is still unused" do
+      metric = create(:completion_kit_metric, :check)
+
+      metric.metric_type = "llm_judge"
+      expect(metric.save).to be(true)
+    end
+  end
+
   it "generates rubric text from star bands" do
     metric = described_class.create!(name: "Test metric")
 

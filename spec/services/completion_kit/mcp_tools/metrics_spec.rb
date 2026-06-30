@@ -41,6 +41,35 @@ RSpec.describe CompletionKit::McpTools::Metrics do
       expect(content["rubric_bands"].find { |b| b["stars"] == 5 }["description"]).to eq("Perfect")
     end
 
+    it "creates a check metric with metric_type and check_config" do
+      result = described_class.call("metrics_create", {
+        "name" => "Contains OK", "metric_type" => "check",
+        "check_config" => {"check_kind" => "contains", "target" => "response_text", "value" => "OK"}
+      })
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["metric_type"]).to eq("check")
+      expect(content["check_config"]).to include("value" => "OK")
+    end
+
+    it "updates a check metric's check_config" do
+      check = create(:completion_kit_metric, :check)
+      result = described_class.call("metrics_update", {
+        "id" => check.id,
+        "check_config" => {"check_kind" => "contains", "target" => "response_text", "value" => "done"}
+      })
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["check_config"]).to include("value" => "done")
+    end
+
+    it "advertises metric_type and check_config on the create and update schemas" do
+      %w[metrics_create metrics_update].each do |tool|
+        schema = described_class::TOOLS[tool][:inputSchema]
+        expect(schema[:properties]).to have_key(:metric_type)
+        expect(schema[:properties][:metric_type][:enum]).to include("check")
+        expect(schema[:properties]).to have_key(:check_config)
+      end
+    end
+
     it "updates a metric" do
       result = described_class.call("metrics_update", {"id" => metric.id, "name" => "Precision"})
       content = JSON.parse(result[:content].first[:text])

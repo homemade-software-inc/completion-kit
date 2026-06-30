@@ -63,8 +63,10 @@ module CompletionKit
         end
 
         def metric_params
-          params.permit(:name, :instruction,
-            rubric_bands: [:stars, :description], tag_names: [])
+          params.permit(:name, :instruction, :metric_type,
+            rubric_bands: [:stars, :description],
+            check_config: %i[check_kind target target_path value pattern json_path expected min max case_sensitive multiline trim],
+            tag_names: [])
         end
       end
     end

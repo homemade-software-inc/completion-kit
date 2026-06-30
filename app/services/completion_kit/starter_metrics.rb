@@ -1,6 +1,6 @@
 module CompletionKit
   module StarterMetrics
-    Starter = Struct.new(:key, :name, :description, :catches, :instruction, :rubric_bands, keyword_init: true)
+    Starter = Struct.new(:key, :name, :description, :catches, :instruction, :rubric_bands, :metric_type, :check_config, keyword_init: true)
 
     ALL = [
       Starter.new(
@@ -72,6 +72,30 @@ module CompletionKit
           { "stars" => 2, "description" => "Noticeable filler or visible gaps." },
           { "stars" => 1, "description" => "Padded, repetitive, or so short it loses information." }
         ]
+      ),
+      Starter.new(
+        key: "valid_json",
+        name: "Valid JSON",
+        description: "Does the output parse as JSON?",
+        catches: "Broken or partial JSON, prose wrapped around a structured response, trailing commas. A deterministic pass/fail with no LLM judgement.",
+        metric_type: "check",
+        check_config: { "check_kind" => "valid_json", "target" => "response_text" }
+      ),
+      Starter.new(
+        key: "no_refusal",
+        name: "No refusal",
+        description: "Did the model answer instead of refusing?",
+        catches: "\"I'm sorry, I can't help with that\" and other refusal boilerplate when a real answer was expected. Deterministic, no judge call.",
+        metric_type: "check",
+        check_config: { "check_kind" => "no_refusal", "target" => "response_text" }
+      ),
+      Starter.new(
+        key: "contains_token",
+        name: "Contains required token",
+        description: "Does the output contain a required substring?",
+        catches: "A required marker, citation, or keyword the output must always include. Set the value to the token you require.",
+        metric_type: "check",
+        check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "REQUIRED" }
       )
     ].freeze
 
