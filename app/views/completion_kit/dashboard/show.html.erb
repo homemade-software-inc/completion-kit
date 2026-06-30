@@ -88,6 +88,8 @@
 
   <% if @recent_runs.any? %>
     <%= render "completion_kit/runs/table", runs: @recent_runs %>
+  <% elsif CompletionKit::Run.exists? %>
+    <div class="ck-empty">Your older runs are hidden.</div>
   <% else %>
     <div class="ck-empty">No runs yet.&ensp;<%= link_to "Create your first run →", new_run_path, class: "ck-link" %></div>
   <% end %>

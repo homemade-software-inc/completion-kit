@@ -19,6 +19,8 @@
   <div class="ck-empty">
     <p>No runs match these tags. <%= link_to "Clear filters", runs_path, class: "ck-link" %>.</p>
   </div>
+<% elsif CompletionKit::Run.exists? %>
+  <div class="ck-empty">Your older runs are hidden.</div>
 <% else %>
   <div class="ck-empty">No runs yet.&ensp;<%= link_to "Create your first run →", new_run_path, class: "ck-link" %></div>
 <% end %>

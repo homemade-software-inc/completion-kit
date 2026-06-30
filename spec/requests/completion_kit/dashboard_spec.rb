@@ -111,6 +111,21 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       expect(response.body).to include("is-loss")
     end
 
+    it "shows a hidden-runs message, not the new-user CTA, when every run is hidden on the dashboard" do
+      cookies[:ck_onboarding_dismissed] = "1"
+      prompt = create(:completion_kit_prompt)
+      dataset = create(:completion_kit_dataset)
+      create(:completion_kit_run, prompt: prompt, dataset: dataset, created_at: 90.days.ago)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      get dashboard
+
+      expect(response.body).not_to include("Create your first run")
+      expect(response.body).to include("Your older runs are hidden")
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
     it "filters the recent-runs list through a host-configured runs_display_scope" do
       cookies[:ck_onboarding_dismissed] = "1"
       prompt = create(:completion_kit_prompt)
