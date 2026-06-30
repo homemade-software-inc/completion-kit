@@ -224,8 +224,8 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics</p>
-        <p class="ck-meta-copy">Create a metric.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>instruction</code>, <code>rubric_bands</code> (array of {stars, description})</p>
+        <p class="ck-meta-copy">Create a metric. Defaults to an LLM judge; pass <code>metric_type</code> <code>check</code> with a <code>check_config</code> for a deterministic pass/fail check.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>metric_type</code> (llm_judge default, or check), <code>instruction</code> and <code>rubric_bands</code> (array of {stars, description}) for judges, <code>check_config</code> (<code>check_kind</code>, <code>target</code>, plus per-kind keys) for checks</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/metrics \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"relevance\", \"instruction\": \"Is the response relevant?\"}'" %>
       </div>
       <div class="ck-api-endpoint">
@@ -259,11 +259,11 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/metrics/:metric_id/metric_versions/:id</p>
-        <p class="ck-meta-copy">Get a single version with its instruction, rubric bands, state, and source.</p>
+        <p class="ck-meta-copy">Get a single version with its instruction and rubric bands (or check_config for checks), state, and source.</p>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics/:metric_id/metric_versions/:id/publish</p>
-        <p class="ck-meta-copy">Publish the version as current. Works for a draft (promote) or a superseded published version (revert). Copies the version's instruction and rubric back onto the metric.</p>
+        <p class="ck-meta-copy">Publish the version as current. Works for a draft (promote) or a superseded published version (revert). Copies the version's instruction and rubric (or check_config for checks) back onto the metric.</p>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metrics/:metric_id/metric_versions/:id</p>

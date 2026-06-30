@@ -66,7 +66,29 @@
       <%= ck_field_error(form, :name) %>
     </div>
 
-    <div class="ck-field ck-field--spacious">
+    <% editing = metric.persisted? %>
+    <% show_judge = !editing || metric.llm_judge? %>
+    <% show_check = !editing || metric.check? %>
+
+    <% if editing %>
+      <%= form.hidden_field :metric_type %>
+    <% else %>
+      <div class="ck-field" data-ck-metric-type>
+        <p class="ck-section-title">Metric type</p>
+        <p class="ck-hint">An LLM judge scores each output on a 1-5 rubric. A deterministic check passes or fails with no model call.</p>
+        <label class="ck-radio">
+          <%= form.radio_button :metric_type, "llm_judge", checked: !metric.check? %>
+          <span>LLM judge (1-5)</span>
+        </label>
+        <label class="ck-radio">
+          <%= form.radio_button :metric_type, "check", checked: metric.check? %>
+          <span>Deterministic check</span>
+        </label>
+      </div>
+    <% end %>
+
+    <% if show_judge %>
+    <div class="ck-field ck-field--spacious" data-ck-metric-editor="llm_judge">
       <p class="ck-section-title">Instruction</p>
       <p class="ck-hint">What should the judge assess? This instruction is sent to the LLM judge when scoring outputs.</p>
       <%= form.text_area :instruction, rows: 8, class: "ck-input ck-input--area", placeholder: "Evaluate whether the output...", **ck_field_aria(form, :instruction) %>
@@ -129,6 +151,87 @@
         <% end %>
       </div>
     </div>
+    <% end %>
+
+    <% if show_check %>
+    <% check = metric.check_config || {} %>
+    <div class="ck-field ck-field--spacious" data-ck-metric-editor="check">
+      <p class="ck-section-title">Check</p>
+      <p class="ck-hint">A deterministic pass/fail rule. Fill only the fields the chosen kind needs.</p>
+
+      <div class="ck-field">
+        <label class="ck-label" for="metric_check_kind">Check kind</label>
+        <select name="metric[check_config][check_kind]" id="metric_check_kind" class="ck-input">
+          <% CompletionKit::Checks::Registry.kinds.each do |kind| %>
+            <option value="<%= kind %>"<%= " selected" if check["check_kind"] == kind %>><%= kind %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <div class="ck-field">
+        <label class="ck-label" for="metric_check_target">Target</label>
+        <select name="metric[check_config][target]" id="metric_check_target" class="ck-input">
+          <% CompletionKit::Checks::TargetResolver::TARGETS.each do |target| %>
+            <option value="<%= target %>"<%= " selected" if check["target"] == target %>><%= target %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <div class="ck-field">
+        <label class="ck-label" for="metric_check_target_path">Target path</label>
+        <p class="ck-hint">Used when target is json_path, e.g. data.items.0.name.</p>
+        <input type="text" name="metric[check_config][target_path]" id="metric_check_target_path" class="ck-input" value="<%= check["target_path"] %>">
+      </div>
+
+      <div class="ck-field">
+        <label class="ck-label" for="metric_check_value">Value</label>
+        <p class="ck-hint">The substring or exact string for contains, not_contains, or equals.</p>
+        <input type="text" name="metric[check_config][value]" id="metric_check_value" class="ck-input" value="<%= check["value"] %>">
+      </div>
+
+      <div class="ck-field">
+        <label class="ck-label" for="metric_check_pattern">Pattern</label>
+        <p class="ck-hint">A regular expression for the regex kind.</p>
+        <input type="text" name="metric[check_config][pattern]" id="metric_check_pattern" class="ck-input" value="<%= check["pattern"] %>">
+      </div>
+
+      <div class="ck-field">
+        <label class="ck-label" for="metric_check_json_path">JSON path</label>
+        <p class="ck-hint">Dotted path into parsed JSON for json_path_equals.</p>
+        <input type="text" name="metric[check_config][json_path]" id="metric_check_json_path" class="ck-input" value="<%= check["json_path"] %>">
+      </div>
+
+      <div class="ck-field">
+        <label class="ck-label" for="metric_check_expected">Expected</label>
+        <p class="ck-hint">The value the JSON path must equal.</p>
+        <input type="text" name="metric[check_config][expected]" id="metric_check_expected" class="ck-input" value="<%= check["expected"] %>">
+      </div>
+
+      <div class="ck-field-row">
+        <div class="ck-field">
+          <label class="ck-label" for="metric_check_min">Min length</label>
+          <input type="number" name="metric[check_config][min]" id="metric_check_min" class="ck-input" value="<%= check["min"] %>">
+        </div>
+        <div class="ck-field">
+          <label class="ck-label" for="metric_check_max">Max length</label>
+          <input type="number" name="metric[check_config][max]" id="metric_check_max" class="ck-input" value="<%= check["max"] %>">
+        </div>
+      </div>
+
+      <label class="ck-checkbox">
+        <input type="checkbox" name="metric[check_config][case_sensitive]" value="true"<%= " checked" if check["case_sensitive"] %>>
+        <span>Case sensitive</span>
+      </label>
+      <label class="ck-checkbox">
+        <input type="checkbox" name="metric[check_config][multiline]" value="true"<%= " checked" if check["multiline"] %>>
+        <span>Multiline</span>
+      </label>
+      <label class="ck-checkbox">
+        <input type="checkbox" name="metric[check_config][trim]" value="true"<%= " checked" if check["trim"] %>>
+        <span>Trim whitespace</span>
+      </label>
+    </div>
+    <% end %>
 
     <%= render "completion_kit/tags/picker", record: metric, param_namespace: :metric %>
 

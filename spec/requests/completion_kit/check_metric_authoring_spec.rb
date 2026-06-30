@@ -104,6 +104,92 @@ RSpec.describe "Check metric authoring", type: :request do
     end
   end
 
+  describe "authoring views" do
+    it "renders the metric-type chooser and an inline check builder on the new form" do
+      get "#{base_path}/new"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Metric type")
+      expect(response.body).to include("LLM judge (1-5)")
+      expect(response.body).to include("Deterministic check")
+      expect(response.body).to include('name="metric[check_config][check_kind]"')
+      expect(response.body).to include('name="metric[check_config][target]"')
+      CompletionKit::Checks::Registry.kinds.each do |kind|
+        expect(response.body).to include(">#{kind}</option>")
+      end
+      CompletionKit::Checks::TargetResolver::TARGETS.each do |target|
+        expect(response.body).to include(">#{target}</option>")
+      end
+      expect(response.body).to include("ck-rubric-builder")
+    end
+
+    it "creates a check through the inline builder fields" do
+      expect do
+        post base_path, params: { metric: { name: "Inline check", metric_type: "check",
+                                            check_config: { check_kind: "valid_json", target: "response_text" } } }
+      end.to change(CompletionKit::Metric, :count).by(1)
+
+      metric = CompletionKit::Metric.find_by(name: "Inline check")
+      expect(metric.check?).to be(true)
+      expect(metric.check_config).to include("check_kind" => "valid_json")
+    end
+
+    it "renders the check builder prefilled and hides the chooser when editing a check" do
+      metric = create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "contains", "target" => "json_path", "target_path" => "data.field",
+                        "value" => "TOKEN", "case_sensitive" => true, "multiline" => true, "trim" => true })
+
+      get "#{base_path}/#{metric.id}/edit"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Metric type")
+      expect(response.body).not_to include("ck-rubric-builder")
+      expect(response.body).to include('type="hidden"')
+      expect(response.body).to include('name="metric[metric_type]"')
+      expect(response.body).to include('value="contains" selected')
+      expect(response.body).to include('value="json_path" selected')
+      expect(response.body).to include("data.field")
+      expect(response.body).to include("TOKEN")
+      expect(response.body.scan("checked").size).to be >= 3
+    end
+
+    it "shows the check spec instead of rubric stars on a check's show page" do
+      metric = create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "contains", "target" => "response_text",
+                        "value" => "TOKEN", "case_sensitive" => true })
+
+      get "#{base_path}/#{metric.id}"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("contains")
+      expect(response.body).to include("response_text")
+      expect(response.body).to include("Value")
+      expect(response.body).to include("TOKEN")
+      expect(response.body).not_to include("ck-rubric-display")
+    end
+
+    it "tags each row in the index with a Judge or Check chip" do
+      create(:completion_kit_metric, name: "Helpfulness")
+      create(:completion_kit_metric, :check, name: "JSON shape")
+
+      get base_path
+
+      expect(response.body).to include(">Judge</span>")
+      expect(response.body).to include(">Check</span>")
+    end
+
+    it "previews a check starter as a check spec, not a star rubric" do
+      get "#{base_path}/starters/valid_json"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Valid JSON")
+      expect(response.body).to include("valid_json")
+      expect(response.body).to include("response_text")
+      expect(response.body).not_to include("Judge instruction")
+      expect(response.body).not_to include("ck-rubric-display")
+    end
+  end
+
   describe "API v1" do
     let(:token) { "test-api-token" }
     let(:headers) { { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" } }

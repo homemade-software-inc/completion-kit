@@ -24,6 +24,13 @@
 </section>
 <% end %>
 
+<% if @metric.check? %>
+<section class="ck-card ck-card--spaced">
+  <p class="ck-kicker">Check</p>
+  <p class="ck-meta-copy">A deterministic pass/fail rule. No judge call.</p>
+  <%= render "completion_kit/metrics/check_spec", config: @metric.check_config %>
+</section>
+<% else %>
 <section class="ck-card ck-card--spaced">
   <p class="ck-kicker">Rubric<%= render "completion_kit/metrics/rubric_hint" %></p>
   <div class="ck-rubric-display">
@@ -41,6 +48,7 @@
     <% end %>
   </div>
 </section>
+<% end %>
 
 <% if CompletionKit.config.judge_agreement_enabled && @versions.any? %>
   <% predecessor_of = @versions.index_with { |v| @versions.detect { |o| o.version_number < v.version_number } } %>

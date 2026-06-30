@@ -24,7 +24,7 @@ module CompletionKit
         },
         metric: {
           name: "Metric",
-          definition: "An evaluation dimension with its own 1-5 rubric. The LLM judge scores every response against it."
+          definition: "An evaluation dimension. An LLM judge scores each response on a 1-5 rubric, or a deterministic check passes or fails it with no model call."
         }
       }.freeze
     end

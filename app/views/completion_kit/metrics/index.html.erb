@@ -1,7 +1,7 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title">Metrics</h1>
-    <p class="ck-lead">Scoring dimensions the judge uses to evaluate each response. Each metric defines one thing to assess and a 1-5 scale.</p>
+    <p class="ck-lead">Scoring dimensions used to evaluate each response. Each defines one thing to assess, by an LLM judge on a 1-5 scale or a deterministic check.</p>
   </div>
   <div class="ck-actions">
     <%= link_to "New metric", new_metric_path, class: ck_button_classes(:dark) %>
@@ -29,6 +29,7 @@
         <tr onclick="window.location='<%= metric_path(metric) %>'" style="cursor: pointer;">
           <td>
             <%= link_to metric_path(metric), class: "ck-record-name" do %><strong><%= metric.name %></strong><% end %>
+            <span class="ck-chip ck-chip--soft ck-metric-type-chip"><%= metric.check? ? "Check" : "Judge" %></span>
             <% if metric.tags.any? %>
               <div class="tag-marks-row">
                 <%= render "completion_kit/tags/marks", tags: metric.tags %>
@@ -69,7 +70,7 @@
   <% if @available_starters.any? %>
     <section class="ck-starter-row">
       <p class="ck-kicker">Skip the blank page</p>
-      <p class="ck-meta-copy">Pre-written rubrics for the dimensions most teams score against. Click a card to preview before it's created.</p>
+      <p class="ck-meta-copy">Pre-written metrics for the dimensions most teams score against, both LLM judges and deterministic checks. Click a card to preview before it's created.</p>
       <div class="ck-starter-grid">
         <% @available_starters.each do |starter| %>
           <%= render "starter_card", starter: starter %>
@@ -85,7 +86,7 @@
   <% if @available_starters.any? %>
     <section class="ck-starter-row ck-starter-row--empty-state">
       <h2 class="ck-title ck-title--sm">Skip the blank page</h2>
-      <p class="ck-lead">Five rubrics we've worked through for common evaluation dimensions. Adopt one to drop in a pre-written 1&ndash;5 scale, edit anything after. Or <%= link_to "write your own from scratch", new_metric_path, class: "ck-link" %>.</p>
+      <p class="ck-lead">Starter metrics we've worked through for common evaluation dimensions, both LLM judges and deterministic checks. Adopt one to drop in a pre-written metric, edit anything after. Or <%= link_to "write your own from scratch", new_metric_path, class: "ck-link" %>.</p>
       <div class="ck-starter-grid">
         <% @available_starters.each do |starter| %>
           <%= render "starter_card", starter: starter %>

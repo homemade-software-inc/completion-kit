@@ -4,7 +4,7 @@ RSpec.describe "CompletionKit starter metrics", type: :request do
   let(:starters) { CompletionKit::StarterMetrics::ALL }
 
   describe "GET /metrics (index empty state)" do
-    it "renders all five starter cards when the org has no metrics" do
+    it "renders all starter cards when the org has no metrics" do
       get "/completion_kit/metrics"
       expect(response.body).to include("Skip the blank page")
       starters.each { |s| expect(response.body).to include(s.name) }

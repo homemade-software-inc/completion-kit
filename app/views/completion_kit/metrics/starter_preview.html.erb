@@ -14,6 +14,13 @@
   <p class="ck-copy"><%= @starter.catches %></p>
 </section>
 
+<% if @starter.metric_type == "check" %>
+<section class="ck-card ck-card--spaced">
+  <p class="ck-kicker">Check</p>
+  <p class="ck-meta-copy">A deterministic pass/fail rule. No judge call.</p>
+  <%= render "completion_kit/metrics/check_spec", config: @starter.check_config %>
+</section>
+<% else %>
 <section class="ck-card ck-card--spaced">
   <p class="ck-kicker">Judge instruction</p>
   <p class="ck-copy"><%= @starter.instruction %></p>
@@ -36,6 +43,7 @@
     <% end %>
   </div>
 </section>
+<% end %>
 
 <div class="ck-starter-actions">
   <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline) %>

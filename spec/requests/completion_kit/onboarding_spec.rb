@@ -87,6 +87,15 @@ RSpec.describe "CompletionKit onboarding", type: :request do
     end
   end
 
+  describe "metric concept copy" do
+    it "describes both judge rubric scoring and deterministic checks" do
+      definition = CompletionKit::Onboarding::Concepts::DEFINITIONS[:metric][:definition]
+
+      expect(definition).to match(/judge/i)
+      expect(definition).to match(/check/i)
+    end
+  end
+
   describe "POST /onboarding/dismiss" do
     it "sets the dismiss cookie, redirects to the dashboard with a notice, and stays dismissed" do
       post "/completion_kit/onboarding/dismiss"

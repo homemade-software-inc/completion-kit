@@ -39,6 +39,13 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     expect(html).to include("https://app.example.test/api/v1/prompts/#{prompt.slug}")
   end
 
+  it "documents metric_type and check_config in the REST metrics contract" do
+    html = render_body(base_url: "https://docs.example.test")
+
+    expect(html).to include("(llm_judge default, or check)")
+    expect(html).to include("or check_config for checks")
+  end
+
   it "wires the real token into the copy-to-clipboard examples" do
     html = render_body(base_url: "https://app.example.test", token: "DISPLAY_TOKEN", real_token: "live-secret-9999")
 
