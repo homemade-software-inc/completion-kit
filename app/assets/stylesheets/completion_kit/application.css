@@ -1900,6 +1900,80 @@ tr:hover .ck-chip--publish {
   accent-color: var(--ck-accent);
 }
 
+.ck-radio,
+label.ck-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto;
+  height: auto;
+  margin-top: 0.4rem;
+  font-family: var(--ck-sans);
+  font-size: 0.9rem;
+  color: var(--ck-text);
+  cursor: pointer;
+}
+
+.ck-radio input,
+label.ck-checkbox input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--ck-accent);
+  cursor: pointer;
+}
+
+.ck-field-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.ck-field-row .ck-field {
+  flex: 1;
+}
+
+.ck-metric-type-chip {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+}
+
+.ck-check-spec {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+}
+
+.ck-check-spec__row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.ck-check-spec__term {
+  flex: 0 0 7rem;
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ck-muted);
+}
+
+.ck-check-spec__val {
+  margin: 0;
+  color: var(--ck-text);
+}
+
+.ck-check-spec__code {
+  font-family: var(--ck-mono);
+  font-size: 0.85rem;
+  padding: 0.1rem 0.4rem;
+  background: var(--ck-surface-soft);
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
+  color: var(--ck-text);
+}
+
 .ck-section-title {
   font-size: 1.05rem;
   font-weight: 600;
