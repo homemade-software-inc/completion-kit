@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-06-29
+
+### Added
+- **Deterministic "check" metric type (#82).** A second metric type that evaluates a response with code instead of an LLM judge and yields pass/fail, alongside the existing 1-5 rubric judge. Eight check kinds ship: `contains`, `not_contains`, `equals`, `regex`, `valid_json`, `json_path_equals`, `length_bounds`, and `no_refusal`, each targeting the response text, the input row, or a json-path-extracted value. A `metric_type` discriminator and a serialized `check_config` land on metrics and metric_versions, and a nullable `passed` lands on reviews; `ai_score` stays NULL for checks, so checks are additive and never blend into the 1-5 averages. An unresolvable or malformed target records `passed: false` with a succeeded status (never an internal error), so a regression stays visible to CI. Checks run through a new non-LLM `CheckReviewJob`; a check-only run no longer hangs waiting on a judge, and a mixed run completes from its checks even when no judge is configured. `Run#check_pass_rate` is exposed in `Run#as_json` so automated pipelines can gate on check regressions from the v1 API. Check metrics can be authored through the form, the REST API, the MCP tools, and three new starters (Valid JSON, No refusal, Contains required token); `metric_type` locks once a metric has been used in a run. Because a check is exact, check metrics are excluded from the agreement/trust/suggest/judge-compare calibration machinery at every entry point. Run-list badges and the run-vs-run compare gate for checks follow in the next release.
+
 ## [0.17.1] - 2026-06-29
 
 ### Fixed
