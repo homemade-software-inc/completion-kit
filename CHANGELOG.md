@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-06-29
+
+### Added
+- **Import a promptfooconfig.yaml in one step (#76).** A new importer turns an existing Promptfoo config into CompletionKit records: inline `prompts` become a Prompt (their `{{var}}` templates map directly), `tests`/`vars` become a Dataset with one row per case, and `assert` blocks become Metrics. `llm-rubric` and `g-eval` map to a judge metric with the rubric text; `contains`, `icontains`, `not-contains`, `equals`, `regex`, and `is-json` map to deterministic check metrics; anything without an equivalent (a `javascript` assert, a prompt file reference, an unmatched provider) is reported as skipped with a reason rather than dropped. Available three ways: a web page (paste or upload, reachable from the metrics index), a REST endpoint (`POST /api/v1/imports/promptfoo`), and an MCP tool (`promptfoo_import`). This is a migration on-ramp for the eval and judge half of Promptfoo, not a claim of feature parity.
+
+### Fixed
+- **Response and Review broadcasts are now wrapped in `safely_broadcast` (#70), matching Run and ProviderCredential.** A failure while rendering or delivering one of those live-UI Turbo broadcasts is logged and swallowed instead of propagating into the saving job, so a cable-adapter hiccup or a future render regression can no longer turn a successful row write into a failed `GenerateRowJob` / `JudgeReviewJob`.
+
 ## [0.19.0] - 2026-06-29
 
 ### Added
