@@ -62,7 +62,7 @@ module CompletionKit
             CompletionKit::Review.where(response_id: failed_response_ids, status: "failed").update_all(
               status: "pending", attempts: 0,
               error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
-              ai_score: nil, ai_feedback: nil
+              ai_score: nil, passed: nil, ai_feedback: nil
             )
             scope.update_all(
               status: "pending", attempts: 0,

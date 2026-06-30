@@ -11,6 +11,23 @@ RSpec.describe CompletionKit::Response, type: :model do
     expect(response).not_to be_valid
   end
 
+  it "allows a nil response_text on a succeeded response for an input_data-only check run" do
+    dataset = create(:completion_kit_dataset, csv_data: "input,topic\nhello,greeting\n")
+    check = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "input_data" })
+    run = CompletionKit::Run.new(prompt: nil, dataset: dataset, name: "input check")
+    run.run_metrics.build(metric: check, position: 1)
+    run.save!
+
+    response = build(:completion_kit_response, run: run, status: "succeeded", response_text: nil)
+    expect(response).to be_valid
+  end
+
+  it "still requires response_text on a succeeded response with no run" do
+    response = build(:completion_kit_response, run: nil, status: "succeeded", response_text: nil)
+    expect(response).not_to be_valid
+    expect(response.errors[:response_text]).to be_present
+  end
+
   describe "#error_payload" do
     it "returns nil when error_class is blank" do
       response = build(:completion_kit_response)

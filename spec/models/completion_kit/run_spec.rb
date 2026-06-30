@@ -474,6 +474,129 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
+  describe "check metric execution" do
+    let(:check_metric) do
+      create(:completion_kit_metric, :check, check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "ok" })
+    end
+    let(:llm_metric) { create(:completion_kit_metric, name: "Quality") }
+
+    describe "#llm_judge_configured? and #gradable?" do
+      before { allow(CompletionKit::ApiConfig).to receive(:valid_for_model?).and_return(true) }
+
+      it "llm_judge_configured? is false for a check-only run with a judge_model but no llm metric" do
+        run = create(:completion_kit_run, judge_model: "gpt-4o")
+        run.run_metrics.create!(metric: check_metric, position: 1)
+        expect(run.llm_judge_configured?).to be(false)
+        expect(run.gradable?).to be(true)
+      end
+
+      it "llm_judge_configured? is true with a judge_model, an llm metric, and a valid model" do
+        run = create(:completion_kit_run, judge_model: "gpt-4o")
+        run.run_metrics.create!(metric: llm_metric, position: 1)
+        expect(run.llm_judge_configured?).to be(true)
+        expect(run.gradable?).to be(true)
+      end
+
+      it "gradable? is false for an llm-only run with no judge_model" do
+        run = create(:completion_kit_run, judge_model: nil)
+        run.run_metrics.create!(metric: llm_metric, position: 1)
+        expect(run.gradable?).to be(false)
+      end
+    end
+
+    describe "#start! dispatch" do
+      before do
+        allow(CompletionKit::JudgeReviewJob).to receive(:perform_later)
+        allow(CompletionKit::CheckReviewJob).to receive(:perform_later)
+        allow(CompletionKit::GenerateRowJob).to receive(:perform_later)
+        allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+        allow(CompletionKit::ApiConfig).to receive(:valid_for_model?).and_return(true)
+      end
+
+      it "dispatches CheckReviewJob (not JudgeReviewJob) for a check-only judge-only run with no judge_model" do
+        dataset = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+        run = create(:completion_kit_run, prompt: nil, dataset: dataset, judge_model: nil)
+        run.run_metrics.create!(metric: check_metric, position: 1)
+
+        expect(run.start!).to be(true)
+        expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).once
+        expect(CompletionKit::JudgeReviewJob).not_to have_received(:perform_later)
+        expect(CompletionKit::RunCompletionCheckJob).to have_received(:perform_later).with(run.id)
+      end
+
+      it "dispatches both job types for a mixed judge-only run" do
+        dataset = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+        run = create(:completion_kit_run, prompt: nil, dataset: dataset, judge_model: "gpt-4o")
+        run.run_metrics.create!(metric: llm_metric, position: 1)
+        run.run_metrics.create!(metric: check_metric, position: 2)
+
+        run.start!
+
+        expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).once
+        expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).once
+      end
+    end
+
+    describe "an input_data-only check run needs no output column" do
+      let(:input_check) do
+        create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "input_data" })
+      end
+      let(:dataset_no_output) { create(:completion_kit_dataset, csv_data: "input,topic\nhello,greeting\n") }
+
+      before do
+        allow(CompletionKit::CheckReviewJob).to receive(:perform_later)
+        allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+      end
+
+      it "is valid and starts with succeeded responses carrying nil response_text" do
+        run = CompletionKit::Run.new(prompt: nil, dataset: dataset_no_output, name: "input check")
+        run.run_metrics.build(metric: input_check, position: 1)
+
+        expect(run).to be_valid
+        run.save!
+
+        expect(run.start!).to be(true)
+        expect(run.responses.pluck(:status).uniq).to eq(["succeeded"])
+        expect(run.responses.first.response_text).to be_nil
+        expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).once
+      end
+    end
+
+    describe "#regrade! with checks" do
+      before do
+        allow(CompletionKit::CheckReviewJob).to receive(:perform_later)
+        allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+      end
+
+      it "is gated on gradable?, clears passed, and re-dispatches CheckReviewJob" do
+        run = create(:completion_kit_run, judge_model: nil)
+        run.run_metrics.create!(metric: check_metric, position: 1)
+        response_row = create(:completion_kit_response, run: run, status: "succeeded", response_text: "ok")
+        v1 = CompletionKit::MetricVersion.ensure_current_for(check_metric)
+        review = response_row.reviews.create!(metric: check_metric, metric_name: check_metric.name,
+                                              metric_version_id: v1.id, status: "succeeded", passed: true, ai_score: nil)
+
+        expect(run.regrade!).to be(true)
+        expect(review.reload.passed).to be_nil
+        expect(review.reload.status).to eq("pending")
+        expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).with(response_row.id, check_metric.id, run.id)
+      end
+    end
+
+    describe "#progress_snapshot with checks" do
+      it "counts a succeeded check review as judged_done" do
+        run = create(:completion_kit_run, judge_model: nil, progress_total: 1)
+        run.run_metrics.create!(metric: check_metric, position: 1)
+        response_row = create(:completion_kit_response, run: run, status: "succeeded", response_text: "ok")
+        v1 = CompletionKit::MetricVersion.ensure_current_for(check_metric)
+        response_row.reviews.create!(metric: check_metric, metric_name: check_metric.name,
+                                    metric_version_id: v1.id, status: "succeeded", passed: true, ai_score: nil)
+
+        expect(run.progress_snapshot[:judged_done]).to eq(1)
+      end
+    end
+  end
+
   describe "#generate_responses!" do
     let(:prompt) { create(:completion_kit_prompt, template: "Static prompt with no variables") }
     let(:client) { instance_double(CompletionKit::LlmClient, configured?: true, configuration_errors: []) }

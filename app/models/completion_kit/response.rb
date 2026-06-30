@@ -8,7 +8,7 @@ module CompletionKit
 
     delegate :prompt, to: :run
 
-    validates :response_text, presence: true, if: :succeeded?
+    validates :response_text, presence: true, if: :requires_response_text?
 
     before_validation :set_default_status, on: :create
 
@@ -45,6 +45,10 @@ module CompletionKit
     end
 
     private
+
+    def requires_response_text?
+      succeeded? && !run&.judge_only_input_data_checks?
+    end
 
     def broadcast_row_update
       run.broadcast_response_update(self)

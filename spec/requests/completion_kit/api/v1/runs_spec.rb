@@ -175,6 +175,19 @@ RSpec.describe "API V1 Runs", type: :request do
       expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).with(run.id, failed.id)
     end
 
+    it "clears passed on a failed check review when retrying" do
+      run = create(:completion_kit_run, status: "completed")
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text" })
+      failed_row = create(:completion_kit_response, :failed, run: run, row_index: 0)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      review = failed_row.reviews.create!(metric: metric, metric_name: metric.name, metric_version_id: v1.id, status: "failed", passed: false, ai_score: nil)
+
+      post "/completion_kit/api/v1/runs/#{run.id}/retry_failures", headers: headers
+
+      expect(review.reload.passed).to be_nil
+      expect(review.reload.status).to eq("pending")
+    end
+
     it "returns 409 with a use-rerun message when reviews are stale against the current metric version" do
       run = create(:completion_kit_run, status: "completed")
       metric = create(:completion_kit_metric)

@@ -61,10 +61,13 @@ module CompletionKit
         error_provider: nil, error_class: nil, error_status: nil, error_message: nil
       )
 
-      if run.judge_configured?
-        run.metrics.each do |metric|
+      if run.llm_judge_configured?
+        run.llm_metrics.each do |metric|
           JudgeReviewJob.perform_later(response.id, metric.id, run.id)
         end
+      end
+      run.check_metrics.each do |metric|
+        CheckReviewJob.perform_later(response.id, metric.id, run.id)
       end
 
       enqueue_completion_check

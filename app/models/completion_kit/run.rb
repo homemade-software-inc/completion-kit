@@ -74,6 +74,31 @@ module CompletionKit
       judge_model.present? && metrics.any? && ApiConfig.valid_for_model?(judge_model)
     end
 
+    def llm_metrics
+      metrics.where(metric_type: "llm_judge")
+    end
+
+    def check_metrics
+      metrics.where(metric_type: "check")
+    end
+
+    def llm_judge_configured?
+      judge_model.present? && llm_metrics.any? && ApiConfig.valid_for_model?(judge_model)
+    end
+
+    def gradable?
+      llm_judge_configured? || check_metrics.any?
+    end
+
+    def judge_only_input_data_checks?
+      return false unless judge_only?
+
+      attached = run_metrics.filter_map(&:metric)
+      return false if attached.empty?
+
+      attached.all?(&:check?) && attached.all? { |m| m.check_config.to_h["target"] == "input_data" }
+    end
+
     def replace_metrics!(metric_ids)
       return unless metric_ids
       run_metrics.delete_all
@@ -141,7 +166,9 @@ module CompletionKit
 
       if judge_only?
         column = output_column.presence || "actual_output"
-        return fail_with_summary!("Dataset has no \"#{column}\" column") unless dataset && dataset.headers.include?(column)
+        unless judge_only_input_data_checks? || (dataset && dataset.headers.include?(column))
+          return fail_with_summary!("Dataset has no \"#{column}\" column")
+        end
       else
         client = LlmClient.for_model(prompt.llm_model, ApiConfig.for_model(prompt.llm_model))
         unless client.configured?
@@ -168,13 +195,15 @@ module CompletionKit
           }
           if judge_only?
             attrs[:status] = "succeeded"
-            attrs[:response_text] = row[output_column.presence || "actual_output"].to_s
+            column = output_column.presence || "actual_output"
+            attrs[:response_text] = row[column].to_s if dataset && dataset.headers.include?(column)
           end
 
           response = responses.create!(attrs)
 
           if judge_only?
-            metrics.each { |m| JudgeReviewJob.perform_later(response.id, m.id, id) } if judge_configured?
+            llm_metrics.each { |m| JudgeReviewJob.perform_later(response.id, m.id, id) } if llm_judge_configured?
+            check_metrics.each { |m| CheckReviewJob.perform_later(response.id, m.id, id) }
           else
             GenerateRowJob.perform_later(id, response.id)
           end
@@ -195,8 +224,7 @@ module CompletionKit
     end
 
     def regrade!
-      grading_metrics = metrics
-      return false if grading_metrics.empty? || !judge_configured?
+      return false if metrics.empty? || !gradable?
 
       eligible_responses = responses.where(status: "succeeded").where.not(response_text: nil)
       response_ids = eligible_responses.pluck(:id)
@@ -208,6 +236,7 @@ module CompletionKit
           attempts: 0,
           metric_version_id: nil,
           ai_score: nil,
+          passed: nil,
           ai_feedback: nil,
           error_provider: nil,
           error_class: nil,
@@ -217,7 +246,8 @@ module CompletionKit
         update!(status: "running", failure_summary: nil, error_message: nil)
 
         response_ids.each do |rid|
-          grading_metrics.each { |m| JudgeReviewJob.perform_later(rid, m.id, id) }
+          llm_metrics.each { |m| JudgeReviewJob.perform_later(rid, m.id, id) } if llm_judge_configured?
+          check_metrics.each { |m| CheckReviewJob.perform_later(rid, m.id, id) }
         end
         RunCompletionCheckJob.perform_later(id)
       end
@@ -410,6 +440,8 @@ module CompletionKit
         errors.add(:dataset_id, "is required for a judge-only run (no prompt)")
         return
       end
+
+      return if judge_only_input_data_checks?
 
       column = output_column.presence || "actual_output"
       unless dataset.headers.include?(column)

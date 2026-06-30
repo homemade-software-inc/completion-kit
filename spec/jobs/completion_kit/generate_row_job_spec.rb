@@ -69,9 +69,22 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
 
     fake_client = double("client", generate_completion: "ok", configured?: true)
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
-    allow_any_instance_of(CompletionKit::Run).to receive(:judge_configured?).and_return(true)
+    allow_any_instance_of(CompletionKit::Run).to receive(:llm_judge_configured?).and_return(true)
 
     expect(CompletionKit::JudgeReviewJob).to receive(:perform_later).with(response.id, metric.id, run.id)
+
+    described_class.perform_now(run.id, response.id)
+  end
+
+  it "enqueues a CheckReviewJob for each check metric regardless of judge config" do
+    check = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text" })
+    CompletionKit::RunMetric.create!(run: run, metric: check, position: 1)
+
+    fake_client = double("client", generate_completion: "ok", configured?: true)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
+
+    expect(CompletionKit::CheckReviewJob).to receive(:perform_later).with(response.id, check.id, run.id)
+    expect(CompletionKit::JudgeReviewJob).not_to receive(:perform_later)
 
     described_class.perform_now(run.id, response.id)
   end
