@@ -53,7 +53,7 @@ module CompletionKit
 
     def gradable_metric_ids
       ids = check_metrics.pluck(:id)
-      ids += llm_metrics.pluck(:id) if llm_judge_configured?
+      ids += llm_metrics.pluck(:id) if judge_model.present?
       ids
     end
 

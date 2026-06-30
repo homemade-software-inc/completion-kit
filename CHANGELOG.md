@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-06-29
+
+### Fixed
+- **Run completion no longer depends on live judge-API validity.** A run's outstanding-work accounting and progress snapshot now decide which metrics are expected to produce reviews from the run's own `judge_model` intent plus its check metrics, rather than re-checking the provider's `valid_for_model?` at completion time. This removes an environment-dependent edge where a run could be counted differently depending on whether the judge API was currently reachable.
+
 ## [0.18.0] - 2026-06-29
 
 ### Added
