@@ -59,6 +59,9 @@ CompletionKit::Engine.routes.draw do
 
   get "api_reference", to: "api_reference#index", as: :api_reference
 
+  get "import", to: "imports#new", as: :import
+  post "import", to: "imports#create"
+
   namespace :api do
     namespace :v1 do
       resources :prompts do

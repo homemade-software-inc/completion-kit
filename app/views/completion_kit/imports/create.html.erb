@@ -1,0 +1,89 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li><%= link_to "Import from Promptfoo", import_path %></li>
+  <li>Summary</li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Import summary</h1>
+    <p class="ck-lead">Here is what mapped into CompletionKit and what could not be translated.</p>
+  </div>
+  <div class="ck-actions">
+    <%= link_to "Import another", import_path, class: ck_button_classes(:light, variant: :outline) %>
+  </div>
+</section>
+
+<section class="ck-card ck-card--spaced">
+  <p class="ck-kicker">Prompts</p>
+  <% if @result.prompts[:created].any? %>
+    <ul class="ck-list ck-list--compact">
+      <% @result.prompts[:created].each do |name| %>
+        <li><%= link_to name, prompts_path, class: "ck-link" %></li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="ck-meta-copy">No prompts imported.</p>
+  <% end %>
+  <% if @result.prompts[:skipped].any? %>
+    <p class="ck-kicker">Skipped prompts</p>
+    <ul class="ck-list ck-list--compact">
+      <% @result.prompts[:skipped].each do |item| %>
+        <li><code><%= item[:value] %></code>: <span class="ck-meta-copy"><%= item[:reason] %></span></li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>
+
+<section class="ck-card ck-card--spaced">
+  <p class="ck-kicker">Dataset</p>
+  <% if @result.dataset[:created] %>
+    <p><%= link_to @result.dataset[:created], datasets_path, class: "ck-link" %>, <%= pluralize(@result.dataset[:rows], "row") %>. Columns: <%= @result.dataset[:columns].join(", ") %>.</p>
+  <% else %>
+    <p class="ck-meta-copy">Skipped: <%= @result.dataset[:skipped] %>.</p>
+  <% end %>
+</section>
+
+<section class="ck-card ck-card--spaced">
+  <p class="ck-kicker">Metrics</p>
+  <% if @result.metrics[:created].any? %>
+    <ul class="ck-list ck-list--compact">
+      <% @result.metrics[:created].each do |metric| %>
+        <li>
+          <%= link_to metric[:name], metrics_path, class: "ck-link" %>
+          <span class="ck-chip ck-chip--soft"><%= metric[:type] == "check" ? "Check" : "Judge" %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="ck-meta-copy">No metrics imported.</p>
+  <% end %>
+  <% if @result.metrics[:skipped].any? %>
+    <p class="ck-kicker">Skipped asserts</p>
+    <ul class="ck-list ck-list--compact">
+      <% @result.metrics[:skipped].each do |item| %>
+        <li><code><%= item[:type] %></code>: <span class="ck-meta-copy"><%= item[:reason] %></span></li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>
+
+<section class="ck-card ck-card--spaced">
+  <p class="ck-kicker">Providers</p>
+  <% if @result.providers[:matched].any? %>
+    <p class="ck-meta-copy">Matched to configured credentials:</p>
+    <div class="ck-chip-row">
+      <% @result.providers[:matched].each do |name| %>
+        <span class="ck-chip ck-chip--done"><%= name %></span>
+      <% end %>
+    </div>
+  <% end %>
+  <% if @result.providers[:unmatched].any? %>
+    <p class="ck-meta-copy">Referenced but not configured here. <%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %> to run against these.</p>
+    <div class="ck-chip-row">
+      <% @result.providers[:unmatched].each do |name| %>
+        <span class="ck-chip ck-chip--warning"><%= name %></span>
+      <% end %>
+    </div>
+  <% end %>
+</section>

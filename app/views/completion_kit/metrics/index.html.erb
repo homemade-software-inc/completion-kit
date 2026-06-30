@@ -4,6 +4,7 @@
     <p class="ck-lead">Scoring dimensions used to evaluate each response. Each defines one thing to assess, by an LLM judge on a 1-5 scale or a deterministic check.</p>
   </div>
   <div class="ck-actions">
+    <%= link_to "Import from Promptfoo", import_path, class: ck_button_classes(:light, variant: :outline) %>
     <%= link_to "New metric", new_metric_path, class: ck_button_classes(:dark) %>
   </div>
 </section>

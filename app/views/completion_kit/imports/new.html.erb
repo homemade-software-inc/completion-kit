@@ -1,0 +1,31 @@
+<ol class="ck-breadcrumb">
+  <li><%= link_to "Metrics", metrics_path %></li>
+  <li>Import from Promptfoo</li>
+</ol>
+
+<section class="ck-page-header">
+  <div>
+    <h1 class="ck-title">Import from Promptfoo</h1>
+    <p class="ck-lead">Paste or upload a <code>promptfooconfig.yaml</code> to bring its prompts, test vars, and assertions into CompletionKit. This maps the eval and judge half of Promptfoo. Anything it cannot translate is reported back on the next page, never dropped silently.</p>
+  </div>
+</section>
+
+<%= form_with url: import_path, method: :post, multipart: true do |form| %>
+  <div class="ck-card ck-form-card">
+    <div class="ck-field">
+      <%= form.label :config, "Paste config", class: "ck-label" %>
+      <%= form.text_area :config, rows: 16, class: "ck-input ck-input--area ck-input--code", placeholder: "prompts:\n  - \"Summarize {{article}}.\"\ntests:\n  - vars: { article: \"...\" }\ndefaultTest:\n  assert:\n    - type: contains\n      value: \"summary\"" %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :file, "Or upload a file", class: "ck-label" %>
+      <%= form.file_field :file, accept: ".yaml,.yml", class: "ck-input" %>
+      <p class="ck-field-hint">A <code>.yaml</code> file takes precedence over the pasted text.</p>
+    </div>
+
+    <div class="ck-actions">
+      <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
+      <%= form.submit "Import", class: ck_button_classes(:dark) %>
+    </div>
+  </div>
+<% end %>
