@@ -16,6 +16,18 @@ RSpec.describe CompletionKit::Review, type: :model do
     end
   end
 
+  describe "broadcast safety" do
+    it "does not let a broadcast failure propagate out of the save" do
+      review = create(:completion_kit_review)
+      allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update).and_raise(StandardError, "cable down")
+      allow(Rails.logger).to receive(:error)
+
+      expect { review.update!(ai_feedback: "still saved") }.not_to raise_error
+      expect(review.reload.ai_feedback).to eq("still saved")
+      expect(Rails.logger).to have_received(:error).with(/broadcast failed/)
+    end
+  end
+
   describe "#passed?" do
     it "reflects the passed column across true, false, and nil" do
       expect(build(:completion_kit_review, passed: true).passed?).to be(true)

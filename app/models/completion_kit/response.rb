@@ -63,15 +63,21 @@ module CompletionKit
     end
 
     def broadcast_row_update
-      run.broadcast_response_update(self)
+      safely_broadcast { run.broadcast_response_update(self) }
     end
 
     def broadcast_run_progress
-      run.broadcast_progress
+      safely_broadcast { run.broadcast_progress }
     end
 
     def should_broadcast_progress?
       saved_change_to_status? && terminal?
+    end
+
+    def safely_broadcast
+      yield
+    rescue StandardError => e
+      Rails.logger.error("[CompletionKit] response ##{id} broadcast failed: #{e.class}: #{e.message}")
     end
   end
 end

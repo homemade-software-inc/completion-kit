@@ -28,6 +28,16 @@ RSpec.describe CompletionKit::Response, type: :model do
     expect(response.errors[:response_text]).to be_present
   end
 
+  it "does not let a broadcast failure propagate out of the save" do
+    response = create(:completion_kit_response)
+    allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_response_update).and_raise(StandardError, "cable down")
+    allow(Rails.logger).to receive(:error)
+
+    expect { response.update!(response_text: "still saved") }.not_to raise_error
+    expect(response.reload.response_text).to eq("still saved")
+    expect(Rails.logger).to have_received(:error).with(/broadcast failed/)
+  end
+
   describe "#error_payload" do
     it "returns nil when error_class is blank" do
       response = build(:completion_kit_response)
