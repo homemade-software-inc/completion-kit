@@ -16,6 +16,10 @@ module CompletionKit
     after_save_commit :broadcast_parent_row_update, unless: :destroyed?
     after_save_commit :broadcast_run_progress, if: :should_broadcast_progress?
 
+    def check?
+      metric_version&.metric_type == "check"
+    end
+
     def stale_against_current_judge?
       return false unless metric_id && metric_version_id
       current_id = MetricVersion.current.where(metric_id: metric_id).limit(1).pick(:id)
@@ -27,7 +31,7 @@ module CompletionKit
       {
         id: id, response_id: response_id, metric_id: metric_id,
         metric_version_id: metric_version_id,
-        metric_name: metric_name, ai_score: ai_score,
+        metric_name: metric_name, ai_score: ai_score, passed: passed,
         ai_feedback: ai_feedback, status: status, attempts: attempts,
         error: error_payload
       }

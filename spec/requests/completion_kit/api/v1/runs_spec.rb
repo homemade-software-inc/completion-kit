@@ -92,6 +92,7 @@ RSpec.describe "API V1 Runs", type: :request do
       body = JSON.parse(response.body)
       expect(body["responses_count"]).to eq(1)
       expect(body).to have_key("avg_score")
+      expect(body).to have_key("check_pass_rate")
     end
 
     it "returns 404 for missing run" do

@@ -8,5 +8,13 @@ FactoryBot.define do
     status { "succeeded" }
     ai_score { 4.0 }
     ai_feedback { "Good response." }
+
+    trait :check do
+      association :metric, factory: [:completion_kit_metric, :check]
+      metric_name { "Valid JSON" }
+      instruction { nil }
+      ai_score { nil }
+      passed { true }
+    end
   end
 end

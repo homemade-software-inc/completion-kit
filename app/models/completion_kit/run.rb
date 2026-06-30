@@ -116,11 +116,27 @@ module CompletionKit
     end
 
     def metric_averages
-      all_reviews = responses.flat_map(&:reviews).select { |r| r.ai_score.present? }
-      all_reviews.group_by(&:metric_name).map do |name, reviews|
-        scores = reviews.map { |r| r.ai_score.to_f }
-        { name: name, avg: (scores.sum / scores.length).round(1) }
+      responses.flat_map(&:reviews).group_by(&:metric_name).filter_map do |name, reviews|
+        scored = reviews.select { |r| r.ai_score.present? }
+        if scored.any?
+          scores = scored.map { |r| r.ai_score.to_f }
+          { name: name, avg: (scores.sum / scores.length).round(1) }
+        else
+          resolved = reviews.reject { |r| r.passed.nil? }
+          next if resolved.empty?
+
+          passed = resolved.count { |r| r.passed == true }
+          { name: name, kind: "check", pass_rate: (passed.to_f / resolved.length).round(2) }
+        end
       end
+    end
+
+    def check_pass_rate
+      resolved = responses.flat_map(&:reviews).reject { |r| r.passed.nil? }
+      return nil if resolved.empty?
+
+      passed = resolved.count { |r| r.passed == true }
+      (passed.to_f / resolved.length).round(2)
     end
 
     def stale_review_summary
@@ -303,6 +319,7 @@ module CompletionKit
         output_column: output_column,
         created_at: created_at, updated_at: updated_at,
         responses_count: responses.count, avg_score: avg_score,
+        check_pass_rate: check_pass_rate,
         progress_current: snap[:generated_done],
         progress_total: snap[:generated_total],
         progress: {

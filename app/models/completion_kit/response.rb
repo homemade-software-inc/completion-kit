@@ -34,7 +34,19 @@ module CompletionKit
     end
 
     def reviewed?
-      reviews.any? { |r| r.ai_score.present? }
+      reviews.any? { |r| r.ai_score.present? || !r.passed.nil? }
+    end
+
+    def checks_total
+      reviews.count { |r| !r.passed.nil? }
+    end
+
+    def checks_passed
+      reviews.count { |r| r.passed == true }
+    end
+
+    def checks_failed
+      reviews.count { |r| r.passed == false }
     end
 
     def fully_reviewed?
