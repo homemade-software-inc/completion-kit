@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.3] - 2026-06-30
+
+### Fixed
+- **The check-metric UI now ships styled (#92).** Four class families used by the check-metric views had no rule in the engine stylesheet and rendered with browser defaults: the metric-type chooser radios (`ck-radio`), the check-builder field rows (`ck-field-row`), the judge-vs-check type chip (`ck-metric-type-chip`), and the check-spec display on a metric's show and index pages (`ck-check-spec` and its parts). They now render consistently with the rest of the metric UI, using the existing form, chip, and code conventions.
+
 ## [0.20.2] - 2026-06-30
 
 ### Fixed
