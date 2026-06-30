@@ -34,10 +34,17 @@
     <% if metrics.any? %>
       <div class="ck-metric-bar ck-metric-bar--compact">
         <% metrics.each do |m| %>
-          <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(m[:avg]) %>">
-            <span class="ck-metric-pip__bar"></span>
-            <span class="ck-metric-pip__label"><%= m[:name] %> <strong><%= m[:avg] %></strong></span>
-          </span>
+          <% if m[:kind] == "check" %>
+            <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(m[:pass_rate]) %>">
+              <span class="ck-metric-pip__bar"></span>
+              <span class="ck-metric-pip__label"><%= m[:name] %> <strong><%= (m[:pass_rate] * 100).round %>%</strong></span>
+            </span>
+          <% else %>
+            <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(m[:avg]) %>">
+              <span class="ck-metric-pip__bar"></span>
+              <span class="ck-metric-pip__label"><%= m[:name] %> <strong><%= m[:avg] %></strong></span>
+            </span>
+          <% end %>
         <% end %>
       </div>
     <% else %>
@@ -46,8 +53,14 @@
   </td>
   <td>
     <% avg = run.avg_score %>
-    <% if avg %>
-      <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
+    <% pass_rate = run.check_pass_rate %>
+    <% if avg || pass_rate %>
+      <% if avg %>
+        <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
+      <% end %>
+      <% if pass_rate %>
+        <span class="<%= ck_badge_classes(ck_pass_rate_kind(pass_rate)) %>"><%= (pass_rate * 100).round %>%</span>
+      <% end %>
     <% else %>
       <span class="ck-runs-table__dim">—</span>
     <% end %>

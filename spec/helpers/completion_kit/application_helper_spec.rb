@@ -207,6 +207,37 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#ck_check_badge" do
+    it "renders a green Pass badge when the check passed" do
+      html = helper.ck_check_badge(true)
+      expect(html).to include("Pass")
+      expect(html).to include("ck-badge--high")
+    end
+
+    it "renders a red Fail badge when the check failed" do
+      html = helper.ck_check_badge(false)
+      expect(html).to include("Fail")
+      expect(html).to include("ck-badge--low")
+    end
+
+    it "renders a neutral pending badge when the result is unknown" do
+      html = helper.ck_check_badge(nil)
+      expect(html).to include("Pending")
+      expect(html).to include("ck-badge--pending")
+    end
+  end
+
+  describe "#ck_pass_rate_kind" do
+    it "buckets a 0-1 pass rate into high/medium/low bands" do
+      expect(helper.ck_pass_rate_kind(1.0)).to eq(:high)
+      expect(helper.ck_pass_rate_kind(0.9)).to eq(:high)
+      expect(helper.ck_pass_rate_kind(0.8)).to eq(:medium)
+      expect(helper.ck_pass_rate_kind(0.7)).to eq(:medium)
+      expect(helper.ck_pass_rate_kind(0.69)).to eq(:low)
+      expect(helper.ck_pass_rate_kind(0.0)).to eq(:low)
+    end
+  end
+
   describe "#ck_word_diff_old" do
     it "marks removed words in old text and skips additions" do
       result = helper.ck_word_diff_old("hello world", "hello universe")

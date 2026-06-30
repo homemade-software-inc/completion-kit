@@ -107,14 +107,14 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to match(/<input(?=[^>]*name="run\[tag_names\]\[\]")(?=[^>]*value="priority")(?=[^>]*\bchecked\b)/)
   end
 
-  it "sorts responses by score when judge is configured" do
+  it "sorts responses by rubric score when the run is gradable" do
     run = create(:completion_kit_run, prompt: prompt, name: "Run A")
     r1 = create(:completion_kit_response, run: run)
     r2 = create(:completion_kit_response, run: run)
     create(:completion_kit_review, response: r1, ai_score: 4.0)
     create(:completion_kit_review, response: r2, ai_score: 2.0)
 
-    allow_any_instance_of(CompletionKit::Run).to receive(:judge_configured?).and_return(true)
+    allow_any_instance_of(CompletionKit::Run).to receive(:gradable?).and_return(true)
 
     get "#{base_path}/#{run.id}", params: { sort: "score_asc" }
     expect(response).to have_http_status(:ok)
@@ -123,14 +123,119 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to have_http_status(:ok)
   end
 
-  it "orders responses by id when judge is not configured" do
+  it "surfaces responses with failed checks first in the composite worst-first order" do
+    check = create(:completion_kit_metric, :check)
+    run = create(:completion_kit_run, prompt: prompt, name: "Check run")
+    run.replace_metrics!([check.id])
+    clean = create(:completion_kit_response, run: run, response_text: "ok one")
+    broken = create(:completion_kit_response, run: run, response_text: "ok two")
+    create(:completion_kit_review, :check, response: clean, metric: check, metric_name: check.name, passed: true)
+    create(:completion_kit_review, :check, response: broken, metric: check, metric_name: check.name, passed: false)
+
+    get "#{base_path}/#{run.id}", params: { sort: "score_asc" }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body.index("response_#{broken.id}")).to be < response.body.index("response_#{clean.id}")
+  end
+
+  it "orders responses by id when the run is not gradable" do
     run = create(:completion_kit_run, prompt: prompt, name: "Run A")
     create(:completion_kit_response, run: run)
 
-    allow_any_instance_of(CompletionKit::Run).to receive(:judge_configured?).and_return(false)
+    allow_any_instance_of(CompletionKit::Run).to receive(:gradable?).and_return(false)
 
     get "#{base_path}/#{run.id}"
     expect(response).to have_http_status(:ok)
+  end
+
+  it "renders check pass-rate pips and a pass-rate badge on the index for a mixed run" do
+    llm = create(:completion_kit_metric, name: "Quality")
+    check = create(:completion_kit_metric, :check, name: "Valid JSON")
+    run = create(:completion_kit_run, prompt: prompt, name: "Mixed index run")
+    run.replace_metrics!([llm.id, check.id])
+    resp = create(:completion_kit_response, run: run)
+    create(:completion_kit_review, response: resp, metric: llm, metric_name: "Quality", ai_score: 4.0)
+    create(:completion_kit_review, :check, response: resp, metric: check, metric_name: "Valid JSON", passed: true)
+
+    get base_path
+
+    expect(response.body).to include("Mixed index run")
+    expect(response.body).to include("Valid JSON")
+    expect(response.body).to include("100%")
+  end
+
+  it "renders only a pass-rate badge on the index for a check-only run" do
+    check = create(:completion_kit_metric, :check, name: "JSON only")
+    run = create(:completion_kit_run, prompt: prompt, name: "Checks only index")
+    run.replace_metrics!([check.id])
+    resp = create(:completion_kit_response, run: run)
+    create(:completion_kit_review, :check, response: resp, metric: check, metric_name: "JSON only", passed: false)
+
+    get base_path
+
+    expect(response.body).to include("Checks only index")
+    expect(response.body).to include("0%")
+  end
+
+  it "renders check pips, a pass-rate fraction, and grading cells on the run page for a mixed run" do
+    llm = create(:completion_kit_metric, name: "Quality")
+    check = create(:completion_kit_metric, :check, name: "Valid JSON")
+    run = create(:completion_kit_run, prompt: prompt, name: "Mixed show", status: "completed", progress_total: 1)
+    run.replace_metrics!([llm.id, check.id])
+    resp = create(:completion_kit_response, run: run, status: "succeeded", response_text: "ok")
+    create(:completion_kit_review, response: resp, metric: llm, metric_name: "Quality", ai_score: 4.0)
+    create(:completion_kit_review, :check, response: resp, metric: check, metric_name: "Valid JSON", passed: true)
+
+    get "#{base_path}/#{run.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Pass")
+    expect(response.body).to include("1/1")
+    expect(response.body).to include(">Checks passed</p>")
+    expect(response.body).to include(">Avg score</p>")
+  end
+
+  it "renders a Fail pip and a fraction on the run page for a failing check response" do
+    check = create(:completion_kit_metric, :check, name: "Valid JSON")
+    run = create(:completion_kit_run, prompt: prompt, name: "Failing show", status: "completed", progress_total: 1)
+    run.replace_metrics!([check.id])
+    resp = create(:completion_kit_response, run: run, status: "succeeded", response_text: "ok")
+    create(:completion_kit_review, :check, response: resp, metric: check, metric_name: "Valid JSON", passed: false)
+
+    get "#{base_path}/#{run.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Fail")
+    expect(response.body).to include("0/1")
+  end
+
+  it "shows the judge avg cell and hides the checks cell on an llm-only run status panel" do
+    llm = create(:completion_kit_metric, name: "Quality")
+    run = create(:completion_kit_run, prompt: prompt, name: "LLM panel", status: "completed", progress_total: 1, judge_model: "gpt-4o")
+    run.replace_metrics!([llm.id])
+    resp = create(:completion_kit_response, run: run, status: "succeeded", response_text: "ok")
+    create(:completion_kit_review, response: resp, metric: llm, metric_name: "Quality", ai_score: 4.0)
+
+    get "#{base_path}/#{run.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(">Avg score</p>")
+    expect(response.body).not_to include(">Checks passed</p>")
+  end
+
+  it "shows a pending pip, an em-dash checks cell, and no judge avg cell for a check-only run still grading" do
+    check = create(:completion_kit_metric, :check, name: "Valid JSON")
+    run = create(:completion_kit_run, prompt: prompt, name: "Checks grading", status: "running", progress_total: 1)
+    run.replace_metrics!([check.id])
+    resp = create(:completion_kit_response, run: run, status: "succeeded", response_text: "ok")
+    create(:completion_kit_review, :check, response: resp, metric: check, metric_name: "Valid JSON", passed: nil, status: "pending")
+
+    get "#{base_path}/#{run.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("ck-metric-pip--pending")
+    expect(response.body).to include(">Checks passed</p>")
+    expect(response.body).not_to include(">Avg score</p>")
   end
 
   it "renders the show page with pending, retrying, and failed response rows" do

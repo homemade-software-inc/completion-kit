@@ -20,6 +20,9 @@
       <% if @run.avg_score %>
         <span class="<%= ck_badge_classes(ck_score_kind(@run.avg_score)) %>"><%= @run.avg_score %></span>
       <% end %>
+      <% if @run.check_pass_rate %>
+        <span class="<%= ck_badge_classes(ck_pass_rate_kind(@run.check_pass_rate)) %>"><%= (@run.check_pass_rate * 100).round %>%</span>
+      <% end %>
     </p>
   </div>
   <div class="ck-actions">

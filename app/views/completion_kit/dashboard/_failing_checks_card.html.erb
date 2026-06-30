@@ -1,0 +1,19 @@
+<div class="ck-card ck-stat-card ck-rise" id="ck-failing-checks-card" style="--rise-delay: 200ms;">
+  <p class="ck-kicker">Failing checks · last 7 days</p>
+  <div class="ck-stat-card__body">
+    <span class="ck-stat-card__count<%= failing_checks[:count].positive? ? ' is-danger' : ' is-clean' %>"><%= failing_checks[:count] %></span>
+  </div>
+
+  <% if failing_checks[:items].any? %>
+    <ul class="ck-failure-list">
+      <% failing_checks[:items].first(5).each do |item| %>
+        <li class="ck-failure-list__item">
+          <span class="ck-failure-list__surface ck-failure-list__surface--check">check</span>
+          <%= link_to item[:metric_name], completion_kit.run_path(item[:run]), class: "ck-link ck-failure-list__cause" %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="ck-stat-card__foot"><span>No failing checks this week.</span></div>
+  <% end %>
+</div>

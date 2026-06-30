@@ -63,6 +63,37 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       expect(response.body).to include("is-gain")
     end
 
+    it "surfaces a failing-checks card with a count and a run link when checks have failed" do
+      ready_workspace!(run_count: 6)
+      run = CompletionKit::Run.first
+      check = create(:completion_kit_metric, :check, name: "Valid JSON")
+      response_row = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, :check, response: response_row, metric: check, metric_name: "Valid JSON", passed: false)
+      allow(CompletionKit::DashboardStats).to receive(:activity).and_return([{ date: Date.new(2026, 5, 3), count: 1 }])
+      allow(CompletionKit::DashboardStats).to receive(:worst_metric).and_return(nil)
+      allow(CompletionKit::DashboardStats).to receive(:failures).and_return(count: 0, items: [])
+      allow(CompletionKit::DashboardStats).to receive(:prompt_changes).and_return([])
+
+      get dashboard
+
+      expect(response.body).to include("Failing checks · last 7 days")
+      expect(response.body).to include("Valid JSON")
+      expect(response.body).to include("ck-failing-checks-card")
+    end
+
+    it "shows the clean failing-checks state when no checks have failed" do
+      ready_workspace!(run_count: 6)
+      allow(CompletionKit::DashboardStats).to receive(:activity).and_return([{ date: Date.new(2026, 5, 3), count: 1 }])
+      allow(CompletionKit::DashboardStats).to receive(:worst_metric).and_return(nil)
+      allow(CompletionKit::DashboardStats).to receive(:failures).and_return(count: 0, items: [])
+      allow(CompletionKit::DashboardStats).to receive(:prompt_changes).and_return([])
+
+      get dashboard
+
+      expect(response.body).to include("Failing checks · last 7 days")
+      expect(response.body).to include("No failing checks this week")
+    end
+
     it "renders a regression row in prompt changes" do
       ready_workspace!(run_count: 6)
       prompt = CompletionKit::Prompt.first

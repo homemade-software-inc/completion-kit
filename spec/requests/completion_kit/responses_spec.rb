@@ -252,6 +252,39 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).to include("actual_output")
   end
 
+  it "renders a Pass badge for a passing check review and stars for a rubric review on a mixed response" do
+    check = create(:completion_kit_metric, :check, name: "Valid JSON")
+    create(:completion_kit_review, :check, response: response_with_output, metric: check, metric_name: "Valid JSON", passed: true)
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_with_output.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Pass")
+    expect(response.body).to include("ck-badge--high")
+    expect(response.body).to include("ck-star--filled")
+  end
+
+  it "renders a Fail badge for a failing check review" do
+    check = create(:completion_kit_metric, :check, name: "Valid JSON")
+    create(:completion_kit_review, :check, response: response_without_expected, metric: check, metric_name: "Valid JSON", passed: false)
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_without_expected.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Fail")
+    expect(response.body).to include("ck-badge--low")
+  end
+
+  it "renders Pending for an unresolved check review" do
+    check = create(:completion_kit_metric, :check, name: "Valid JSON")
+    create(:completion_kit_review, :check, response: response_without_expected, metric: check, metric_name: "Valid JSON", passed: nil, status: "pending")
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_without_expected.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Pending")
+  end
+
   it "renders show without expected output" do
     get "/completion_kit/runs/#{run.id}/responses/#{response_without_expected.id}"
 
@@ -259,24 +292,39 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).not_to include("Expected")
   end
 
-  it "orders responses by score_asc when judge is configured" do
-    allow_any_instance_of(CompletionKit::Run).to receive(:judge_configured?).and_return(true)
+  it "orders responses by score_asc when the run is gradable" do
+    allow_any_instance_of(CompletionKit::Run).to receive(:gradable?).and_return(true)
 
     get "/completion_kit/runs/#{run.id}/responses/#{response_with_output.id}", params: { sort: "score_asc" }
     expect(response).to have_http_status(:ok)
   end
 
-  it "orders responses by score_desc when judge is configured and sort is score_desc" do
-    allow_any_instance_of(CompletionKit::Run).to receive(:judge_configured?).and_return(true)
+  it "orders responses by score_desc when the run is gradable and sort is score_desc" do
+    allow_any_instance_of(CompletionKit::Run).to receive(:gradable?).and_return(true)
 
     get "/completion_kit/runs/#{run.id}/responses/#{response_with_output.id}", params: { sort: "score_desc" }
     expect(response).to have_http_status(:ok)
   end
 
-  it "orders responses by id when sort is none or judge not configured" do
-    allow_any_instance_of(CompletionKit::Run).to receive(:judge_configured?).and_return(false)
+  it "orders responses by id when the run is not gradable" do
+    allow_any_instance_of(CompletionKit::Run).to receive(:gradable?).and_return(false)
 
     get "/completion_kit/runs/#{run.id}/responses/#{response_with_output.id}", params: { sort: "none" }
     expect(response).to have_http_status(:ok)
+  end
+
+  it "navigates a check run using the same failed-checks-first order as the index" do
+    check = create(:completion_kit_metric, :check)
+    check_run = create(:completion_kit_run, prompt: prompt, name: "Check nav run")
+    check_run.replace_metrics!([check.id])
+    clean = create(:completion_kit_response, run: check_run, response_text: "good")
+    broken = create(:completion_kit_response, run: check_run, response_text: "bad")
+    create(:completion_kit_review, :check, response: clean, metric: check, metric_name: check.name, passed: true)
+    create(:completion_kit_review, :check, response: broken, metric: check, metric_name: check.name, passed: false)
+
+    get "/completion_kit/runs/#{check_run.id}/responses/#{broken.id}", params: { sort: "score_asc" }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Response #1")
   end
 end

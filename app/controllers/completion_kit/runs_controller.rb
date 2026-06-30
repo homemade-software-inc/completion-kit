@@ -1,6 +1,7 @@
 module CompletionKit
   class RunsController < ApplicationController
     include CompletionKit::TagFiltering
+    include CompletionKit::ResponseOrdering
     before_action :set_run, only: [:show, :edit, :update, :destroy, :generate, :suggest, :retry_failures, :rerun, :regrade, :refresh_status, :compare]
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
@@ -10,21 +11,7 @@ module CompletionKit
     end
 
     def show
-      @responses = if @run.judge_configured? && params[:sort] == "score_asc"
-                     @run.responses
-                       .left_joins(:reviews)
-                       .includes(:reviews)
-                       .group("completion_kit_responses.id")
-                       .order(Arel.sql("AVG(completion_kit_reviews.ai_score) ASC NULLS LAST"))
-                   elsif @run.judge_configured?
-                     @run.responses
-                       .left_joins(:reviews)
-                       .includes(:reviews)
-                       .group("completion_kit_responses.id")
-                       .order(Arel.sql("AVG(completion_kit_reviews.ai_score) DESC NULLS LAST"))
-                   else
-                     @run.responses.includes(:reviews).order(:id)
-                   end
+      @responses = ordered_responses_relation(@run, params[:sort]).includes(:reviews)
     end
 
     def new

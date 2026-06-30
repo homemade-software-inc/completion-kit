@@ -105,6 +105,63 @@ RSpec.describe CompletionKit::DashboardStats, type: :service do
     end
   end
 
+  describe ".metric_pass_rate" do
+    it "returns the rounded pass rate for a check metric in the window" do
+      check = create(:completion_kit_metric, :check)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: true)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: false)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: true)
+
+      expect(described_class.metric_pass_rate(check.id, since: 7.days.ago)).to eq(0.67)
+    end
+
+    it "returns nil when there are no resolved checks in the window" do
+      check = create(:completion_kit_metric, :check)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: nil, status: "pending")
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: true, created_at: 40.days.ago)
+
+      expect(described_class.metric_pass_rate(check.id, since: 7.days.ago)).to be_nil
+    end
+  end
+
+  describe ".failing_checks" do
+    it "is empty when no checks failed in the window" do
+      check = create(:completion_kit_metric, :check)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: true)
+
+      result = described_class.failing_checks(since: 7.days.ago)
+      expect(result[:count]).to eq(0)
+      expect(result[:items]).to eq([])
+    end
+
+    it "collects failed check reviews with their metric name and run, most recent first" do
+      check = create(:completion_kit_metric, :check, name: "Valid JSON")
+      older = create(:completion_kit_response)
+      newer = create(:completion_kit_response)
+      create(:completion_kit_review, :check, response: older, metric: check, metric_name: "Valid JSON",
+                                             passed: false, updated_at: 3.days.ago)
+      create(:completion_kit_review, :check, response: newer, metric: check, metric_name: "Valid JSON",
+                                             passed: false, updated_at: 1.hour.ago)
+
+      result = described_class.failing_checks(since: 7.days.ago)
+
+      expect(result[:count]).to eq(2)
+      expect(result[:items].first[:metric_name]).to eq("Valid JSON")
+      expect(result[:items].first[:run]).to eq(newer.run)
+      expect(result[:items].map { |i| i[:response] }).to eq([newer, older])
+    end
+
+    it "excludes passing checks, rubric reviews, and out-of-window failures" do
+      check = create(:completion_kit_metric, :check)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: true)
+      create(:completion_kit_review, response: create(:completion_kit_response), ai_score: 1.0)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check,
+                                             passed: false, created_at: 40.days.ago)
+
+      expect(described_class.failing_checks(since: 7.days.ago)[:count]).to eq(0)
+    end
+  end
+
   describe ".failures" do
     it "is empty when nothing failed in the window" do
       result = described_class.failures(since: 7.days.ago)

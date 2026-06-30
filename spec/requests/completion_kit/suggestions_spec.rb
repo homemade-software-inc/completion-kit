@@ -22,6 +22,18 @@ RSpec.describe "CompletionKit suggestions", type: :request do
       expect(response.body).to include("Back to prompt")
     end
 
+    it "shows a check pass-rate badge in the header when the run has resolved checks" do
+      check = create(:completion_kit_metric, :check)
+      run.replace_metrics!([check.id])
+      resp = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, :check, response: resp, metric: check, passed: true)
+
+      get "/completion_kit/suggestions/#{suggestion.id}"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("100%")
+    end
+
     it "anchors breadcrumbs and back button on the run when from=run" do
       get "/completion_kit/suggestions/#{suggestion.id}?from=run"
       expect(response).to have_http_status(:ok)

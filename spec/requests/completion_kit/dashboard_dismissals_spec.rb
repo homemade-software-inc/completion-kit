@@ -18,6 +18,16 @@ RSpec.describe "CompletionKit dashboard dismissals", type: :request do
     expect(CompletionKit::DashboardDismissal.last.baseline_score).to eq(3.0)
   end
 
+  it "dismisses a check metric, snapshotting its window pass rate as the baseline" do
+    check = create(:completion_kit_metric, :check)
+    create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: true)
+    create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: false)
+
+    expect { dismiss(check) }.to change(CompletionKit::DashboardDismissal, :count).by(1)
+    expect(response).to have_http_status(:ok)
+    expect(CompletionKit::DashboardDismissal.last.baseline_score).to eq(0.5)
+  end
+
   it "dismisses a failed run with no baseline score" do
     run = create(:completion_kit_run, status: "failed")
 

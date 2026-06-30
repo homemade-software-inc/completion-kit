@@ -1,5 +1,6 @@
 module CompletionKit
   class ResponsesController < ApplicationController
+    include CompletionKit::ResponseOrdering
     before_action :set_run
     before_action :set_response
 
@@ -24,21 +25,7 @@ module CompletionKit
     end
 
     def ordered_response_ids
-      if @run.judge_configured? && @sort == "score_asc"
-        @run.responses
-          .left_joins(:reviews)
-          .group("completion_kit_responses.id")
-          .order(Arel.sql("AVG(completion_kit_reviews.ai_score) ASC NULLS LAST"))
-          .pluck(:id)
-      elsif @run.judge_configured? && @sort != "none"
-        @run.responses
-          .left_joins(:reviews)
-          .group("completion_kit_responses.id")
-          .order(Arel.sql("AVG(completion_kit_reviews.ai_score) DESC NULLS LAST"))
-          .pluck(:id)
-      else
-        @run.responses.order(:id).pluck(:id)
-      end
+      ordered_responses_relation(@run, @sort).pluck(:id)
     end
   end
 end

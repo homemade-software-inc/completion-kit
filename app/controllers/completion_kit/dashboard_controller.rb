@@ -14,6 +14,7 @@ module CompletionKit
       @activity = DashboardStats.activity
       @worst_metric = DashboardStats.worst_metric(since: 7.days.ago)
       @failures = DashboardStats.failures(since: 7.days.ago)
+      @failing_checks = DashboardStats.failing_checks(since: 7.days.ago)
       @ignored_metrics = DashboardDismissal.metrics
       @ignored_failures = DashboardDismissal.failures
       @prompt_changes = DashboardStats.prompt_changes

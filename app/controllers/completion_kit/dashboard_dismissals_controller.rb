@@ -27,6 +27,7 @@ module CompletionKit
 
     def baseline_for(record)
       return nil unless record.is_a?(Metric)
+      return DashboardStats.metric_pass_rate(record.id, since: WINDOW.ago) if record.check?
       DashboardStats.metric_average(record.id, since: WINDOW.ago)
     end
 

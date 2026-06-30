@@ -2,7 +2,9 @@
 <div id="run_status_panel" aria-live="polite" aria-atomic="true">
   <% if run.status.in?(%w[running completed]) && snap[:generated_total] > 0 %>
     <% failed_count = snap[:generated_failed] + snap[:judged_failed] %>
-    <% has_judge = snap[:judged_total] > 0 || run.judge_configured? %>
+    <% show_grading = snap[:judged_total] > 0 || run.gradable? %>
+    <% has_llm_metric = run.llm_metrics.any? %>
+    <% has_checks = run.check_metrics.any? %>
     <% metric_avgs = run.metric_averages.sort_by { |m| m[:name].to_s.downcase } %>
     <% metric_lookup = metric_avgs.index_by { |m| m[:name].to_s.downcase } %>
     <section class="ck-run-status ck-run-status--<%= run.status %>">
@@ -18,7 +20,7 @@
           <p class="ck-run-status__cell-value ck-run-status__summary-line">
             <span class="ck-run-status__summary-num"><%= snap[:generated_done] %></span>
             <span class="ck-run-status__summary-text">of <%= snap[:generated_total] %> responses</span>
-            <% if has_judge %>
+            <% if show_grading %>
               <span class="ck-run-status__summary-sep">·</span>
               <span class="ck-run-status__summary-num"><%= snap[:judged_done] %></span>
               <span class="ck-run-status__summary-text">of <%= snap[:judged_total] %> judged</span>
@@ -30,7 +32,7 @@
           </p>
         </div>
 
-        <% if has_judge %>
+        <% if show_grading %>
           <div class="ck-run-status__cell">
             <p class="ck-run-status__metric-label">Metrics</p>
             <div class="ck-run-status__cell-value">
@@ -38,7 +40,12 @@
                 <div class="ck-metric-bar ck-metric-bar--compact">
                   <% run.metrics.order(:name).each do |metric| %>
                     <% avg_for_metric = metric_lookup[metric.name.to_s.downcase] %>
-                    <% if avg_for_metric %>
+                    <% if avg_for_metric && avg_for_metric[:kind] == "check" %>
+                      <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(avg_for_metric[:pass_rate]) %>">
+                        <span class="ck-metric-pip__bar"></span>
+                        <span class="ck-metric-pip__label"><%= metric.name %> <strong><%= (avg_for_metric[:pass_rate] * 100).round %>%</strong></span>
+                      </span>
+                    <% elsif avg_for_metric %>
                       <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(avg_for_metric[:avg]) %>">
                         <span class="ck-metric-pip__bar"></span>
                         <span class="ck-metric-pip__label"><%= metric.name %> <strong><%= avg_for_metric[:avg] %></strong></span>
@@ -57,16 +64,31 @@
             </div>
           </div>
 
-          <div class="ck-run-status__cell">
-            <p class="ck-run-status__metric-label">Avg score</p>
-            <div class="ck-run-status__cell-value">
-              <% if run.avg_score %>
-                <span class="<%= ck_badge_classes(ck_score_kind(run.avg_score)) %> ck-badge--lg"><%= run.avg_score %></span>
-              <% else %>
-                <span class="ck-run-status__cell-empty">—</span>
-              <% end %>
+          <% if has_llm_metric %>
+            <div class="ck-run-status__cell">
+              <p class="ck-run-status__metric-label">Avg score</p>
+              <div class="ck-run-status__cell-value">
+                <% if run.avg_score %>
+                  <span class="<%= ck_badge_classes(ck_score_kind(run.avg_score)) %> ck-badge--lg"><%= run.avg_score %></span>
+                <% else %>
+                  <span class="ck-run-status__cell-empty">—</span>
+                <% end %>
+              </div>
             </div>
-          </div>
+          <% end %>
+
+          <% if has_checks %>
+            <div class="ck-run-status__cell">
+              <p class="ck-run-status__metric-label">Checks passed</p>
+              <div class="ck-run-status__cell-value">
+                <% if run.check_pass_rate %>
+                  <span class="<%= ck_badge_classes(ck_pass_rate_kind(run.check_pass_rate)) %> ck-badge--lg"><%= (run.check_pass_rate * 100).round %>%</span>
+                <% else %>
+                  <span class="ck-run-status__cell-empty">—</span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
         <% end %>
       </div>
 

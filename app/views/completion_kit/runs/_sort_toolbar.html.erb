@@ -1,5 +1,5 @@
 <div id="run_sort_toolbar">
-  <% if run.judge_configured? %>
+  <% if run.gradable? %>
     <% active = run.status == "completed" && run.responses.joins(:reviews).exists? %>
     <div class="ck-toolbar" style="margin-top: 1.5rem;<%= ' visibility: hidden;' unless active %>" aria-hidden="<%= !active %>">
       <%= link_to "Best first", run_path(run, sort: "score_desc"), class: params[:sort].blank? || params[:sort] == "score_desc" ? ck_button_classes(:dark) : ck_button_classes(:light, variant: :outline), tabindex: active ? nil : -1 %>

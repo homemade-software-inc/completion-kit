@@ -58,6 +58,28 @@ module CompletionKit
       scored_reviews_since(since).where(metric_id: metric_id).average(:ai_score)&.to_f&.round(2)
     end
 
+    def self.metric_pass_rate(metric_id, since:)
+      resolved = Review.joins(:response)
+                       .where(metric_id: metric_id)
+                       .where("completion_kit_reviews.created_at >= ?", since)
+                       .where.not(passed: nil)
+      total = resolved.count
+      return nil if total.zero?
+
+      (resolved.where(passed: true).count.to_f / total).round(2)
+    end
+
+    def self.failing_checks(since:)
+      reviews = Review.where(passed: false)
+                      .where("completion_kit_reviews.created_at >= ?", since)
+                      .includes(response: :run)
+                      .order(updated_at: :desc)
+      items = reviews.map do |review|
+        { metric_name: review.metric_name, response: review.response, run: review.response.run }
+      end
+      { count: items.size, items: items }
+    end
+
     # Everything that terminally failed in the window across all three
     # surfaces — failed runs, failed generations, failed judge reviews —
     # excluding any the user has dismissed. Returns a count and an items list

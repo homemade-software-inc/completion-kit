@@ -64,7 +64,9 @@
       </thead>
       <tbody>
         <% versions.each do |v| %>
-          <% best_score = v.runs.display_scoped.map(&:avg_score).compact.max %>
+          <% scoped_runs = v.runs.display_scoped %>
+          <% best_score = scoped_runs.map(&:avg_score).compact.max %>
+          <% best_pass_rate = scoped_runs.map(&:check_pass_rate).compact.max %>
           <% pred = predecessor_of[v] %>
           <tr class="<%= "ck-results-table__row--active" if v.id == @prompt.id %>" onclick="window.location='<%= prompt_path(v) %>'" style="cursor: pointer;">
             <td>
@@ -86,7 +88,11 @@
             <td>
               <% if best_score %>
                 <span class="<%= ck_badge_classes(ck_score_kind(best_score)) %>"><%= best_score %></span>
-              <% else %>
+              <% end %>
+              <% if best_pass_rate %>
+                <span class="<%= ck_badge_classes(ck_pass_rate_kind(best_pass_rate)) %>"><%= (best_pass_rate * 100).round %>%</span>
+              <% end %>
+              <% unless best_score || best_pass_rate %>
                 <span class="ck-prompts-table__dim">—</span>
               <% end %>
             </td>

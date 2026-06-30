@@ -159,6 +159,23 @@ module CompletionKit
       :low
     end
 
+    def ck_check_badge(passed)
+      if passed == true
+        content_tag(:span, "Pass", class: ck_badge_classes(:high))
+      elsif passed == false
+        content_tag(:span, "Fail", class: ck_badge_classes(:low))
+      else
+        content_tag(:span, "Pending", class: ck_badge_classes(:pending))
+      end
+    end
+
+    def ck_pass_rate_kind(rate)
+      return :high if rate >= 0.9
+      return :medium if rate >= 0.7
+
+      :low
+    end
+
     def ck_word_diff_old(old_text, new_text)
       diff_tokens(old_text, new_text, :old)
     end

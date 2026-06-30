@@ -54,10 +54,15 @@
           <% family_runs = CompletionKit::Run.where(prompt_id: prompt.family_versions.select(:id)).display_scoped %>
           <% current_version_runs = prompt.runs.display_scoped.includes(responses: :reviews) %>
           <% best_score = current_version_runs.map(&:avg_score).compact.max %>
+          <% best_pass_rate = current_version_runs.map(&:check_pass_rate).compact.max %>
           <td>
             <% if best_score %>
               <span class="<%= ck_badge_classes(ck_score_kind(best_score)) %>"><%= best_score %></span>
-            <% else %>
+            <% end %>
+            <% if best_pass_rate %>
+              <span class="<%= ck_badge_classes(ck_pass_rate_kind(best_pass_rate)) %>"><%= (best_pass_rate * 100).round %>%</span>
+            <% end %>
+            <% unless best_score || best_pass_rate %>
               <span class="ck-prompts-table__dim">—</span>
             <% end %>
           </td>

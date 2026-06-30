@@ -413,6 +413,10 @@ form.button_to {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.ck-grid--cards-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 /* ── Dashboard: workspace stat ribbon ─────────────────────────────────
    Replaces the old oversized count cards. One thin instrument strip,
    four navigable segments split by hairline dividers. */
@@ -5163,6 +5167,7 @@ a.tag-mark {
 .ck-failure-list__surface--run { color: var(--ck-warning); }
 .ck-failure-list__surface--generation { color: var(--ck-danger); }
 .ck-failure-list__surface--judge { color: var(--ck-info); }
+.ck-failure-list__surface--check { color: var(--ck-danger); }
 .ck-failure-list__cause {
   overflow: hidden;
   text-overflow: ellipsis;

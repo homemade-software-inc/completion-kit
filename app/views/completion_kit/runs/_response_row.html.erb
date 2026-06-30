@@ -10,14 +10,21 @@
     <% end %>
   </td>
   <td data-label="Metrics">
-    <% scored_reviews = response.reviews.select { |r| r.ai_score.present? }.sort_by { |r| r.metric_name.to_s.downcase } %>
-    <% if scored_reviews.any? %>
+    <% pip_reviews = response.reviews.select { |r| r.ai_score.present? || !r.passed.nil? }.sort_by { |r| r.metric_name.to_s.downcase } %>
+    <% if pip_reviews.any? %>
       <span class="ck-metric-bar ck-metric-bar--compact">
-        <% scored_reviews.each do |r| %>
-          <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(r.ai_score.to_f) %>">
-            <span class="ck-metric-pip__bar"></span>
-            <span class="ck-metric-pip__label"><%= r.metric_name %> <strong><%= r.ai_score %></strong></span>
-          </span>
+        <% pip_reviews.each do |r| %>
+          <% if r.ai_score.present? %>
+            <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(r.ai_score.to_f) %>">
+              <span class="ck-metric-pip__bar"></span>
+              <span class="ck-metric-pip__label"><%= r.metric_name %> <strong><%= r.ai_score %></strong></span>
+            </span>
+          <% else %>
+            <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(r.passed ? 1.0 : 0.0) %>">
+              <span class="ck-metric-pip__bar"></span>
+              <span class="ck-metric-pip__label"><%= r.metric_name %> <strong><%= r.passed ? "Pass" : "Fail" %></strong></span>
+            </span>
+          <% end %>
         <% end %>
       </span>
     <% else %>
@@ -26,7 +33,12 @@
   </td>
   <td data-label="Avg score">
     <% if response.reviewed? %>
-      <span class="<%= ck_badge_classes(ck_score_kind(response.score.to_f)) %>"><%= response.score %></span>
+      <% if response.score %>
+        <span class="<%= ck_badge_classes(ck_score_kind(response.score.to_f)) %>"><%= response.score %></span>
+      <% end %>
+      <% if response.checks_total.positive? %>
+        <span class="<%= ck_badge_classes(ck_pass_rate_kind(response.checks_passed.to_f / response.checks_total)) %>"><%= response.checks_passed %>/<%= response.checks_total %></span>
+      <% end %>
     <% else %>
       <span class="ck-response-cell__dim">—</span>
     <% end %>

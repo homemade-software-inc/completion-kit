@@ -28,7 +28,7 @@
 </nav>
 
 <% if @activity %>
-  <div class="ck-grid ck-grid--cards ck-grid--cards-3 ck-pulse-grid">
+  <div class="ck-grid ck-grid--cards ck-grid--cards-4 ck-pulse-grid">
     <div class="ck-card ck-stat-card ck-rise" style="--rise-delay: 60ms;">
       <p class="ck-kicker">Activity · last 14 days</p>
       <% activity_max = @activity.map { |d| d[:count] }.max %>
@@ -49,6 +49,9 @@
 
     <%= render "completion_kit/dashboard/failures_card",
                failures: @failures, ignored_failures: @ignored_failures %>
+
+    <%= render "completion_kit/dashboard/failing_checks_card",
+               failing_checks: @failing_checks %>
   </div>
 
   <div class="ck-card ck-card--spaced ck-rise" style="--rise-delay: 240ms;">

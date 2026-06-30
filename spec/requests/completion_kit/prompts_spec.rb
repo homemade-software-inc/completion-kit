@@ -23,6 +23,36 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).to include(prompt.name)
   end
 
+  it "shows a check pass-rate badge alongside best score on the prompts index" do
+    prompt = create(:completion_kit_prompt, name: "Checked Prompt")
+    check = create(:completion_kit_metric, :check)
+    run = create(:completion_kit_run, prompt: prompt)
+    run.replace_metrics!([check.id])
+    resp = create(:completion_kit_response, run: run)
+    create(:completion_kit_review, :check, response: resp, metric: check, passed: true)
+
+    get base_path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Checked Prompt")
+    expect(response.body).to include("100%")
+  end
+
+  it "shows a check pass-rate badge in the versions best-score column" do
+    v1 = create(:completion_kit_prompt, name: "Fam Check", family_key: "fam-check", version_number: 1, current: true)
+    create(:completion_kit_prompt, name: "Fam Check", family_key: "fam-check", version_number: 2, current: false)
+    check = create(:completion_kit_metric, :check)
+    run = create(:completion_kit_run, prompt: v1)
+    run.replace_metrics!([check.id])
+    resp = create(:completion_kit_response, run: run)
+    create(:completion_kit_review, :check, response: resp, metric: check, passed: false)
+
+    get "#{base_path}/#{v1.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("0%")
+  end
+
   it "renders show, new, and edit pages" do
     prompt = create(:completion_kit_prompt, name: "Visible Prompt")
 
