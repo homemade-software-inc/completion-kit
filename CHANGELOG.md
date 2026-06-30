@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-06-29
+
+### Fixed
+- **Dashboard stat aggregates and the metric suggest-button gates now honor `runs_display_scope` (#80).** The activity sparkline, worst-metric, failing-checks, failures, prompt-changes, metric-average, and metric-pass-rate aggregates, plus the agreement-disagreement counts behind the Suggest-improvements button (web, API), now exclude runs hidden by a host's run-retention scope, matching every other run-derived surface. With no `runs_display_scope` configured the behavior is unchanged.
+
 ## [0.20.0] - 2026-06-29
 
 ### Added
