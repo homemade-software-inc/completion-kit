@@ -63,6 +63,40 @@ RSpec.describe "CompletionKit runs", type: :request do
     CompletionKit.config.runs_display_scope = nil
   end
 
+  it "renders Pass/Fail and a Broke badge for a check that regressed across runs" do
+    dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
+    left = create(:completion_kit_run, prompt: prompt, dataset: dataset, status: "completed")
+    right = create(:completion_kit_run, prompt: prompt, dataset: dataset, status: "completed")
+    check = create(:completion_kit_metric, :check)
+    v1 = CompletionKit::MetricVersion.ensure_current_for(check)
+    left_response = create(:completion_kit_response, run: left, input_data: "hi", response_text: '{"ok":1}')
+    right_response = create(:completion_kit_response, run: right, input_data: "hi", response_text: "not json")
+    create(:completion_kit_review, :check, response: left_response, metric: check, metric_name: check.name, metric_version_id: v1.id, passed: true)
+    create(:completion_kit_review, :check, response: right_response, metric: check, metric_name: check.name, metric_version_id: v1.id, passed: false)
+
+    get "#{base_path}/#{left.id}/compare", params: { with: right.id }
+
+    expect(response.body).to include("Pass")
+    expect(response.body).to include("Fail")
+    expect(response.body).to include("Broke")
+  end
+
+  it "renders placeholders for a one-sided check row in compare" do
+    dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
+    left = create(:completion_kit_run, prompt: prompt, dataset: dataset, status: "completed")
+    right = create(:completion_kit_run, prompt: prompt, dataset: dataset, status: "completed")
+    check = create(:completion_kit_metric, :check)
+    v1 = CompletionKit::MetricVersion.ensure_current_for(check)
+    left_response = create(:completion_kit_response, run: left, input_data: "hi", response_text: "x")
+    create(:completion_kit_response, run: right, input_data: "hi", response_text: "y")
+    create(:completion_kit_review, :check, response: left_response, metric: check, metric_name: check.name, metric_version_id: v1.id, passed: true)
+
+    get "#{base_path}/#{left.id}/compare", params: { with: right.id }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Pass")
+  end
+
   it "does not seed new-run tags from a run hidden by runs_display_scope" do
     create(:completion_kit_run, prompt: prompt, created_at: 90.days.ago, tag_names: ["stale"])
     CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }

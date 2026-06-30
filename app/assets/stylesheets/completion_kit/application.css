@@ -3702,7 +3702,7 @@ table.ck-runs-table {
 }
 
 .ck-runs-table td {
-  vertical-align: middle;
+  vertical-align: top;
   padding-top: 0.7rem;
   padding-bottom: 0.7rem;
 }

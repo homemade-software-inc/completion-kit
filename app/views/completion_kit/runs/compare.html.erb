@@ -46,21 +46,35 @@
             <% end %>
             <td><%= pm[:metric_name] %></td>
             <td>
-              <% if pm[:left_score] %>
+              <% if pm[:kind] == "check" %>
+                <% if pm[:left_passed].nil? %>
+                  <span class="ck-meta-copy">—</span>
+                <% else %>
+                  <%= ck_check_badge(pm[:left_passed]) %>
+                <% end %>
+              <% elsif pm[:left_score] %>
                 <span class="<%= ck_badge_classes(ck_score_kind(pm[:left_score].to_f)) %>"><%= pm[:left_score] %></span>
               <% else %>
                 <span class="ck-meta-copy">—</span>
               <% end %>
             </td>
             <td>
-              <% if pm[:right_score] %>
+              <% if pm[:kind] == "check" %>
+                <% if pm[:right_passed].nil? %>
+                  <span class="ck-meta-copy">—</span>
+                <% else %>
+                  <%= ck_check_badge(pm[:right_passed]) %>
+                <% end %>
+              <% elsif pm[:right_score] %>
                 <span class="<%= ck_badge_classes(ck_score_kind(pm[:right_score].to_f)) %>"><%= pm[:right_score] %></span>
               <% else %>
                 <span class="ck-meta-copy">—</span>
               <% end %>
             </td>
             <td>
-              <% if pm[:delta] %>
+              <% if pm[:kind] == "check" %>
+                <%= ck_result_change_badge(pm[:result_change]) || content_tag(:span, "—", class: "ck-meta-copy") %>
+              <% elsif pm[:delta] %>
                 <% delta_class = pm[:delta] > 0 ? "ck-delta--positive" : pm[:delta] < 0 ? "ck-delta--negative" : "ck-delta--zero" %>
                 <span class="ck-delta <%= delta_class %>"><%= pm[:delta].positive? ? "+#{pm[:delta]}" : pm[:delta].to_s %></span>
               <% else %>

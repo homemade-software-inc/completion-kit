@@ -134,11 +134,15 @@ module CompletionKit
                 {
                   metric_id: mid,
                   metric_name: anchor.metric_name,
+                  kind: anchor.check? ? "check" : "llm_judge",
                   left_score: l_review ? l_review.ai_score : nil,
                   right_score: r_review ? r_review.ai_score : nil,
+                  left_passed: l_review&.passed,
+                  right_passed: r_review&.passed,
                   left_metric_version_id: l_review&.metric_version_id,
                   right_metric_version_id: r_review&.metric_version_id,
-                  delta: (l_review&.ai_score && r_review&.ai_score) ? (r_review.ai_score.to_f - l_review.ai_score.to_f).round(2) : nil
+                  delta: (l_review&.ai_score && r_review&.ai_score) ? (r_review.ai_score.to_f - l_review.ai_score.to_f).round(2) : nil,
+                  result_change: CompletionKit::RunComparison.result_change(l_review&.passed, r_review&.passed)
                 }
               end.compact
             }

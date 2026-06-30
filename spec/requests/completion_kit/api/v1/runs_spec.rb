@@ -323,6 +323,45 @@ RSpec.describe "API V1 Runs", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
+    it "surfaces a check pass to fail as result_change broke (the CI gate)" do
+      prompt = create(:completion_kit_prompt, template: "Static")
+      dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
+      left = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      right = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      check = create(:completion_kit_metric, :check)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(check)
+      left_response = create(:completion_kit_response, run: left, input_data: "hi", response_text: '{"ok":1}')
+      right_response = create(:completion_kit_response, run: right, input_data: "hi", response_text: "not json")
+      create(:completion_kit_review, :check, response: left_response, metric: check, metric_name: check.name, metric_version_id: v1.id, passed: true)
+      create(:completion_kit_review, :check, response: right_response, metric: check, metric_name: check.name, metric_version_id: v1.id, passed: false)
+
+      get "/completion_kit/api/v1/runs/#{left.id}/compare", params: { with: right.id }, headers: headers
+
+      pm = JSON.parse(response.body)["rows"].first["per_metric"].first
+      expect(pm["kind"]).to eq("check")
+      expect(pm["left_passed"]).to be(true)
+      expect(pm["right_passed"]).to be(false)
+      expect(pm["result_change"]).to eq("broke")
+    end
+
+    it "reports result_change nil for a one-sided check review" do
+      prompt = create(:completion_kit_prompt, template: "Static")
+      dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
+      left = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      right = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      check = create(:completion_kit_metric, :check)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(check)
+      left_response = create(:completion_kit_response, run: left, input_data: "hi", response_text: "x")
+      create(:completion_kit_response, run: right, input_data: "hi", response_text: "y")
+      create(:completion_kit_review, :check, response: left_response, metric: check, metric_name: check.name, metric_version_id: v1.id, passed: true)
+
+      get "/completion_kit/api/v1/runs/#{left.id}/compare", params: { with: right.id }, headers: headers
+
+      pm = JSON.parse(response.body)["rows"].first["per_metric"].first
+      expect(pm["result_change"]).to be_nil
+      expect(pm["right_passed"]).to be_nil
+    end
+
     it "tolerates mixed shapes: left-only metric review, right-only metric review, and an orphan response on the left with no matching right" do
       prompt = create(:completion_kit_prompt, template: "Static")
       dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")

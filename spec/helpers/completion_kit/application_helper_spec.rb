@@ -227,6 +227,18 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#ck_result_change_badge" do
+    it "renders Broke, Fixed, and Same badges for each transition" do
+      expect(helper.ck_result_change_badge("broke")).to include("Broke", "ck-delta--negative")
+      expect(helper.ck_result_change_badge("fixed")).to include("Fixed", "ck-delta--positive")
+      expect(helper.ck_result_change_badge("same")).to include("Same", "ck-delta--zero")
+    end
+
+    it "renders nothing for an unknown or nil change" do
+      expect(helper.ck_result_change_badge(nil)).to be_nil
+    end
+  end
+
   describe "#ck_pass_rate_kind" do
     it "buckets a 0-1 pass rate into high/medium/low bands" do
       expect(helper.ck_pass_rate_kind(1.0)).to eq(:high)

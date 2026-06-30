@@ -169,6 +169,17 @@ module CompletionKit
       end
     end
 
+    def ck_result_change_badge(change)
+      case change
+      when "broke"
+        content_tag(:span, "Broke", class: "ck-delta ck-delta--negative")
+      when "fixed"
+        content_tag(:span, "Fixed", class: "ck-delta ck-delta--positive")
+      when "same"
+        content_tag(:span, "Same", class: "ck-delta ck-delta--zero")
+      end
+    end
+
     def ck_pass_rate_kind(rate)
       return :high if rate >= 0.9
       return :medium if rate >= 0.7
