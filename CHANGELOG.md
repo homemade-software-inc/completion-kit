@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-06-30
+
+### Fixed
+- **The runs index and dashboard no longer show "Create your first run" when runs exist but are all hidden by `runs_display_scope` (#91).** The empty-state now checks the display-scope-free `Run.exists?` to tell a genuinely new workspace apart from one whose runs are all filtered out by run-history retention. A workspace with only hidden runs sees "Your older runs are hidden" instead of the misleading new-user call to action; a truly empty workspace still sees the new-user state, and the tag-filter empty state is unchanged.
+
 ## [0.20.1] - 2026-06-29
 
 ### Fixed
