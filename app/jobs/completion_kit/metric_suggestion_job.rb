@@ -15,6 +15,7 @@ module CompletionKit
     def perform(metric_id)
       @metric = Metric.find_by(id: metric_id)
       return unless @metric
+      return if @metric.check?
 
       MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").destroy_all
 

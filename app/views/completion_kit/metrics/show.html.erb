@@ -192,7 +192,7 @@
   <section class="ck-card ck-card--spaced">
     <div class="ck-prompt-preview__header">
       <p class="ck-kicker">Agreement</p>
-      <% if draft.nil? && @improve_disagreement_count.positive? %>
+      <% if !@metric.check? && draft.nil? && @improve_disagreement_count.positive? %>
         <%= button_to suggest_variants_metric_path(@metric),
               method: :post, form_class: "inline-block",
               class: ck_button_classes(:light, variant: :outline) + " ck-button--sm",
@@ -202,19 +202,23 @@
         <% end %>
       <% end %>
     </div>
-    <%= turbo_stream_from "metric_#{@metric.id}_suggestion" %>
-    <div id="ck-suggestion-status-<%= @metric.id %>" class="ck-suggestion-status"></div>
-    <p class="ck-meta-copy">How often the judge lands on the same score you would. Review its scores to build that signal, and improve the metric to raise it.</p>
-    <%= render "completion_kit/agreements/trust_panel",
-          stats: CompletionKit::MetricAgreementStats.for(@metric),
-          metric: @metric %>
-    <% if CompletionKit.config.judge_examples_from_reviews %>
-      <%= render "completion_kit/metrics/guiding_examples", metric: @metric, examples: @guiding_examples %>
-    <% end %>
-    <% if draft %>
-      <div class="ck-cal-foot">
-        <span class="ck-cal-foot__note">A draft improvement (<%= draft.version_label %>) is waiting in the Versions table above. Open its change to compare, then Publish to use it.</span>
-      </div>
+    <% if @metric.check? %>
+      <p class="ck-meta-copy">This is a deterministic check, so there is nothing to calibrate.</p>
+    <% else %>
+      <%= turbo_stream_from "metric_#{@metric.id}_suggestion" %>
+      <div id="ck-suggestion-status-<%= @metric.id %>" class="ck-suggestion-status"></div>
+      <p class="ck-meta-copy">How often the judge lands on the same score you would. Review its scores to build that signal, and improve the metric to raise it.</p>
+      <%= render "completion_kit/agreements/trust_panel",
+            stats: CompletionKit::MetricAgreementStats.for(@metric),
+            metric: @metric %>
+      <% if CompletionKit.config.judge_examples_from_reviews %>
+        <%= render "completion_kit/metrics/guiding_examples", metric: @metric, examples: @guiding_examples %>
+      <% end %>
+      <% if draft %>
+        <div class="ck-cal-foot">
+          <span class="ck-cal-foot__note">A draft improvement (<%= draft.version_label %>) is waiting in the Versions table above. Open its change to compare, then Publish to use it.</span>
+        </div>
+      <% end %>
     <% end %>
   </section>
 <% end %>

@@ -37,6 +37,11 @@ module CompletionKit
         end
 
         def suggest_variants
+          if @metric.check?
+            render_error("Checks are exact; no variants to suggest.", status: :unprocessable_entity)
+            return
+          end
+
           disagreement_count = Agreement.where(metric_id: @metric.id, verdict: "disagree").count
           if disagreement_count.zero?
             render_error("Mark at least one case as Disagree before asking the model to suggest a change.", status: :unprocessable_entity)

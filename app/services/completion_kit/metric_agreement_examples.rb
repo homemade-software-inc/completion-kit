@@ -17,6 +17,8 @@ module CompletionKit
     end
 
     def judge_examples_for(metric, exclude_response_id: nil, limit: DEFAULT_JUDGE_EXAMPLE_LIMIT)
+      return [] if metric.check?
+
       current_version = MetricVersion.current.find_by(metric_id: metric.id)
       return [] unless current_version
 

@@ -86,7 +86,7 @@ module CompletionKit
     def judge_score(response, new_text)
       config = ApiConfig.for_model(@run.judge_model).merge(judge_model: @run.judge_model)
       judge = JudgeService.new(config)
-      scores = @run.metrics.filter_map do |metric|
+      scores = @run.metrics.select(&:llm_judge?).filter_map do |metric|
         judge.evaluate(
           new_text, response.expected_output, @candidate,
           criteria: metric.instruction.to_s,

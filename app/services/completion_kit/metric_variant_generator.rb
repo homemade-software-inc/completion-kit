@@ -14,6 +14,7 @@ module CompletionKit
     end
 
     def call
+      return [] if @metric.check?
       raise CompletionKit::ConfigurationError, "No judging model available; set CompletionKit.config.judge_model or add a provider with a judging model" if @model.blank?
 
       client = LlmClient.for_model(@model, ApiConfig.for_model(@model))

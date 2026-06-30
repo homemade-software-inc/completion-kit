@@ -64,6 +64,14 @@ RSpec.describe CompletionKit::MetricVariantGenerator, type: :service do
     end
   end
 
+  describe "check metrics" do
+    it "returns [] without calling the LLM" do
+      check_metric = create(:completion_kit_metric, :check)
+      expect(CompletionKit::LlmClient).not_to receive(:for_model)
+      expect(described_class.new(check_metric).call).to eq([])
+    end
+  end
+
   describe "#persist!" do
     it "saves each variant as a draft metric_version with source=suggestion and emits a Stripe-metering notification" do
       events = []

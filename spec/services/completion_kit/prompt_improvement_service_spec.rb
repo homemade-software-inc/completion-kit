@@ -43,6 +43,25 @@ RSpec.describe CompletionKit::PromptImprovementService do
       expect(result["suggested_template"]).to eq("Just a plain text response with no sections")
     end
 
+    it "renders check reviews as PASS or FAIL, not as an N/5 score" do
+      resp = create(:completion_kit_response, run: run, response_text: "Output", input_data: nil, expected_output: nil)
+      pass_metric = create(:completion_kit_metric, :check, name: "Valid JSON")
+      fail_metric = create(:completion_kit_metric, :check, name: "Has TOKEN")
+      create(:completion_kit_review, :check, response: resp, metric: pass_metric, metric_name: "Valid JSON",
+             metric_version: CompletionKit::MetricVersion.ensure_current_for(pass_metric), passed: true)
+      create(:completion_kit_review, :check, response: resp, metric: fail_metric, metric_name: "Has TOKEN",
+             metric_version: CompletionKit::MetricVersion.ensure_current_for(fail_metric), passed: false)
+
+      allow(client).to receive(:generate_completion) do |meta_prompt, **_opts|
+        expect(meta_prompt).to include("Valid JSON: PASS")
+        expect(meta_prompt).to include("Has TOKEN: FAIL")
+        expect(meta_prompt).not_to match(%r{Valid JSON: \d})
+        "REASONING:\n- ok\n\nIMPROVED_PROMPT:\nBetter {{text}}"
+      end
+
+      described_class.new(run).suggest
+    end
+
     it "includes metric averages and overall score in the meta-prompt" do
       resp1 = create(:completion_kit_response, run: run, response_text: "Output", input_data: nil, expected_output: nil)
       metric = create(:completion_kit_metric, name: "Quality")

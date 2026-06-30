@@ -4,6 +4,7 @@ module CompletionKit
       class AgreementsController < BaseController
         before_action :ensure_agreement_enabled
         before_action :set_nested_scope, only: [:create]
+        before_action :reject_check_metric, only: [:create]
         before_action :load_agreement, only: [:destroy]
 
         def index
@@ -51,6 +52,10 @@ module CompletionKit
           @metric = Metric.find(params[:metric_id])
         rescue ActiveRecord::RecordNotFound
           not_found
+        end
+
+        def reject_check_metric
+          render_error("Checks have nothing to calibrate", status: :unprocessable_entity) if @metric.check?
         end
 
         def load_agreement

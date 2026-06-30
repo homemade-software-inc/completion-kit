@@ -66,6 +66,37 @@ RSpec.describe CompletionKit::PromptImprovementValidator do
       expect(summary["before_avg"]).to be_nil
       expect(summary["after_avg"]).to be_nil
     end
+
+    it "excludes a response reviewed only by a check from the held-out sample" do
+      check_metric = create(:completion_kit_metric, :check)
+      response = create(:completion_kit_response, run: run, input_data: { content: "x" }.to_json, response_text: "out")
+      create(:completion_kit_review, :check, response: response, metric: check_metric,
+             metric_version: CompletionKit::MetricVersion.ensure_current_for(check_metric), passed: true)
+      summary = described_class.new(run, "c", generator: ->(_r) { "new" }, judge: ->(_r, _t) { 4.0 }).call
+      expect(summary["total"]).to eq(0)
+      expect(summary["tested"]).to eq(0)
+    end
+  end
+
+  describe "#judge_score with a mixed run" do
+    it "judges only the llm_judge metric and never the check" do
+      judge_metric = create(:completion_kit_metric, instruction: "Be fair")
+      check_metric = create(:completion_kit_metric, :check)
+      create(:completion_kit_run_metric, run: run, metric: judge_metric)
+      create(:completion_kit_run_metric, run: run, metric: check_metric)
+      scored_response(ai: 3.0)
+      allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+      client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+      allow(client).to receive(:generate_completion).and_return("new output")
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+      judge = instance_double(CompletionKit::JudgeService)
+      allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
+      expect(judge).to receive(:evaluate).once.and_return({ score: 5.0, feedback: "great" })
+
+      summary = described_class.new(run, "Summarize {{content}} concisely").call
+
+      expect(summary["tested"]).to eq(1)
+    end
   end
 
   describe "#call exercising the real generate + judge path" do

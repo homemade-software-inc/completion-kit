@@ -48,5 +48,12 @@ RSpec.describe CompletionKit::McpTools::Metrics do
       result = described_class.call("metrics_suggest_variants", {"metric_id" => metric.id})
       expect(result[:isError]).to be(true)
     end
+
+    it "returns isError for a check metric without invoking the generator" do
+      check_metric = create(:completion_kit_metric, :check)
+      expect(CompletionKit::MetricVariantGenerator).not_to receive(:new)
+      result = described_class.call("metrics_suggest_variants", {"metric_id" => check_metric.id})
+      expect(result[:isError]).to be(true)
+    end
   end
 end

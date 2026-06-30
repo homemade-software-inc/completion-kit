@@ -36,6 +36,10 @@ module CompletionKit
       metric_type == "check"
     end
 
+    def llm_judge?
+      !check?
+    end
+
     def draft?
       state == "draft"
     end

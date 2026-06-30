@@ -147,6 +147,14 @@ RSpec.describe "API V1 Metrics", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(JSON.parse(response.body)["error"]).to include("no usable variants")
     end
+
+    it "returns 422 for a check metric and never invokes the generator" do
+      check_metric = create(:completion_kit_metric, :check)
+      expect(CompletionKit::MetricVariantGenerator).not_to receive(:new)
+      post "/completion_kit/api/v1/metrics/#{check_metric.id}/suggest_variants", headers: headers
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["error"]).to include("Checks are exact")
+    end
   end
 
 end

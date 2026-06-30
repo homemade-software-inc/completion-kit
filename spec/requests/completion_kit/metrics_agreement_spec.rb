@@ -57,6 +57,34 @@ RSpec.describe "CompletionKit metrics (agreement surfaces)", type: :request do
     end
   end
 
+  describe "check metric show" do
+    let(:check_metric) { create(:completion_kit_metric, :check) }
+
+    it "hides the suggest/trust/guiding surfaces and shows a deterministic-check note" do
+      get "/completion_kit/metrics/#{check_metric.id}"
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Agreement")
+      expect(response.body).to include("nothing to calibrate")
+      expect(response.body).not_to include("Suggest improvements")
+      expect(response.body).not_to include("ck-trust-line")
+    end
+
+    it "still shows the trust panel for an llm-judge metric" do
+      get "/completion_kit/metrics/#{metric.id}"
+      expect(response.body).to include("ck-trust-line")
+    end
+
+    it "does not query review-grounded examples for a check" do
+      original = CompletionKit.config.judge_examples_from_reviews
+      CompletionKit.config.judge_examples_from_reviews = true
+      expect(CompletionKit::MetricAgreementExamples).not_to receive(:judge_examples_for)
+      get "/completion_kit/metrics/#{check_metric.id}"
+      expect(response).to have_http_status(:ok)
+    ensure
+      CompletionKit.config.judge_examples_from_reviews = original
+    end
+  end
+
   describe "trust panel borderline severity" do
     def add_borderline_agreements(n)
       n.times do

@@ -94,6 +94,16 @@ RSpec.describe CompletionKit::MetricImprovementValidator do
     expect(summary["total"]).to eq(1)
   end
 
+  it "returns an empty summary for a check metric without building an answer key" do
+    check_metric = create(:completion_kit_metric, :check)
+    candidate = CompletionKit::MetricVersion.ensure_current_for(check_metric)
+    expect(CompletionKit::MetricVersion).not_to receive(:current)
+    summary = described_class.new(check_metric, candidate).call
+    expect(summary["tested"]).to eq(0)
+    expect(summary["total"]).to eq(0)
+    expect(summary["rows"]).to eq([])
+  end
+
   it "re-scores via JudgeService when no scorer is injected" do
     resp = reviewed(verdict: "disagree", ai: 4.0, corrected: 2.0)
     candidate = CompletionKit::MetricVersion.create!(metric: metric, instruction: "c", rubric_bands: metric.rubric_bands || [], state: "draft", source: "suggestion")

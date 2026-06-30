@@ -121,6 +121,8 @@ module CompletionKit
 
       def self.suggest_variants(args)
         metric = Metric.find(args["metric_id"])
+        return error_result("Metric ##{metric.id} is a check; checks are exact and have no variants to suggest.") if metric.check?
+
         generator = MetricVariantGenerator.new(metric, count: args["count"].to_i, model: args["model"])
         variants = generator.call
         return error_result("Variant generator returned no parseable variants. Try again or change the model.") if variants.empty?

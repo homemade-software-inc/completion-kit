@@ -119,6 +119,21 @@ RSpec.describe CompletionKit::McpTools::Judges do
       expect(payload["recommendation"]["state"]).to eq("no_change")
       expect(payload["recommendation"]["reason"]).to include("Not enough verdicts")
     end
+
+    it "returns an error for a check metric and never computes agreement stats" do
+      check_metric = create(:completion_kit_metric, :check)
+      v1 = CompletionKit::MetricVersion.ensure_current_for(check_metric)
+      v2 = CompletionKit::MetricVersion.create!(metric: check_metric, metric_type: "check",
+             check_config: { "check_kind" => "valid_json", "target" => "response_text" },
+             state: "draft", source: "edit", current: false)
+      expect(CompletionKit::MetricAgreementStats).not_to receive(:for)
+      result = described_class.call("judges_compare", {
+        "metric_id" => check_metric.id,
+        "metric_version_a_id" => v1.id,
+        "metric_version_b_id" => v2.id
+      })
+      expect(result[:isError]).to be(true)
+    end
   end
 
   it "exposes the judges tool definitions" do

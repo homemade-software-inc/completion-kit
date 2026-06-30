@@ -53,6 +53,8 @@ module CompletionKit
 
       def self.compare(args)
         metric = CompletionKit::Metric.find(args["metric_id"])
+        return error_result("judges_compare is unavailable for check metrics.") if metric.check?
+
         a = CompletionKit::MetricVersion.where(metric_id: metric.id).find(args["metric_version_a_id"])
         b = CompletionKit::MetricVersion.where(metric_id: metric.id).find(args["metric_version_b_id"])
         stats_a = CompletionKit::MetricAgreementStats.for(metric, metric_version: a)

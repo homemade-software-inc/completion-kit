@@ -29,6 +29,13 @@ RSpec.describe CompletionKit::MetricAgreementExamples do
     expect(described_class.judge_examples_for(create(:completion_kit_metric))).to eq([])
   end
 
+  it "short-circuits to [] for a check metric before touching the current version" do
+    check_metric = create(:completion_kit_metric, :check)
+    CompletionKit::MetricVersion.ensure_current_for(check_metric)
+    expect(CompletionKit::MetricVersion).not_to receive(:current)
+    expect(described_class.judge_examples_for(check_metric)).to eq([])
+  end
+
   it "skips muted cases" do
     disagreement(metric, excluded: true)
     expect(described_class.judge_examples_for(metric)).to eq([])

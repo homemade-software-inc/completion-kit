@@ -9,6 +9,8 @@ module CompletionKit
     end
 
     def call
+      return summarize([], 0, false) if @metric.check?
+
       key = answer_key
       rows = []
       key.each do |entry|

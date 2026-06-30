@@ -41,9 +41,14 @@ module CompletionKit
     def show
       @edit_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
-      @improve_disagreement_count = Agreement.where(metric_id: @metric.id, verdict: "disagree").count
       @versions = MetricVersion.where(metric_id: @metric.id).order(version_number: :desc).to_a
-      @guiding_examples = CompletionKit.config.judge_examples_from_reviews ? MetricAgreementExamples.judge_examples_for(@metric) : []
+      if @metric.check?
+        @improve_disagreement_count = 0
+        @guiding_examples = []
+      else
+        @improve_disagreement_count = Agreement.where(metric_id: @metric.id, verdict: "disagree").count
+        @guiding_examples = CompletionKit.config.judge_examples_from_reviews ? MetricAgreementExamples.judge_examples_for(@metric) : []
+      end
     end
 
     def new
@@ -54,7 +59,7 @@ module CompletionKit
       @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @edit_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @published_metric_version = MetricVersion.published.where(metric_id: @metric.id, current: true).first
-      @improve_disagreement_count = Agreement.where(metric_id: @metric.id, verdict: "disagree").count
+      @improve_disagreement_count = @metric.check? ? 0 : Agreement.where(metric_id: @metric.id, verdict: "disagree").count
 
       if @edit_draft
         @metric.instruction = @edit_draft.instruction
@@ -92,6 +97,11 @@ module CompletionKit
     end
 
     def suggest_variants
+      if @metric.check?
+        redirect_to metric_path(@metric), alert: "Checks are exact, so there is nothing to suggest."
+        return
+      end
+
       target = params[:back_to] == "edit" ? edit_metric_path(@metric) : metric_path(@metric)
       counts = Agreement.where(metric_id: @metric.id, verdict: %w[agree disagree]).group(:verdict).count
       if counts["disagree"].to_i.zero?

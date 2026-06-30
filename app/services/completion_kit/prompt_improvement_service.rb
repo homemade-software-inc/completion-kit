@@ -37,7 +37,11 @@ module CompletionKit
           sections << "Expected: #{resp.expected_output.truncate(200)}"
         end
         resp.reviews.each do |review|
-          sections << "  #{review.metric_name}: #{review.ai_score}/5 — #{review.ai_feedback}"
+          if review.check?
+            sections << "  #{review.metric_name}: #{review.passed ? "PASS" : "FAIL"}"
+          else
+            sections << "  #{review.metric_name}: #{review.ai_score}/5 — #{review.ai_feedback}"
+          end
         end
         sections << ""
       end
@@ -45,10 +49,10 @@ module CompletionKit
       avg = @run.avg_score
       sections << "## Overall Score: #{avg}/5" if avg
 
-      metric_avgs = @run.metric_averages
-      if metric_avgs.any?
+      rubric_avgs = @run.metric_averages.select { |m| m.key?(:avg) }
+      if rubric_avgs.any?
         sections << "## Metric Averages"
-        metric_avgs.each { |m| sections << "  #{m[:name]}: #{m[:avg]}/5" }
+        rubric_avgs.each { |m| sections << "  #{m[:name]}: #{m[:avg]}/5" }
         sections << ""
       end
 

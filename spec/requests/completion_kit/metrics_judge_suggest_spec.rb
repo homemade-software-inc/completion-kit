@@ -38,6 +38,16 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
     expect(response.body).to include("Mark at least one case as Disagree")
   end
 
+  it "refuses to suggest variants for a check metric and does not enqueue a job" do
+    check_metric = create(:completion_kit_metric, :check)
+    expect {
+      post "/completion_kit/metrics/#{check_metric.id}/suggest_variants"
+    }.not_to have_enqueued_job(CompletionKit::MetricSuggestionJob)
+    expect(response).to redirect_to("/completion_kit/metrics/#{check_metric.id}")
+    follow_redirect!
+    expect(response.body).to include("Checks are exact")
+  end
+
   it "shows no Suggest-improvements affordance when no disagreements exist (the agreement card guides toward verdicts instead)" do
     get "/completion_kit/metrics/#{metric.id}"
     expect(response.body).not_to include("Suggest improvements")

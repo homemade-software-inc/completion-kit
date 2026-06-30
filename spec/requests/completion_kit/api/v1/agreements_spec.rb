@@ -143,6 +143,16 @@ RSpec.describe "API V1 Agreements", type: :request do
     ensure
       CompletionKit.config.judge_agreement_enabled = original
     end
+
+    it "refuses to create an agreement for a check metric with 422" do
+      check_metric = create(:completion_kit_metric, :check)
+      path = "/completion_kit/api/v1/runs/#{run.id}/responses/#{response_row.id}/metrics/#{check_metric.id}/agreements"
+      expect {
+        post path, headers: headers, params: { verdict: "agree" }.to_json
+      }.not_to change(CompletionKit::Agreement, :count)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["error"]).to eq("Checks have nothing to calibrate")
+    end
   end
 
   describe "GET" do

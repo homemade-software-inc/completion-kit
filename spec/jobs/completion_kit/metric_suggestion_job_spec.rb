@@ -48,6 +48,15 @@ RSpec.describe CompletionKit::MetricSuggestionJob do
     expect { described_class.perform_now(metric.id) }.not_to raise_error
   end
 
+  it "does nothing for a check metric" do
+    check_metric = create(:completion_kit_metric, :check)
+    CompletionKit::MetricVersion.ensure_current_for(check_metric)
+    expect(CompletionKit::MetricVariantGenerator).not_to receive(:new)
+    expect(Turbo::StreamsChannel).not_to receive(:broadcast_replace_to)
+    expect { described_class.new.perform(check_metric.id) }
+      .not_to change { CompletionKit::MetricVersion.drafts.where(metric_id: check_metric.id).count }
+  end
+
   it "replaces an existing suggestion draft" do
     old = CompletionKit::MetricVersion.create!(metric: metric, instruction: "old", rubric_bands: metric.rubric_bands || [], state: "draft", source: "suggestion")
     variant = CompletionKit::MetricVariantGenerator::Variant.new(reasoning: "r", instruction: "tighter", rubric_bands: nil)

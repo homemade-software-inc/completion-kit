@@ -132,4 +132,29 @@ RSpec.describe "CompletionKit agreements (web)", type: :request do
   ensure
     CompletionKit.config.judge_agreement_enabled = original
   end
+
+  describe "check metrics" do
+    let(:check_metric) { create(:completion_kit_metric, :check) }
+
+    it "never renders agreement buttons for a check review even when a score and pass are present" do
+      create(:completion_kit_review, :check, response: response_row, metric: check_metric,
+             metric_name: check_metric.name,
+             metric_version: CompletionKit::MetricVersion.ensure_current_for(check_metric),
+             ai_score: 3.0, passed: true)
+
+      get "/completion_kit/runs/#{run.id}/responses/#{response_row.id}"
+
+      expect(response.body).to include(check_metric.name)
+      expect(response.body).not_to include("agreement_#{response_row.id}_#{check_metric.id}")
+    end
+
+    it "refuses to create an agreement for a check metric with 422" do
+      expect {
+        post "/completion_kit/runs/#{run.id}/responses/#{response_row.id}/agreements",
+             params: { metric_id: check_metric.id, verdict: "agree" },
+             headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      }.not_to change(CompletionKit::Agreement, :count)
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
 end

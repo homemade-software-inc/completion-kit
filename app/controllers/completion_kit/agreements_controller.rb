@@ -2,6 +2,7 @@ module CompletionKit
   class AgreementsController < ApplicationController
     before_action :ensure_agreement_enabled
     before_action :set_scope
+    before_action :reject_check_metric, only: [:create]
 
     def create
       created_by = agreement_creator
@@ -58,6 +59,10 @@ module CompletionKit
 
     def ensure_agreement_enabled
       head :not_found unless CompletionKit.config.judge_agreement_enabled
+    end
+
+    def reject_check_metric
+      head :unprocessable_entity if @metric.check?
     end
 
     def set_scope
