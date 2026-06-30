@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-06-29
+
+### Added
+- **Check metrics now render everywhere and gate run-vs-run comparison (#82, Release B).** Run and response surfaces show Pass/Fail badges and pass-rate pips for checks instead of star ratings, with the run list and status panel sorting failed checks first; check-only runs no longer show a judge "Avg score" framing, and the dashboard gains a failing-checks card. The run-vs-run comparison is now check-aware in both the HTML view and the v1 API: each per-metric row carries `kind`, `left_passed`/`right_passed`, and a `result_change` of `broke`, `fixed`, or `same`, so an automated pipeline polling the compare API catches a check that regressed from pass to fail (a valid-JSON response becoming invalid registers as `broke`, not an excluded error). The 1-5 rubric `avg_score` contract is unchanged; pass-rate stays a separate field.
+
 ## [0.18.1] - 2026-06-29
 
 ### Fixed
