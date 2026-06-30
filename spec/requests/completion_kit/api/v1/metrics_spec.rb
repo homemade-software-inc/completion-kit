@@ -155,6 +155,27 @@ RSpec.describe "API V1 Metrics", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(JSON.parse(response.body)["error"]).to include("Checks are exact")
     end
+
+    describe "with runs_display_scope hiding aged-out runs" do
+      around do |example|
+        CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+        example.run
+      ensure
+        CompletionKit.config.runs_display_scope = nil
+      end
+
+      it "returns 422 when the only disagreement is on a hidden run" do
+        jv = CompletionKit::MetricVersion.ensure_current_for(metric)
+        hidden_run = create(:completion_kit_run, created_at: 90.days.ago)
+        hidden_response = create(:completion_kit_response, run: hidden_run)
+        create(:completion_kit_agreement, run: hidden_run, response: hidden_response, metric: metric,
+               metric_version: jv, verdict: "disagree", corrected_score: 3, created_by: SecureRandom.uuid)
+        expect(CompletionKit::MetricVariantGenerator).not_to receive(:new)
+        post "/completion_kit/api/v1/metrics/#{metric.id}/suggest_variants", headers: headers
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)["error"]).to include("Mark at least one case as Disagree")
+      end
+    end
   end
 
 end

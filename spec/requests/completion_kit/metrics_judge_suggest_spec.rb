@@ -129,4 +129,43 @@ RSpec.describe "CompletionKit metrics (judge suggest)", type: :request do
            params: { draft_id: draft.id, back_to: "edit" }
     expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}/edit")
   end
+
+  describe "with runs_display_scope hiding aged-out runs" do
+    around do |example|
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+      example.run
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
+    def add_hidden_disagree
+      jv = CompletionKit::MetricVersion.ensure_current_for(metric)
+      hidden_run = create(:completion_kit_run, created_at: 90.days.ago)
+      hidden_response = create(:completion_kit_response, run: hidden_run)
+      create(:completion_kit_agreement, run: hidden_run, response: hidden_response, metric: metric,
+             metric_version: jv, verdict: "disagree", corrected_score: 3, created_by: SecureRandom.uuid)
+    end
+
+    it "hides the show-page Suggest button when the only disagreement is on a hidden run" do
+      add_hidden_disagree
+      get "/completion_kit/metrics/#{metric.id}"
+      expect(response.body).not_to include("Suggest improvements")
+    end
+
+    it "hides the edit-page Suggest button when the only disagreement is on a hidden run" do
+      add_hidden_disagree
+      get "/completion_kit/metrics/#{metric.id}/edit"
+      expect(response.body).not_to include("Suggest improvements")
+    end
+
+    it "refuses to suggest variants when the only disagreement is on a hidden run" do
+      add_hidden_disagree
+      expect {
+        post "/completion_kit/metrics/#{metric.id}/suggest_variants"
+      }.not_to have_enqueued_job(CompletionKit::MetricSuggestionJob)
+      expect(response).to redirect_to("/completion_kit/metrics/#{metric.id}")
+      follow_redirect!
+      expect(response.body).to include("Mark at least one case as Disagree")
+    end
+  end
 end

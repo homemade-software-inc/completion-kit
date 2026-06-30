@@ -46,7 +46,7 @@ module CompletionKit
         @improve_disagreement_count = 0
         @guiding_examples = []
       else
-        @improve_disagreement_count = Agreement.where(metric_id: @metric.id, verdict: "disagree").count
+        @improve_disagreement_count = Agreement.where(metric_id: @metric.id, verdict: "disagree", run_id: CompletionKit::Run.visible_run_ids).count
         @guiding_examples = CompletionKit.config.judge_examples_from_reviews ? MetricAgreementExamples.judge_examples_for(@metric) : []
       end
     end
@@ -59,7 +59,7 @@ module CompletionKit
       @suggestion_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").order(created_at: :desc).first
       @edit_draft = MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").order(created_at: :desc).first
       @published_metric_version = MetricVersion.published.where(metric_id: @metric.id, current: true).first
-      @improve_disagreement_count = @metric.check? ? 0 : Agreement.where(metric_id: @metric.id, verdict: "disagree").count
+      @improve_disagreement_count = @metric.check? ? 0 : Agreement.where(metric_id: @metric.id, verdict: "disagree", run_id: CompletionKit::Run.visible_run_ids).count
 
       if @edit_draft
         @metric.instruction = @edit_draft.instruction
@@ -103,7 +103,7 @@ module CompletionKit
       end
 
       target = params[:back_to] == "edit" ? edit_metric_path(@metric) : metric_path(@metric)
-      counts = Agreement.where(metric_id: @metric.id, verdict: %w[agree disagree]).group(:verdict).count
+      counts = Agreement.where(metric_id: @metric.id, verdict: %w[agree disagree], run_id: CompletionKit::Run.visible_run_ids).group(:verdict).count
       if counts["disagree"].to_i.zero?
         redirect_to target, alert: "Mark at least one case as Disagree before asking the model to suggest a change."
         return

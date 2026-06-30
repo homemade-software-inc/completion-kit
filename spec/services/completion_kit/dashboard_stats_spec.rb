@@ -321,4 +321,98 @@ RSpec.describe CompletionKit::DashboardStats, type: :service do
       expect(result.first[:delta]).to eq(-3.0)
     end
   end
+
+  describe "with runs_display_scope hiding aged-out runs" do
+    around do |example|
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+      example.run
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+
+    it "omits hidden runs from the activity sparkline" do
+      create(:completion_kit_run, created_at: Time.current)
+      create(:completion_kit_run, created_at: 90.days.ago)
+
+      expect(described_class.activity(days: 120).sum { |d| d[:count] }).to eq(1)
+    end
+
+    it "excludes reviews on hidden runs from metric_average" do
+      metric = create(:completion_kit_metric)
+      hidden_run = create(:completion_kit_run, created_at: 90.days.ago)
+      visible_run = create(:completion_kit_run, created_at: Time.current)
+      create(:completion_kit_review, response: create(:completion_kit_response, run: hidden_run), metric: metric, ai_score: 1.0)
+      create(:completion_kit_review, response: create(:completion_kit_response, run: visible_run), metric: metric, ai_score: 4.0)
+
+      expect(described_class.metric_average(metric.id, since: 7.days.ago)).to eq(4.0)
+    end
+
+    it "excludes reviews on hidden runs from worst_metric" do
+      metric = create(:completion_kit_metric, name: "Accuracy")
+      hidden_run = create(:completion_kit_run, created_at: 90.days.ago)
+      visible_run = create(:completion_kit_run, created_at: Time.current)
+      create(:completion_kit_review, response: create(:completion_kit_response, run: hidden_run), metric: metric, ai_score: 1.0)
+      visible_response = create(:completion_kit_response, run: visible_run)
+      create(:completion_kit_review, response: visible_response, metric: metric, ai_score: 4.0)
+
+      result = described_class.worst_metric(since: 7.days.ago)
+      expect(result[:avg]).to eq(4.0)
+      expect(result[:response]).to eq(visible_response)
+      expect(result[:score]).to eq(4.0)
+    end
+
+    it "excludes checks on hidden runs from metric_pass_rate" do
+      check = create(:completion_kit_metric, :check)
+      hidden_run = create(:completion_kit_run, created_at: 90.days.ago)
+      visible_run = create(:completion_kit_run, created_at: Time.current)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response, run: hidden_run), metric: check, passed: true)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response, run: visible_run), metric: check, passed: false)
+
+      expect(described_class.metric_pass_rate(check.id, since: 7.days.ago)).to eq(0.0)
+    end
+
+    it "excludes failed checks on hidden runs from failing_checks" do
+      check = create(:completion_kit_metric, :check)
+      hidden_run = create(:completion_kit_run, created_at: 90.days.ago)
+      visible_run = create(:completion_kit_run, created_at: Time.current)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response, run: hidden_run), metric: check, passed: false)
+      visible_response = create(:completion_kit_response, run: visible_run)
+      create(:completion_kit_review, :check, response: visible_response, metric: check, passed: false)
+
+      result = described_class.failing_checks(since: 7.days.ago)
+      expect(result[:count]).to eq(1)
+      expect(result[:items].first[:response]).to eq(visible_response)
+    end
+
+    it "excludes failures on hidden runs across all three surfaces" do
+      hidden_run = create(:completion_kit_run, created_at: 90.days.ago)
+      create(:completion_kit_run, status: "failed", created_at: 90.days.ago, failure_summary: "hidden crash")
+      create(:completion_kit_response, :failed, run: hidden_run)
+      create(:completion_kit_review, response: create(:completion_kit_response, run: hidden_run),
+                                     status: "failed", ai_score: nil)
+
+      visible_run = create(:completion_kit_run, created_at: Time.current)
+      visible_failed_run = create(:completion_kit_run, status: "failed", created_at: Time.current, failure_summary: "visible crash")
+      visible_failed_response = create(:completion_kit_response, :failed, run: visible_run)
+      visible_failed_review = create(:completion_kit_review, response: create(:completion_kit_response, run: visible_run),
+                                                             status: "failed", ai_score: nil)
+
+      result = described_class.failures(since: 120.days.ago)
+      expect(result[:count]).to eq(3)
+      expect(result[:items].map { |i| i[:record] }).to contain_exactly(visible_failed_run, visible_failed_response, visible_failed_review)
+    end
+
+    it "excludes reviews on hidden runs from prompt_changes averages" do
+      v1 = create(:completion_kit_prompt, family_key: "fam", version_number: 1, current: true)
+      create(:completion_kit_review, response: create(:completion_kit_response, run: create(:completion_kit_run, prompt: v1)), ai_score: 3.0)
+
+      v2 = create(:completion_kit_prompt, family_key: "fam", version_number: 2, current: false)
+      create(:completion_kit_review, response: create(:completion_kit_response, run: create(:completion_kit_run, prompt: v2, created_at: 90.days.ago)), ai_score: 1.0)
+      create(:completion_kit_review, response: create(:completion_kit_response, run: create(:completion_kit_run, prompt: v2, created_at: Time.current)), ai_score: 5.0)
+
+      result = described_class.prompt_changes
+      expect(result.length).to eq(1)
+      expect(result.first).to include(prompt: v2, from_version: 1, to_version: 2, from_score: 3.0, to_score: 5.0, delta: 2.0)
+    end
+  end
 end

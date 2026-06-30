@@ -7,7 +7,7 @@ module CompletionKit
     # can render a fixed-width sparkline.
     def self.activity(days: 14)
       since = (days - 1).days.ago.to_date
-      counts = Run.where("created_at >= ?", since.beginning_of_day)
+      counts = Run.display_scoped.where("created_at >= ?", since.beginning_of_day)
                   .group("DATE(created_at)")
                   .count
       (0...days).map do |offset|
@@ -62,6 +62,7 @@ module CompletionKit
       resolved = Review.joins(:response)
                        .where(metric_id: metric_id)
                        .where("completion_kit_reviews.created_at >= ?", since)
+                       .where(completion_kit_responses: { run_id: Run.visible_run_ids })
                        .where.not(passed: nil)
       total = resolved.count
       return nil if total.zero?
@@ -72,6 +73,8 @@ module CompletionKit
     def self.failing_checks(since:)
       reviews = Review.where(passed: false)
                       .where("completion_kit_reviews.created_at >= ?", since)
+                      .joins(:response)
+                      .where(completion_kit_responses: { run_id: Run.visible_run_ids })
                       .includes(response: :run)
                       .order(updated_at: :desc)
       items = reviews.map do |review|
@@ -89,7 +92,7 @@ module CompletionKit
       dismissed = failure_dismissal_keys
       items = []
 
-      Run.where(status: "failed").where("created_at >= ?", since).find_each do |run|
+      Run.display_scoped.where(status: "failed").where("created_at >= ?", since).find_each do |run|
         next if dismissed.include?(["CompletionKit::Run", run.id])
         items << {
           surface: "run", record: run, run: run,
@@ -98,6 +101,7 @@ module CompletionKit
       end
 
       Response.where(status: "failed").where("created_at >= ?", since)
+              .where(run_id: Run.visible_run_ids)
               .includes(:run).find_each do |response|
         next if dismissed.include?(["CompletionKit::Response", response.id])
         items << {
@@ -107,6 +111,8 @@ module CompletionKit
       end
 
       Review.where(status: "failed").where("completion_kit_reviews.created_at >= ?", since)
+            .joins(:response)
+            .where(completion_kit_responses: { run_id: Run.visible_run_ids })
             .includes(response: :run).find_each do |review|
         next if dismissed.include?(["CompletionKit::Review", review.id])
         items << {
@@ -132,6 +138,7 @@ module CompletionKit
       scores = Review.joins(response: :run)
                      .where(status: "succeeded")
                      .where.not(ai_score: nil)
+                     .where(completion_kit_responses: { run_id: Run.visible_run_ids })
                      .group("completion_kit_runs.prompt_id")
                      .average(:ai_score)
       return [] if scores.empty?
@@ -167,6 +174,7 @@ module CompletionKit
       Review.joins(:response)
             .where(status: "succeeded")
             .where("completion_kit_reviews.created_at >= ?", since)
+            .where(completion_kit_responses: { run_id: Run.visible_run_ids })
             .where.not(ai_score: nil)
     end
     private_class_method :scored_reviews_since
