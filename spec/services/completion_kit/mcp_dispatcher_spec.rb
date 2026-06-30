@@ -20,7 +20,7 @@ RSpec.describe CompletionKit::McpDispatcher do
     it "returns tool definitions for tools/list" do
       result = described_class.dispatch("tools/list", nil)
       expect(result[:tools]).to be_an(Array)
-      expect(result[:tools].length).to eq(49)
+      expect(result[:tools].length).to eq(50)
       expect(result[:tools].first).to have_key(:name)
       expect(result[:tools].first).to have_key(:description)
       expect(result[:tools].first).to have_key(:inputSchema)
@@ -34,6 +34,11 @@ RSpec.describe CompletionKit::McpDispatcher do
     it "raises MethodNotFound for unknown methods" do
       expect { described_class.dispatch("unknown/method", nil) }
         .to raise_error(described_class::MethodNotFound, /Method not found/)
+    end
+
+    it "routes the promptfoo_import tool through the dispatcher" do
+      result = described_class.dispatch("tools/call", { "name" => "promptfoo_import", "arguments" => { "config" => "prompts:\n  - \"Hi {{x}}\"\n" } })
+      expect(result[:content].first[:text]).to include("Imported prompt 1")
     end
 
     it "raises MethodNotFound for unknown tools" do

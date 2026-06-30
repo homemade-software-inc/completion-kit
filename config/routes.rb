@@ -95,6 +95,7 @@ CompletionKit::Engine.routes.draw do
       resources :tags
       resources :provider_credentials
       resources :agreements, only: [:index, :destroy]
+      post "imports/promptfoo", to: "imports#promptfoo"
     end
   end
 

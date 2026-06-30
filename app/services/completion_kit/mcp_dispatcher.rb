@@ -36,7 +36,8 @@ module CompletionKit
         McpTools::ProviderCredentials.definitions +
         McpTools::Tags.definitions +
         McpTools::Agreements.definitions +
-        McpTools::Judges.definitions
+        McpTools::Judges.definitions +
+        McpTools::Imports.definitions
     end
 
     def self.call_tool(name, arguments)
@@ -52,6 +53,7 @@ module CompletionKit
       when /\Atags_/                 then McpTools::Tags.call(name, arguments)
       when /\Aagreements_/           then McpTools::Agreements.call(name, arguments)
       when /\Ajudges_/               then McpTools::Judges.call(name, arguments)
+      when /\Apromptfoo_/            then McpTools::Imports.call(name, arguments)
       else raise MethodNotFound, "Unknown tool: #{name}"
       end
     end
