@@ -1,0 +1,18 @@
+<% chosen = options.find { |value, _label| value.to_s == selected.to_s } || options.first %>
+<div class="ck-select" data-ck-select>
+  <input type="hidden" name="<%= name %>" value="<%= chosen && chosen.first %>" data-ck-select-value>
+  <button type="button" class="ck-select__trigger" data-ck-select-trigger
+          aria-haspopup="listbox" aria-expanded="false" aria-labelledby="<%= labelledby %>">
+    <span class="ck-select__label" data-ck-select-label><%= chosen && chosen.last %></span>
+    <span class="ck-select__chevron" aria-hidden="true"><%= heroicon_tag "chevron-down" %></span>
+  </button>
+  <ul class="ck-select__menu" role="listbox" hidden data-ck-select-menu aria-labelledby="<%= labelledby %>">
+    <% options.each do |value, label| %>
+      <li class="ck-select__option" role="option" tabindex="-1" data-value="<%= value %>"
+          aria-selected="<%= chosen && chosen.first.to_s == value.to_s ? "true" : "false" %>">
+        <span class="ck-select__tick" aria-hidden="true"><%= heroicon_tag "check" %></span>
+        <span class="ck-select__text" data-ck-select-text><%= label %></span>
+      </li>
+    <% end %>
+  </ul>
+</div>

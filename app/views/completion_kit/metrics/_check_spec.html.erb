@@ -1,16 +1,16 @@
 <% config = local_assigns.fetch(:config) %>
 <dl class="ck-check-spec">
   <div class="ck-check-spec__row">
-    <dt class="ck-check-spec__term">Kind</dt>
-    <dd class="ck-check-spec__val"><code class="ck-check-spec__code"><%= config["check_kind"] %></code></dd>
+    <dt class="ck-check-spec__term">Rule</dt>
+    <dd class="ck-check-spec__val"><%= ck_check_kind_label(config["check_kind"]) %></dd>
   </div>
   <div class="ck-check-spec__row">
-    <dt class="ck-check-spec__term">Target</dt>
-    <dd class="ck-check-spec__val"><code class="ck-check-spec__code"><%= config["target"] %></code></dd>
+    <dt class="ck-check-spec__term">Checks</dt>
+    <dd class="ck-check-spec__val"><%= ck_check_target_label(config["target"]) %></dd>
   </div>
   <% config.except("check_kind", "target").each do |key, value| %>
     <div class="ck-check-spec__row">
-      <dt class="ck-check-spec__term"><%= key.humanize %></dt>
+      <dt class="ck-check-spec__term"><%= ck_check_field_label(key) %></dt>
       <dd class="ck-check-spec__val"><code class="ck-check-spec__code"><%= value %></code></dd>
     </div>
   <% end %>

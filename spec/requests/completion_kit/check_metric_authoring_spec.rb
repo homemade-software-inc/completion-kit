@@ -146,7 +146,7 @@ RSpec.describe "Check metric authoring", type: :request do
   end
 
   describe "authoring views" do
-    it "renders the metric-type chooser and an inline check builder on the new form" do
+    it "renders the metric-type chooser and a branded check builder with human labels on the new form" do
       get "#{base_path}/new"
 
       expect(response).to have_http_status(:ok)
@@ -155,12 +155,13 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(response.body).to include("Deterministic check")
       expect(response.body).to include('name="metric[check_config][check_kind]"')
       expect(response.body).to include('name="metric[check_config][target]"')
-      CompletionKit::Checks::Registry.kinds.each do |kind|
-        expect(response.body).to include(">#{kind}</option>")
-      end
-      CompletionKit::Checks::TargetResolver::TARGETS.each do |target|
-        expect(response.body).to include(">#{target}</option>")
-      end
+      expect(response.body).to include("data-ck-select")
+      expect(response.body).to include('role="listbox"')
+      expect(response.body).to include("Does not contain a phrase")
+      expect(response.body).to include("Is valid JSON")
+      expect(response.body).to include("The response text")
+      expect(response.body).not_to include(">not_contains<")
+      expect(response.body).not_to include(">response_text<")
       expect(response.body).to include("ck-rubric-builder")
     end
 
@@ -203,8 +204,10 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(response.body).not_to include("ck-rubric-builder")
       expect(response.body).to include('type="hidden"')
       expect(response.body).to include('name="metric[metric_type]"')
-      expect(response.body).to include('value="contains" selected')
-      expect(response.body).to include('value="json_path" selected')
+      expect(response.body).to include('name="metric[check_config][check_kind]" value="contains"')
+      expect(response.body).to include('name="metric[check_config][target]" value="json_path"')
+      expect(response.body).to include("Contains a phrase")
+      expect(response.body).to include("A value from the response JSON")
       expect(response.body).to include("data.field")
       expect(response.body).to include("TOKEN")
       expect(response.body.scan("checked").size).to be >= 3
@@ -218,9 +221,9 @@ RSpec.describe "Check metric authoring", type: :request do
       get "#{base_path}/#{metric.id}"
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("contains")
-      expect(response.body).to include("response_text")
-      expect(response.body).to include("Value")
+      expect(response.body).to include("Contains a phrase")
+      expect(response.body).to include("The response text")
+      expect(response.body).to include("Text to look for")
       expect(response.body).to include("TOKEN")
       expect(response.body).not_to include("ck-rubric-display")
     end
@@ -240,8 +243,8 @@ RSpec.describe "Check metric authoring", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Valid JSON")
-      expect(response.body).to include("valid_json")
-      expect(response.body).to include("response_text")
+      expect(response.body).to include("Is valid JSON")
+      expect(response.body).to include("The response text")
       expect(response.body).not_to include("Judge instruction")
       expect(response.body).not_to include("ck-rubric-display")
     end

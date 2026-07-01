@@ -296,3 +296,75 @@ document.addEventListener("click", function(e) {
   btn.textContent = "Applied ✓";
   field.focus({ preventScroll: true });
 });
+
+function ckSelectClose(sel) {
+  if (!sel.classList.contains("is-open")) return;
+  sel.classList.remove("is-open");
+  var menu = sel.querySelector("[data-ck-select-menu]");
+  var trigger = sel.querySelector("[data-ck-select-trigger]");
+  if (menu) menu.hidden = true;
+  if (trigger) trigger.setAttribute("aria-expanded", "false");
+}
+
+function ckSelectOpen(sel) {
+  document.querySelectorAll("[data-ck-select].is-open").forEach(ckSelectClose);
+  sel.classList.add("is-open");
+  var menu = sel.querySelector("[data-ck-select-menu]");
+  var trigger = sel.querySelector("[data-ck-select-trigger]");
+  if (menu) menu.hidden = false;
+  if (trigger) trigger.setAttribute("aria-expanded", "true");
+  var current = menu.querySelector('[aria-selected="true"]') || menu.querySelector('[role="option"]');
+  if (current) current.focus();
+}
+
+function ckSelectChoose(sel, option) {
+  var input = sel.querySelector("[data-ck-select-value]");
+  var label = sel.querySelector("[data-ck-select-label]");
+  var text = option.querySelector("[data-ck-select-text]");
+  sel.querySelectorAll('[role="option"]').forEach(function(o) {
+    o.setAttribute("aria-selected", o === option ? "true" : "false");
+  });
+  input.value = option.getAttribute("data-value");
+  if (text) label.textContent = text.textContent;
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+  ckSelectClose(sel);
+  var trigger = sel.querySelector("[data-ck-select-trigger]");
+  if (trigger) trigger.focus();
+}
+
+document.addEventListener("click", function(e) {
+  var trigger = e.target.closest("[data-ck-select-trigger]");
+  if (trigger) {
+    var sel = trigger.closest("[data-ck-select]");
+    if (sel.classList.contains("is-open")) { ckSelectClose(sel); } else { ckSelectOpen(sel); }
+    return;
+  }
+  var option = e.target.closest('[data-ck-select] [role="option"]');
+  if (option) {
+    ckSelectChoose(option.closest("[data-ck-select]"), option);
+    return;
+  }
+  document.querySelectorAll("[data-ck-select].is-open").forEach(function(sel) {
+    if (!sel.contains(e.target)) ckSelectClose(sel);
+  });
+});
+
+document.addEventListener("keydown", function(e) {
+  var sel = e.target.closest("[data-ck-select]");
+  if (!sel) return;
+  var trigger = sel.querySelector("[data-ck-select-trigger]");
+  var options = Array.prototype.slice.call(sel.querySelectorAll('[role="option"]'));
+  var open = sel.classList.contains("is-open");
+  if (e.target === trigger && !open) {
+    if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") { e.preventDefault(); ckSelectOpen(sel); }
+    return;
+  }
+  if (!open) return;
+  var idx = options.indexOf(document.activeElement);
+  if (e.key === "ArrowDown") { e.preventDefault(); (options[idx + 1] || options[0]).focus(); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); (options[idx - 1] || options[options.length - 1]).focus(); }
+  else if (e.key === "Home") { e.preventDefault(); options[0].focus(); }
+  else if (e.key === "End") { e.preventDefault(); options[options.length - 1].focus(); }
+  else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (options[idx]) ckSelectChoose(sel, options[idx]); }
+  else if (e.key === "Escape") { e.preventDefault(); ckSelectClose(sel); trigger.focus(); }
+});

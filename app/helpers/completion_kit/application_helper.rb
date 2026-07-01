@@ -169,6 +169,48 @@ module CompletionKit
       end
     end
 
+    CHECK_KIND_LABELS = {
+      "contains" => "Contains a phrase",
+      "not_contains" => "Does not contain a phrase",
+      "equals" => "Equals exactly",
+      "regex" => "Matches a pattern",
+      "valid_json" => "Is valid JSON",
+      "json_path_equals" => "A JSON field equals a value",
+      "length_bounds" => "Length is within a range",
+      "no_refusal" => "Is not a refusal"
+    }.freeze
+
+    CHECK_TARGET_LABELS = {
+      "response_text" => "The response text",
+      "input_data" => "The input row",
+      "json_path" => "A value from the response JSON"
+    }.freeze
+
+    CHECK_FIELD_LABELS = {
+      "value" => "Text to look for",
+      "pattern" => "Pattern",
+      "json_path" => "JSON path",
+      "expected" => "Expected value",
+      "target_path" => "Path into the JSON",
+      "min" => "Shortest allowed",
+      "max" => "Longest allowed",
+      "case_sensitive" => "Case sensitive",
+      "multiline" => "Multiline",
+      "trim" => "Trim whitespace"
+    }.freeze
+
+    def ck_check_kind_label(kind)
+      CHECK_KIND_LABELS.fetch(kind.to_s) { kind.to_s.humanize }
+    end
+
+    def ck_check_target_label(target)
+      CHECK_TARGET_LABELS.fetch(target.to_s) { target.to_s.humanize }
+    end
+
+    def ck_check_field_label(key)
+      CHECK_FIELD_LABELS.fetch(key.to_s) { key.to_s.humanize }
+    end
+
     def ck_result_change_badge(change)
       case change
       when "broke"

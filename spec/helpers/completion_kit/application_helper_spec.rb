@@ -227,6 +227,25 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "check label helpers" do
+    it "renders human labels for known check kinds and humanizes unknown ones" do
+      expect(helper.ck_check_kind_label("not_contains")).to eq("Does not contain a phrase")
+      expect(helper.ck_check_kind_label("valid_json")).to eq("Is valid JSON")
+      expect(helper.ck_check_kind_label("mystery_kind")).to eq("Mystery kind")
+    end
+
+    it "renders human labels for known targets and humanizes unknown ones" do
+      expect(helper.ck_check_target_label("response_text")).to eq("The response text")
+      expect(helper.ck_check_target_label("elsewhere")).to eq("Elsewhere")
+    end
+
+    it "renders human labels for known config fields and humanizes unknown ones" do
+      expect(helper.ck_check_field_label("value")).to eq("Text to look for")
+      expect(helper.ck_check_field_label("target_path")).to eq("Path into the JSON")
+      expect(helper.ck_check_field_label("some_key")).to eq("Some key")
+    end
+  end
+
   describe "#ck_result_change_badge" do
     it "renders Broke, Fixed, and Same badges for each transition" do
       expect(helper.ck_result_change_badge("broke")).to include("Broke", "ck-delta--negative")

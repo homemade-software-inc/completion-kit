@@ -159,63 +159,62 @@
     <% check = metric.check_config || {} %>
     <div class="ck-field ck-field--spacious" data-ck-metric-editor="check" <%= "hidden" unless metric.check? %>>
       <p class="ck-section-title">Check</p>
-      <p class="ck-hint">A deterministic pass/fail rule. Fill only the fields the chosen kind needs.</p>
+      <p class="ck-hint">A pass or fail rule with no AI and no cost. You only fill in the fields the chosen rule needs.</p>
 
       <div class="ck-field">
-        <label class="ck-label" for="metric_check_kind">Check kind</label>
-        <select name="metric[check_config][check_kind]" id="metric_check_kind" class="ck-input">
-          <% CompletionKit::Checks::Registry.kinds.each do |kind| %>
-            <option value="<%= kind %>"<%= " selected" if check["check_kind"] == kind %>><%= kind %></option>
-          <% end %>
-        </select>
+        <p class="ck-label" id="metric_check_kind_label">Rule</p>
+        <%= render "completion_kit/shared/branded_select",
+                   name: "metric[check_config][check_kind]",
+                   options: CompletionKit::Checks::Registry.kinds.map { |kind| [kind, ck_check_kind_label(kind)] },
+                   selected: check["check_kind"] || CompletionKit::Checks::Registry.kinds.first,
+                   labelledby: "metric_check_kind_label" %>
       </div>
 
       <div class="ck-field">
-        <label class="ck-label" for="metric_check_target">Target</label>
-        <select name="metric[check_config][target]" id="metric_check_target" class="ck-input">
-          <% CompletionKit::Checks::TargetResolver::TARGETS.each do |target| %>
-            <option value="<%= target %>"<%= " selected" if check["target"] == target %>><%= target %></option>
-          <% end %>
-        </select>
+        <p class="ck-label" id="metric_check_target_label">What to check</p>
+        <%= render "completion_kit/shared/branded_select",
+                   name: "metric[check_config][target]",
+                   options: CompletionKit::Checks::TargetResolver::TARGETS.map { |target| [target, ck_check_target_label(target)] },
+                   selected: check["target"] || CompletionKit::Checks::TargetResolver::TARGETS.first,
+                   labelledby: "metric_check_target_label" %>
       </div>
 
       <div class="ck-field" data-ck-check-field="target_path">
-        <label class="ck-label" for="metric_check_target_path">Target path</label>
-        <p class="ck-hint">Used when target is json_path, e.g. data.items.0.name.</p>
+        <label class="ck-label" for="metric_check_target_path">Path into the JSON</label>
+        <p class="ck-hint">Where to look inside the response, like data.items.0.name.</p>
         <input type="text" name="metric[check_config][target_path]" id="metric_check_target_path" class="ck-input" value="<%= check["target_path"] %>">
       </div>
 
       <div class="ck-field" data-ck-check-field="value">
-        <label class="ck-label" for="metric_check_value">Value</label>
-        <p class="ck-hint">The substring or exact string for contains, not_contains, or equals.</p>
+        <label class="ck-label" for="metric_check_value">Text to look for</label>
         <input type="text" name="metric[check_config][value]" id="metric_check_value" class="ck-input" value="<%= check["value"] %>">
       </div>
 
       <div class="ck-field" data-ck-check-field="pattern">
         <label class="ck-label" for="metric_check_pattern">Pattern</label>
-        <p class="ck-hint">A regular expression for the regex kind.</p>
+        <p class="ck-hint">A regular expression to match against.</p>
         <input type="text" name="metric[check_config][pattern]" id="metric_check_pattern" class="ck-input" value="<%= check["pattern"] %>">
       </div>
 
       <div class="ck-field" data-ck-check-field="json_path">
         <label class="ck-label" for="metric_check_json_path">JSON path</label>
-        <p class="ck-hint">Dotted path into parsed JSON for json_path_equals.</p>
+        <p class="ck-hint">The path to the value inside the response, like data.status.</p>
         <input type="text" name="metric[check_config][json_path]" id="metric_check_json_path" class="ck-input" value="<%= check["json_path"] %>">
       </div>
 
       <div class="ck-field" data-ck-check-field="expected">
-        <label class="ck-label" for="metric_check_expected">Expected</label>
-        <p class="ck-hint">The value the JSON path must equal.</p>
+        <label class="ck-label" for="metric_check_expected">Expected value</label>
+        <p class="ck-hint">The value it should equal.</p>
         <input type="text" name="metric[check_config][expected]" id="metric_check_expected" class="ck-input" value="<%= check["expected"] %>">
       </div>
 
       <div class="ck-field-row">
         <div class="ck-field" data-ck-check-field="min">
-          <label class="ck-label" for="metric_check_min">Min length</label>
+          <label class="ck-label" for="metric_check_min">Shortest allowed</label>
           <input type="number" name="metric[check_config][min]" id="metric_check_min" class="ck-input" value="<%= check["min"] %>">
         </div>
         <div class="ck-field" data-ck-check-field="max">
-          <label class="ck-label" for="metric_check_max">Max length</label>
+          <label class="ck-label" for="metric_check_max">Longest allowed</label>
           <input type="number" name="metric[check_config][max]" id="metric_check_max" class="ck-input" value="<%= check["max"] %>">
         </div>
       </div>
