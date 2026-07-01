@@ -68,7 +68,7 @@ module CompletionKit
     end
 
     def create
-      @metric = Metric.new(metric_params)
+      @metric = Metric.new(create_metric_params)
 
       if @metric.save
         redirect_to metric_path(@metric), notice: "Metric was successfully created."
@@ -233,6 +233,15 @@ module CompletionKit
 
     def set_metric
       @metric = Metric.find(params[:id])
+    end
+
+    def create_metric_params
+      attrs = metric_params
+      if attrs[:metric_type] == "check"
+        attrs.except(:instruction, :rubric_bands)
+      else
+        attrs.except(:check_config)
+      end
     end
 
     def metric_params

@@ -22,7 +22,7 @@
         <%= check_box_tag "run[judge_only]", "1", run.persisted? && run.judge_only?, id: "run_judge_only", class: "ck-checkbox" %>
         <span class="ck-checkbox-label__box" aria-hidden="true"></span>
         <span class="ck-checkbox-label__body">
-          <span class="ck-checkbox-label__text">Judge-only run</span>
+          <span class="ck-checkbox-label__text">Score existing outputs</span>
           <span class="ck-checkbox-label__hint">Grade an existing column on the dataset instead of running a prompt. Roughly half the LLM calls per row.</span>
         </span>
       </label>
@@ -263,7 +263,7 @@ function updateRunForm() {
       }
     } else if (!dataset) {
       if (datasetField) datasetField.className = 'ck-field ck-field--info';
-      if (datasetHint) datasetHint.textContent = 'Judge-only runs need a dataset that supplies the output column.';
+      if (datasetHint) datasetHint.textContent = 'Skip generation and score responses you already have from a dataset column. Works with rubric metrics or deterministic checks.';
     }
   } else {
     valid = prompt !== '';

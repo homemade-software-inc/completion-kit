@@ -210,6 +210,76 @@ document.addEventListener("click", function(e) {
   });
 });
 
+var CK_CHECK_FIELDS = {
+  contains: ["value", "case_sensitive", "trim"],
+  not_contains: ["value", "case_sensitive", "trim"],
+  equals: ["value", "case_sensitive", "trim"],
+  regex: ["pattern", "case_sensitive", "multiline"],
+  valid_json: [],
+  json_path_equals: ["json_path", "expected"],
+  length_bounds: ["min", "max"],
+  no_refusal: []
+};
+
+function ckApplyCheckFields(scope) {
+  if (!scope) return;
+  var kindSelect = scope.querySelector('[name="metric[check_config][check_kind]"]');
+  if (!kindSelect) return;
+  var visible = CK_CHECK_FIELDS[kindSelect.value];
+  var targetSelect = scope.querySelector('[name="metric[check_config][target]"]');
+  var targetIsJsonPath = !!(targetSelect && targetSelect.value === "json_path");
+  scope.querySelectorAll("[data-ck-check-field]").forEach(function(field) {
+    var key = field.getAttribute("data-ck-check-field");
+    var show;
+    if (key === "target_path") {
+      show = targetIsJsonPath;
+    } else if (!visible) {
+      show = true;
+    } else {
+      show = visible.indexOf(key) !== -1;
+    }
+    field.hidden = !show;
+  });
+}
+
+function ckApplyMetricType(group) {
+  var checked = group.querySelector('input[type="radio"]:checked');
+  if (!checked) return;
+  var value = checked.value;
+  var scope = group.closest("form") || document;
+  scope.querySelectorAll("[data-ck-metric-editor]").forEach(function(editor) {
+    var active = editor.getAttribute("data-ck-metric-editor") === value;
+    editor.hidden = !active;
+    editor.querySelectorAll("input, select, textarea").forEach(function(field) {
+      field.disabled = !active;
+    });
+  });
+  ckApplyCheckFields(scope);
+}
+
+document.addEventListener("turbo:load", function() {
+  document.querySelectorAll("[data-ck-metric-type]").forEach(function(group) {
+    ckApplyMetricType(group);
+  });
+  document.querySelectorAll('[data-ck-metric-editor="check"]').forEach(function(editor) {
+    ckApplyCheckFields(editor);
+  });
+});
+
+document.addEventListener("change", function(e) {
+  var target = e.target;
+  if (!target || !target.closest) return;
+  var group = target.closest("[data-ck-metric-type]");
+  if (group && target.type === "radio") {
+    ckApplyMetricType(group);
+    return;
+  }
+  if (target.name === "metric[check_config][check_kind]" || target.name === "metric[check_config][target]") {
+    var scope = target.closest('[data-ck-metric-editor="check"]') || target.closest("form");
+    ckApplyCheckFields(scope);
+  }
+});
+
 document.addEventListener("click", function(e) {
   var btn = e.target.closest("[data-ck-apply]");
   if (!btn) return;

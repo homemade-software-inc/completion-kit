@@ -616,7 +616,7 @@ RSpec.describe "CompletionKit runs", type: :request do
 
     expect { post "#{base_path}/#{judge_only.id}/suggest" }.not_to change(CompletionKit::Suggestion, :count)
     expect(response).to redirect_to("/completion_kit/runs/#{judge_only.id}")
-    expect(flash[:alert]).to include("Judge-only runs")
+    expect(flash[:alert]).to include("scores existing outputs")
   end
 
   it "rerun copies output_column when re-running a judge-only run" do

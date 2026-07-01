@@ -10,7 +10,7 @@
           <%= link_to run.prompt.name, ck_prompt_path(run.prompt), class: "ck-runs-table__config-link", onclick: "event.stopPropagation();" %>
           <span class="ck-runs-table__version">v<%= run.prompt.version_number %></span>
         <% else %>
-          <span class="ck-runs-table__version">Judge-only</span>
+          <span class="ck-runs-table__version">Scoring only</span>
         <% end %>
         <% if run.dataset %>
           <span class="ck-runs-table__sep">·</span>

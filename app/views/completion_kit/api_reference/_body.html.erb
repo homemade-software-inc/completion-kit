@@ -20,6 +20,7 @@
   <input type="radio" name="ck-api-tab" id="ck-tab-agreements" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-tags" class="ck-api-tabs__radio">
   <input type="radio" name="ck-api-tab" id="ck-tab-providers" class="ck-api-tabs__radio">
+  <input type="radio" name="ck-api-tab" id="ck-tab-imports" class="ck-api-tabs__radio">
 
   <nav class="ck-api-tabs__nav">
     <label for="ck-tab-mcp" class="ck-api-tabs__label">MCP <span class="ck-api-tabs__count"><%= CompletionKit::McpDispatcher.tool_definitions.size %></span></label>
@@ -32,6 +33,7 @@
     <label for="ck-tab-agreements" class="ck-api-tabs__label">Agreements <span class="ck-api-tabs__count">3</span></label>
     <label for="ck-tab-tags" class="ck-api-tabs__label">Tags <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-providers" class="ck-api-tabs__label">Providers <span class="ck-api-tabs__count">5</span></label>
+    <label for="ck-tab-imports" class="ck-api-tabs__label">Imports <span class="ck-api-tabs__count">1</span></label>
   </nav>
 
   <div class="ck-api-tabs__panels">
@@ -124,7 +126,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs</p>
         <p class="ck-meta-copy">Create a new run.</p>
-        <p class="ck-api-params"><strong>Optional:</strong>&ensp;<code>name</code>, <code>prompt_id</code>, <code>dataset_id</code>, <code>metric_ids</code>, <code>judge_model</code>, <code>output_column</code> (judge-only: omit <code>prompt_id</code> and grade a dataset column instead, default <code>actual_output</code>)</p>
+        <p class="ck-api-params"><strong>Optional:</strong>&ensp;<code>name</code>, <code>prompt_id</code>, <code>dataset_id</code>, <code>metric_ids</code>, <code>judge_model</code>, <code>output_column</code> (score existing outputs: omit <code>prompt_id</code> and grade a dataset column instead, default <code>actual_output</code>)</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"prompt_id\": 1, \"dataset_id\": 1, \"metric_ids\": [1, 2]}'" %>
       </div>
       <div class="ck-api-endpoint">
@@ -377,6 +379,18 @@
               { name: ck_provider_label(pc.provider), meta: pluralize(pc.model_count, "model"),
                 url: "#{base_url}/api/v1/provider_credentials/#{pc.id}", dom_id: "provider_ep_#{pc.id}" }
             } %>
+    </div>
+
+    <div class="ck-api-tabs__panel">
+      <h2 class="ck-section-title">Imports</h2>
+      <p class="ck-copy">Bring an existing <a href="https://www.promptfoo.dev" class="ck-link">promptfoo</a> config into CompletionKit in one call. Prompts, the test dataset, assert-based metrics, and providers are created where they map cleanly and skipped with a reason where they don't.</p>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/imports/promptfoo</p>
+        <p class="ck-meta-copy">Import a promptfooconfig.yaml. Send the YAML as a <code>config</code> param, or POST the raw YAML as the request body. Returns 201 with a mapping summary, or 422 if the YAML cannot be parsed.</p>
+        <p class="ck-api-params"><strong>Request:</strong>&ensp;<code>config</code> (the YAML text) or a raw YAML request body</p>
+        <p class="ck-api-params"><strong>Response 201:</strong>&ensp;<code>prompts</code>, <code>dataset</code>, <code>metrics</code>, and <code>providers</code>, each listing what was <code>created</code> and what was <code>skipped</code> (with a reason)</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/imports/promptfoo \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/x-yaml\" \\\n  --data-binary @promptfooconfig.yaml" %>
+      </div>
     </div>
 
   </div>

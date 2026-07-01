@@ -51,7 +51,7 @@ module CompletionKit
           handler: :publish
         },
         "prompts_suggest_improvement" => {
-          description: "Suggest an improved version of a prompt, grounded in a run's test results and judge feedback. Analyzes the run's responses, scores, and reviews, then returns reasoning plus a rewritten template (preserving {{variables}}) and persists it as a Suggestion. Requires a run that has a prompt (not a judge-only run).",
+          description: "Suggest an improved version of a prompt, grounded in a run's test results and judge feedback. Analyzes the run's responses, scores, and reviews, then returns reasoning plus a rewritten template (preserving {{variables}}) and persists it as a Suggestion. Requires a run that has a prompt (not a scoring-only run).",
           inputSchema: {
             type: "object",
             properties: {run_id: {type: "integer", description: "The run whose results ground the improvement."}},
@@ -107,7 +107,7 @@ module CompletionKit
 
       def self.suggest_improvement(args)
         run = Run.find(args["run_id"])
-        return error_result("Judge-only runs don't have a prompt to improve.") if run.prompt.nil?
+        return error_result("A run that only scores existing outputs has no prompt to improve.") if run.prompt.nil?
 
         result = PromptImprovementService.new(run).suggest
         return error_result("The model didn't return a usable rewrite.") if result["suggested_template"].blank?

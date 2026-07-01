@@ -46,6 +46,13 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     expect(html).to include("or check_config for checks")
   end
 
+  it "documents the promptfoo import endpoint" do
+    html = render_body(base_url: "https://docs.example.test")
+
+    expect(html).to include("/api/v1/imports/promptfoo")
+    expect(html).to include(">Imports</h2>")
+  end
+
   it "wires the real token into the copy-to-clipboard examples" do
     html = render_body(base_url: "https://app.example.test", token: "DISPLAY_TOKEN", real_token: "live-secret-9999")
 

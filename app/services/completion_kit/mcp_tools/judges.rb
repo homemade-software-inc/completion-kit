@@ -5,7 +5,7 @@ module CompletionKit
 
       TOOLS = {
         "judges_replay" => {
-          description: "Run the current judge against a dataset (judge-only run). Wraps runs_create with prompt_id omitted and output_column supplied. Re-judges existing dataset outputs so you can compare against human verdicts.",
+          description: "Run the current judge against a dataset (scores existing outputs). Wraps runs_create with prompt_id omitted and output_column supplied. Re-judges existing dataset outputs so you can compare against human verdicts.",
           inputSchema: {
             type: "object",
             properties: {

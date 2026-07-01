@@ -392,11 +392,19 @@ RSpec.describe CompletionKit::Run, type: :model do
       end
     end
 
+    describe "auto-generated name" do
+      it "names an unnamed scoring run after its dataset" do
+        dataset = create(:completion_kit_dataset, name: "Tickets", csv_data: "input,actual_output\nhi,hello\n")
+        run = create(:completion_kit_run, prompt: nil, dataset: dataset, output_column: "actual_output", name: nil)
+        expect(run.name).to eq("Tickets scoring #1")
+      end
+    end
+
     describe "validations" do
       it "requires a dataset for a judge-only run" do
         run = build(:completion_kit_run, prompt: nil, dataset: nil)
         expect(run).not_to be_valid
-        expect(run.errors[:dataset_id].join).to include("required for a judge-only run")
+        expect(run.errors[:dataset_id].join).to include("required when scoring existing outputs")
       end
 
       it "rejects a judge-only run whose output_column is not on the dataset" do

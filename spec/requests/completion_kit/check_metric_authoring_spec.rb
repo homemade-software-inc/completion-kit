@@ -45,6 +45,31 @@ RSpec.describe "Check metric authoring", type: :request do
       config = CompletionKit::Metric.find_by(name: "Status word").check_config
       expect(config["expected"]).to eq("active")
     end
+
+    it "drops a stray rubric and instruction when creating a check" do
+      post base_path, params: { metric: { name: "Check only", metric_type: "check",
+                                          instruction: "should be ignored",
+                                          rubric_bands: { "0" => { stars: "5", description: "great" } },
+                                          check_config: { check_kind: "valid_json", target: "response_text" } } }
+
+      metric = CompletionKit::Metric.find_by(name: "Check only")
+      expect(metric.check?).to be(true)
+      expect(metric.check_config).to include("check_kind" => "valid_json")
+      expect(metric.rubric_bands).to be_blank
+      expect(metric.instruction).to be_blank
+    end
+
+    it "drops a stray check_config when creating an llm_judge metric" do
+      post base_path, params: { metric: { name: "Judge only", metric_type: "llm_judge",
+                                          instruction: "Rate helpfulness",
+                                          check_config: { check_kind: "valid_json", target: "response_text" } } }
+
+      metric = CompletionKit::Metric.find_by(name: "Judge only")
+      expect(metric.llm_judge?).to be(true)
+      expect(metric.check_config).to be_blank
+      expect(metric.rubric_bands).to be_present
+      expect(metric.instruction).to eq("Rate helpfulness")
+    end
   end
 
   describe "web update versioning" do
@@ -137,6 +162,22 @@ RSpec.describe "Check metric authoring", type: :request do
         expect(response.body).to include(">#{target}</option>")
       end
       expect(response.body).to include("ck-rubric-builder")
+    end
+
+    it "explains each metric type with a plain-language info icon and hint on the new form" do
+      get "#{base_path}/new"
+
+      expect(response.body).to include("The judge gives each response 1 to 5 stars against your rubric. A check just passes or fails, with no AI.")
+      expect(response.body).to include("An AI reads each response and rates it 1 to 5 stars against your rubric, with a written reason. Best for subjective quality: tone, helpfulness, accuracy.")
+      expect(response.body).to include("A rule that passes or fails instantly with no AI and no cost. Best for exact things: valid JSON, contains a phrase, no refusal.")
+    end
+
+    it "renders both editors on the new form with the check editor hidden by default" do
+      get "#{base_path}/new"
+
+      expect(response.body).to include('data-ck-metric-editor="llm_judge"')
+      expect(response.body).to include('data-ck-metric-editor="check"')
+      expect(response.body).to match(/data-ck-metric-editor="check"[^>]*hidden/)
     end
 
     it "creates a check through the inline builder fields" do

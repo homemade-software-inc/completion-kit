@@ -30,7 +30,7 @@ module CompletionKit
       display_scoped.select(:id)
     end
 
-    # A judge-only run grades a pre-existing column on the dataset instead of
+    # A scoring-only run grades a pre-existing column on the dataset instead of
     # generating new outputs. No prompt is attached; the response text is read
     # from row[output_column]; no LLM generation happens.
     def judge_only?
@@ -442,7 +442,7 @@ module CompletionKit
         self.name = "#{prompt.name} — v#{prompt.version_number} ##{count}"
       elsif dataset.present?
         count = Run.where(prompt_id: nil, dataset_id: dataset.id).count + 1
-        self.name = "#{dataset.name} — judge-only ##{count}"
+        self.name = "#{dataset.name} scoring ##{count}"
       end
     end
 
@@ -461,7 +461,7 @@ module CompletionKit
       return if prompt.present?
 
       if dataset.nil?
-        errors.add(:dataset_id, "is required for a judge-only run (no prompt)")
+        errors.add(:dataset_id, "is required when scoring existing outputs (no prompt)")
         return
       end
 

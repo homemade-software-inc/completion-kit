@@ -15,7 +15,7 @@ module CompletionKit
           handler: :get
         },
         "runs_create" => {
-          description: "Create a run. Omit prompt_id and provide output_column for a judge-only run that grades a pre-existing dataset column instead of generating new outputs.",
+          description: "Create a run. Omit prompt_id and provide output_column to score existing outputs by grading a pre-existing dataset column instead of generating new ones.",
           inputSchema: {
             type: "object",
             properties: {

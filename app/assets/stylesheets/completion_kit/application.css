@@ -1922,6 +1922,13 @@ label.ck-checkbox input {
   cursor: pointer;
 }
 
+.ck-radio-info {
+  width: 16px;
+  height: 16px;
+  color: var(--ck-muted);
+  cursor: help;
+}
+
 .ck-field-row {
   display: flex;
   gap: 1rem;
@@ -3238,7 +3245,8 @@ select.ck-input {
 #ck-tab-metric-groups:checked ~ .ck-api-tabs__nav label[for="ck-tab-metric-groups"],
 #ck-tab-agreements:checked ~ .ck-api-tabs__nav label[for="ck-tab-agreements"],
 #ck-tab-tags:checked ~ .ck-api-tabs__nav label[for="ck-tab-tags"],
-#ck-tab-providers:checked ~ .ck-api-tabs__nav label[for="ck-tab-providers"] {
+#ck-tab-providers:checked ~ .ck-api-tabs__nav label[for="ck-tab-providers"],
+#ck-tab-imports:checked ~ .ck-api-tabs__nav label[for="ck-tab-imports"] {
   color: var(--ck-accent);
   background: var(--ck-surface-soft);
   border-left-color: var(--ck-accent);
@@ -3253,7 +3261,8 @@ select.ck-input {
 #ck-tab-metric-groups:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(7),
 #ck-tab-agreements:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(8),
 #ck-tab-tags:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(9),
-#ck-tab-providers:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(10) {
+#ck-tab-providers:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(10),
+#ck-tab-imports:checked ~ .ck-api-tabs__panels .ck-api-tabs__panel:nth-child(11) {
   display: block;
 }
 
@@ -3295,7 +3304,8 @@ select.ck-input {
   #ck-tab-metric-groups:checked ~ .ck-api-tabs__nav label[for="ck-tab-metric-groups"],
   #ck-tab-agreements:checked ~ .ck-api-tabs__nav label[for="ck-tab-agreements"],
   #ck-tab-tags:checked ~ .ck-api-tabs__nav label[for="ck-tab-tags"],
-  #ck-tab-providers:checked ~ .ck-api-tabs__nav label[for="ck-tab-providers"] {
+  #ck-tab-providers:checked ~ .ck-api-tabs__nav label[for="ck-tab-providers"],
+  #ck-tab-imports:checked ~ .ck-api-tabs__nav label[for="ck-tab-imports"] {
     border-left-color: transparent;
     border-bottom-color: var(--ck-accent);
   }

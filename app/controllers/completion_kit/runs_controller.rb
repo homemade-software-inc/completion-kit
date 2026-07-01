@@ -122,7 +122,7 @@ module CompletionKit
 
     def suggest
       if @run.prompt.nil?
-        redirect_to run_path(@run), alert: "Judge-only runs don't have a prompt to improve."
+        redirect_to run_path(@run), alert: "A run that only scores existing outputs has no prompt to improve."
         return
       end
 
