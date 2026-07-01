@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.4] - 2026-06-30
+
+### Fixed
+- **The new-metric form's type toggle now works (#93).** Choosing "LLM judge" vs "Deterministic check" previously did nothing and rendered both editors stacked, so a check could only be authored through the REST API or MCP. The chooser now shows only the selected editor and toggles the check builder's per-kind fields, and `create` strips the non-selected editor's fields server-side so a stray submission can never save both a rubric and a check config. Each type also gets a plain-language info icon, and the hint copy reads in plain terms.
+- **Renamed the user-facing "judge-only run" wording to "score existing outputs" (#94).** Since check metrics landed, a scoring run can be entirely deterministic checks with no LLM judge, so the old label was a misnomer. The run form, status header, run-list badge, auto-generated run name, suggest-action alert, API reference, and MCP tool descriptions now describe scoring existing outputs instead. The internal `judge_only?` predicate is unchanged.
+- **Documented the promptfoo import endpoint in the API reference (#95).** `POST /api/v1/imports/promptfoo` now has its own section in the in-app API reference, matching the other v1 resources, with its request forms and mapping-summary response.
+
 ## [0.20.3] - 2026-06-30
 
 ### Fixed
