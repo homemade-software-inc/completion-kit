@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-06-30
+
+### Changed
+- **The check builder now speaks plain language and looks on-brand.** The rule and target pickers are a new branded, dark, keyboard-accessible dropdown (matching the theme instead of the browser's light native menu), rendered in the brand mono. The options read in plain English ("Contains a phrase", "Is valid JSON", "A JSON field equals a value", "The response text") instead of the raw `contains` / `valid_json` / `json_path_equals` / `response_text` identifiers, and the same human labels show on a check metric's page. Field labels and hints were reworded to plain language throughout.
+
 ## [0.20.4] - 2026-06-30
 
 ### Fixed
