@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-07-01
+
+### Changed
+- Removed the info icons from beside the metric-type choices on the metric form; the plain-language hint below the heading already explains the difference.
+
 ## [0.21.0] - 2026-06-30
 
 ### Changed
