@@ -79,12 +79,10 @@
         <label class="ck-radio">
           <%= form.radio_button :metric_type, "llm_judge", checked: !metric.check? %>
           <span>LLM judge (1-5)</span>
-          <%= heroicon_tag "information-circle", variant: :outline, size: 16, class: "ck-radio-info", "aria-hidden": "true", title: "An AI reads each response and rates it 1 to 5 stars against your rubric, with a written reason. Best for subjective quality: tone, helpfulness, accuracy." %>
         </label>
         <label class="ck-radio">
           <%= form.radio_button :metric_type, "check", checked: metric.check? %>
           <span>Deterministic check</span>
-          <%= heroicon_tag "information-circle", variant: :outline, size: 16, class: "ck-radio-info", "aria-hidden": "true", title: "A rule that passes or fails instantly with no AI and no cost. Best for exact things: valid JSON, contains a phrase, no refusal." %>
         </label>
       </div>
     <% end %>

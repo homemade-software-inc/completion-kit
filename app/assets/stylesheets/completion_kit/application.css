@@ -1922,13 +1922,6 @@ label.ck-checkbox input {
   cursor: pointer;
 }
 
-.ck-radio-info {
-  width: 16px;
-  height: 16px;
-  color: var(--ck-muted);
-  cursor: help;
-}
-
 .ck-field-row {
   display: flex;
   gap: 1rem;

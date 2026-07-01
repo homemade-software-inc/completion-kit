@@ -165,12 +165,11 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(response.body).to include("ck-rubric-builder")
     end
 
-    it "explains each metric type with a plain-language info icon and hint on the new form" do
+    it "explains the metric types in plain language on the new form" do
       get "#{base_path}/new"
 
       expect(response.body).to include("The judge gives each response 1 to 5 stars against your rubric. A check just passes or fails, with no AI.")
-      expect(response.body).to include("An AI reads each response and rates it 1 to 5 stars against your rubric, with a written reason. Best for subjective quality: tone, helpfulness, accuracy.")
-      expect(response.body).to include("A rule that passes or fails instantly with no AI and no cost. Best for exact things: valid JSON, contains a phrase, no refusal.")
+      expect(response.body).not_to include("ck-radio-info")
     end
 
     it "renders both editors on the new form with the check editor hidden by default" do
