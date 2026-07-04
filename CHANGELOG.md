@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.22.1] - 2026-07-04
+## [0.23.0] - 2026-07-04
+
+### Removed
+- **Dropped the `no_refusal` check kind and its starter.** It was a preset, not a capability: a fixed, hidden English phrase list dressed up as a first-class rule, and the "Is not a refusal" label promised detection it could not deliver (it missed off-script refusals and flagged legitimate uses of the same phrases). Anything it did can be built explicitly with a `not_contains` or `regex` check, and real refusal detection belongs to an LLM judge. Existing `no_refusal` metrics stop validating; recreate them as a `regex` check or a judge metric if you need them.
 
 ### Changed
 - Reworded the "Field in the answer key" help text on the check builder to drop a domain-specific example value and the sentence that repeated the option above it.
