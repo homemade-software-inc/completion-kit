@@ -6,9 +6,9 @@ RSpec.describe CompletionKit::Checks::Registry do
   end
 
   describe ".kinds" do
-    it "exposes the exact v1 catalog of eight kinds" do
+    it "exposes the catalog of check kinds" do
       expect(described_class.kinds).to match_array(
-        %w[contains not_contains equals regex valid_json json_path_equals length_bounds no_refusal]
+        %w[contains not_contains equals regex valid_json json_path_equals length_bounds]
       )
     end
 
@@ -169,27 +169,6 @@ RSpec.describe CompletionKit::Checks::Registry do
       expect { call("length_bounds", "abc", { "min" => "2", "max" => "9" }) }.not_to raise_error
       expect(call("length_bounds", "a", { "min" => "2" }).passed).to be(false)
       expect(call("length_bounds", "abc", { "min" => "2" }).passed).to be(true)
-    end
-  end
-
-  describe "no_refusal" do
-    it "passes a normal answer and fails a refusal" do
-      expect(call("no_refusal", "Here is the data you asked for.", {}).passed).to be(true)
-      expect(call("no_refusal", "I'm sorry, I can't help with that.", {}).passed).to be(false)
-    end
-
-    it "detects each refusal phrasing in the catalog" do
-      refusals = [
-        "I'm sorry, but that is off limits.",
-        "I can't help with that request.",
-        "I cannot assist with this.",
-        "I'm unable to do that.",
-        "I won't be able to help here.",
-        "As an AI, I do not have opinions."
-      ]
-      refusals.each do |phrase|
-        expect(call("no_refusal", phrase, {}).passed).to be(false), "expected a refusal for: #{phrase}"
-      end
     end
   end
 end

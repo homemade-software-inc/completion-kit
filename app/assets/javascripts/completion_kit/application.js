@@ -217,8 +217,7 @@ var CK_CHECK_FIELDS = {
   regex: ["pattern", "case_sensitive", "multiline"],
   valid_json: [],
   json_path_equals: ["json_path", "expected"],
-  length_bounds: ["min", "max"],
-  no_refusal: []
+  length_bounds: ["min", "max"]
 };
 
 var CK_VALUE_KINDS = ["contains", "not_contains", "equals"];

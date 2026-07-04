@@ -176,8 +176,7 @@ module CompletionKit
       "regex" => "Matches a pattern",
       "valid_json" => "Is valid JSON",
       "json_path_equals" => "A JSON field equals a value",
-      "length_bounds" => "Length is within a range",
-      "no_refusal" => "Is not a refusal"
+      "length_bounds" => "Length is within a range"
     }.freeze
 
     CHECK_COMPARE_TO_LABELS = {

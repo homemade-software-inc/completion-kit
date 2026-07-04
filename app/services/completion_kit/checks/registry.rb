@@ -8,8 +8,7 @@ module CompletionKit
         "regex" => Regex,
         "valid_json" => ValidJson,
         "json_path_equals" => JsonPathEquals,
-        "length_bounds" => LengthBounds,
-        "no_refusal" => NoRefusal
+        "length_bounds" => LengthBounds
       }.freeze
 
       REQUIRED_KEYS = {
@@ -19,8 +18,7 @@ module CompletionKit
         "regex" => %w[pattern],
         "valid_json" => [],
         "json_path_equals" => %w[json_path expected],
-        "length_bounds" => [],
-        "no_refusal" => []
+        "length_bounds" => []
       }.freeze
 
       VALUE_COMPARISON_KINDS = %w[contains not_contains equals].freeze
