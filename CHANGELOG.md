@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-07-04
+
+### Added
+- **Deterministic checks can now grade against each row's own answer key (#97).** The `contains`, `not_contains`, and `equals` checks gained a `compare_to` source: compare every output against one fixed value you type (the default, unchanged), or against each row's own `expected_output` (the ground-truth column). This makes exact, per-row grading of extraction and classification datasets possible with no LLM judge and no external runner. Pick which part of the output to read (whole response or a `json_path`), and set `expected_path` to dig into the expected value when the answer key is itself JSON. A row with no expected value fails cleanly with a clear reason. Surfaced through the check builder, the REST API, and MCP, plus a new "Matches the answer key" starter metric. No schema change; the config rides the existing `check_config` JSON.
+
+### Changed
+- **The metric form has a consistent vertical rhythm.** Stacked fields in the check and judge builders were cramped at a tight gap meant for label-to-input spacing; they now use a single `--ck-field-gap` token so the space between fields matches the rest of the form.
+
+### Fixed
+- **Hidden check-builder checkboxes no longer render.** A `label.ck-checkbox` had no `[hidden]` rule, so a checkbox the form meant to hide for the chosen rule (for example Multiline on an equality check) stayed visible.
+
 ## [0.21.1] - 2026-07-01
 
 ### Changed
