@@ -40,6 +40,54 @@ RSpec.describe CompletionKit::CheckReviewJob, type: :job do
     expect(review.ai_feedback).to eq("could not resolve target")
   end
 
+  context "with a comparison check graded against the row's answer key (compare_to: expected)" do
+    let(:metric) do
+      create(:completion_kit_metric, :check,
+             check_config: { "check_kind" => "equals", "target" => "json_path", "target_path" => "vin",
+                             "compare_to" => "expected", "expected_path" => "vin" })
+    end
+    let(:response) do
+      create(:completion_kit_response, run: run,
+             response_text: '{"vin":"5YFBURHE0KP891234"}', expected_output: '{"vin":"5YFBURHE0KP891234"}')
+    end
+
+    it "passes when the output field matches this row's expected value" do
+      described_class.perform_now(response.id, metric.id, run.id)
+
+      review = response.reviews.find_by(metric_id: metric.id)
+      expect(review.passed).to be(true)
+    end
+
+    it "fails when the output field does not match this row's expected value" do
+      response.update!(response_text: '{"vin":"WRONGVIN000000000"}')
+
+      described_class.perform_now(response.id, metric.id, run.id)
+
+      review = response.reviews.find_by(metric_id: metric.id)
+      expect(review.passed).to be(false)
+    end
+
+    it "grades a contains check against the row's expected value too" do
+      metric.update!(check_config: { "check_kind" => "contains", "target" => "response_text", "compare_to" => "expected" })
+      response.update!(response_text: "the VIN is 5YFBURHE0KP891234, extracted", expected_output: "5YFBURHE0KP891234")
+
+      described_class.perform_now(response.id, metric.id, run.id)
+
+      expect(response.reviews.find_by(metric_id: metric.id).passed).to be(true)
+    end
+
+    it "fails with a clear detail when the row has no expected value, never raising" do
+      response.update!(expected_output: nil)
+
+      expect { described_class.perform_now(response.id, metric.id, run.id) }.not_to raise_error
+
+      review = response.reviews.find_by(metric_id: metric.id)
+      expect(review.status).to eq("succeeded")
+      expect(review.passed).to be(false)
+      expect(review.ai_feedback).to eq("no expected value for this row")
+    end
+  end
+
   it "records a genuine internal exception as failed and still enqueues the completion check" do
     allow(CompletionKit::Checks::Registry).to receive(:fetch).and_raise(RuntimeError, "boom")
     expect(CompletionKit::RunCompletionCheckJob).to receive(:perform_later).with(run.id)

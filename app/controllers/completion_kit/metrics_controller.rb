@@ -247,7 +247,7 @@ module CompletionKit
     def metric_params
       permitted = params.require(:metric).permit(:name, :instruction, :metric_type,
         rubric_bands: [:stars, :description],
-        check_config: %i[check_kind target target_path value pattern json_path expected min max case_sensitive multiline trim],
+        check_config: %i[check_kind target target_path compare_to value pattern json_path expected expected_path min max case_sensitive multiline trim],
         tag_names: [])
       permitted[:check_config] = normalize_check_config(permitted[:check_config]) if permitted.key?(:check_config)
       permitted
@@ -258,6 +258,12 @@ module CompletionKit
       %w[min max].each { |key| hash[key] = hash[key].to_i if hash[key].present? }
       %w[case_sensitive multiline trim].each { |key| hash[key] = ActiveModel::Type::Boolean.new.cast(hash[key]) if hash.key?(key) }
       hash["expected"] = coerce_scalar(hash["expected"]) if hash["expected"].present?
+      if hash["compare_to"] == "expected"
+        hash.delete("value")
+      else
+        hash.delete("compare_to")
+        hash.delete("expected_path")
+      end
       hash.reject { |_, value| value.nil? || value == "" }
     end
 

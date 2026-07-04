@@ -132,8 +132,21 @@ module CompletionKit
       end
 
       validate_check_target(config)
+      validate_check_compare_to(config, kind)
       validate_check_required_keys(config, kind)
       validate_check_kind_rules(config, kind)
+    end
+
+    def validate_check_compare_to(config, kind)
+      return unless config.key?("compare_to")
+
+      unless %w[constant expected].include?(config["compare_to"])
+        errors.add(:check_config, "compare_to must be constant or expected")
+        return
+      end
+      if config["compare_to"] == "expected" && !CompletionKit::Checks::Registry.compares_value?(kind)
+        errors.add(:check_config, "compare_to expected only applies to contains, not_contains, or equals")
+      end
     end
 
     def validate_check_target(config)
@@ -147,7 +160,9 @@ module CompletionKit
     end
 
     def validate_check_required_keys(config, kind)
-      CompletionKit::Checks::Registry.required_keys.fetch(kind).each do |required_key|
+      required = CompletionKit::Checks::Registry.required_keys.fetch(kind)
+      required -= %w[value] if config["compare_to"] == "expected" && CompletionKit::Checks::Registry.compares_value?(kind)
+      required.each do |required_key|
         if required_key == "expected"
           errors.add(:check_config, "expected is required") unless config.key?("expected")
         elsif config[required_key].to_s.strip.empty?

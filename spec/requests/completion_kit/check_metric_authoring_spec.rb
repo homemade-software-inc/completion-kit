@@ -13,6 +13,27 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(metric.check_config).to include("check_kind" => "valid_json", "target" => "response_text")
     end
 
+    it "grades against the row's expected value and drops the constant value when compare_to is expected" do
+      post base_path, params: { metric: { name: "VIN gold", metric_type: "check",
+                                          check_config: { check_kind: "equals", target: "response_text",
+                                                          compare_to: "expected", expected_path: "vin", value: "leftover" } } }
+
+      config = CompletionKit::Metric.find_by(name: "VIN gold").check_config
+      expect(config).to include("compare_to" => "expected", "expected_path" => "vin")
+      expect(config).not_to have_key("value")
+    end
+
+    it "drops compare_to and expected_path when comparing to a constant" do
+      post base_path, params: { metric: { name: "Constant contains", metric_type: "check",
+                                          check_config: { check_kind: "contains", target: "response_text",
+                                                          compare_to: "constant", expected_path: "vin", value: "OK" } } }
+
+      config = CompletionKit::Metric.find_by(name: "Constant contains").check_config
+      expect(config).to include("value" => "OK")
+      expect(config).not_to have_key("compare_to")
+      expect(config).not_to have_key("expected_path")
+    end
+
     it "coerces numeric and boolean check_config fields from the form" do
       post base_path, params: { metric: { name: "Contains exact", metric_type: "check",
                                           check_config: { check_kind: "contains", target: "response_text", value: "OK", case_sensitive: "true" } } }
@@ -143,6 +164,14 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(metric.metric_type).to eq("check")
       expect(metric.check_config).to include("check_kind" => "valid_json")
     end
+
+    it "adopts the answer-key starter as an equals check graded against expected" do
+      post "#{base_path}/starters/matches_expected"
+
+      metric = CompletionKit::Metric.find_by(name: "Matches the answer key")
+      expect(metric.metric_type).to eq("check")
+      expect(metric.check_config).to include("check_kind" => "equals", "compare_to" => "expected")
+    end
   end
 
   describe "authoring views" do
@@ -160,6 +189,11 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(response.body).to include("Does not contain a phrase")
       expect(response.body).to include("Is valid JSON")
       expect(response.body).to include("The response text")
+      expect(response.body).to include('data-ck-check-field="compare_to"')
+      expect(response.body).to include('name="metric[check_config][compare_to]"')
+      expect(response.body).to include("Each row's expected value")
+      expect(response.body).to include('data-ck-check-field="expected_path"')
+      expect(response.body).to include('name="metric[check_config][expected_path]"')
       expect(response.body).not_to include(">not_contains<")
       expect(response.body).not_to include(">response_text<")
       expect(response.body).to include("ck-rubric-builder")
@@ -273,6 +307,16 @@ RSpec.describe "Check metric authoring", type: :request do
             headers: headers
 
       expect(JSON.parse(response.body)["check_config"]).to include("value" => "ok")
+    end
+
+    it "creates a comparison check graded against each row's expected value" do
+      post "/completion_kit/api/v1/metrics",
+           params: { name: "VIN match", metric_type: "check",
+                     check_config: { check_kind: "equals", target: "json_path", target_path: "vin", compare_to: "expected", expected_path: "vin" } }.to_json,
+           headers: headers
+
+      expect(response).to have_http_status(:created)
+      expect(JSON.parse(response.body)["check_config"]).to include("check_kind" => "equals", "compare_to" => "expected", "expected_path" => "vin")
     end
   end
 end

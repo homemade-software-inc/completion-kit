@@ -242,7 +242,15 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     it "renders human labels for known config fields and humanizes unknown ones" do
       expect(helper.ck_check_field_label("value")).to eq("Text to look for")
       expect(helper.ck_check_field_label("target_path")).to eq("Path into the JSON")
+      expect(helper.ck_check_field_label("expected_path")).to eq("Field in the answer key")
+      expect(helper.ck_check_field_label("compare_to")).to eq("Compare against")
       expect(helper.ck_check_field_label("some_key")).to eq("Some key")
+    end
+
+    it "renders compare_to values in plain language and passes other values through" do
+      expect(helper.ck_check_field_value("compare_to", "expected")).to eq("Each row's expected value")
+      expect(helper.ck_check_field_value("compare_to", "constant")).to eq("A value you type")
+      expect(helper.ck_check_field_value("value", "TOKEN")).to eq("TOKEN")
     end
   end
 

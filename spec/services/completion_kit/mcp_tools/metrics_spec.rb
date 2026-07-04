@@ -70,6 +70,22 @@ RSpec.describe CompletionKit::McpTools::Metrics do
       end
     end
 
+    it "advertises the compare_to source and expected_path field for grading against expected" do
+      schema = described_class::CHECK_CONFIG_SCHEMA
+      expect(schema[:properties][:compare_to][:enum]).to match_array(%w[constant expected])
+      expect(schema[:properties]).to have_key(:expected_path)
+      expect(described_class::CHECK_CONFIG_HINT).to include("compare_to")
+    end
+
+    it "creates a comparison check that grades against each row's expected_output" do
+      result = described_class.call("metrics_create", {
+        "name" => "VIN ground truth", "metric_type" => "check",
+        "check_config" => {"check_kind" => "equals", "target" => "json_path", "target_path" => "vin", "compare_to" => "expected", "expected_path" => "vin"}
+      })
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["check_config"]).to include("check_kind" => "equals", "compare_to" => "expected", "expected_path" => "vin")
+    end
+
     it "updates a metric" do
       result = described_class.call("metrics_update", {"id" => metric.id, "name" => "Precision"})
       content = JSON.parse(result[:content].first[:text])

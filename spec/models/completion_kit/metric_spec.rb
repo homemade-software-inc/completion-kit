@@ -122,6 +122,29 @@ RSpec.describe CompletionKit::Metric, type: :model do
       expect(metric).not_to be_valid
       expect(metric.errors[:check_config].join).to include("expected")
     end
+
+    it "does not require value when a comparison check grades against the row's expected value" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "equals", "target" => "response_text", "compare_to" => "expected" })
+      expect(metric).to be_valid
+    end
+
+    it "still requires value for a comparison check that compares to a constant" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "equals", "target" => "response_text", "compare_to" => "constant" })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("value")
+    end
+
+    it "is invalid when compare_to is neither constant nor expected" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "equals", "target" => "response_text", "compare_to" => "guess", "value" => "x" })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("compare_to must be constant or expected")
+    end
+
+    it "rejects compare_to expected on a check kind that has no value operand" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text", "compare_to" => "expected" })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include("only applies to")
+    end
   end
 
   describe "#in_use?" do

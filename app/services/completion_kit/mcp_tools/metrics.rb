@@ -13,6 +13,8 @@ module CompletionKit
           pattern: {type: "string"},
           json_path: {type: "string"},
           expected: {},
+          compare_to: {type: "string", enum: %w[constant expected]},
+          expected_path: {type: "string"},
           min: {type: "integer"},
           max: {type: "integer"},
           case_sensitive: {type: "boolean"},
@@ -23,7 +25,8 @@ module CompletionKit
 
       CHECK_CONFIG_HINT = "For a deterministic check set metric_type:\"check\" and check_config. Per-kind required keys: " \
         "value (contains/not_contains/equals), pattern (regex), json_path+expected (json_path_equals), " \
-        "min and/or max (length_bounds); valid_json and no_refusal take no extra keys. target_path is required when target is json_path."
+        "min and/or max (length_bounds); valid_json and no_refusal take no extra keys. target_path is required when target is json_path. " \
+        "For contains, not_contains, and equals, set compare_to:\"expected\" to grade against each row's own expected_output (ground truth) instead of a constant value (drop value); add expected_path to dig into the expected value when it is JSON."
 
       TOOLS = {
         "metrics_list" => {

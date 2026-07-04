@@ -27,6 +27,16 @@ RSpec.describe CompletionKit::Checks::Registry do
     end
   end
 
+  describe ".compares_value?" do
+    it "is true only for the kinds whose operand can come from a constant or the row's expected value" do
+      expect(described_class.compares_value?("contains")).to be(true)
+      expect(described_class.compares_value?("not_contains")).to be(true)
+      expect(described_class.compares_value?("equals")).to be(true)
+      expect(described_class.compares_value?("json_path_equals")).to be(false)
+      expect(described_class.compares_value?("valid_json")).to be(false)
+    end
+  end
+
   describe ".fetch" do
     it "returns the callable for a known kind" do
       expect(described_class.fetch("valid_json")).to respond_to(:call)

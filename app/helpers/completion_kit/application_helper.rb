@@ -180,6 +180,11 @@ module CompletionKit
       "no_refusal" => "Is not a refusal"
     }.freeze
 
+    CHECK_COMPARE_TO_LABELS = {
+      "constant" => "A value you type",
+      "expected" => "Each row's expected value"
+    }.freeze
+
     CHECK_TARGET_LABELS = {
       "response_text" => "The response text",
       "input_data" => "The input row",
@@ -191,6 +196,8 @@ module CompletionKit
       "pattern" => "Pattern",
       "json_path" => "JSON path",
       "expected" => "Expected value",
+      "expected_path" => "Field in the answer key",
+      "compare_to" => "Compare against",
       "target_path" => "Path into the JSON",
       "min" => "Shortest allowed",
       "max" => "Longest allowed",
@@ -209,6 +216,12 @@ module CompletionKit
 
     def ck_check_field_label(key)
       CHECK_FIELD_LABELS.fetch(key.to_s) { key.to_s.humanize }
+    end
+
+    def ck_check_field_value(key, value)
+      return CHECK_COMPARE_TO_LABELS.fetch(value.to_s, value) if key.to_s == "compare_to"
+
+      value
     end
 
     def ck_result_change_badge(change)

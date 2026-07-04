@@ -221,20 +221,31 @@ var CK_CHECK_FIELDS = {
   no_refusal: []
 };
 
+var CK_VALUE_KINDS = ["contains", "not_contains", "equals"];
+
 function ckApplyCheckFields(scope) {
   if (!scope) return;
   var kindSelect = scope.querySelector('[name="metric[check_config][check_kind]"]');
   if (!kindSelect) return;
-  var visible = CK_CHECK_FIELDS[kindSelect.value];
+  var kind = kindSelect.value;
+  var visible = (CK_CHECK_FIELDS[kind] || []).slice();
   var targetSelect = scope.querySelector('[name="metric[check_config][target]"]');
   var targetIsJsonPath = !!(targetSelect && targetSelect.value === "json_path");
+
+  if (CK_VALUE_KINDS.indexOf(kind) !== -1) {
+    visible.push("compare_to");
+    var comparison = scope.querySelector('[name="metric[check_config][compare_to]"]:checked');
+    if (comparison && comparison.value === "expected") {
+      visible = visible.filter(function(key) { return key !== "value"; });
+      visible.push("expected_path");
+    }
+  }
+
   scope.querySelectorAll("[data-ck-check-field]").forEach(function(field) {
     var key = field.getAttribute("data-ck-check-field");
     var show;
     if (key === "target_path") {
       show = targetIsJsonPath;
-    } else if (!visible) {
-      show = true;
     } else {
       show = visible.indexOf(key) !== -1;
     }
@@ -274,7 +285,7 @@ document.addEventListener("change", function(e) {
     ckApplyMetricType(group);
     return;
   }
-  if (target.name === "metric[check_config][check_kind]" || target.name === "metric[check_config][target]") {
+  if (target.name === "metric[check_config][check_kind]" || target.name === "metric[check_config][target]" || target.name === "metric[check_config][compare_to]") {
     var scope = target.closest('[data-ck-metric-editor="check"]') || target.closest("form");
     ckApplyCheckFields(scope);
   }

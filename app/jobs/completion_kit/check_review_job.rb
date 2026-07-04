@@ -41,7 +41,16 @@ module CompletionKit
         return Checks::Result.new(passed: false, detail: "could not resolve target")
       end
 
-      Checks::Registry.fetch(config["check_kind"]).call(target_value, config)
+      kind = config["check_kind"]
+      if config["compare_to"] == "expected" && Checks::Registry.compares_value?(kind)
+        expected_value = Checks::ExpectedResolver.call(response, config)
+        if expected_value.equal?(Checks::ExpectedResolver::UNRESOLVED)
+          return Checks::Result.new(passed: false, detail: "no expected value for this row")
+        end
+        config = config.merge("value" => expected_value)
+      end
+
+      Checks::Registry.fetch(kind).call(target_value, config)
     end
 
     def record_terminal_failure!(error)

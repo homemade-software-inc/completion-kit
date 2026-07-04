@@ -52,6 +52,7 @@
   --ck-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --ck-radius: 6px;
   --ck-radius-lg: 10px;
+  --ck-field-gap: 1.15rem;
 }
 
 *,
@@ -1613,8 +1614,30 @@ tr:hover .ck-chip--publish {
 
 .ck-form-card {
   display: grid;
-  gap: 1rem;
+  gap: var(--ck-field-gap);
   max-width: 36rem;
+}
+
+.ck-form-card [data-ck-metric-type],
+.ck-form-card [data-ck-metric-editor] {
+  display: grid;
+  gap: var(--ck-field-gap);
+  align-content: start;
+}
+
+.ck-form-card [data-ck-metric-type] > .ck-section-title + .ck-hint,
+.ck-form-card [data-ck-metric-editor] > .ck-section-title + .ck-hint {
+  margin-top: calc(0.35rem - var(--ck-field-gap));
+}
+
+.ck-form-card [data-ck-metric-type] > .ck-radio,
+.ck-form-card [data-ck-metric-editor] > .ck-checkbox {
+  margin-top: 0;
+}
+
+.ck-form-card [data-ck-metric-type] > .ck-radio + .ck-radio,
+.ck-form-card [data-ck-metric-editor] > .ck-checkbox + .ck-checkbox {
+  margin-top: calc(0.4rem - var(--ck-field-gap));
 }
 
 .ck-version-note {
@@ -1920,6 +1943,10 @@ label.ck-checkbox input {
   height: 1rem;
   accent-color: var(--ck-accent);
   cursor: pointer;
+}
+
+label.ck-checkbox[hidden] {
+  display: none;
 }
 
 .ck-field-row {

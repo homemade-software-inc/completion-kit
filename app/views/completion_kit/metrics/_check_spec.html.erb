@@ -11,7 +11,13 @@
   <% config.except("check_kind", "target").each do |key, value| %>
     <div class="ck-check-spec__row">
       <dt class="ck-check-spec__term"><%= ck_check_field_label(key) %></dt>
-      <dd class="ck-check-spec__val"><code class="ck-check-spec__code"><%= value %></code></dd>
+      <dd class="ck-check-spec__val">
+        <% if key == "compare_to" %>
+          <%= ck_check_field_value(key, value) %>
+        <% else %>
+          <code class="ck-check-spec__code"><%= value %></code>
+        <% end %>
+      </dd>
     </div>
   <% end %>
 </dl>

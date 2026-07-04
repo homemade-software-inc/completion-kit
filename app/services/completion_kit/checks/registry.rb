@@ -23,6 +23,8 @@ module CompletionKit
         "no_refusal" => []
       }.freeze
 
+      VALUE_COMPARISON_KINDS = %w[contains not_contains equals].freeze
+
       KINDS = CHECKS.keys.freeze
 
       def self.kinds
@@ -31,6 +33,10 @@ module CompletionKit
 
       def self.required_keys
         REQUIRED_KEYS
+      end
+
+      def self.compares_value?(kind)
+        VALUE_COMPARISON_KINDS.include?(kind)
       end
 
       def self.fetch(kind)

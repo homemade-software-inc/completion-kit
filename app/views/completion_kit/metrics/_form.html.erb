@@ -183,6 +183,19 @@
         <input type="text" name="metric[check_config][target_path]" id="metric_check_target_path" class="ck-input" value="<%= check["target_path"] %>">
       </div>
 
+      <div class="ck-field" data-ck-check-field="compare_to">
+        <p class="ck-label">Compare against</p>
+        <p class="ck-hint">Check every output against one fixed value, or against each row's own expected value (its answer key).</p>
+        <label class="ck-radio">
+          <input type="radio" name="metric[check_config][compare_to]" value="constant" <%= "checked" unless check["compare_to"] == "expected" %>>
+          <span>A value I type</span>
+        </label>
+        <label class="ck-radio">
+          <input type="radio" name="metric[check_config][compare_to]" value="expected" <%= "checked" if check["compare_to"] == "expected" %>>
+          <span>Each row's expected value</span>
+        </label>
+      </div>
+
       <div class="ck-field" data-ck-check-field="value">
         <label class="ck-label" for="metric_check_value">Text to look for</label>
         <input type="text" name="metric[check_config][value]" id="metric_check_value" class="ck-input" value="<%= check["value"] %>">
@@ -204,6 +217,12 @@
         <label class="ck-label" for="metric_check_expected">Expected value</label>
         <p class="ck-hint">The value it should equal.</p>
         <input type="text" name="metric[check_config][expected]" id="metric_check_expected" class="ck-input" value="<%= check["expected"] %>">
+      </div>
+
+      <div class="ck-field" data-ck-check-field="expected_path">
+        <label class="ck-label" for="metric_check_expected_path">Field in the answer key</label>
+        <p class="ck-hint">Optional. Each row is compared to its own expected value. If that answer key is JSON, dig into it here, like vin. Leave blank to use the whole expected value.</p>
+        <input type="text" name="metric[check_config][expected_path]" id="metric_check_expected_path" class="ck-input" value="<%= check["expected_path"] %>">
       </div>
 
       <div class="ck-field-row">

@@ -96,6 +96,14 @@ module CompletionKit
         catches: "A required marker, citation, or keyword the output must always include. Set the value to the token you require.",
         metric_type: "check",
         check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "REQUIRED" }
+      ),
+      Starter.new(
+        key: "matches_expected",
+        name: "Matches the answer key",
+        description: "Does the output equal this row's own expected value?",
+        catches: "Extraction and classification against ground truth, where every row has its own correct answer in the expected_output column. Exact match, deterministic, no judge call.",
+        metric_type: "check",
+        check_config: { "check_kind" => "equals", "target" => "response_text", "compare_to" => "expected" }
       )
     ].freeze
 
