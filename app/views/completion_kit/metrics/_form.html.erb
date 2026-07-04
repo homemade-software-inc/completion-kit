@@ -221,7 +221,7 @@
 
       <div class="ck-field" data-ck-check-field="expected_path">
         <label class="ck-label" for="metric_check_expected_path">Field in the answer key</label>
-        <p class="ck-hint">Optional. Each row is compared to its own expected value. If that answer key is JSON, dig into it here, like vin. Leave blank to use the whole expected value.</p>
+        <p class="ck-hint">Optional. If the expected value is JSON, name the field to read from it, like data.answer. Leave blank to compare against the whole value.</p>
         <input type="text" name="metric[check_config][expected_path]" id="metric_check_expected_path" class="ck-input" value="<%= check["expected_path"] %>">
       </div>
 
