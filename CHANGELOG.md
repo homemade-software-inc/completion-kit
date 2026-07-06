@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.25.1] - 2026-07-06
+## [0.25.2] - 2026-07-06
+
+### Fixed
+- **Cross-links on a record's show page produced a malformed URL like `datasets/4.4`.** `ck_engine_path_options` threaded the current page's engine `:id` (and `:format`) from the route recall into every `ck_*_path` helper, so a link to a sibling record on a member page (for example the dataset link in a run row on the dataset show page) had the stale id spill into the `:format` segment. It now keeps only the host mount's own scope segments (such as an org slug). The dataset "Download CSV" link threads the same scope options for consistency.
 
 ### Fixed
 - Added breathing room below the tag chips on the dataset and run show pages; the standalone header tag row butted against the following section heading (for example "CSV preview"). The metric page, where the tags sit inside the page header, is unchanged.
