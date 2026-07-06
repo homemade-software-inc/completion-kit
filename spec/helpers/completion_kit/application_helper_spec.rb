@@ -361,6 +361,18 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_prompt_path(prompt)).to eq("/orgs/acme/prompts/the-prompt")
       expect(helper.ck_dataset_path(dataset)).to eq("/orgs/acme/datasets/the-dataset")
     end
+
+    it "drops the current page's engine :id and :format from recall so a sibling link is not corrupted" do
+      allow(helper).to receive(:url_options).and_return(
+        _recall: { controller: "completion_kit/datasets", action: "show", org_slug: "acme", id: "4", format: nil }
+      )
+
+      expect(helper.ck_engine_path_options).to eq(org_slug: "acme")
+
+      engine_helpers = CompletionKit::Engine.routes.url_helpers
+      expect(engine_helpers).to receive(:dataset_path).with(dataset, org_slug: "acme").and_return("/orgs/acme/datasets/the-dataset")
+      expect(helper.ck_dataset_path(dataset)).to eq("/orgs/acme/datasets/the-dataset")
+    end
   end
 
   describe "#ck_format_maybe_json" do

@@ -270,7 +270,7 @@ module CompletionKit
     # The engine's url_helpers won't read them out of the nested recall hash to
     # satisfy a required segment — they have to arrive as explicit kwargs.
     def ck_engine_path_options
-      (url_options[:_recall] || {}).except(:controller, :action)
+      (url_options[:_recall] || {}).except(:controller, :action, :id, :format)
     end
 
     def ck_format_maybe_json(text)

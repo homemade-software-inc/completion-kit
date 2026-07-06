@@ -8,7 +8,7 @@
     <h1 class="ck-title"><%= @dataset.name %></h1>
   </div>
   <div class="ck-actions">
-    <%= link_to "Download CSV", dataset_path(@dataset, format: :csv), class: ck_button_classes(:light, variant: :outline) %>
+    <%= link_to "Download CSV", dataset_path(@dataset, format: :csv, **ck_engine_path_options), class: ck_button_classes(:light, variant: :outline) %>
     <%= link_to "Edit", edit_dataset_path(@dataset), class: ck_button_classes(:light, variant: :outline) %>
   </div>
 </section>
