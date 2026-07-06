@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_30_005721) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_06_164600) do
   create_table "completion_kit_agreements", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -206,6 +206,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_005721) do
     t.datetime "created_at", null: false
     t.integer "dataset_id"
     t.text "error_message"
+    t.string "expected_column"
     t.text "failure_summary"
     t.string "judge_model"
     t.string "name"

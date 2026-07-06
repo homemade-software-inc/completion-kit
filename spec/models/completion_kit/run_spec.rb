@@ -39,6 +39,32 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
+  describe "expected_column (answer-key override)" do
+    let(:prompt) { create(:completion_kit_prompt, template: "Static prompt") }
+    let(:dataset) { create(:completion_kit_dataset, csv_data: "input,true_vin\nphoto,WP0AA2A98KS103927\n") }
+
+    it "is valid when blank even with a dataset" do
+      run = build(:completion_kit_run, prompt: prompt, dataset: dataset, expected_column: nil)
+      expect(run).to be_valid
+    end
+
+    it "is valid when it names a real dataset column" do
+      run = build(:completion_kit_run, prompt: prompt, dataset: dataset, expected_column: "true_vin")
+      expect(run).to be_valid
+    end
+
+    it "is invalid when it names a column the dataset does not have" do
+      run = build(:completion_kit_run, prompt: prompt, dataset: dataset, expected_column: "gold")
+      expect(run).not_to be_valid
+      expect(run.errors[:expected_column].join).to include("is not a column")
+    end
+
+    it "is exposed in as_json" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, expected_column: "true_vin")
+      expect(run.as_json[:expected_column]).to eq("true_vin")
+    end
+  end
+
   describe ".display_scoped" do
     it "returns all runs when no runs_display_scope is configured" do
       recent = create(:completion_kit_run)

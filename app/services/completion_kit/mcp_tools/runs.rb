@@ -22,6 +22,7 @@ module CompletionKit
               name: {type: "string"}, prompt_id: {type: "integer"},
               dataset_id: {type: "integer"}, judge_model: {type: "string"},
               output_column: {type: "string", description: "Dataset column to grade when prompt_id is omitted; defaults to \"actual_output\"."},
+              expected_column: {type: "string", description: "Dataset column holding each row's answer key / ground truth, graded by checks with compare_to \"expected\" and passed to the judge; defaults to \"expected_output\"."},
               metric_ids: {type: "array", items: {type: "integer"}},
               tag_names: {type: "array", items: {type: "string"}}
             },
@@ -37,6 +38,7 @@ module CompletionKit
               id: {type: "integer"}, name: {type: "string"},
               dataset_id: {type: "integer"}, judge_model: {type: "string"},
               output_column: {type: "string"},
+              expected_column: {type: "string"},
               metric_ids: {type: "array", items: {type: "integer"}},
               tag_names: {type: "array", items: {type: "string"}}
             },
@@ -65,7 +67,7 @@ module CompletionKit
       end
 
       def self.create(args)
-        run = Run.new(args.slice("name", "prompt_id", "dataset_id", "judge_model", "output_column"))
+        run = Run.new(args.slice("name", "prompt_id", "dataset_id", "judge_model", "output_column", "expected_column"))
         if run.save
           run.replace_metrics!(args["metric_ids"])
           run.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
@@ -77,7 +79,7 @@ module CompletionKit
 
       def self.update(args)
         run = Run.find(args["id"])
-        if run.update(args.except("id", "metric_ids", "tag_names").slice("name", "dataset_id", "judge_model", "output_column"))
+        if run.update(args.except("id", "metric_ids", "tag_names").slice("name", "dataset_id", "judge_model", "output_column", "expected_column"))
           run.replace_metrics!(args["metric_ids"]) if args.key?("metric_ids")
           run.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(run.reload.as_json)

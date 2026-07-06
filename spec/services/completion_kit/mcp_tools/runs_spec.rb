@@ -79,6 +79,25 @@ RSpec.describe CompletionKit::McpTools::Runs do
       expect(content["output_column"]).to eq("actual_output")
     end
 
+    it "creates a run with an expected_column answer-key override" do
+      dataset = create(:completion_kit_dataset, csv_data: "input,true_vin\nphoto,WP0AA2A98KS103927\n")
+
+      result = described_class.call("runs_create", {
+        "name" => "Ground truth",
+        "dataset_id" => dataset.id,
+        "prompt_id" => prompt.id,
+        "expected_column" => "true_vin"
+      })
+
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["expected_column"]).to eq("true_vin")
+    end
+
+    it "advertises expected_column on the create schema" do
+      props = described_class::TOOLS["runs_create"][:inputSchema][:properties]
+      expect(props).to have_key(:expected_column)
+    end
+
     it "updates a run" do
       result = described_class.call("runs_update", {"id" => run.id, "name" => "Updated"})
       content = JSON.parse(result[:content].first[:text])

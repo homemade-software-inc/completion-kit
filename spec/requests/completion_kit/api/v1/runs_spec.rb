@@ -124,6 +124,16 @@ RSpec.describe "API V1 Runs", type: :request do
       body = JSON.parse(response.body)
       expect(body["metric_ids"]).to eq([metric.id])
     end
+
+    it "persists an expected_column answer-key override" do
+      prompt = create(:completion_kit_prompt, template: "Static prompt")
+      dataset = create(:completion_kit_dataset, csv_data: "input,true_vin\nphoto,WP0AA2A98KS103927\n")
+      post "/completion_kit/api/v1/runs",
+        params: {prompt_id: prompt.id, dataset_id: dataset.id, expected_column: "true_vin"}.to_json,
+        headers: headers
+      expect(response).to have_http_status(:created)
+      expect(JSON.parse(response.body)["expected_column"]).to eq("true_vin")
+    end
   end
 
   describe "PATCH /api/v1/runs/:id" do
@@ -262,6 +272,15 @@ RSpec.describe "API V1 Runs", type: :request do
       post "/completion_kit/api/v1/runs/#{run.id}/rerun", headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
       expect(JSON.parse(response.body)["error"]).to eq("Dataset empty")
+    end
+
+    it "copies the expected_column onto the new run" do
+      prompt = create(:completion_kit_prompt, template: "Static")
+      dataset = create(:completion_kit_dataset, csv_data: "input,true_vin\nhi,X1\n")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, expected_column: "true_vin")
+      allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
+      post "/completion_kit/api/v1/runs/#{run.id}/rerun", headers: headers
+      expect(CompletionKit::Run.order(:id).last.expected_column).to eq("true_vin")
     end
   end
 

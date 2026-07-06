@@ -17,6 +17,7 @@ module CompletionKit
     validates :status, inclusion: { in: STATUSES }
     validate :dataset_supplies_prompt_variables
     validate :judge_only_run_supplies_output_column
+    validate :dataset_supplies_expected_column
 
     before_validation :set_default_status, on: :create
     before_validation :set_auto_name, on: :create
@@ -217,7 +218,7 @@ module CompletionKit
               status: "pending",
               row_index: index,
               input_data: input,
-              expected_output: row["expected_output"]
+              expected_output: row[expected_column.presence || "expected_output"]
             }
             if judge_only?
               attrs[:status] = "succeeded"
@@ -333,6 +334,7 @@ module CompletionKit
         id: id, name: name, status: status, prompt_id: prompt_id,
         dataset_id: dataset_id, judge_model: judge_model, temperature: temperature,
         output_column: output_column,
+        expected_column: expected_column,
         created_at: created_at, updated_at: updated_at,
         responses_count: responses.count, avg_score: avg_score,
         check_pass_rate: check_pass_rate,
@@ -469,6 +471,14 @@ module CompletionKit
         errors.add(:dataset_id, "is required: prompt uses #{missing.join(', ')}")
       else
         errors.add(:dataset_id, "is missing columns required by the prompt: #{missing.join(', ')}")
+      end
+    end
+
+    def dataset_supplies_expected_column
+      return if expected_column.blank? || dataset.nil?
+
+      unless dataset.headers.include?(expected_column)
+        errors.add(:expected_column, "\"#{expected_column}\" is not a column on dataset \"#{dataset.name}\"")
       end
     end
 

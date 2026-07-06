@@ -83,6 +83,7 @@ module CompletionKit
             judge_model: @run.judge_model,
             temperature: @run.temperature,
             output_column: @run.output_column,
+            expected_column: @run.expected_column,
             tag_names: @run.tag_names,
             status: "pending"
           )
@@ -157,7 +158,7 @@ module CompletionKit
         end
 
         def run_params
-          params.permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :output_column,
+          params.permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :output_column, :expected_column,
             metric_ids: [], tag_names: [])
         end
       end

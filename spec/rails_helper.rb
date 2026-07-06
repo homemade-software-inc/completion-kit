@@ -111,6 +111,7 @@ ActiveRecord::Schema.define do
     t.float :temperature, default: 1.0
     t.boolean :temperature_ignored, default: false, null: false
     t.string :output_column
+    t.string :expected_column
     t.timestamps
   end
 

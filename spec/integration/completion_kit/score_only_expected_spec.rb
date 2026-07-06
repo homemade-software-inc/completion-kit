@@ -76,4 +76,22 @@ RSpec.describe "Score-only run graded against per-row expected_output", type: :m
     expect(run.status).to eq("failed")
     expect(run.failure_summary).to eq("run invalid")
   end
+
+  it "grades against a custom answer-key column when expected_column is set" do
+    custom = create(:completion_kit_dataset, csv_data: <<~CSV)
+      input,actual_output,true_vin
+      "photo a","WP0AA2A98KS103927","WP0AA2A98KS103927"
+      "photo b","NOPE","WP0CD2A91BS773674"
+    CSV
+    run = CompletionKit::Run.create!(prompt: nil, dataset: custom, name: "custom key",
+                                     output_column: "actual_output", expected_column: "true_vin")
+    run.replace_metrics!([metric.id])
+
+    expect(run.start!).to be(true), -> { "start! failed: #{run.reload.failure_summary}" }
+    perform_enqueued_jobs
+
+    responses = run.reload.responses.order(:row_index)
+    expect(responses.map(&:expected_output)).to eq(%w[WP0AA2A98KS103927 WP0CD2A91BS773674])
+    expect(responses.map { |r| r.reviews.first.passed }).to eq([true, false])
+  end
 end
