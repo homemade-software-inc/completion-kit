@@ -53,6 +53,14 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     expect(html).to include(">Imports</h2>")
   end
 
+  it "documents the expected_column override and the recognized dataset columns" do
+    html = render_body(base_url: "https://docs.example.test")
+
+    expect(html).to include("expected_column")
+    expect(html).to include("actual_output")
+    expect(html).to include("answer key")
+  end
+
   it "wires the real token into the copy-to-clipboard examples" do
     html = render_body(base_url: "https://app.example.test", token: "DISPLAY_TOKEN", real_token: "live-secret-9999")
 

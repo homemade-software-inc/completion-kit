@@ -75,6 +75,14 @@
       <p class="ck-field-hint" id="dataset-hint"></p>
     </div>
 
+    <div class="ck-field" id="expected-column-field">
+      <%= form.label :expected_column, "Answer-key column", class: "ck-label" %>
+      <%= form.text_field :expected_column, class: "ck-input", id: "run_expected_column", placeholder: "expected_output", **ck_field_aria(form, :expected_column) %>
+      <%= ck_field_error(form, :expected_column) %>
+      <p class="ck-field-hint" id="expected-column-hint">Optional. The dataset column holding each row's correct answer, used by the judge and by checks set to compare against the row's expected value. Defaults to <code>expected_output</code>.</p>
+      <p class="ck-field-hint" id="expected-column-warn"></p>
+    </div>
+
     <div class="ck-field">
       <label class="ck-label" for="run_temperature" style="position: relative;">
         Temperature<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup">Controls how random the model's output is. Lower values are more focused and deterministic — the model picks the most likely words. Higher values are more varied and creative, with more risk of odd phrasing. Most LLMs default to 1.0; for evaluation, try a few values and see how your prompt holds up. Newer reasoning models (Claude Opus 4.7, GPT-5 family, etc.) ignore temperature entirely — CompletionKit detects this and re-sends without the parameter.</span>
@@ -152,7 +160,7 @@
 
         <div class="ck-metric-checkboxes" data-metric-checkboxes>
           <% @all_metrics.each do |metric| %>
-            <label class="ck-checkbox-label" data-metric-tags="<%= metric.tag_names.join(",") %>">
+            <label class="ck-checkbox-label" data-metric-tags="<%= metric.tag_names.join(",") %>" data-compare-expected="<%= metric.check? && metric.check_config.to_h["compare_to"] == "expected" ? "1" : "0" %>">
               <%= check_box_tag "run[metric_ids][]", metric.id, run.metric_ids.include?(metric.id), class: "ck-checkbox", id: "run_metric_#{metric.id}" %>
               <span class="ck-checkbox-label__box" aria-hidden="true"></span>
               <span class="ck-checkbox-label__body">
@@ -233,6 +241,26 @@ function updateRunForm() {
   } else if (hasVars && !dataset) {
     if (datasetField) datasetField.className = 'ck-field ck-field--info';
     if (datasetHint) datasetHint.textContent = 'This prompt uses variables. Select a dataset to provide values.';
+  }
+
+  var expectedWarn = document.getElementById('expected-column-warn');
+  var expectedField = document.getElementById('expected-column-field');
+  var expectedColEl = document.getElementById('run_expected_column');
+  if (expectedField) expectedField.className = 'ck-field';
+  if (expectedWarn) expectedWarn.textContent = '';
+  var wantsExpected = false;
+  document.querySelectorAll('input[name="run[metric_ids][]"]:checked').forEach(function(cb) {
+    var lbl = cb.closest('[data-compare-expected]');
+    if (lbl && lbl.dataset.compareExpected === '1') wantsExpected = true;
+  });
+  if (wantsExpected && dataset && datasetEl) {
+    var expOption = datasetEl.options[datasetEl.selectedIndex];
+    var expHeaders = (expOption && expOption.dataset.headers ? expOption.dataset.headers.split(/,\s*/) : []).filter(Boolean);
+    var expCol = ((expectedColEl && expectedColEl.value) || 'expected_output').trim();
+    if (expHeaders.indexOf(expCol) === -1) {
+      if (expectedField) expectedField.className = 'ck-field ck-field--error';
+      if (expectedWarn) expectedWarn.textContent = "A selected check grades against each row's expected value, but this dataset has no \"" + expCol + "\" column, so every row would fail. Add the column or point this at the right one.";
+    }
   }
 
   var summary = document.getElementById('prompt-summary');

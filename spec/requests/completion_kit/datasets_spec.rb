@@ -60,6 +60,14 @@ RSpec.describe "CompletionKit datasets", type: :request do
     expect(response.body).to include("New dataset")
   end
 
+  it "surfaces the recognized special columns on the new form" do
+    get "#{base_path}/new"
+
+    expect(response.body).to include("expected_output")
+    expect(response.body).to include("actual_output")
+    expect(response.body).to include("id=\"dataset-header-preview\"")
+  end
+
   it "creates a dataset with valid params" do
     expect do
       post base_path, params: { dataset: { name: "New Dataset", csv_data: valid_csv } }

@@ -132,6 +132,19 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response).to have_http_status(:ok)
   end
 
+  it "surfaces the answer-key column field and marks metrics that grade against expected" do
+    create(:completion_kit_metric, :check, name: "VIN match",
+      check_config: { "check_kind" => "equals", "target" => "response_text", "compare_to" => "expected" })
+    create(:completion_kit_metric, name: "Helpfulness")
+
+    get "#{base_path}/new"
+
+    expect(response.body).to include('id="run_expected_column"')
+    expect(response.body).to include("Answer-key column")
+    expect(response.body).to include('data-compare-expected="1"')
+    expect(response.body).to include('data-compare-expected="0"')
+  end
+
   it "skips the empty metrics-hint placeholder when there are no metrics" do
     get "#{base_path}/new"
     expect(response.body).not_to include('id="metrics-hint"')
@@ -360,6 +373,25 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(run.prompt_id).to be_nil
     expect(run.output_column).to eq("actual_output")
     expect(run).to be_judge_only
+  end
+
+  it "persists an expected_column answer-key override from the form" do
+    prompt = create(:completion_kit_prompt, template: "Static")
+    dataset = create(:completion_kit_dataset, csv_data: "input,true_vin\nhi,X1\n")
+
+    post base_path, params: { run: { name: "Ground truth", prompt_id: prompt.id, dataset_id: dataset.id, expected_column: "true_vin" } }
+
+    expect(CompletionKit::Run.order(:id).last.expected_column).to eq("true_vin")
+  end
+
+  it "rejects a run whose expected_column is not a dataset column" do
+    prompt = create(:completion_kit_prompt, template: "Static")
+    dataset = create(:completion_kit_dataset, csv_data: "input,true_vin\nhi,X1\n")
+
+    expect do
+      post base_path, params: { run: { name: "Bad key", prompt_id: prompt.id, dataset_id: dataset.id, expected_column: "gold" } }
+    end.not_to change(CompletionKit::Run, :count)
+    expect(response.body).to include("is not a column")
   end
 
   it "rejects a judge-only run when the dataset lacks the output_column" do

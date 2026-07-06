@@ -19,8 +19,13 @@
 
     <div class="ck-field">
       <%= form.label :csv_data, "CSV data", class: "ck-label" %>
-      <%= form.text_area :csv_data, rows: 12, class: "ck-input ck-input--area ck-input--code", placeholder: "content,audience\nFirst ticket text,internal\nSecond ticket text,customer", **ck_field_aria(form, :csv_data) %>
+      <%= form.text_area :csv_data, rows: 12, class: "ck-input ck-input--area ck-input--code", placeholder: "content,audience\nFirst ticket text,internal\nSecond ticket text,customer", id: "dataset_csv_data", **ck_field_aria(form, :csv_data) %>
       <%= ck_field_error(form, :csv_data) %>
+      <p class="ck-field-hint">First row is the header. Two column names are recognized specially: <code>expected_output</code> is each row's answer key (ground truth) given to the judge and to checks that compare against the row's expected value, and <code>actual_output</code> is a pre-made output to score when you run without a prompt. Both are overridable per run. Every column is also available to the prompt as a variable.</p>
+      <div class="ck-header-preview" id="dataset-header-preview" hidden>
+        <span class="ck-header-preview__label">Detected columns</span>
+        <span id="dataset-header-chips"></span>
+      </div>
     </div>
 
     <%= render "completion_kit/tags/picker", record: dataset, param_namespace: :dataset %>
@@ -47,4 +52,32 @@
       <%= form.submit(dataset.persisted? ? "Save dataset" : "Create dataset", class: ck_button_classes(:dark)) %>
     </div>
   </div>
+
+  <script>
+function ckDatasetHeaderPreview() {
+  var area = document.getElementById('dataset_csv_data');
+  var box = document.getElementById('dataset-header-preview');
+  var chips = document.getElementById('dataset-header-chips');
+  if (!area || !box || !chips) return;
+  var recognized = { expected_output: 'answer key', actual_output: 'pre-made output' };
+  var firstLine = (area.value.split(/\r?\n/).find(function(l) { return l.trim() !== ''; }) || '');
+  var headers = firstLine.split(',').map(function(h) { return h.trim().replace(/^"|"$/g, ''); }).filter(Boolean);
+  if (headers.length === 0) { box.hidden = true; chips.textContent = ''; return; }
+  box.hidden = false;
+  chips.textContent = '';
+  headers.forEach(function(h) {
+    var role = recognized[h];
+    var chip = document.createElement('span');
+    chip.className = 'ck-header-chip' + (role ? ' ck-header-chip--special' : '');
+    chip.textContent = role ? h + ' · ' + role : h;
+    chips.appendChild(chip);
+  });
+}
+document.addEventListener('turbo:load', ckDatasetHeaderPreview);
+(function() {
+  var area = document.getElementById('dataset_csv_data');
+  if (area) area.addEventListener('input', ckDatasetHeaderPreview);
+})();
+ckDatasetHeaderPreview();
+  </script>
 <% end %>

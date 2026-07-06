@@ -1745,6 +1745,38 @@ tr:hover .ck-chip--publish {
   color: var(--ck-muted);
 }
 
+.ck-header-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+
+.ck-header-preview__label {
+  font-family: var(--ck-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ck-dim);
+}
+
+.ck-header-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--ck-line-strong);
+  border-radius: 999px;
+  font-family: var(--ck-mono);
+  font-size: 0.72rem;
+  color: var(--ck-muted);
+}
+
+.ck-header-chip--special {
+  border-color: var(--ck-accent);
+  color: var(--ck-accent);
+}
+
 .ck-field--info #refresh-status,
 .ck-field--warn #refresh-status,
 .ck-field--error #refresh-status {

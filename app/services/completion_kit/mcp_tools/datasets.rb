@@ -19,7 +19,7 @@ module CompletionKit
           handler: :get
         },
         "datasets_create" => {
-          description: "Create a dataset with CSV data",
+          description: "Create a dataset with CSV data. First row is the header. Two column names are recognized specially: \"expected_output\" is each row's answer key (ground truth) given to the judge and to checks that compare against the row's expected value, and \"actual_output\" is a pre-made output to score in a prompt-less run. Both are overridable per run (expected_column / output_column). Every column is also available to the prompt as a variable.",
           inputSchema: {
             type: "object",
             properties: {name: {type: "string"}, csv_data: {type: "string"}, tag_names: {type: "array", items: {type: "string"}}},
@@ -42,7 +42,7 @@ module CompletionKit
           handler: :delete
         },
         "datasets_create_from_url" => {
-          description: "Create a dataset by downloading CSV from a URL instead of inlining it. Use this for large datasets: pass a public http(s) URL and the server fetches the CSV directly, so the data never has to pass through the tool-call arguments. The URL is SSRF-checked and the download is capped at 10MB.",
+          description: "Create a dataset by downloading CSV from a URL instead of inlining it. Use this for large datasets: pass a public http(s) URL and the server fetches the CSV directly, so the data never has to pass through the tool-call arguments. The URL is SSRF-checked and the download is capped at 10MB. First row is the header; the \"expected_output\" (answer key) and \"actual_output\" (pre-made output) columns are recognized specially, overridable per run.",
           inputSchema: {
             type: "object",
             properties: {
