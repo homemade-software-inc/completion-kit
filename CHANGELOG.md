@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-07-06
+
+### Added
+- **`config.on_run_started` lifecycle callback (#102).** The sibling to `on_run_created`: an observe-only seam fired once each time a run transitions into `running`, so a host can meter the billable event (LLM spend begins at start, not creation). A single `after_update_commit` guard covers every path that (re)starts work — the initial `start!`, `retry_failures`, and `regrade!` all flip status to `running` — so no start is missed. A rerun fires `on_run_created` and `on_run_started` once each. A raising host callback is reported through `Rails.error` and never aborts the run; the veto/gate seam remains deferred.
+
 ## [0.24.0] - 2026-07-06
 
 ### Added
