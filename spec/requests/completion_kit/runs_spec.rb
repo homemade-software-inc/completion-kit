@@ -495,6 +495,20 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(run.reload.name).to eq("Original")
   end
 
+  it "re-renders the edit form instead of 500ing when the fork has an invalid answer-key column" do
+    static = create(:completion_kit_prompt, template: "Static")
+    dataset = create(:completion_kit_dataset, csv_data: "input,true_vin\nhi,X1\n")
+    run = create(:completion_kit_run, prompt: static, dataset: dataset, name: "Keep")
+    run.responses.create!(response_text: "Some output")
+
+    expect do
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Keep", prompt_id: static.id, dataset_id: dataset.id, expected_column: "gold" } }
+    end.not_to change(CompletionKit::Run, :count)
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include("is not a column")
+  end
+
   it "forks a new run when the judge model changes on a run with responses" do
     run = create(:completion_kit_run, prompt: prompt)
     run.responses.create!(response_text: "Some output")
@@ -665,6 +679,18 @@ RSpec.describe "CompletionKit runs", type: :request do
     new_run = CompletionKit::Run.order(:id).last
     expect(new_run.output_column).to eq("actual_output")
     expect(new_run.prompt_id).to be_nil
+  end
+
+  it "rerun copies expected_column onto the new run" do
+    static = create(:completion_kit_prompt, template: "Static")
+    dataset = create(:completion_kit_dataset, csv_data: "input,true_vin\nhi,X1\n")
+    source_run = create(:completion_kit_run, prompt: static, dataset: dataset,
+                        expected_column: "true_vin", status: "completed")
+    allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
+
+    post "#{base_path}/#{source_run.id}/rerun"
+
+    expect(CompletionKit::Run.order(:id).last.expected_column).to eq("true_vin")
   end
 
   it "filters runs by tag" do

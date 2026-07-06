@@ -98,6 +98,16 @@ RSpec.describe CompletionKit::McpTools::Runs do
       expect(props).to have_key(:expected_column)
     end
 
+    it "updates a run's expected_column" do
+      dataset = create(:completion_kit_dataset, csv_data: "input,true_vin\nphoto,X1\n")
+      run.update!(dataset: dataset)
+
+      result = described_class.call("runs_update", {"id" => run.id, "expected_column" => "true_vin"})
+
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["expected_column"]).to eq("true_vin")
+    end
+
     it "updates a run" do
       result = described_class.call("runs_update", {"id" => run.id, "name" => "Updated"})
       content = JSON.parse(result[:content].first[:text])

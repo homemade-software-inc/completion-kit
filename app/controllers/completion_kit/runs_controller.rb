@@ -41,9 +41,16 @@ module CompletionKit
       if @run.responses.any? && run_generation_changed?
         attrs = run_params.except(:metric_ids).to_h
         attrs.delete("name") if attrs["name"].to_s == @run.name.to_s
-        new_run = Run.create!(attrs.merge(status: "pending"))
-        new_run.replace_metrics!(params[:run][:metric_ids]) if params[:run].key?(:metric_ids)
-        redirect_to run_path(new_run), notice: "Saved as a new run. The previous run and its results are preserved."
+        new_run = Run.new(attrs.merge(status: "pending"))
+        if new_run.save
+          new_run.replace_metrics!(params[:run][:metric_ids]) if params[:run].key?(:metric_ids)
+          redirect_to run_path(new_run), notice: "Saved as a new run. The previous run and its results are preserved."
+        else
+          @run.assign_attributes(run_params.except(:metric_ids))
+          new_run.errors.each { |error| @run.errors.add(error.attribute, error.message) }
+          load_form_collections
+          render :edit, status: :unprocessable_entity
+        end
       elsif @run.update(run_params.except(:metric_ids))
         @run.replace_metrics!(params[:run][:metric_ids]) if params[:run].key?(:metric_ids)
         redirect_to run_path(@run), notice: "Run saved."

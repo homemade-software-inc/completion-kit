@@ -291,6 +291,7 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
   config.before { Rails.cache.clear }
   config.before { CompletionKit.config.judge_agreement_enabled = true }
+  config.before { CompletionKit.config.on_run_created = nil }
   config.before do
     server = ActionCable.server
     adapter = ActionCable::SubscriptionAdapter::Test.new(server)
