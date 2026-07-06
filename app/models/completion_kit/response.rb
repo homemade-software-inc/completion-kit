@@ -59,7 +59,7 @@ module CompletionKit
     private
 
     def requires_response_text?
-      succeeded? && !run&.judge_only_input_data_checks?
+      succeeded? && !run&.judge_only?
     end
 
     def broadcast_row_update

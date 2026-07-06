@@ -50,7 +50,7 @@ module CompletionKit
           handler: :delete
         },
         "runs_generate" => {
-          description: "Generate responses for a run using its prompt and dataset",
+          description: "Start a run. Required for every run, including score-only runs (no prompt): generates responses with the prompt when there is one, otherwise copies the graded dataset column and grades it.",
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :generate
         }
