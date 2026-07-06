@@ -65,7 +65,7 @@ module CompletionKit
     def judge_count
       model_ids = Model.where(provider: provider).pluck(:model_id)
       return 0 if model_ids.empty?
-      Run.where(judge_model: model_ids).display_scoped.distinct.count(:judge_model)
+      Run.where(judge_model: model_ids).distinct.count(:judge_model)
     end
 
     def last_used_at
@@ -74,7 +74,6 @@ module CompletionKit
       prompt_scope = Prompt.where(llm_model: model_ids).select(:id)
       Run.where("prompt_id IN (:prompts) OR judge_model IN (:models)",
                 prompts: prompt_scope, models: model_ids)
-         .display_scoped
          .where.not(status: "pending")
          .maximum(:created_at)
     end
