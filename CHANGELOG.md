@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-07-06
+
+### Fixed
+- Added breathing room below the tag chips on the dataset and run show pages; the standalone header tag row butted against the following section heading (for example "CSV preview"). The metric page, where the tags sit inside the page header, is unchanged.
+
 ## [0.25.0] - 2026-07-06
 
 ### Added

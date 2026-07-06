@@ -4958,6 +4958,10 @@ a.tag-mark {
 
 .tag-marks-row--header {
   margin-top: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.ck-page-header .tag-marks-row--header {
   margin-bottom: 0;
 }
 
