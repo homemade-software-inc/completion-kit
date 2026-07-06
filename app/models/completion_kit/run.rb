@@ -20,6 +20,7 @@ module CompletionKit
 
     before_validation :set_default_status, on: :create
     before_validation :set_auto_name, on: :create
+    after_create_commit :notify_host_of_creation
 
     def self.display_scoped
       filter = CompletionKit.config.runs_display_scope
@@ -414,6 +415,12 @@ module CompletionKit
     end
 
     private
+
+    def notify_host_of_creation
+      CompletionKit.config.on_run_created&.call(self)
+    rescue StandardError => e
+      Rails.error.report(e, handled: true, context: { hook: "on_run_created", run_id: id })
+    end
 
     def fail_with_summary!(message)
       errors.add(:base, message)

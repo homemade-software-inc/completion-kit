@@ -12,6 +12,33 @@ RSpec.describe CompletionKit::Run, type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_clear_responses)
   end
 
+  describe "on_run_created host callback" do
+    after { CompletionKit.config.on_run_created = nil }
+
+    it "invokes the configured callback once per create with the persisted run" do
+      observed = []
+      CompletionKit.config.on_run_created = ->(run) { observed << run.id }
+
+      run = create(:completion_kit_run)
+      run.update!(name: "renamed")
+
+      expect(observed).to eq([run.id])
+    end
+
+    it "does nothing when no callback is configured" do
+      expect { create(:completion_kit_run) }.not_to raise_error
+    end
+
+    it "reports a raising callback and still creates the run" do
+      CompletionKit.config.on_run_created = ->(_run) { raise "host meter down" }
+      expect(Rails.error).to receive(:report).with(
+        an_instance_of(RuntimeError), hash_including(handled: true)
+      )
+
+      expect { create(:completion_kit_run) }.to change(CompletionKit::Run, :count).by(1)
+    end
+  end
+
   describe ".display_scoped" do
     it "returns all runs when no runs_display_scope is configured" do
       recent = create(:completion_kit_run)

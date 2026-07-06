@@ -15,6 +15,7 @@ module CompletionKit
     attr_accessor :allow_loopback_endpoints
     attr_accessor :judge_agreement_enabled
     attr_accessor :judge_examples_from_reviews
+    attr_accessor :on_run_created
 
     def initialize
       @openai_api_key = ENV['OPENAI_API_KEY']
