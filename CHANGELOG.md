@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **A blank cell in the graded column no longer crashes a score-only run.** `start!` raised a `RecordInvalid` mid-transaction (the response presence validation rejected the empty string), leaving the run stuck in `pending` with no responses, no failure summary, and a 500 at the API layer. A blank cell is now a legitimate graded value: the row is created and the check fails it against the row's expected value with a clear detail. Any other row that cannot be built now fails the run with a row-scoped `failure_summary` instead of raising.
+
+### Changed
+- Reworded the `runs_generate` MCP tool description to say it starts every run, including score-only runs; the old wording ("using its prompt and dataset") suggested it did not apply to prompt-less runs, so they were left sitting in `pending`.
+
 ## [0.23.0] - 2026-07-04
 
 ### Removed
