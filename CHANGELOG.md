@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-07-06
+
+### Added
+- **Pick which dataset column is the answer key, per run (#98).** The per-row ground-truth column was a hidden convention: only a column named exactly `expected_output` was recognized, so an answer key named anything else meant every `compare_to: expected` check silently failed with "no expected value for this row". A new optional `expected_column` on runs (mirroring `output_column`) lets you point at any column; it is exposed through the run form, the REST API, and MCP, copied on rerun, and soft-validated only when explicitly set. The dataset form now surfaces the recognized `expected_output` and `actual_output` columns with a live header preview, and the run form warns when a selected check grades against the answer key but the dataset lacks the column. No new table; `expected_column` rides the existing run row.
+- **`config.on_run_created` lifecycle callback (#101).** A first-class seam for host apps to observe run creation from every entry point (web, API, MCP, rerun, fork), fired once per successful create via an `after_create_commit`, replacing the need to monkey-patch controllers and the MCP dispatcher. A raising host callback is reported through `Rails.error` and never turns run creation into a 500. Metrics and tags are attached after the callback fires; a veto/gate seam is deferred.
+
 ### Fixed
 - **A blank cell in the graded column no longer crashes a score-only run.** `start!` raised a `RecordInvalid` mid-transaction (the response presence validation rejected the empty string), leaving the run stuck in `pending` with no responses, no failure summary, and a 500 at the API layer. A blank cell is now a legitimate graded value: the row is created and the check fails it against the row's expected value with a clear detail. Any other row that cannot be built now fails the run with a row-scoped `failure_summary` instead of raising.
+- **A provider's judge count and last-used time are lifetime again, not retention-scoped (#96).** `judge_count` and `last_used_at` on a provider credential applied the host's `runs_display_scope` (retention window), so a provider whose runs had all aged out showed "0 judges" and "Never used" next to a real lifetime `prompt_count`. Retention scopes run lists, not provider history; both stats now count across all runs.
+- **Editing a run with results no longer 500s on an invalid generation field.** When a change forks a new run, the fork went through an unrescued `Run.create!`, so an invalid value (for example an answer-key column the dataset lacks) raised instead of re-rendering the edit form. The fork path now validates and re-renders with the field error, matching the create and in-place-update paths.
 
 ### Changed
 - Reworded the `runs_generate` MCP tool description to say it starts every run, including score-only runs; the old wording ("using its prompt and dataset") suggested it did not apply to prompt-less runs, so they were left sitting in `pending`.
