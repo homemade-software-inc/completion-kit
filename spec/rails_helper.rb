@@ -292,6 +292,7 @@ RSpec.configure do |config|
   config.before { Rails.cache.clear }
   config.before { CompletionKit.config.judge_agreement_enabled = true }
   config.before { CompletionKit.config.on_run_created = nil }
+  config.before { CompletionKit.config.on_run_started = nil }
   config.before do
     server = ActionCable.server
     adapter = ActionCable::SubscriptionAdapter::Test.new(server)

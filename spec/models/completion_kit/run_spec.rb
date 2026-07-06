@@ -39,6 +39,55 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
+  describe "on_run_started host callback" do
+    after { CompletionKit.config.on_run_started = nil }
+
+    it "fires when a run transitions into running" do
+      observed = []
+      CompletionKit.config.on_run_started = ->(run) { observed << run.id }
+
+      run = create(:completion_kit_run)
+      run.update!(status: "running")
+
+      expect(observed).to eq([run.id])
+    end
+
+    it "does not fire on an update that leaves the status unchanged" do
+      observed = []
+      CompletionKit.config.on_run_started = ->(run) { observed << run.id }
+
+      create(:completion_kit_run).update!(name: "renamed")
+
+      expect(observed).to be_empty
+    end
+
+    it "does not fire on a status change to something other than running" do
+      observed = []
+      CompletionKit.config.on_run_started = ->(run) { observed << run.id }
+
+      run = create(:completion_kit_run, status: "running")
+      run.update!(status: "completed")
+
+      expect(observed).to be_empty
+    end
+
+    it "does nothing when no callback is configured" do
+      expect { create(:completion_kit_run).update!(status: "running") }.not_to raise_error
+    end
+
+    it "reports a raising callback and still commits the transition" do
+      CompletionKit.config.on_run_started = ->(_run) { raise "host meter down" }
+      expect(Rails.error).to receive(:report).with(
+        an_instance_of(RuntimeError), hash_including(handled: true)
+      )
+
+      run = create(:completion_kit_run)
+      run.update!(status: "running")
+
+      expect(run.reload.status).to eq("running")
+    end
+  end
+
   describe "expected_column (answer-key override)" do
     let(:prompt) { create(:completion_kit_prompt, template: "Static prompt") }
     let(:dataset) { create(:completion_kit_dataset, csv_data: "input,true_vin\nphoto,WP0AA2A98KS103927\n") }
@@ -143,6 +192,20 @@ RSpec.describe CompletionKit::Run, type: :model do
     it "returns false and does no work when the run has no eligible succeeded responses" do
       expect(run.regrade!).to be(false)
       expect(CompletionKit::JudgeReviewJob).not_to have_received(:perform_later)
+    end
+
+    it "fires on_run_started because regrade! transitions the run back to running" do
+      response_row = create(:completion_kit_response, run: run, status: "succeeded", response_text: "scored")
+      v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+      create(:completion_kit_review, response: response_row, metric: metric, metric_name: metric.name, ai_score: 5, status: "succeeded", metric_version_id: v1.id)
+      observed = []
+      CompletionKit.config.on_run_started = ->(r) { observed << r.id }
+
+      expect(run.regrade!).to be(true)
+
+      expect(observed).to eq([run.id])
+    ensure
+      CompletionKit.config.on_run_started = nil
     end
 
     it "returns false when the run has no metrics attached" do

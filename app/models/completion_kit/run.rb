@@ -22,6 +22,7 @@ module CompletionKit
     before_validation :set_default_status, on: :create
     before_validation :set_auto_name, on: :create
     after_create_commit :notify_host_of_creation
+    after_update_commit :notify_host_of_start
 
     def self.display_scoped
       filter = CompletionKit.config.runs_display_scope
@@ -422,6 +423,14 @@ module CompletionKit
       CompletionKit.config.on_run_created&.call(self)
     rescue StandardError => e
       Rails.error.report(e, handled: true, context: { hook: "on_run_created", run_id: id })
+    end
+
+    def notify_host_of_start
+      return unless saved_change_to_status? && status == "running"
+
+      CompletionKit.config.on_run_started&.call(self)
+    rescue StandardError => e
+      Rails.error.report(e, handled: true, context: { hook: "on_run_started", run_id: id })
     end
 
     def fail_with_summary!(message)

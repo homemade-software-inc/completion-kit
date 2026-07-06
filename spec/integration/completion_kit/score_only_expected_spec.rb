@@ -77,6 +77,18 @@ RSpec.describe "Score-only run graded against per-row expected_output", type: :m
     expect(run.failure_summary).to eq("run invalid")
   end
 
+  it "fires on_run_started when a real start! transitions the run to running" do
+    observed = []
+    CompletionKit.config.on_run_started = ->(run) { observed << run.id }
+    run = build_run
+
+    expect(run.start!).to be(true)
+
+    expect(observed).to eq([run.id])
+  ensure
+    CompletionKit.config.on_run_started = nil
+  end
+
   it "grades against a custom answer-key column when expected_column is set" do
     custom = create(:completion_kit_dataset, csv_data: <<~CSV)
       input,actual_output,true_vin

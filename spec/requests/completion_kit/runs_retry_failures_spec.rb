@@ -44,6 +44,21 @@ RSpec.describe "POST /completion_kit/runs/:id/retry_failures", type: :request do
     expect(review.reload.status).to eq("pending")
   end
 
+  it "fires on_run_started because retry_failures transitions the run back to running" do
+    metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text" })
+    failed_row = create(:completion_kit_response, :failed, run: run, row_index: 0)
+    v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
+    failed_row.reviews.create!(metric: metric, metric_name: metric.name, metric_version_id: v1.id, status: "failed", passed: false, ai_score: nil)
+    observed = []
+    CompletionKit.config.on_run_started = ->(r) { observed << r.id }
+
+    post "/completion_kit/runs/#{run.id}/retry_failures"
+
+    expect(observed).to eq([run.id])
+  ensure
+    CompletionKit.config.on_run_started = nil
+  end
+
   it "resets failed responses to pending and re-enqueues their jobs" do
     failed = create(:completion_kit_response, :failed, run: run, row_index: 0)
     succeeded = create(:completion_kit_response, run: run, status: "succeeded", row_index: 1, response_text: "ok")
