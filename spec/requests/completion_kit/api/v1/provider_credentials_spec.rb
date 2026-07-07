@@ -69,10 +69,26 @@ RSpec.describe "API V1 Provider Credentials", type: :request do
   end
 
   describe "DELETE /api/v1/provider_credentials/:id" do
-    it "deletes the credential" do
-      cred = create(:completion_kit_provider_credential)
+    it "deletes an unused credential and its discovered models" do
+      cred = create(:completion_kit_provider_credential, provider: "openai")
+      CompletionKit::Model.create!(provider: "openai", model_id: "gpt-4.1", status: "active", supports_generation: true)
+
       delete "/completion_kit/api/v1/provider_credentials/#{cred.id}", headers: headers
+
       expect(response).to have_http_status(:no_content)
+      expect(CompletionKit::Model.where(provider: "openai")).not_to exist
+    end
+
+    it "refuses to delete an in-use credential with 422" do
+      cred = create(:completion_kit_provider_credential, provider: "openai")
+      CompletionKit::Model.create!(provider: "openai", model_id: "gpt-4.1", status: "active", supports_generation: true)
+      create(:completion_kit_prompt, llm_model: "gpt-4.1")
+
+      delete "/completion_kit/api/v1/provider_credentials/#{cred.id}", headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)).to have_key("details")
+      expect(CompletionKit::ProviderCredential.exists?(cred.id)).to be(true)
     end
   end
 end

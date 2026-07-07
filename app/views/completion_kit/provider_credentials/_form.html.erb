@@ -28,7 +28,21 @@
       <%= ck_field_error(form, :api_endpoint) %>
     </div>
 
+    <% if provider_credential.persisted? && provider_credential.in_use? %>
+      <p class="ck-field-hint"><%= provider_credential.in_use_message %></p>
+    <% end %>
+
     <div class="ck-actions">
+      <% if provider_credential.persisted? && !provider_credential.in_use? %>
+        <%= button_to provider_credential_path(provider_credential), method: :delete,
+              form_class: "inline-block",
+              class: "ck-icon-btn",
+              title: "Delete provider",
+              "aria-label": "Delete provider",
+              data: { turbo_confirm: "Delete the #{provider_credential.display_provider} provider and its discovered models? This can't be undone." } do %>
+          <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
+        <% end %>
+      <% end %>
       <%= link_to "Cancel", provider_credentials_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(provider_credential.persisted? ? "Save provider" : "Create provider", class: ck_button_classes(:dark)) %>
     </div>

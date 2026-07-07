@@ -150,6 +150,61 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     end
   end
 
+  describe "#in_use? and destruction" do
+    let!(:credential) { create(:completion_kit_provider_credential, provider: "openai", api_key: "sk") }
+
+    before do
+      CompletionKit::Model.create!(provider: "openai", model_id: "gpt-4.1",
+        status: "active", supports_generation: true)
+    end
+
+    it "is not in use when nothing references its models" do
+      expect(credential.in_use?).to be(false)
+    end
+
+    it "is in use when a current prompt uses one of its models" do
+      create(:completion_kit_prompt, llm_model: "gpt-4.1")
+      expect(credential.in_use?).to be(true)
+    end
+
+    it "is in use, and names the judge runs, when a run uses one of its models as judge" do
+      prompt = create(:completion_kit_prompt, llm_model: "some-other-model")
+      create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4.1")
+
+      expect(credential.in_use?).to be(true)
+      expect(credential.destroy).to be_falsey
+      expect(credential.errors.full_messages.join).to match(/1 judge run/)
+    end
+
+    it "destroys an unused credential and its discovered models" do
+      expect { credential.destroy }.to change(CompletionKit::ProviderCredential, :count).by(-1)
+      expect(CompletionKit::Model.where(provider: "openai")).not_to exist
+    end
+
+    it "refuses to destroy an in-use credential, leaving it and its models intact" do
+      create(:completion_kit_prompt, llm_model: "gpt-4.1")
+
+      expect(credential.destroy).to be_falsey
+      expect(credential.errors.full_messages.join).to match(/in use/i)
+      expect(CompletionKit::ProviderCredential.exists?(credential.id)).to be(true)
+      expect(CompletionKit::Model.where(provider: "openai")).to exist
+    end
+
+    it "names what still references it in the refusal message" do
+      create(:completion_kit_prompt, llm_model: "gpt-4.1")
+
+      credential.destroy
+      expect(credential.errors.full_messages.join).to match(/1 prompt/)
+    end
+
+    it "does not let retired models with no references block deletion" do
+      CompletionKit::Model.where(provider: "openai").update_all(status: "retired", retired_at: Time.current)
+
+      expect(credential.in_use?).to be(false)
+      expect { credential.destroy }.to change(CompletionKit::ProviderCredential, :count).by(-1)
+    end
+  end
+
   describe "#broadcast_discovery_progress" do
     it "broadcasts the discovery status partial and morphs the provider models card" do
       credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")

@@ -86,6 +86,48 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(response.body).to include("2/5")
   end
 
+  describe "destroy" do
+    it "destroys an unused provider and its discovered models, redirecting with a notice" do
+      credential = create(:completion_kit_provider_credential, provider: "openai")
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1", status: "active", supports_generation: true)
+
+      expect { delete "#{base_path}/#{credential.id}" }
+        .to change(CompletionKit::ProviderCredential, :count).by(-1)
+
+      expect(response).to redirect_to(base_path)
+      expect(flash[:notice]).to match(/removed/i)
+      expect(CompletionKit::Model.where(provider: "openai")).not_to exist
+    end
+
+    it "refuses to destroy an in-use provider, leaving it intact with an alert" do
+      credential = create(:completion_kit_provider_credential, provider: "openai")
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1", status: "active", supports_generation: true)
+      create(:completion_kit_prompt, llm_model: "gpt-4.1")
+
+      expect { delete "#{base_path}/#{credential.id}" }
+        .not_to change(CompletionKit::ProviderCredential, :count)
+
+      expect(response).to redirect_to(base_path)
+      expect(flash[:alert]).to match(/in use/i)
+    end
+
+    it "shows a delete control on the edit page for an unused provider" do
+      credential = create(:completion_kit_provider_credential, provider: "openai")
+      get "#{base_path}/#{credential.id}/edit"
+      expect(response.body).to include("Delete provider")
+    end
+
+    it "hides the delete control and explains why for an in-use provider" do
+      credential = create(:completion_kit_provider_credential, provider: "openai")
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1", status: "active", supports_generation: true)
+      create(:completion_kit_prompt, llm_model: "gpt-4.1")
+
+      get "#{base_path}/#{credential.id}/edit"
+      expect(response.body).not_to include("Delete provider")
+      expect(response.body).to match(/in use/i)
+    end
+  end
+
   it "exposes the statuses polling url so the client polls the engine's actual mount path" do
     credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
 

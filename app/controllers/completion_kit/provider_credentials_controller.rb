@@ -1,6 +1,6 @@
 module CompletionKit
   class ProviderCredentialsController < ApplicationController
-    before_action :set_provider_credential, only: [:edit, :update, :refresh]
+    before_action :set_provider_credential, only: [:edit, :update, :refresh, :destroy]
 
     def index
       @provider_credentials = ProviderCredential.order(:provider)
@@ -33,6 +33,14 @@ module CompletionKit
         redirect_to provider_credentials_path, notice: "Provider credential was successfully updated."
       else
         render :edit, status: :unprocessable_entity
+      end
+    end
+
+    def destroy
+      if @provider_credential.destroy
+        redirect_to provider_credentials_path, notice: "#{@provider_credential.display_provider} provider was removed."
+      else
+        redirect_to provider_credentials_path, alert: @provider_credential.errors.full_messages.to_sentence
       end
     end
 

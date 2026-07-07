@@ -51,7 +51,7 @@ CompletionKit::Engine.routes.draw do
     end
   end
 
-  resources :provider_credentials, only: [:index, :new, :create, :edit, :update] do
+  resources :provider_credentials, only: [:index, :new, :create, :edit, :update, :destroy] do
     post :refresh, on: :member
     get :statuses, on: :collection
   end

@@ -30,8 +30,11 @@ module CompletionKit
         end
 
         def destroy
-          @credential.destroy!
-          head :no_content
+          if @credential.destroy
+            head :no_content
+          else
+            render_validation_errors(@credential)
+          end
         end
 
         private

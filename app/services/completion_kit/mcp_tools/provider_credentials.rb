@@ -73,8 +73,12 @@ module CompletionKit
       end
 
       def self.delete(args)
-        ProviderCredential.find(args["id"]).destroy!
-        text_result("Provider credential #{args["id"]} deleted")
+        credential = ProviderCredential.find(args["id"])
+        if credential.destroy
+          text_result("Provider credential #{args["id"]} deleted")
+        else
+          error_result(credential.errors.full_messages.join(", "))
+        end
       end
     end
   end
