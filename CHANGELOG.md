@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.25.2] - 2026-07-06
+## [0.25.3] - 2026-07-06
+
+### Fixed
+- **A long run name overlapped the next column in the runs table.** The name's ellipsis truncation was set on the inner `<strong>`, but its link wrapper was a flex item with the default `min-width: auto`, so it refused to shrink and overflowed the fixed-width first column into "Responses". The link now carries the truncation and `min-width: 0`, so long names clip with an ellipsis. Fixes every runs table (dashboard, runs index, dataset and prompt show pages), which all share the one component.
 
 ### Fixed
 - **Cross-links on a record's show page produced a malformed URL like `datasets/4.4`.** `ck_engine_path_options` threaded the current page's engine `:id` (and `:format`) from the route recall into every `ck_*_path` helper, so a link to a sibling record on a member page (for example the dataset link in a run row on the dataset show page) had the stale id spill into the `:format` segment. It now keeps only the host mount's own scope segments (such as an org slug). The dataset "Download CSV" link threads the same scope options for consistency.
