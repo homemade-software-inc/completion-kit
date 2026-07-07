@@ -31,6 +31,27 @@ RSpec.describe CompletionKit::ModelDiscoveryJob, type: :job do
     expect(credential.discovery_status).to eq("failed")
   end
 
+  it "reports a provider-side discovery error as handled, not an application bug" do
+    error = CompletionKit::ModelDiscoveryService::DiscoveryError.new("No OpenAI-compatible model list was found (404)")
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(error)
+
+    expect(Rails.error).to receive(:report).with(error, hash_including(handled: true))
+
+    described_class.perform_now(credential.id)
+    credential.reload
+    expect(credential.discovery_status).to eq("failed")
+    expect(credential.discovery_error).to include("model list")
+  end
+
+  it "does not classify an unexpected error as a handled config error" do
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(StandardError, "boom")
+
+    expect(Rails.error).not_to receive(:report)
+
+    described_class.perform_now(credential.id)
+    expect(credential.reload.discovery_status).to eq("failed")
+  end
+
   it "passes force through to the discovery service" do
     expect_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).with(force: true)
     described_class.perform_now(credential.id, force: true)

@@ -803,18 +803,81 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(probe_request.headers).not_to have_key("Authorization")
     end
 
-    it "raises DiscoveryError when api_endpoint is nil" do
+    it "raises DiscoveryError without leaking the internal slug when api_endpoint is nil" do
       service = described_class.new(config: { provider: "ollama", api_key: nil, api_endpoint: nil })
-      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /Ollama endpoint URL is required/)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError) do |error|
+        expect(error.message).to match(/endpoint URL is required/i)
+        expect(error.message).not_to match(/ollama/i)
+      end
       expect(CompletionKit::Model.where(provider: "ollama").count).to eq(0)
     end
 
-    it "raises DiscoveryError when ollama fetch returns 5xx" do
+    it "raises DiscoveryError with an actionable, non-leaky message when the endpoint 5xxes" do
       stub_faraday_get(faraday_response(success: false, status: 500, body: "Internal Server Error"))
 
       service = described_class.new(config: config)
-      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /ollama returned 500/)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError) do |error|
+        expect(error.message).to match(/500/)
+        expect(error.message).to match(%r{/v1/models})
+        expect(error.message).not_to match(/ollama/i)
+      end
       expect(CompletionKit::Model.where(provider: "ollama").count).to eq(0)
+    end
+
+    it "explains a 404 at the model-list path and what to check, without leaking the slug" do
+      stub_faraday_get(faraday_response(success: false, status: 404, body: { error: { message: "Resource not found" } }.to_json))
+
+      service = described_class.new(config: config)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError) do |error|
+        expect(error.message).to match(%r{/v1/models})
+        expect(error.message).to match(/404/)
+        expect(error.message).to match(/base URL/i)
+        expect(error.message).not_to match(/ollama/i)
+      end
+    end
+
+    it "points Azure hosts at the Azure AI Foundry provider on a 404" do
+      stub_faraday_get(faraday_response(success: false, status: 404, body: "Resource not found"))
+
+      service = described_class.new(config: { provider: "ollama", api_key: "k",
+        api_endpoint: "https://my-resource.openai.azure.com" })
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /Azure AI Foundry/)
+    end
+
+    it "omits a detail suffix when the endpoint returns no error body" do
+      stub_faraday_get(faraday_response(success: false, status: 500, body: ""))
+
+      service = described_class.new(config: config)
+      expect { service.refresh! }.to raise_error(
+        CompletionKit::ModelDiscoveryService::DiscoveryError,
+        "The endpoint at localhost did not return an OpenAI-compatible model list at /v1/models (500)."
+      )
+    end
+
+    it "falls back to the raw endpoint string in the message when the host cannot be parsed" do
+      stub_faraday_get(faraday_response(success: false, status: 404, body: ""))
+
+      service = described_class.new(config: { provider: "ollama", api_key: nil, api_endpoint: "not a url" })
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, %r{not a url/v1/models})
+    end
+
+    it "reports a rate-limited custom endpoint clearly" do
+      stub_faraday_get(faraday_response(success: false, status: 429, body: "Too Many Requests"))
+
+      service = described_class.new(config: config)
+      expect { service.refresh! }.to raise_error(
+        CompletionKit::ModelDiscoveryService::DiscoveryError, /rate-limited the model-list request \(429\)/
+      )
+    end
+
+    it "reports an invalid key on the custom endpoint without leaking the slug" do
+      stub_faraday_get(faraday_response(success: false, status: 401, body: "Unauthorized"))
+
+      service = described_class.new(config: config)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError) do |error|
+        expect(error.message).to match(/401/)
+        expect(error.message).not_to match(/ollama/i)
+      end
     end
 
     it "sends Authorization header when api_key is present" do

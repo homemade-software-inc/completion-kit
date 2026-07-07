@@ -6,6 +6,8 @@ module CompletionKit
   class ModelDiscoveryService
     class DiscoveryError < StandardError; end
 
+    AZURE_HOST_SUFFIXES = [".openai.azure.com", ".services.ai.azure.com"].freeze
+
     def initialize(config:)
       @provider = config[:provider]
       @api_key = config[:api_key]
@@ -106,13 +108,46 @@ module CompletionKit
     end
 
     def fetch_ollama_models
-      raise DiscoveryError, "Ollama endpoint URL is required" if @api_endpoint.blank?
+      raise DiscoveryError, "A model endpoint URL is required." if @api_endpoint.blank?
       base_url = ollama_root_url
       response = fetch_connection(base_url).get("/v1/models") do |req|
         req.headers["Authorization"] = "Bearer #{@api_key}" if @api_key.present?
       end
-      raise_fetch_error!(response) unless response.success?
+      raise DiscoveryError, custom_endpoint_error_message(response) unless response.success?
       JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
+    end
+
+    def custom_endpoint_error_message(response)
+      detail = extract_provider_error_message(response.body)
+      case response.status
+      when 401, 403
+        with_detail("The endpoint rejected the API key (#{response.status}).", detail)
+      when 404
+        custom_endpoint_404_message
+      when 429
+        "The endpoint rate-limited the model-list request (429). Try again shortly."
+      else
+        with_detail("The endpoint at #{custom_endpoint_host} did not return an OpenAI-compatible model list at /v1/models (#{response.status}).", detail)
+      end
+    end
+
+    def custom_endpoint_404_message
+      message = "No OpenAI-compatible model list was found at #{custom_endpoint_host}/v1/models (404). Check that the base URL is correct."
+      return message unless azure_custom_host?
+      "#{message} This looks like an Azure endpoint; add it with the Azure AI Foundry provider, which uses an api-version and an api-key header."
+    end
+
+    def with_detail(message, detail)
+      detail.present? ? "#{message} #{detail}" : message
+    end
+
+    def custom_endpoint_host
+      ProviderEndpoint.parse(@api_endpoint)&.host || @api_endpoint.to_s
+    end
+
+    def azure_custom_host?
+      host = custom_endpoint_host.to_s.downcase
+      AZURE_HOST_SUFFIXES.any? { |suffix| host.end_with?(suffix) }
     end
 
     def ollama_root_url
