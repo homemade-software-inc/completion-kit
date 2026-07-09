@@ -891,6 +891,70 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
     end
   end
 
+  describe "#refresh! for azure_foundry" do
+    let(:config) do
+      { provider: "azure_foundry", api_key: "azure-key",
+        api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21" }
+    end
+
+    let(:deployments_body) do
+      { data: [
+        { id: "my-gpt4o", model: "gpt-4o", object: "deployment" },
+        { id: "my-mini", model: "gpt-4o-mini", object: "deployment" }
+      ] }.to_json
+    end
+
+    let(:probe_response) do
+      faraday_response(success: true, body: { choices: [{ message: { content: "PING-OK\nScore: 3\nFeedback: ok" } }] }.to_json)
+    end
+
+    it "lists deployments at /openai/deployments with the api-version and api-key header" do
+      request = stub_faraday_get(faraday_response(success: true, body: deployments_body))
+      stub_faraday_post(probe_response)
+
+      described_class.new(config: config).refresh!
+
+      expect(faraday_connection_stub).to have_received(:get).with("/openai/deployments?api-version=2024-10-21")
+      expect(request.headers["api-key"]).to eq("azure-key")
+    end
+
+    it "creates each deployment as a model and probes generation and judging" do
+      stub_faraday_get(faraday_response(success: true, body: deployments_body))
+      probe = stub_faraday_post(probe_response)
+
+      described_class.new(config: config).refresh!
+
+      models = CompletionKit::Model.where(provider: "azure_foundry")
+      expect(models.pluck(:model_id)).to contain_exactly("my-gpt4o", "my-mini")
+      expect(models.where(supports_generation: true).count).to eq(2)
+      expect(models.where(supports_judging: true).count).to eq(2)
+      expect(models.where("probed_at IS NOT NULL").count).to eq(2)
+      expect(probe.path).to match(%r{\A/openai/deployments/.+/chat/completions\?api-version=2024-10-21\z})
+      expect(probe.headers["api-key"]).to eq("azure-key")
+    end
+
+    it "raises a clean DiscoveryError when the deployments list 404s" do
+      stub_faraday_get(faraday_response(success: false, status: 404, body: "Resource not found"))
+
+      service = described_class.new(config: config)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError) do |error|
+        expect(error.message).to match(/deployments/)
+        expect(error.message).to match(/api-version/)
+      end
+      expect(CompletionKit::Model.where(provider: "azure_foundry").count).to eq(0)
+    end
+
+    it "raises DiscoveryError when the endpoint is missing" do
+      service = described_class.new(config: config.merge(api_endpoint: nil))
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /endpoint/i)
+    end
+
+    it "raises DiscoveryError when the api-version is missing" do
+      service = described_class.new(config: config.merge(api_version: nil))
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /api-version/i)
+    end
+  end
+
   describe "#refresh! for unknown provider" do
     let(:config) { { provider: "unknown", api_key: "key" } }
 

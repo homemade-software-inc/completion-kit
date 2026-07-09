@@ -1,6 +1,6 @@
 module CompletionKit
   class ApiConfig
-    PROVIDERS = %w[openai anthropic ollama openrouter].freeze
+    PROVIDERS = %w[openai anthropic ollama openrouter azure_foundry].freeze
 
     def self.for_model(model_name)
       provider = provider_for_model(model_name)

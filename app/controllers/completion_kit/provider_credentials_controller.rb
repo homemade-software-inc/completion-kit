@@ -62,7 +62,7 @@ module CompletionKit
     end
 
     def provider_credential_params
-      params.require(:provider_credential).permit(:provider, :api_key, :api_endpoint)
+      params.require(:provider_credential).permit(:provider, :api_key, :api_endpoint, :api_version)
     end
   end
 end

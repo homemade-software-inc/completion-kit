@@ -46,6 +46,35 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
       cred = CompletionKit::ProviderCredential.new(provider: "openrouter", api_key: "or-test")
       expect(cred).to be_valid
     end
+
+    it "includes azure_foundry as a valid provider labelled 'Azure AI Foundry'" do
+      expect(CompletionKit::ProviderCredential::PROVIDERS).to include("azure_foundry")
+      expect(CompletionKit::ProviderCredential::PROVIDER_LABELS["azure_foundry"]).to eq("Azure AI Foundry")
+    end
+  end
+
+  describe "azure_foundry credentials" do
+    it "requires an endpoint and an api-version" do
+      cred = CompletionKit::ProviderCredential.new(provider: "azure_foundry", api_key: "k")
+      expect(cred).not_to be_valid
+      expect(cred.errors[:api_endpoint]).to be_present
+      expect(cred.errors[:api_version]).to be_present
+    end
+
+    it "is valid with an endpoint, key, and api-version" do
+      cred = CompletionKit::ProviderCredential.new(provider: "azure_foundry", api_key: "k",
+        api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21")
+      expect(cred).to be_valid
+    end
+
+    it "carries the api-version in the config hash" do
+      cred = build(:completion_kit_provider_credential, provider: "azure_foundry", api_key: "k",
+        api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21")
+      expect(cred.config_hash).to eq(
+        provider: "azure_foundry", api_key: "k",
+        api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21"
+      )
+    end
   end
 
   it "returns config data and delegates to the provider client" do

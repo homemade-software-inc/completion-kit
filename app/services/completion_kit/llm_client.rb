@@ -34,6 +34,8 @@ module CompletionKit
         OllamaClient.new(config)
       when "openrouter"
         OpenRouterClient.new(config)
+      when "azure_foundry"
+        AzureFoundryClient.new(config)
       else
         raise ArgumentError, "Unsupported provider: #{provider_name}"
       end
