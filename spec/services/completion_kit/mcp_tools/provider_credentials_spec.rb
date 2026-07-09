@@ -70,9 +70,24 @@ RSpec.describe CompletionKit::McpTools::ProviderCredentials do
       expect(result[:isError]).to be true
     end
 
-    it "deletes a credential" do
+    it "deletes an unused credential and its discovered models" do
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1", status: "active", supports_generation: true)
+
       result = described_class.call("provider_credentials_delete", {"id" => credential.id})
+
       expect(result[:content].first[:text]).to include("deleted")
+      expect(CompletionKit::Model.where(provider: "openai")).not_to exist
+    end
+
+    it "returns an error when the credential is still in use" do
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1", status: "active", supports_generation: true)
+      create(:completion_kit_prompt, llm_model: "gpt-4.1")
+
+      result = described_class.call("provider_credentials_delete", {"id" => credential.id})
+
+      expect(result[:isError]).to be true
+      expect(result[:content].first[:text]).to match(/in use/i)
+      expect(CompletionKit::ProviderCredential.exists?(credential.id)).to be(true)
     end
   end
 end

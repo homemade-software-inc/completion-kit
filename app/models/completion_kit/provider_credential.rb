@@ -30,6 +30,8 @@ module CompletionKit
     validate :api_endpoint_not_internal
 
     after_save :enqueue_discovery
+    before_destroy :ensure_not_in_use, prepend: true
+    after_destroy :destroy_discovered_models
 
     def azure_foundry?
       provider == "azure_foundry"
@@ -86,6 +88,17 @@ module CompletionKit
          .maximum(:created_at)
     end
 
+    def in_use?
+      prompt_count.positive? || judge_count.positive?
+    end
+
+    def in_use_message
+      parts = []
+      parts << "#{prompt_count} #{'prompt'.pluralize(prompt_count)}" if prompt_count.positive?
+      parts << "#{judge_count} judge #{'run'.pluralize(judge_count)}" if judge_count.positive?
+      "#{display_provider} is still in use by #{parts.to_sentence}. Remove those references before deleting it."
+    end
+
     def broadcast_discovery_progress
       safely_broadcast do
         broadcast_replace_to(
@@ -115,6 +128,17 @@ module CompletionKit
     end
 
     private
+
+    def ensure_not_in_use
+      return unless in_use?
+
+      errors.add(:base, in_use_message)
+      throw :abort
+    end
+
+    def destroy_discovered_models
+      Model.where(provider: provider).delete_all
+    end
 
     def enqueue_discovery
       update_columns(discovery_status: "discovering", discovery_current: 0, discovery_total: 0)
