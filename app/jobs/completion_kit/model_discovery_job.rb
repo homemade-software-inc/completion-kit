@@ -21,7 +21,8 @@ module CompletionKit
       if error.is_a?(CompletionKit::ModelDiscoveryService::DiscoveryError)
         Rails.error.report(error, handled: true, context: { job: self.class.name, provider_credential_id: arguments.first })
       end
-      credential = ProviderCredential.find(arguments.first)
+      credential = ProviderCredential.find_by(id: arguments.first)
+      next unless credential
       credential.update_columns(discovery_status: "failed", discovery_error: error.message.to_s.truncate(500))
       credential.reload
       credential.broadcast_discovery_progress
