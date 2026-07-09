@@ -52,6 +52,17 @@ RSpec.describe CompletionKit::ModelDiscoveryJob, type: :job do
     expect(credential.reload.discovery_status).to eq("failed")
   end
 
+  it "does not secondary-crash when the credential is deleted mid-discovery" do
+    error = CompletionKit::ModelDiscoveryService::DiscoveryError.new("gone")
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!) do
+      credential.destroy!
+      raise error
+    end
+    allow(Rails.error).to receive(:report)
+
+    expect { described_class.perform_now(credential.id) }.not_to raise_error
+  end
+
   it "passes force through to the discovery service" do
     expect_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).with(force: true)
     described_class.perform_now(credential.id, force: true)

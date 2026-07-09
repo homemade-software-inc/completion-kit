@@ -140,6 +140,22 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
       expect(response.body).not_to include("Delete provider")
       expect(response.body).to match(/in use/i)
     end
+
+    it "renders the delete control as its own form, not nested in the edit form (so it issues DELETE, not a Turbo-swallowed PATCH)" do
+      credential = create(:completion_kit_provider_credential, provider: "openai")
+
+      get "#{base_path}/#{credential.id}/edit"
+
+      doc = Nokogiri::HTML5(response.body)
+      target = "#{base_path}/#{credential.id}"
+      forms = doc.css("form").select { |f| f["action"] == target }
+      patch_form = forms.find { |f| f.css("input[name='_method']").any? { |i| i["value"] == "patch" } }
+      delete_form = forms.find { |f| f.css("input[name='_method']").any? { |i| i["value"] == "delete" } }
+
+      expect(patch_form).to be_present
+      expect(delete_form).to be_present
+      expect(patch_form).not_to eq(delete_form)
+    end
   end
 
   it "exposes the statuses polling url so the client polls the engine's actual mount path" do
