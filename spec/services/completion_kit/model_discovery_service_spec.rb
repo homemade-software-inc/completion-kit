@@ -656,7 +656,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       }.to_json
     end
 
-    it "derives capabilities from metadata: text models active, image models failed, judging unknown, all probed-stamped" do
+    it "derives capabilities from metadata: text models judge-capable, image models not, all probed-stamped" do
       stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
 
       described_class.new(config: config).refresh!
@@ -665,14 +665,13 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(models.keys).to contain_exactly("openai/gpt-4o-mini", "vendor/no-modalities", "vendor/image-gen")
 
       text_model = models["openai/gpt-4o-mini"]
-      expect(text_model).to have_attributes(supports_generation: true, supports_judging: nil, status: "active")
+      expect(text_model).to have_attributes(supports_generation: true, supports_judging: true, status: "active")
       expect(text_model.probed_at).to be_present
 
-      # missing architecture.output_modalities -> historical default of text-capable
-      expect(models["vendor/no-modalities"]).to have_attributes(supports_generation: true, status: "active")
+      expect(models["vendor/no-modalities"]).to have_attributes(supports_generation: true, supports_judging: true, status: "active")
 
       image_model = models["vendor/image-gen"]
-      expect(image_model).to have_attributes(supports_generation: false, supports_judging: nil, status: "failed")
+      expect(image_model).to have_attributes(supports_generation: false, supports_judging: false, status: "failed")
       expect(image_model.probed_at).to be_present
     end
 
@@ -692,21 +691,26 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(CompletionKit::Model.find_by(model_id: "openai/gpt-4o-mini").display_name).to eq("GPT-4o Mini")
     end
 
-    it "re-derives supports_generation on refresh but preserves a learned supports_judging" do
-      learned = CompletionKit::Model.create!(
+    it "re-derives supports_generation and supports_judging from metadata on refresh" do
+      stale_false = CompletionKit::Model.create!(
         provider: "openrouter", model_id: "openai/gpt-4o-mini", display_name: "old name",
-        status: "active", supports_generation: true, supports_judging: true, probed_at: 1.day.ago
+        status: "active", supports_generation: true, supports_judging: false, judging_error: "old probe failure", probed_at: 1.day.ago
+      )
+      unknown = CompletionKit::Model.create!(
+        provider: "openrouter", model_id: "vendor/no-modalities", display_name: "No Modalities",
+        status: "active", supports_generation: true, supports_judging: nil
       )
       regressed = CompletionKit::Model.create!(
         provider: "openrouter", model_id: "vendor/image-gen", display_name: "Image Gen",
-        status: "active", supports_generation: true, supports_judging: nil
+        status: "active", supports_generation: true, supports_judging: true
       )
       stub_faraday_get(faraday_response(success: true, body: openrouter_response_body))
 
       described_class.new(config: config).refresh!
 
-      expect(learned.reload).to have_attributes(supports_judging: true, supports_generation: true, status: "active", display_name: "GPT-4o Mini")
-      expect(regressed.reload).to have_attributes(supports_generation: false, status: "failed")
+      expect(stale_false.reload).to have_attributes(supports_judging: true, supports_generation: true, status: "active", display_name: "GPT-4o Mini", judging_error: nil)
+      expect(unknown.reload).to have_attributes(supports_judging: true, supports_generation: true, status: "active")
+      expect(regressed.reload).to have_attributes(supports_generation: false, supports_judging: false, status: "failed")
     end
 
     it "raises DiscoveryError when openrouter fetch returns 401" do

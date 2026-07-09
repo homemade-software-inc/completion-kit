@@ -150,7 +150,7 @@ module CompletionKit
         supports_generation = meta[:supports_generation] != false
         attrs.merge!(
           supports_generation: supports_generation,
-          supports_judging: nil,
+          supports_judging: supports_generation,
           probed_at: Time.current,
           status: supports_generation ? "active" : "failed"
         )
@@ -163,14 +163,13 @@ module CompletionKit
 
     def reconcile_existing_model(model, meta)
       if @provider == "openrouter"
-        # Re-derive generation capability from the published metadata every refresh
-        # (fixes models discovered before capability metadata was used). Leave
-        # supports_judging alone — it's "learned" from successful runs.
         supports_generation = meta[:supports_generation] != false
         model.update!(
           display_name: meta[:display_name].presence || model.display_name,
           supports_generation: supports_generation,
+          supports_judging: supports_generation,
           generation_error: nil,
+          judging_error: nil,
           probed_at: Time.current,
           status: supports_generation ? "active" : "failed",
           retired_at: nil
