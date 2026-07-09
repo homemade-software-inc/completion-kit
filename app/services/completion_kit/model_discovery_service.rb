@@ -18,9 +18,6 @@ module CompletionKit
     def refresh!(force: false, &on_progress)
       discovered = fetch_models
       reconcile(discovered)
-      # OpenRouter publishes capability metadata (output modalities, etc.), so we
-      # derive everything from the model list and skip live probing entirely.
-      # Judging stays unknown ("?") until a real run proves it.
       return if @provider == "openrouter"
 
       reset_failed_generation if force
