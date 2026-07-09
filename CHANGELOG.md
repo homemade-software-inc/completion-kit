@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-07-08
+
+### Added
+- **Native Azure AI Foundry provider (#104).** A first-class `azure_foundry` provider type backed by the Azure OpenAI data plane, so a Foundry/Azure OpenAI endpoint no longer has to masquerade as a custom Ollama endpoint (which 404s on discovery). Adds an `api_version` field, discovery via `GET /openai/deployments`, and an `AzureFoundryClient` that generates and judges against a deployment (`POST /openai/deployments/{name}/chat/completions`) with `api-key` auth. Discovered deployments are probed like the other providers, the existing SSRF/internal-address guard still applies to the endpoint, and the provider is wired through the form, REST API, and MCP.
+- **Delete an unused provider credential (#106).** Provider credentials were the one resource with no destroy path. You can now remove a credential that nothing references from its edit page; the guard reuses the existing `prompt_count`/`judge_count` usage signals, refuses deletion when a prompt or run still uses one of its models (explaining what), and cleans up the provider's discovered `Model` rows on delete. The guard lives on the model, so the REST API and MCP `delete` inherit it instead of silently orphaning models or removing an in-use provider.
+
+### Fixed
+- **OpenRouter models never showed judge capability, leaving a wall of "?".** OpenRouter is discovered from published metadata rather than live probing, but judging was left `nil` ("unknown") and only promoted by a successful run, so any model discovered after probing was disabled showed "?" forever, and whether a tenant saw ✓ or "?" depended only on when its catalog was discovered. Judge capability is now derived from the same text-output signal as generation, on both new and existing models, so a refresh resolves every OpenRouter model to a consistent judge state at no cost.
+- **Model-discovery failures for custom endpoints leaked the internal `ollama` slug and gave opaque 404s (#105).** A user pointing the generic OpenAI-compatible option at, say, an Azure endpoint saw "ollama model list request failed (404)". Discovery failures on that path now use provider-neutral copy, say what to check on a 404, point Azure hosts at the dedicated Foundry provider, and are reported as handled configuration errors rather than unhandled application bugs.
+
 ## [0.25.3] - 2026-07-06
 
 ### Fixed
