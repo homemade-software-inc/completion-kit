@@ -68,6 +68,20 @@ RSpec.describe "API V1 Provider Credentials", type: :request do
     end
   end
 
+  describe "azure_foundry api-version" do
+    it "accepts api_version on create and returns it (without the key)" do
+      post "/completion_kit/api/v1/provider_credentials",
+        params: { provider: "azure_foundry", api_key: "k",
+                  api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21" }.to_json,
+        headers: headers
+
+      expect(response).to have_http_status(:created)
+      body = JSON.parse(response.body)
+      expect(body["api_version"]).to eq("2024-10-21")
+      expect(body).not_to have_key("api_key")
+    end
+  end
+
   describe "DELETE /api/v1/provider_credentials/:id" do
     it "deletes the credential" do
       cred = create(:completion_kit_provider_credential)

@@ -68,7 +68,7 @@ RSpec.describe "JSON serialization" do
     it "excludes api_key" do
       json = credential.as_json
       expect(json.keys).not_to include(:api_key)
-      expect(json.keys).to match_array(%i[id provider api_endpoint created_at updated_at])
+      expect(json.keys).to match_array(%i[id provider api_endpoint api_version created_at updated_at])
     end
   end
 

@@ -24,8 +24,14 @@
 
     <div class="ck-field">
       <%= form.label :api_endpoint, "API endpoint", class: "ck-label" %>
-      <%= form.text_field :api_endpoint, class: "ck-input", placeholder: "Only needed for Ollama or custom OpenAI-compatible endpoints", **ck_field_aria(form, :api_endpoint) %>
+      <%= form.text_field :api_endpoint, class: "ck-input", placeholder: "Needed for Ollama, Azure AI Foundry, or custom OpenAI-compatible endpoints", **ck_field_aria(form, :api_endpoint) %>
       <%= ck_field_error(form, :api_endpoint) %>
+    </div>
+
+    <div class="ck-field">
+      <%= form.label :api_version, "API version", class: "ck-label" %>
+      <%= form.text_field :api_version, class: "ck-input", placeholder: "Only needed for Azure AI Foundry (e.g. 2024-10-21)", **ck_field_aria(form, :api_version) %>
+      <%= ck_field_error(form, :api_version) %>
     </div>
 
     <div class="ck-actions">

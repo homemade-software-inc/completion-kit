@@ -170,7 +170,8 @@ RSpec.describe "CompletionKit provider clients", type: :service do
       [CompletionKit::AnthropicClient.new(api_key: "k"), { content: [{ text: "hi" }] }.to_json],
       [CompletionKit::OpenAiClient.new(api_key: "k"), { output: [{ type: "message", content: [{ type: "output_text", text: "hi" }] }] }.to_json],
       [CompletionKit::OpenRouterClient.new(api_key: "k"), { choices: [{ message: { content: "hi" } }] }.to_json],
-      [CompletionKit::OllamaClient.new(api_key: "k", api_endpoint: "https://ollama.example.test"), { choices: [{ text: "hi" }] }.to_json]
+      [CompletionKit::OllamaClient.new(api_key: "k", api_endpoint: "https://ollama.example.test"), { choices: [{ text: "hi" }] }.to_json],
+      [CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "https://azure.example.test", api_version: "2024-10-21"), { choices: [{ message: { content: "hi" } }] }.to_json]
     ].each do |client, body|
       stub_faraday(faraday_response(success: true, body: body))
       client.generate_completion("prompt", temperature: 0.5)
@@ -324,5 +325,93 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     request = stub_faraday_get(faraday_get_response(success: true, body: { data: [{ id: "qwen2.5" }] }.to_json))
     expect(no_key_client.available_models).to eq([{ id: "qwen2.5", name: "qwen2.5" }])
     expect(request.headers["Authorization"]).to be_nil
+  end
+
+  it "covers Azure Foundry client success, error, rescue, and configuration branches" do
+    client = CompletionKit::AzureFoundryClient.new(
+      api_key: "azure-key", api_endpoint: "https://azure.example.test", api_version: "2024-10-21"
+    )
+    success_request = stub_faraday(faraday_response(success: true, body: { choices: [{ message: { content: " hello " } }] }.to_json))
+
+    expect(client.generate_completion("prompt", model: "my-gpt4o")).to eq("hello")
+    expect(success_request.headers["api-key"]).to eq("azure-key")
+    expect(success_request.path).to eq("/openai/deployments/my-gpt4o/chat/completions?api-version=2024-10-21")
+    expect(client.configured?).to eq(true)
+    expect(client.configuration_errors).to eq([])
+
+    stub_faraday(faraday_response(success: true, body: { choices: [{ message: { content: "" } }] }.to_json))
+    expect(client.generate_completion("prompt", model: "my-gpt4o")).to eq("Error: model returned empty content")
+
+    stub_faraday(faraday_response(success: false, status: 500, body: "broken", headers: {}))
+    expect(client.generate_completion("prompt", model: "my-gpt4o")).to eq("Error: 500 - broken")
+
+    stub_faraday(faraday_response(success: false, status: 429, body: "rate limited", headers: { "Retry-After" => "12" }))
+    expect { client.generate_completion("prompt", model: "my-gpt4o") }.to raise_error(CompletionKit::RateLimitError) do |error|
+      expect(error.provider).to eq("azure_foundry")
+      expect(error.status).to eq(429)
+      expect(error.retry_after).to eq(12)
+    end
+
+    stub_faraday(faraday_response(success: false, status: 429, body: "rate limited", headers: {}))
+    expect { client.generate_completion("prompt", model: "my-gpt4o") }.to raise_error(CompletionKit::RateLimitError) do |error|
+      expect(error.retry_after).to be_nil
+    end
+
+    allow(Faraday).to receive(:new).and_raise(Faraday::ConnectionFailed, "connection refused")
+    expect { client.generate_completion("prompt", model: "my-gpt4o") }.to raise_error(Faraday::ConnectionFailed)
+
+    allow(Faraday).to receive(:new).and_raise(StandardError, "azure down")
+    expect(client.generate_completion("prompt", model: "my-gpt4o")).to eq("Error: azure down")
+  end
+
+  it "refuses to call Azure when the endpoint resolves to a private address" do
+    client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "http://10.0.0.5", api_version: "2024-10-21")
+    expect(client.generate_completion("prompt", model: "d")).to eq("Error: API endpoint resolves to a private address")
+    expect(client.available_models).to eq([])
+  end
+
+  it "reports Azure configuration problems for each missing field" do
+    expect(CompletionKit::AzureFoundryClient.new(api_key: "k", api_version: "v").configuration_errors)
+      .to include("Azure endpoint is not configured")
+    expect(CompletionKit::AzureFoundryClient.new(api_endpoint: "https://azure.example.test", api_version: "v").configuration_errors)
+      .to include("Azure API key is not configured")
+    expect(CompletionKit::AzureFoundryClient.new(api_endpoint: "https://azure.example.test", api_key: "k").configuration_errors)
+      .to include("Azure api-version is not configured")
+
+    unconfigured = CompletionKit::AzureFoundryClient.new
+    expect(unconfigured.configured?).to eq(false)
+    expect(unconfigured.generate_completion("prompt", model: "d")).to eq("Error: Azure provider is not fully configured")
+    expect(unconfigured.available_models).to eq([])
+  end
+
+  it "retries the Azure request without temperature when the deployment rejects it" do
+    client = CompletionKit::AzureFoundryClient.new(
+      api_key: "k", api_endpoint: "https://azure.example.test", api_version: "2024-10-21"
+    )
+    posted = stub_temperature_fallback(
+      deprecated_body: { error: { message: "temperature is not supported by this deployment" } }.to_json,
+      success_body: { choices: [{ message: { content: "ok" } }] }.to_json
+    )
+
+    expect(client.generate_completion("prompt", model: "my-o1", temperature: 0.7)).to eq("ok")
+    expect(posted[0].body).to include("\"temperature\":0.7")
+    expect(posted[1].body).not_to include("temperature")
+    expect(client.temperature_dropped?).to be(true)
+  end
+
+  it "lists Azure deployments as available models" do
+    client = CompletionKit::AzureFoundryClient.new(
+      api_key: "azure-key", api_endpoint: "https://azure.example.test", api_version: "2024-10-21"
+    )
+    request = stub_faraday_get(faraday_get_response(success: true, body: { data: [{ id: "my-gpt4o" }, { id: "my-mini" }] }.to_json))
+
+    expect(client.available_models).to eq([{ id: "my-gpt4o", name: "my-gpt4o" }, { id: "my-mini", name: "my-mini" }])
+    expect(request.headers["api-key"]).to eq("azure-key")
+
+    stub_faraday_get(faraday_get_response(success: false, body: "nope", status: 500))
+    expect(client.available_models).to eq([])
+
+    allow(Faraday).to receive(:new).and_raise(StandardError, "boom")
+    expect(client.available_models).to eq([])
   end
 end

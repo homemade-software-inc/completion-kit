@@ -19,9 +19,10 @@ module CompletionKit
           inputSchema: {
             type: "object",
             properties: {
-              provider: {type: "string", enum: ["openai", "anthropic", "ollama", "openrouter"]},
+              provider: {type: "string", enum: ["openai", "anthropic", "ollama", "openrouter", "azure_foundry"]},
               api_key: {type: "string"},
-              api_endpoint: {type: "string"}
+              api_endpoint: {type: "string"},
+              api_version: {type: "string"}
             },
             required: ["provider", "api_key"]
           },
@@ -33,7 +34,7 @@ module CompletionKit
             type: "object",
             properties: {
               id: {type: "integer"}, provider: {type: "string"},
-              api_key: {type: "string"}, api_endpoint: {type: "string"}
+              api_key: {type: "string"}, api_endpoint: {type: "string"}, api_version: {type: "string"}
             },
             required: ["id"]
           },
@@ -55,7 +56,7 @@ module CompletionKit
       end
 
       def self.create(args)
-        credential = ProviderCredential.new(args.slice("provider", "api_key", "api_endpoint"))
+        credential = ProviderCredential.new(args.slice("provider", "api_key", "api_endpoint", "api_version"))
         if credential.save
           text_result(credential.as_json)
         else
@@ -65,7 +66,7 @@ module CompletionKit
 
       def self.update(args)
         credential = ProviderCredential.find(args["id"])
-        if credential.update(args.except("id").slice("provider", "api_key", "api_endpoint"))
+        if credential.update(args.except("id").slice("provider", "api_key", "api_endpoint", "api_version"))
           text_result(credential.as_json)
         else
           error_result(credential.errors.full_messages.join(", "))

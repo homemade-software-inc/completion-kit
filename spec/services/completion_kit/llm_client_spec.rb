@@ -6,6 +6,7 @@ RSpec.describe CompletionKit::LlmClient, type: :service do
     expect(described_class.for_provider("anthropic")).to be_a(CompletionKit::AnthropicClient)
     expect(described_class.for_provider("ollama")).to be_a(CompletionKit::OllamaClient)
     expect(described_class.for_provider("openrouter")).to be_a(CompletionKit::OpenRouterClient)
+    expect(described_class.for_provider("azure_foundry")).to be_a(CompletionKit::AzureFoundryClient)
     expect { described_class.for_provider("unknown") }.to raise_error(ArgumentError, /Unsupported provider/)
 
     allow(CompletionKit::ApiConfig).to receive(:provider_for_model).with("gpt-4.1").and_return("openai")

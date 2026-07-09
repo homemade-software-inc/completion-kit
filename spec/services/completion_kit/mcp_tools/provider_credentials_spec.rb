@@ -42,6 +42,16 @@ RSpec.describe CompletionKit::McpTools::ProviderCredentials do
       expect(content).not_to have_key("api_key")
     end
 
+    it "creates an azure_foundry credential with an api-version" do
+      result = described_class.call("provider_credentials_create", {
+        "provider" => "azure_foundry", "api_key" => "k",
+        "api_endpoint" => "https://my-resource.openai.azure.com", "api_version" => "2024-10-21"
+      })
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["provider"]).to eq("azure_foundry")
+      expect(content["api_version"]).to eq("2024-10-21")
+    end
+
     it "updates a credential" do
       result = described_class.call("provider_credentials_update", {
         "id" => credential.id, "api_endpoint" => "https://custom.api"

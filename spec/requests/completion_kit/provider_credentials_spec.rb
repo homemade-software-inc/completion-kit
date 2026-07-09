@@ -42,6 +42,20 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
   end
 
+  it "creates an azure_foundry credential, persisting the api-version, and offers the field on the form" do
+    get "#{base_path}/new"
+    expect(response.body).to include("api_version")
+
+    expect do
+      post base_path, params: { provider_credential: {
+        provider: "azure_foundry", api_key: "k",
+        api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21"
+      } }
+    end.to change(CompletionKit::ProviderCredential, :count).by(1)
+
+    expect(CompletionKit::ProviderCredential.last.api_version).to eq("2024-10-21")
+  end
+
   it "refresh action enqueues discovery job and returns ok" do
     credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:broadcast_discovery_progress)

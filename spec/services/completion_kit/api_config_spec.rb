@@ -29,6 +29,22 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
     expect(described_class.for_model("unknown")).to eq({})
   end
 
+  it "routes a discovered azure_foundry deployment to the azure config, api-version included" do
+    allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
+    create(:completion_kit_provider_credential, provider: "azure_foundry", api_key: "azure-key",
+      api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21")
+    CompletionKit::Model.create!(provider: "azure_foundry", model_id: "my-gpt4o",
+      status: "active", supports_generation: true)
+
+    expect(described_class.provider_for_model("my-gpt4o")).to eq("azure_foundry")
+    expect(described_class.for_model("my-gpt4o")).to eq(
+      provider: "azure_foundry", api_key: "azure-key",
+      api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21"
+    )
+    expect(CompletionKit::LlmClient.for_model("my-gpt4o", described_class.for_model("my-gpt4o")))
+      .to be_a(CompletionKit::AzureFoundryClient)
+  end
+
   it "returns openrouter config from ENV" do
     allow(ENV).to receive(:[]).and_call_original
     allow(ENV).to receive(:[]).with("OPENROUTER_API_KEY").and_return("or-env-key")

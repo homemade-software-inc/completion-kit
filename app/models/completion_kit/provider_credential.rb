@@ -1,19 +1,20 @@
 module CompletionKit
   class ProviderCredential < ApplicationRecord
     include Turbo::Broadcastable
-    PROVIDERS = %w[openai anthropic ollama openrouter].freeze
+    PROVIDERS = %w[openai anthropic ollama openrouter azure_foundry].freeze
     PROVIDER_LABELS = {
       "openai" => "OpenAI",
       "anthropic" => "Anthropic",
       "ollama" => "Ollama / OpenAI-compatible endpoint",
-      "openrouter" => "OpenRouter"
+      "openrouter" => "OpenRouter",
+      "azure_foundry" => "Azure AI Foundry"
     }.freeze
 
     encrypts :api_key
 
     def as_json(options = {})
       {
-        id: id, provider: provider, api_endpoint: api_endpoint,
+        id: id, provider: provider, api_endpoint: api_endpoint, api_version: api_version,
         created_at: created_at, updated_at: updated_at
       }
     end
@@ -24,15 +25,22 @@ module CompletionKit
 
     validates :provider, presence: true, inclusion: { in: PROVIDERS }
     validates :provider, tenant_scoped_uniqueness: true
+    validates :api_endpoint, presence: true, if: :azure_foundry?
+    validates :api_version, presence: true, if: :azure_foundry?
     validate :api_endpoint_not_internal
 
     after_save :enqueue_discovery
+
+    def azure_foundry?
+      provider == "azure_foundry"
+    end
 
     def config_hash
       {
         provider: provider,
         api_key: api_key,
-        api_endpoint: api_endpoint
+        api_endpoint: api_endpoint,
+        api_version: api_version
       }.compact
     end
 

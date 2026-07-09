@@ -6,10 +6,13 @@ module CompletionKit
   class ModelDiscoveryService
     class DiscoveryError < StandardError; end
 
+    AZURE_HOST_SUFFIXES = [".openai.azure.com", ".services.ai.azure.com"].freeze
+
     def initialize(config:)
       @provider = config[:provider]
       @api_key = config[:api_key]
       @api_endpoint = config[:api_endpoint]
+      @api_version = config[:api_version]
     end
 
     def refresh!(force: false, &on_progress)
@@ -32,6 +35,7 @@ module CompletionKit
       when "anthropic" then fetch_anthropic_models
       when "openrouter" then fetch_openrouter_models
       when "ollama" then fetch_ollama_models
+      when "azure_foundry" then fetch_azure_foundry_models
       else []
       end
     end
@@ -106,17 +110,70 @@ module CompletionKit
     end
 
     def fetch_ollama_models
-      raise DiscoveryError, "Ollama endpoint URL is required" if @api_endpoint.blank?
+      raise DiscoveryError, "A model endpoint URL is required." if @api_endpoint.blank?
       base_url = ollama_root_url
       response = fetch_connection(base_url).get("/v1/models") do |req|
         req.headers["Authorization"] = "Bearer #{@api_key}" if @api_key.present?
       end
-      raise_fetch_error!(response) unless response.success?
+      raise DiscoveryError, custom_endpoint_error_message(response) unless response.success?
       JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
+    end
+
+    def custom_endpoint_error_message(response)
+      detail = extract_provider_error_message(response.body)
+      case response.status
+      when 401, 403
+        with_detail("The endpoint rejected the API key (#{response.status}).", detail)
+      when 404
+        custom_endpoint_404_message
+      when 429
+        "The endpoint rate-limited the model-list request (429). Try again shortly."
+      else
+        with_detail("The endpoint at #{custom_endpoint_host} did not return an OpenAI-compatible model list at /v1/models (#{response.status}).", detail)
+      end
+    end
+
+    def custom_endpoint_404_message
+      message = "No OpenAI-compatible model list was found at #{custom_endpoint_host}/v1/models (404). Check that the base URL is correct."
+      return message unless azure_custom_host?
+      "#{message} This looks like an Azure endpoint; add it with the Azure AI Foundry provider, which uses an api-version and an api-key header."
+    end
+
+    def with_detail(message, detail)
+      detail.present? ? "#{message} #{detail}" : message
+    end
+
+    def custom_endpoint_host
+      ProviderEndpoint.parse(@api_endpoint)&.host || @api_endpoint.to_s
+    end
+
+    def azure_custom_host?
+      host = custom_endpoint_host.to_s.downcase
+      AZURE_HOST_SUFFIXES.any? { |suffix| host.end_with?(suffix) }
     end
 
     def ollama_root_url
       @api_endpoint.to_s.strip.delete_suffix("/").delete_suffix("/v1")
+    end
+
+    def fetch_azure_foundry_models
+      raise DiscoveryError, "An Azure endpoint URL is required." if @api_endpoint.blank?
+      raise DiscoveryError, "An Azure api-version is required." if @api_version.blank?
+
+      response = fetch_connection(azure_base_url).get("/openai/deployments?api-version=#{@api_version}") do |req|
+        req.headers["api-key"] = @api_key
+      end
+      raise DiscoveryError, azure_error_message(response) unless response.success?
+      JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
+    end
+
+    def azure_base_url
+      @api_endpoint.to_s.strip.delete_suffix("/")
+    end
+
+    def azure_error_message(response)
+      detail = extract_provider_error_message(response.body)
+      with_detail("Azure did not return a deployments list at /openai/deployments (#{response.status}). Check the endpoint base URL and api-version.", detail)
     end
 
     def reconcile(discovered)
@@ -287,6 +344,7 @@ module CompletionKit
       when "openai" then openai_probe(model_id, input, max_tokens)
       when "anthropic" then anthropic_probe(model_id, input, max_tokens)
       when "ollama" then ollama_probe(model_id, input, max_tokens)
+      when "azure_foundry" then azure_foundry_probe(model_id, input, max_tokens)
       else raise ArgumentError, "Unsupported probe provider: #{@provider}"
       end
     end
@@ -364,6 +422,21 @@ module CompletionKit
         req.headers["Content-Type"] = "application/json"
         req.headers["Authorization"] = "Bearer #{@api_key}" if @api_key.present?
         req.body = { model: model_id, messages: [{ role: "user", content: input }], max_tokens: max_tokens }.to_json
+      end
+    end
+
+    def azure_foundry_probe(model_id, input, max_tokens)
+      conn = Faraday.new(url: azure_base_url) do |f|
+        f.options.timeout = 60
+        f.options.open_timeout = 5
+        f.request :retry, max: 1, interval: 0.5
+        f.adapter Faraday.default_adapter
+      end
+      conn.post do |req|
+        req.url "/openai/deployments/#{model_id}/chat/completions?api-version=#{@api_version}"
+        req.headers["Content-Type"] = "application/json"
+        req.headers["api-key"] = @api_key
+        req.body = { messages: [{ role: "user", content: input }], max_tokens: max_tokens }.to_json
       end
     end
   end
