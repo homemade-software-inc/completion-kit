@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-07-09
+
+### Fixed
+- **The provider-credential delete control did nothing (it silently saved instead).** The delete `button_to` was rendered inside the edit `form_with`; a `button_to` emits its own `<form>`, and HTML5 parsing collapses the nested forms into one, so Turbo read the first `_method` (`patch`) and clicking the trash icon submitted the edit form as an update rather than issuing a `DELETE`. The delete control is now its own form outside the edit form, so it actually deletes. A request spec now parses the rendered page with the browser-accurate HTML5 parser and asserts the delete form is separate from the edit form. Deletion via the REST API and MCP was already correct.
+- **A credential deleted while its discovery job was in flight crashed the job's error handler.** `ModelDiscoveryJob`'s `rescue_from` reloaded the credential with `ProviderCredential.find`, which raised `RecordNotFound` if the credential had since been removed (now possible), turning a benign situation into an unhandled error. It uses `find_by` and returns early when the credential is gone.
+
 ## [0.26.0] - 2026-07-08
 
 ### Added
