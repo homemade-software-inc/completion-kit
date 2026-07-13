@@ -961,6 +961,14 @@ tr:hover .ck-chip--publish {
   max-width: 36rem;
 }
 
+.ck-model-list__empty {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.35rem 0.25rem;
+}
+
 .ck-form-card__footer-header {
   display: flex;
   align-items: center;

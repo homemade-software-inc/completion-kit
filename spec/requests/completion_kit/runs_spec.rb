@@ -13,8 +13,6 @@ RSpec.describe "CompletionKit runs", type: :request do
 
     get "#{base_path}/#{run.id}"
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include(">Model<")
-    expect(response.body).to include(prompt.llm_model)
 
     get "#{base_path}/new", params: { prompt_id: prompt.id }
     expect(response).to have_http_status(:ok)

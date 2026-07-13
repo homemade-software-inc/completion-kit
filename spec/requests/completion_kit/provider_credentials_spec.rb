@@ -56,6 +56,14 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(CompletionKit::ProviderCredential.last.api_version).to eq("2024-10-21")
   end
 
+  it "offers a Discover models button on the edit page when a provider has no models yet" do
+    credential = create(:completion_kit_provider_credential, provider: "openai")
+    credential.update_columns(discovery_status: "completed")
+
+    get "#{base_path}/#{credential.id}/edit"
+    expect(response.body).to include("Discover models")
+  end
+
   it "hides the API version field unless the Azure provider is selected" do
     openai = create(:completion_kit_provider_credential, provider: "openai")
     get "#{base_path}/#{openai.id}/edit"

@@ -64,12 +64,6 @@
       <span class="ck-run-config__none">None</span>
     <% end %>
   </div>
-  <% if @run.prompt&.llm_model.present? %>
-    <div class="ck-run-config__row">
-      <span class="ck-run-config__key">Model</span>
-      <span style="text-transform: none;"><%= @run.prompt.llm_model %></span>
-    </div>
-  <% end %>
   <% if @run.judge_model.present? %>
     <div class="ck-run-config__row">
       <span class="ck-run-config__key">Judge</span>

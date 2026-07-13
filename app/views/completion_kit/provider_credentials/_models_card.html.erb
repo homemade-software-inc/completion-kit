@@ -1,12 +1,11 @@
 <div id="provider_models_<%= provider_credential.id %>">
   <% models = CompletionKit::Model.where(provider: provider_credential.provider).active.order(:model_id) %>
-  <% if models.any? || provider_credential.discovery_status.present? %>
-    <div class="ck-card ck-form-card__models">
-      <% if models.none? && provider_credential.discovery_status.in?(%w[discovering failed]) %>
-        <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: provider_credential, show_completed: false %>
-      <% end %>
+  <div class="ck-card ck-form-card__models">
+    <% if models.none? && provider_credential.discovery_status.in?(%w[discovering failed]) %>
+      <%= render "completion_kit/provider_credentials/discovery_status", provider_credential: provider_credential, show_completed: false %>
+    <% end %>
 
-      <% if models.any? %>
+    <% if models.any? %>
         <% discovering = provider_credential.discovery_status == "discovering" %>
         <% recently_completed = provider_credential.discovery_status == "completed" && provider_credential.updated_at > 1.minute.ago %>
         <% expanded = discovering || recently_completed %>
@@ -71,7 +70,13 @@
             </table>
           </div>
         </details>
+      <% elsif provider_credential.discovery_status != "discovering" %>
+        <div class="ck-model-list__empty">
+          <% unless provider_credential.discovery_status == "failed" %>
+            <span class="ck-meta-copy">No models discovered yet.</span>
+          <% end %>
+          <button type="button" class="<%= ck_button_classes(:light, variant: :outline) %>" onclick="fetch('<%= refresh_provider_credential_path(provider_credential) %>', {method:'POST',headers:{'X-CSRF-Token':document.querySelector('meta[name=csrf-token]').content}});if(window.ckStartDiscoveryPolling)ckStartDiscoveryPolling(8000)">Discover models</button>
+        </div>
       <% end %>
     </div>
-  <% end %>
 </div>

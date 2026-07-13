@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.7] - 2026-07-13
+
+### Fixed
+- **A provider with no models had no way to trigger discovery.** The "Refresh models" control only appeared once models already existed, so a provider that discovered nothing (or hadn't run discovery yet) was stuck with an empty card and no button. The models card now always shows a **"Discover models"** button when there are no models.
+- **Removed a duplicate "Model" row on the run page.** 0.26.6 added a Model row to the run configuration, but the generation model is already shown as a chip beside the prompt version, so it appeared twice. The row is gone.
+
 ## [0.26.6] - 2026-07-13
 
 ### Fixed
