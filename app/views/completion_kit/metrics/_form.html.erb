@@ -254,24 +254,18 @@
     <%= render "completion_kit/tags/picker", record: metric, param_namespace: :metric %>
 
     <div class="ck-actions">
-      <% if metric.persisted? %>
-        <% groups_n = metric.metric_groups.count %>
-        <% reviews_n = metric.reviews.count %>
-        <% parts = [] %>
-        <% parts << "in #{pluralize(groups_n, 'metric group')} (removed from each)" if groups_n > 0 %>
-        <% parts << "scored in #{pluralize(reviews_n, 'review')} (scores kept, link cleared)" if reviews_n > 0 %>
-        <% confirm = parts.empty? ? "Delete \"#{metric.name}\"? It's not in use." : "Delete \"#{metric.name}\"? It's #{parts.to_sentence}." %>
-        <%= button_to metric_path(metric), method: :delete,
-              form_class: "inline-block",
-              class: "ck-icon-btn ck-icon-btn--form",
-              title: "Delete metric",
-              "aria-label": "Delete metric",
-              data: { turbo_confirm: confirm } do %>
-          <%= heroicon_tag "trash", variant: :outline, size: 24, "aria-hidden": "true" %>
-        <% end %>
-      <% end %>
       <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(metric.persisted? ? "Save metric" : "Create metric", class: ck_button_classes(:dark)) %>
     </div>
   </div>
+<% end %>
+
+<% if metric.persisted? %>
+  <% groups_n = metric.metric_groups.count %>
+  <% reviews_n = metric.reviews.count %>
+  <% parts = [] %>
+  <% parts << "in #{pluralize(groups_n, 'metric group')} (removed from each)" if groups_n > 0 %>
+  <% parts << "scored in #{pluralize(reviews_n, 'review')} (scores kept, link cleared)" if reviews_n > 0 %>
+  <% confirm = parts.empty? ? "Delete \"#{metric.name}\"? It's not in use." : "Delete \"#{metric.name}\"? It's #{parts.to_sentence}." %>
+  <%= render "completion_kit/shared/delete_action", path: metric_path(metric), label: "Delete metric", confirm: confirm %>
 <% end %>

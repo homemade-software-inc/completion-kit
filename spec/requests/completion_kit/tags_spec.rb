@@ -46,6 +46,22 @@ RSpec.describe "CompletionKit tags", type: :request do
     expect(response.body).to include("1")
   end
 
+  it "renders the delete control as its own top-level form so it issues DELETE, not a Turbo-swallowed PATCH" do
+    record = create(:completion_kit_tag)
+
+    get "#{base_path}/#{record.id}/edit"
+
+    doc = Nokogiri::HTML5(response.body)
+    target = "#{base_path}/#{record.id}"
+    forms = doc.css("form").select { |f| f["action"] == target }
+    patch_form = forms.find { |f| f.css("input[name='_method']").any? { |i| i["value"] == "patch" } }
+    delete_form = forms.find { |f| f.css("input[name='_method']").any? { |i| i["value"] == "delete" } }
+
+    expect(patch_form).to be_present
+    expect(delete_form).to be_present
+    expect(patch_form).not_to eq(delete_form)
+  end
+
   describe "live breadcrumb pill update wiring" do
     it "renders the input id, the pill, and includes the engine application JS on /new" do
       get "/completion_kit/tags/new"

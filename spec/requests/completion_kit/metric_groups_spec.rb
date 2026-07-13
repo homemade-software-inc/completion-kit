@@ -44,4 +44,20 @@ RSpec.describe "CompletionKit metric groups", type: :request do
 
     expect(response).to redirect_to("/completion_kit/metric_groups")
   end
+
+  it "renders the delete control as its own top-level form so it issues DELETE, not a Turbo-swallowed PATCH" do
+    record = create(:completion_kit_metric_group)
+
+    get "#{base_path}/#{record.id}/edit"
+
+    doc = Nokogiri::HTML5(response.body)
+    target = "#{base_path}/#{record.id}"
+    forms = doc.css("form").select { |f| f["action"] == target }
+    patch_form = forms.find { |f| f.css("input[name='_method']").any? { |i| i["value"] == "patch" } }
+    delete_form = forms.find { |f| f.css("input[name='_method']").any? { |i| i["value"] == "delete" } }
+
+    expect(patch_form).to be_present
+    expect(delete_form).to be_present
+    expect(patch_form).not_to eq(delete_form)
+  end
 end

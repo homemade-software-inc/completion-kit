@@ -43,20 +43,11 @@
 <% end %>
 
 <% if provider_credential.persisted? %>
-  <% if provider_credential.in_use? %>
-    <p class="ck-field-hint"><%= provider_credential.in_use_message %></p>
-  <% else %>
-    <div class="ck-actions">
-      <%= button_to provider_credential_path(provider_credential), method: :delete,
-            form_class: "inline-block",
-            class: "ck-icon-btn",
-            title: "Delete provider",
-            "aria-label": "Delete provider",
-            data: { turbo_confirm: "Delete the #{provider_credential.display_provider} provider and its discovered models? This can't be undone." } do %>
-        <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
-      <% end %>
-    </div>
-  <% end %>
+  <%= render "completion_kit/shared/delete_action",
+        path: provider_credential_path(provider_credential),
+        label: "Delete provider",
+        confirm: "Delete the #{provider_credential.display_provider} provider and its discovered models? This can't be undone.",
+        blocked_reason: (provider_credential.in_use_message if provider_credential.in_use?) %>
 <% end %>
 
 <% if provider_credential.persisted? %>

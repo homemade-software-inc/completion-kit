@@ -1,7 +1,7 @@
 PATH
   remote: ..
   specs:
-    completion-kit (0.26.1)
+    completion-kit (0.26.2)
       bootstrap (~> 5.2)
       csv (~> 3.2)
       faraday (~> 2.7)

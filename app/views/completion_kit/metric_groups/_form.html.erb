@@ -80,22 +80,16 @@
     </script>
 
     <div class="ck-actions">
-      <% if metric_group.persisted? %>
-        <% members_n = metric_group.metrics.count %>
-        <% confirm = members_n.zero? ?
-             "Delete \"#{metric_group.name}\"? It has no members." :
-             "Delete \"#{metric_group.name}\"? Removes this grouping. #{pluralize(members_n, 'member metric')} #{members_n == 1 ? 'is' : 'are'} kept." %>
-        <%= button_to metric_group_path(metric_group), method: :delete,
-              form_class: "inline-block",
-              class: "ck-icon-btn",
-              title: "Delete metric group",
-              "aria-label": "Delete metric group",
-              data: { turbo_confirm: confirm } do %>
-          <%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %>
-        <% end %>
-      <% end %>
       <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(metric_group.persisted? ? "Save metric group" : "Create metric group", class: ck_button_classes(:dark)) %>
     </div>
   </div>
+<% end %>
+
+<% if metric_group.persisted? %>
+  <% members_n = metric_group.metrics.count %>
+  <% confirm = members_n.zero? ?
+       "Delete \"#{metric_group.name}\"? It has no members." :
+       "Delete \"#{metric_group.name}\"? Removes this grouping. #{pluralize(members_n, 'member metric')} #{members_n == 1 ? 'is' : 'are'} kept." %>
+  <%= render "completion_kit/shared/delete_action", path: metric_group_path(metric_group), label: "Delete metric group", confirm: confirm %>
 <% end %>

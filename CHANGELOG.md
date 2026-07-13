@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.2] - 2026-07-13
+
+### Fixed
+- **Delete on the tag, prompt, dataset, metric, and metric-group edit forms silently saved instead of deleting.** The same defect fixed for provider credentials in 0.26.1 was still live on every other resource: the delete `button_to` sat inside the edit `form_with`, and HTML5 parsing collapses the nested forms into one, so clicking the trash icon submitted the edit form as a `PATCH` rather than issuing a `DELETE`. Each delete control is now its own top-level form, rendered through a shared `delete_action` partial, and a request spec per resource parses the page with the browser-accurate HTML5 parser to assert the delete form is separate from the edit form.
+
+### Changed
+- **The delete control on every edit form is now a labeled destructive button instead of a bare, easily-missed trash icon.** An in-use provider credential now shows that button disabled alongside the reason it can't be deleted, rather than hiding the control entirely and leaving it looking absent.
+
 ## [0.26.1] - 2026-07-09
 
 ### Fixed
