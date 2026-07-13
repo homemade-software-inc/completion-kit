@@ -1562,6 +1562,11 @@ tr:hover .ck-chip--publish {
   color: var(--ck-accent);
 }
 
+.ck-code--error {
+  background: var(--ck-danger-soft);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
 /* the main prompt template block on prompts/show — bigger padding + a
    touch more line-height since this is the page's primary content */
 .ck-code--prompt {

@@ -72,12 +72,17 @@
 
 <section class="ck-card--spaced">
   <div class="ck-prompt-preview__header">
-    <p class="ck-kicker">Response</p>
+    <p class="ck-kicker"><%= @response.status == "failed" ? "Error" : "Response" %></p>
     <% if @run.prompt %>
       <span class="ck-chip ck-chip--soft" style="text-transform: none;"><%= @run.prompt.llm_model %></span>
     <% end %>
   </div>
-  <div class="ck-code-scroll-wrap"><pre class="ck-code"><%= ck_format_maybe_json(@response.response_text) %></pre></div>
+  <% if @response.status == "failed" %>
+    <% err = @response.error_payload || {} %>
+    <div class="ck-code-scroll-wrap"><pre class="ck-code ck-code--error"><%= err[:provider]&.titleize %><%= " #{err[:status]}" if err[:status].present? %><%= "\n\n" if err[:provider].present? || err[:status].present? %><%= err[:message] %></pre></div>
+  <% else %>
+    <div class="ck-code-scroll-wrap"><pre class="ck-code"><%= ck_format_maybe_json(@response.response_text) %></pre></div>
+  <% end %>
 </section>
 
 <% if @response.expected_output.present? %>

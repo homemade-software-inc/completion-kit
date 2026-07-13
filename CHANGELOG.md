@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.8] - 2026-07-13
+
+### Fixed
+- **Failed responses couldn't be opened.** Only succeeded responses were clickable in a run's responses table, so a failed response (e.g. a provider error) could only be read from its truncated cell. Failed responses are now clickable through to their detail page, which shows the **full error** — provider, status, and complete message — in a distinct error block instead of an empty response.
+
 ## [0.26.7] - 2026-07-13
 
 ### Fixed

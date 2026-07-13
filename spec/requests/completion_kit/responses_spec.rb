@@ -21,6 +21,27 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).to include(metric_group.metrics.first.name)
   end
 
+  it "shows the full error on the response page for a failed response" do
+    failed = create(:completion_kit_response, :failed, run: run,
+      error_provider: "openrouter", error_status: 402, error_message: "Insufficient credits — add funds to continue")
+
+    get "/completion_kit/runs/#{run.id}/responses/#{failed.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(">Error<")
+    expect(response.body).to include("Openrouter 402")
+    expect(response.body).to include("Insufficient credits")
+    expect(response.body).to include("ck-code--error")
+  end
+
+  it "makes a failed response row clickable through to its detail page" do
+    failed = create(:completion_kit_response, :failed, run: run, error_message: "boom")
+
+    get "/completion_kit/runs/#{run.id}"
+
+    expect(response.body).to include("responses/#{failed.id}")
+  end
+
   it "marks a stale review with a concise version-transition chip and no border accent" do
     metric = metric_group.metrics.first
     v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
