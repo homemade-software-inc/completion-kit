@@ -183,7 +183,7 @@ module CompletionKit
     end
 
     def reconcile(discovered)
-      api_model_ids = discovered.map { |m| m[:id] }
+      api_model_ids = discovered.map { |m| m[:id] }.uniq
       meta_by_id = discovered.index_by { |m| m[:id] }
       existing = Model.where(provider: @provider).index_by(&:model_id)
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.5] - 2026-07-13
+
+### Fixed
+- **Model discovery crashed with "Validation failed: Model has already been taken" when a provider's model list contained a duplicate id.** Reconciliation snapshotted the existing models once and then created a row per listed id, so a repeated id tried to insert the same `(provider, model_id)` twice and tripped the uniqueness validation. Duplicate ids are now collapsed before reconciling. (Azure's v1 `/openai/v1/models` catalog can list the same id more than once, which is where this surfaced.)
+
 ## [0.26.4] - 2026-07-13
 
 ### Added

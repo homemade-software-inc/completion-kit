@@ -1030,4 +1030,18 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect { service.refresh! }.not_to raise_error
     end
   end
+
+  describe "duplicate model ids in a discovery response" do
+    it "creates each model once instead of crashing on a uniqueness violation" do
+      service = described_class.new(config: { provider: "openai", api_key: "k" })
+      discovered = [
+        { id: "gpt-dup", display_name: "Dup" },
+        { id: "gpt-dup", display_name: "Dup" },
+        { id: "gpt-unique", display_name: "Unique" }
+      ]
+
+      expect { service.send(:reconcile, discovered) }.not_to raise_error
+      expect(CompletionKit::Model.where(provider: "openai").pluck(:model_id)).to contain_exactly("gpt-dup", "gpt-unique")
+    end
+  end
 end
