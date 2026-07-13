@@ -1,3 +1,10 @@
+<% if tag.persisted? %>
+  <% tag_delete_id = "ck_delete_tag_#{tag.id}" %>
+  <% applied_n = tag.taggings.count %>
+  <% tag_delete_confirm = applied_n.zero? ?
+       "Delete \"#{tag.name}\"? It's not currently applied to anything." :
+       "Delete \"#{tag.name}\"? It's currently applied to #{pluralize(applied_n, 'item')}. They'll lose this tag." %>
+<% end %>
 <%= form_with(model: tag, local: true) do |form| %>
   <div class="ck-card ck-form-card">
     <% name_error = tag.errors[:name].first %>
@@ -17,6 +24,9 @@
     </div>
 
 <div class="ck-actions">
+      <% if tag.persisted? %>
+        <%= ck_delete_trigger(form_id: tag_delete_id, label: "Delete tag", confirm: tag_delete_confirm) %>
+      <% end %>
       <%= link_to "Cancel", tags_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(tag.persisted? ? "Save tag" : "Create tag", class: ck_button_classes(:dark)) %>
     </div>
@@ -24,11 +34,5 @@
 <% end %>
 
 <% if tag.persisted? %>
-  <% applied_n = tag.taggings.count %>
-  <% confirm = if applied_n.zero?
-       "Delete \"#{tag.name}\"? It's not currently applied to anything."
-     else
-       "Delete \"#{tag.name}\"? It's currently applied to #{pluralize(applied_n, 'item')}. They'll lose this tag."
-     end %>
-  <%= render "completion_kit/shared/delete_action", path: tag_path(tag), label: "Delete tag", confirm: confirm %>
+  <%= render "completion_kit/shared/delete_form", form_id: tag_delete_id, path: tag_path(tag) %>
 <% end %>

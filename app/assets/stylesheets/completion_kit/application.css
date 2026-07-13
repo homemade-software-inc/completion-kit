@@ -2259,16 +2259,19 @@ label.ck-checkbox[hidden] {
   outline-offset: 2px;
 }
 
-.ck-delete-action {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
+.ck-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-.ck-delete-action .ck-field-hint {
-  margin: 0;
+.ck-icon-btn:disabled:hover {
+  background: none;
+  border-color: transparent;
+  color: var(--ck-dim);
+}
+
+.ck-delete-form {
+  display: contents;
 }
 
 .ck-icon-btn--spinning svg {
@@ -2721,6 +2724,17 @@ select.ck-input {
 .ck-modal::backdrop {
   background: rgba(8, 11, 20, 0.72);
   backdrop-filter: blur(4px);
+}
+
+.ck-modal--sm {
+  max-width: min(92vw, 440px);
+}
+
+.ck-confirm__message {
+  margin: 0;
+  color: var(--ck-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
 }
 
 .ck-modal[open] {

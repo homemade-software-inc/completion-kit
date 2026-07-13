@@ -1,3 +1,11 @@
+<% if dataset.persisted? %>
+  <% dataset_delete_id = "ck_delete_dataset_#{dataset.id}" %>
+  <% runs_n = dataset.runs.count %>
+  <% responses_n = CompletionKit::Response.where(run_id: dataset.runs.select(:id)).count %>
+  <% dataset_delete_confirm = runs_n.zero? ?
+       "Delete \"#{dataset.name}\"? It has no runs." :
+       "Delete \"#{dataset.name}\"? Cascades through #{pluralize(runs_n, 'run')} and #{pluralize(responses_n, 'response')} (and their reviews) that used this dataset." %>
+<% end %>
 <%= form_with(model: dataset, local: true) do |form| %>
   <% if dataset.errors.any? %>
     <div class="ck-flash ck-flash--alert" role="alert">
@@ -31,6 +39,9 @@
     <%= render "completion_kit/tags/picker", record: dataset, param_namespace: :dataset %>
 
     <div class="ck-actions">
+      <% if dataset.persisted? %>
+        <%= ck_delete_trigger(form_id: dataset_delete_id, label: "Delete dataset", confirm: dataset_delete_confirm) %>
+      <% end %>
       <%= link_to "Cancel", datasets_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(dataset.persisted? ? "Save dataset" : "Create dataset", class: ck_button_classes(:dark)) %>
     </div>
@@ -66,12 +77,5 @@ ckDatasetHeaderPreview();
 <% end %>
 
 <% if dataset.persisted? %>
-  <% runs_n = dataset.runs.count %>
-  <% responses_n = CompletionKit::Response.where(run_id: dataset.runs.select(:id)).count %>
-  <% confirm = if runs_n.zero?
-       "Delete \"#{dataset.name}\"? It has no runs."
-     else
-       "Delete \"#{dataset.name}\"? Cascades through #{pluralize(runs_n, 'run')} and #{pluralize(responses_n, 'response')} (and their reviews) that used this dataset."
-     end %>
-  <%= render "completion_kit/shared/delete_action", path: dataset_path(dataset), label: "Delete dataset", confirm: confirm %>
+  <%= render "completion_kit/shared/delete_form", form_id: dataset_delete_id, path: dataset_path(dataset) %>
 <% end %>

@@ -290,6 +290,30 @@ document.addEventListener("change", function(e) {
   }
 });
 
+function ckApplyProviderFields(scope) {
+  if (!scope) return;
+  var select = scope.querySelector("[data-ck-provider-select]");
+  if (!select) return;
+  var provider = select.value;
+  scope.querySelectorAll("[data-ck-provider-field]").forEach(function(field) {
+    var wanted = (field.getAttribute("data-ck-provider-field") || "").split(",");
+    field.hidden = wanted.indexOf(provider) === -1;
+  });
+}
+
+document.addEventListener("turbo:load", function() {
+  document.querySelectorAll("[data-ck-provider-select]").forEach(function(select) {
+    ckApplyProviderFields(select.closest("form") || document);
+  });
+});
+
+document.addEventListener("change", function(e) {
+  var target = e.target;
+  if (target && target.matches && target.matches("[data-ck-provider-select]")) {
+    ckApplyProviderFields(target.closest("form") || document);
+  }
+});
+
 document.addEventListener("click", function(e) {
   var btn = e.target.closest("[data-ck-apply]");
   if (!btn) return;
@@ -378,3 +402,51 @@ document.addEventListener("keydown", function(e) {
   else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (options[idx]) ckSelectChoose(sel, options[idx]); }
   else if (e.key === "Escape") { e.preventDefault(); ckSelectClose(sel); trigger.focus(); }
 });
+
+function ckConfirmModal(message, formEl, submitter) {
+  var dialog = document.getElementById("ck-confirm-modal");
+  if (!dialog || typeof dialog.showModal !== "function") {
+    return Promise.resolve(window.confirm(message));
+  }
+  var messageEl = dialog.querySelector("#ck-confirm-message");
+  var acceptBtn = dialog.querySelector("[data-ck-confirm-accept]");
+  var cancelBtn = dialog.querySelector("[data-ck-confirm-cancel]");
+  if (messageEl) messageEl.textContent = message || "Are you sure?";
+  var label = (submitter && submitter.getAttribute("data-ck-confirm-label")) || "Confirm";
+  var tone = (submitter && submitter.getAttribute("data-ck-confirm-tone")) || "";
+  if (acceptBtn) {
+    acceptBtn.textContent = label;
+    acceptBtn.className = "ck-button " + (tone === "danger" ? "ck-button--danger" : "ck-button--primary");
+  }
+  return new Promise(function(resolve) {
+    function onClose() {
+      dialog.removeEventListener("close", onClose);
+      acceptBtn.removeEventListener("click", onAccept);
+      cancelBtn.removeEventListener("click", onCancel);
+      dialog.removeEventListener("click", onBackdrop);
+      resolve(dialog.returnValue === "accept");
+    }
+    function onAccept() { dialog.close("accept"); }
+    function onCancel() { dialog.close("cancel"); }
+    function onBackdrop(e) { if (e.target === dialog) dialog.close("cancel"); }
+    dialog.addEventListener("close", onClose);
+    acceptBtn.addEventListener("click", onAccept);
+    cancelBtn.addEventListener("click", onCancel);
+    dialog.addEventListener("click", onBackdrop);
+    dialog.returnValue = "";
+    dialog.showModal();
+    var focusTarget = (tone === "danger" ? cancelBtn : acceptBtn);
+    if (focusTarget) focusTarget.focus();
+  });
+}
+
+function ckInstallConfirm() {
+  if (!window.Turbo) return;
+  if (Turbo.config && Turbo.config.forms) {
+    Turbo.config.forms.confirm = ckConfirmModal;
+  } else if (typeof Turbo.setConfirmMethod === "function") {
+    Turbo.setConfirmMethod(ckConfirmModal);
+  }
+}
+document.addEventListener("turbo:load", ckInstallConfirm);
+ckInstallConfirm();

@@ -120,6 +120,32 @@ RSpec.describe "CompletionKit metrics", type: :request do
     expect(patch_form).to be_present
     expect(delete_form).to be_present
     expect(patch_form).not_to eq(delete_form)
+
+    expect(delete_form["id"]).to be_present
+    trigger = doc.at_css("button[type='submit'][form='#{delete_form["id"]}']")
+    expect(trigger).to be_present
+    expect(trigger["data-turbo-confirm"]).to be_present
+  end
+
+  it "keeps the edit form intact (Save not orphaned, no swallowed DELETE) when a draft banner is showing" do
+    metric = create(:completion_kit_metric, name: "Draft Metric")
+    CompletionKit::MetricVersion.ensure_current_for(metric)
+    CompletionKit::MetricVersion.create!(metric: metric, instruction: "draft instruction",
+      rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+
+    get "#{base_path}/#{metric.id}/edit"
+    expect(response.body).to include("Discard draft")
+
+    doc = Nokogiri::HTML5(response.body)
+    target = "#{base_path}/#{metric.id}"
+    edit_form = doc.css("form").find { |f| f["action"] == target && f.css("input[name='_method']").any? { |i| i["value"] == "patch" } }
+    expect(edit_form).to be_present
+    expect(edit_form.css("input[name='_method']").map { |i| i["value"] }).to eq(["patch"])
+
+    save = doc.css("input[type='submit'], button[type='submit']").find { |b| (b["value"].to_s + b.text.to_s).include?("Save metric") }
+    expect(save.ancestors("form").first).to eq(edit_form)
+    name_field = doc.at_css("input[name='metric[name]']")
+    expect(name_field.ancestors("form").first).to eq(edit_form)
   end
 
 end

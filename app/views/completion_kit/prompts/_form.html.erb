@@ -1,3 +1,11 @@
+<% if prompt.persisted? %>
+  <% prompt_delete_id = "ck_delete_prompt_#{prompt.id}" %>
+  <% runs_n = prompt.runs.count %>
+  <% responses_n = prompt.responses.count %>
+  <% prompt_delete_confirm = runs_n.zero? ?
+       "Delete \"#{prompt.display_name}\"? This version has no runs." :
+       "Delete \"#{prompt.display_name}\"? Cascades through #{pluralize(runs_n, 'run')} and #{pluralize(responses_n, 'response')} (and their reviews). Other versions of this prompt are untouched." %>
+<% end %>
 <%= form_with(model: prompt, local: true) do |form| %>
   <% if prompt.errors.any? %>
     <div class="ck-flash ck-flash--alert" role="alert">
@@ -58,6 +66,9 @@
     <%= render "completion_kit/tags/picker", record: prompt, param_namespace: :prompt %>
 
     <div class="ck-actions">
+      <% if prompt.persisted? %>
+        <%= ck_delete_trigger(form_id: prompt_delete_id, label: "Delete prompt", confirm: prompt_delete_confirm) %>
+      <% end %>
       <%= link_to "Cancel", prompts_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(prompt.persisted? ? "Save prompt" : "Create prompt", class: ck_button_classes(:dark), disabled: available.empty?) %>
     </div>
@@ -65,12 +76,5 @@
 <% end %>
 
 <% if prompt.persisted? %>
-  <% runs_n = prompt.runs.count %>
-  <% responses_n = prompt.responses.count %>
-  <% confirm = if runs_n.zero?
-       "Delete \"#{prompt.display_name}\"? This version has no runs."
-     else
-       "Delete \"#{prompt.display_name}\"? Cascades through #{pluralize(runs_n, 'run')} and #{pluralize(responses_n, 'response')} (and their reviews). Other versions of this prompt are untouched."
-     end %>
-  <%= render "completion_kit/shared/delete_action", path: prompt_path(prompt), label: "Delete prompt", confirm: confirm %>
+  <%= render "completion_kit/shared/delete_form", form_id: prompt_delete_id, path: prompt_path(prompt) %>
 <% end %>

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.3] - 2026-07-13
+
+### Fixed
+- **The metric edit form silently lost saves — and "Discard draft" could destroy the whole metric — whenever a draft or suggestion banner was showing.** The banner's `button_to` actions were nested inside the edit `form_with`; an HTML5 parser collapses the nested forms, orphaning the Save button and metric fields and folding the discard action's `_method=delete` into the edit form (so saving did nothing and discarding a draft issued `DELETE /metrics/:id`). The banners now render as their own top-level forms outside the edit form.
+
+### Changed
+- **The delete control on every edit form is a trash icon beside Cancel/Save again**, instead of a labeled button below the card. It stays its own top-level form via the HTML5 `form=` attribute, so it still issues a real `DELETE` rather than the swallowed `PATCH` the nested version produced.
+- **Confirmations now use a branded in-app modal** instead of the browser's native dialog, across every `data-turbo-confirm`. Destructive actions get a red confirm button and focus Cancel; other confirmations get a neutral button. The dialog is an `alertdialog` and describes its message to assistive tech.
+- **The API version field only appears for the Azure AI Foundry provider**, toggling as the provider changes, since no other provider uses it.
+
 ## [0.26.2] - 2026-07-13
 
 ### Fixed

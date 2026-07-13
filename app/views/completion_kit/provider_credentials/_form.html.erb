@@ -1,3 +1,8 @@
+<% if provider_credential.persisted? %>
+  <% pc_delete_id = "ck_delete_provider_#{provider_credential.id}" %>
+  <% pc_delete_blocked = provider_credential.in_use? %>
+  <% pc_delete_confirm = "Delete the #{provider_credential.display_provider} provider and its discovered models? This can't be undone." %>
+<% end %>
 <%= form_with(model: provider_credential, local: true) do |form| %>
   <% if provider_credential.errors.any? %>
     <div class="ck-flash ck-flash--alert" role="alert">
@@ -13,7 +18,7 @@
   <div class="ck-card ck-form-card">
     <div class="ck-field">
       <%= form.label :provider, class: "ck-label" %>
-      <%= form.select :provider, CompletionKit::ProviderCredential::PROVIDERS.map { |p| [CompletionKit::ProviderCredential::PROVIDER_LABELS[p] || p.titleize, p] }, {}, { class: "ck-input" } %>
+      <%= form.select :provider, CompletionKit::ProviderCredential::PROVIDERS.map { |p| [CompletionKit::ProviderCredential::PROVIDER_LABELS[p] || p.titleize, p] }, {}, { class: "ck-input", data: { ck_provider_select: true } } %>
     </div>
 
     <div class="ck-field">
@@ -28,26 +33,28 @@
       <%= ck_field_error(form, :api_endpoint) %>
     </div>
 
-    <div class="ck-field">
+    <div class="ck-field" data-ck-provider-field="azure_foundry"<%= provider_credential.azure_foundry? ? "" : " hidden" %>>
       <%= form.label :api_version, "API version", class: "ck-label" %>
-      <%= form.text_field :api_version, class: "ck-input", placeholder: "Only needed for Azure AI Foundry (e.g. 2024-10-21)", **ck_field_aria(form, :api_version) %>
+      <%= form.text_field :api_version, class: "ck-input", placeholder: "e.g. 2024-10-21", **ck_field_aria(form, :api_version) %>
       <%= ck_field_error(form, :api_version) %>
     </div>
 
     <div class="ck-actions">
+      <% if provider_credential.persisted? %>
+        <%= ck_delete_trigger(form_id: pc_delete_id, label: "Delete provider", confirm: pc_delete_confirm, disabled: pc_delete_blocked, title: (pc_delete_blocked ? provider_credential.in_use_message : "Delete provider")) %>
+      <% end %>
       <%= link_to "Cancel", provider_credentials_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(provider_credential.persisted? ? "Save provider" : "Create provider", class: ck_button_classes(:dark)) %>
     </div>
+    <% if provider_credential.persisted? && pc_delete_blocked %>
+      <p class="ck-field-hint"><%= provider_credential.in_use_message %></p>
+    <% end %>
 
   </div>
 <% end %>
 
-<% if provider_credential.persisted? %>
-  <%= render "completion_kit/shared/delete_action",
-        path: provider_credential_path(provider_credential),
-        label: "Delete provider",
-        confirm: "Delete the #{provider_credential.display_provider} provider and its discovered models? This can't be undone.",
-        blocked_reason: (provider_credential.in_use_message if provider_credential.in_use?) %>
+<% if provider_credential.persisted? && !pc_delete_blocked %>
+  <%= render "completion_kit/shared/delete_form", form_id: pc_delete_id, path: provider_credential_path(provider_credential) %>
 <% end %>
 
 <% if provider_credential.persisted? %>

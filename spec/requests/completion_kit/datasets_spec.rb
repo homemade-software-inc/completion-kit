@@ -125,6 +125,11 @@ RSpec.describe "CompletionKit datasets", type: :request do
     expect(patch_form).to be_present
     expect(delete_form).to be_present
     expect(patch_form).not_to eq(delete_form)
+
+    expect(delete_form["id"]).to be_present
+    trigger = doc.at_css("button[type='submit'][form='#{delete_form["id"]}']")
+    expect(trigger).to be_present
+    expect(trigger["data-turbo-confirm"]).to be_present
   end
 
   it "round-trips tag_names on create and update" do

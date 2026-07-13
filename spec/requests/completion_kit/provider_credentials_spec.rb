@@ -56,6 +56,20 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(CompletionKit::ProviderCredential.last.api_version).to eq("2024-10-21")
   end
 
+  it "hides the API version field unless the Azure provider is selected" do
+    openai = create(:completion_kit_provider_credential, provider: "openai")
+    get "#{base_path}/#{openai.id}/edit"
+    field = Nokogiri::HTML5(response.body).at_css('[data-ck-provider-field="azure_foundry"]')
+    expect(field).to be_present
+    expect(field.key?("hidden")).to be(true)
+
+    azure = create(:completion_kit_provider_credential, provider: "azure_foundry", api_key: "k",
+      api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21")
+    get "#{base_path}/#{azure.id}/edit"
+    field = Nokogiri::HTML5(response.body).at_css('[data-ck-provider-field="azure_foundry"]')
+    expect(field.key?("hidden")).to be(false)
+  end
+
   it "refresh action enqueues discovery job and returns ok" do
     credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
     allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:broadcast_discovery_progress)
@@ -143,10 +157,11 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
       target = "#{base_path}/#{credential.id}"
       delete_form = doc.css("form").select { |f| f["action"] == target }
                        .find { |f| f.css("input[name='_method']").any? { |i| i["value"] == "delete" } }
-      disabled_btn = doc.css("button[disabled]").find { |b| b.text.include?("Delete provider") }
+      disabled_btn = doc.at_css("button[disabled][aria-label='Delete provider']")
 
       expect(delete_form).to be_nil
       expect(disabled_btn).to be_present
+      expect(disabled_btn["form"]).to be_nil
     end
 
     it "renders the delete control as its own form, not nested in the edit form (so it issues DELETE, not a Turbo-swallowed PATCH)" do
@@ -163,6 +178,12 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
       expect(patch_form).to be_present
       expect(delete_form).to be_present
       expect(patch_form).not_to eq(delete_form)
+
+      expect(delete_form["id"]).to be_present
+      trigger = doc.at_css("button[type='submit'][form='#{delete_form["id"]}']")
+      expect(trigger).to be_present
+      expect(trigger["aria-label"]).to eq("Delete provider")
+      expect(trigger["data-turbo-confirm"]).to be_present
     end
   end
 

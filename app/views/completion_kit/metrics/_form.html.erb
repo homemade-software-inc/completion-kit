@@ -3,6 +3,58 @@
 <% suggestion_bands = suggestion ? Array(suggestion.rubric_bands).each_with_object({}) { |b, h| h[b["stars"].to_i] = b["description"].to_s } : {} %>
 <% suggested_instruction = suggestion&.instruction.to_s %>
 <% instruction_changed = suggestion && suggested_instruction.present? && suggested_instruction != metric.instruction.to_s %>
+<% if metric.persisted? %>
+  <% metric_delete_id = "ck_delete_metric_#{metric.id}" %>
+  <% groups_n = metric.metric_groups.count %>
+  <% reviews_n = metric.reviews.count %>
+  <% parts = [] %>
+  <% parts << "in #{pluralize(groups_n, 'metric group')} (removed from each)" if groups_n > 0 %>
+  <% parts << "scored in #{pluralize(reviews_n, 'review')} (scores kept, link cleared)" if reviews_n > 0 %>
+  <% metric_delete_confirm = parts.empty? ? "Delete \"#{metric.name}\"? It's not in use." : "Delete \"#{metric.name}\"? It's #{parts.to_sentence}." %>
+<% end %>
+
+<% if edit_draft %>
+  <% pub = local_assigns[:published_metric_version] %>
+  <% draft_instr_changed = pub && pub.instruction.to_s != edit_draft.instruction.to_s %>
+  <% draft_rubric_changed = pub && pub.rubric_bands != edit_draft.rubric_bands %>
+  <div class="ck-suggestion-banner" role="status">
+    <div class="ck-suggestion-banner__body">
+      <p class="ck-kicker">Draft pending</p>
+      <p class="ck-meta-copy">The form below shows your unpublished draft. Publish to replace the live<%= " instruction" if draft_instr_changed %><%= " and" if draft_instr_changed && draft_rubric_changed %><%= " rubric" if draft_rubric_changed %> for future runs, or keep editing.</p>
+    </div>
+    <div class="ck-suggestion-banner__actions">
+      <%= button_to "Discard draft", dismiss_suggestion_metric_path(metric, draft_id: edit_draft.id, back_to: "edit"),
+            method: :delete, form_class: "inline-block",
+            class: ck_button_classes(:light, variant: :outline),
+            data: { turbo_confirm: "Drop this draft?", ck_confirm_label: "Discard", ck_confirm_tone: "danger" } %>
+      <%= button_to "Publish this version", publish_draft_metric_path(metric, draft_id: edit_draft.id),
+            method: :post, form_class: "inline-block",
+            class: ck_button_classes(:dark) %>
+    </div>
+  </div>
+<% end %>
+
+<% if suggestion %>
+  <div class="ck-suggestion-banner" role="status">
+    <div class="ck-suggestion-banner__body">
+      <p class="ck-kicker ck-kicker--icon"><%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>Proposed changes</p>
+      <p class="ck-meta-copy">Based on human reviews, here are some proposed changes to the metric.</p>
+    </div>
+    <div class="ck-suggestion-banner__actions">
+      <%= button_to suggest_variants_metric_path(metric, back_to: "edit"),
+            method: :post, form_class: "inline-block", class: "ck-icon-btn",
+            title: "Try again", "aria-label": "Try again",
+            data: { turbo_confirm: "Replace these changes with fresh ones from the model?" } do %><%= heroicon_tag "arrow-path", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
+      <%= button_to dismiss_suggestion_metric_path(metric, draft_id: suggestion.id, back_to: "edit"),
+            method: :delete, form_class: "inline-block", class: "ck-icon-btn",
+            title: "Discard these changes", "aria-label": "Discard",
+            data: { turbo_confirm: "Drop these changes?", ck_confirm_label: "Discard", ck_confirm_tone: "danger" } do %><%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
+      <%= button_to "Apply all", publish_draft_metric_path(metric, draft_id: suggestion.id),
+            method: :post, form_class: "inline-block",
+            class: ck_button_classes(:dark) %>
+    </div>
+  </div>
+<% end %>
 
 <%= form_with(model: metric, local: true) do |form| %>
   <% if metric.errors.any? %>
@@ -13,49 +65,6 @@
           <li><%= message %></li>
         <% end %>
       </ul>
-    </div>
-  <% end %>
-
-  <% if edit_draft %>
-    <% pub = local_assigns[:published_metric_version] %>
-    <% draft_instr_changed = pub && pub.instruction.to_s != edit_draft.instruction.to_s %>
-    <% draft_rubric_changed = pub && pub.rubric_bands != edit_draft.rubric_bands %>
-    <div class="ck-suggestion-banner" role="status">
-      <div class="ck-suggestion-banner__body">
-        <p class="ck-kicker">Draft pending</p>
-        <p class="ck-meta-copy">The form below shows your unpublished draft. Publish to replace the live<%= " instruction" if draft_instr_changed %><%= " and" if draft_instr_changed && draft_rubric_changed %><%= " rubric" if draft_rubric_changed %> for future runs, or keep editing.</p>
-      </div>
-      <div class="ck-suggestion-banner__actions">
-        <%= button_to "Discard draft", dismiss_suggestion_metric_path(metric, draft_id: edit_draft.id, back_to: "edit"),
-              method: :delete, form_class: "inline-block",
-              class: ck_button_classes(:light, variant: :outline),
-              data: { turbo_confirm: "Drop this draft?" } %>
-        <%= button_to "Publish this version", publish_draft_metric_path(metric, draft_id: edit_draft.id),
-              method: :post, form_class: "inline-block",
-              class: ck_button_classes(:dark) %>
-      </div>
-    </div>
-  <% end %>
-
-  <% if suggestion %>
-    <div class="ck-suggestion-banner" role="status">
-      <div class="ck-suggestion-banner__body">
-        <p class="ck-kicker ck-kicker--icon"><%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>Proposed changes</p>
-        <p class="ck-meta-copy">Based on human reviews, here are some proposed changes to the metric.</p>
-      </div>
-      <div class="ck-suggestion-banner__actions">
-        <%= button_to suggest_variants_metric_path(metric, back_to: "edit"),
-              method: :post, form_class: "inline-block", class: "ck-icon-btn",
-              title: "Try again", "aria-label": "Try again",
-              data: { turbo_confirm: "Replace these changes with fresh ones from the model?" } do %><%= heroicon_tag "arrow-path", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
-        <%= button_to dismiss_suggestion_metric_path(metric, draft_id: suggestion.id, back_to: "edit"),
-              method: :delete, form_class: "inline-block", class: "ck-icon-btn",
-              title: "Discard these changes", "aria-label": "Discard",
-              data: { turbo_confirm: "Drop these changes?" } do %><%= heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true" %><% end %>
-        <%= button_to "Apply all", publish_draft_metric_path(metric, draft_id: suggestion.id),
-              method: :post, form_class: "inline-block",
-              class: ck_button_classes(:dark) %>
-      </div>
     </div>
   <% end %>
 
@@ -254,6 +263,9 @@
     <%= render "completion_kit/tags/picker", record: metric, param_namespace: :metric %>
 
     <div class="ck-actions">
+      <% if metric.persisted? %>
+        <%= ck_delete_trigger(form_id: metric_delete_id, label: "Delete metric", confirm: metric_delete_confirm) %>
+      <% end %>
       <%= link_to "Cancel", metrics_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
       <%= form.submit(metric.persisted? ? "Save metric" : "Create metric", class: ck_button_classes(:dark)) %>
     </div>
@@ -261,11 +273,5 @@
 <% end %>
 
 <% if metric.persisted? %>
-  <% groups_n = metric.metric_groups.count %>
-  <% reviews_n = metric.reviews.count %>
-  <% parts = [] %>
-  <% parts << "in #{pluralize(groups_n, 'metric group')} (removed from each)" if groups_n > 0 %>
-  <% parts << "scored in #{pluralize(reviews_n, 'review')} (scores kept, link cleared)" if reviews_n > 0 %>
-  <% confirm = parts.empty? ? "Delete \"#{metric.name}\"? It's not in use." : "Delete \"#{metric.name}\"? It's #{parts.to_sentence}." %>
-  <%= render "completion_kit/shared/delete_action", path: metric_path(metric), label: "Delete metric", confirm: confirm %>
+  <%= render "completion_kit/shared/delete_form", form_id: metric_delete_id, path: metric_path(metric) %>
 <% end %>

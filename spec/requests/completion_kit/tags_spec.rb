@@ -60,6 +60,12 @@ RSpec.describe "CompletionKit tags", type: :request do
     expect(patch_form).to be_present
     expect(delete_form).to be_present
     expect(patch_form).not_to eq(delete_form)
+
+    expect(delete_form["id"]).to be_present
+    trigger = doc.at_css("button[type='submit'][form='#{delete_form["id"]}']")
+    expect(trigger).to be_present
+    expect(trigger["data-turbo-confirm"]).to be_present
+    expect(response.body).to include('id="ck-confirm-modal"')
   end
 
   describe "live breadcrumb pill update wiring" do

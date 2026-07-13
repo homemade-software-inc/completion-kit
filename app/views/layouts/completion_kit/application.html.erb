@@ -60,5 +60,22 @@
     <%= yield %>
     </div>
   </main>
+
+  <dialog id="ck-confirm-modal" class="ck-modal ck-modal--sm" role="alertdialog" aria-labelledby="ck-confirm-title" aria-describedby="ck-confirm-message">
+    <article class="ck-modal__panel" tabindex="-1">
+      <header class="ck-modal__header">
+        <div class="ck-modal__heading">
+          <h2 class="ck-modal__title" id="ck-confirm-title">Please confirm</h2>
+        </div>
+      </header>
+      <div class="ck-modal__body">
+        <p class="ck-confirm__message" id="ck-confirm-message"></p>
+      </div>
+      <div class="ck-modal__footer">
+        <button type="button" class="<%= ck_button_classes(:light, variant: :outline) %>" data-ck-confirm-cancel>Cancel</button>
+        <button type="button" class="<%= ck_button_classes(:dark) %>" data-ck-confirm-accept>Confirm</button>
+      </div>
+    </article>
+  </dialog>
 </body>
 </html>
