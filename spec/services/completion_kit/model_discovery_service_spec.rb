@@ -953,9 +953,27 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /endpoint/i)
     end
 
-    it "raises DiscoveryError when the api-version is missing" do
+    it "uses the v1 API (no api-version) for discovery and probing when the api-version is blank" do
+      stub_faraday_get(faraday_response(success: true, body: deployments_body))
+      probe = stub_faraday_post(probe_response)
+
+      described_class.new(config: config.merge(api_version: nil)).refresh!
+
+      expect(faraday_connection_stub).to have_received(:get).with("/openai/v1/models")
+      models = CompletionKit::Model.where(provider: "azure_foundry")
+      expect(models.pluck(:model_id)).to contain_exactly("my-gpt4o", "my-mini")
+      expect(probe.path).to eq("/openai/v1/chat/completions")
+      expect(probe.body).to match(/"model":"my-(gpt4o|mini)"/)
+    end
+
+    it "reports the v1 model-list path (not api-version) when v1 discovery fails" do
+      stub_faraday_get(faraday_response(success: false, status: 404, body: "not found"))
+
       service = described_class.new(config: config.merge(api_version: nil))
-      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, /api-version/i)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError) do |error|
+        expect(error.message).to include("/openai/v1/models")
+        expect(error.message).not_to include("api-version")
+      end
     end
   end
 

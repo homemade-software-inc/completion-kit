@@ -54,17 +54,21 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
   end
 
   describe "azure_foundry credentials" do
-    it "requires an endpoint and an api-version" do
+    it "requires an endpoint but treats the api-version as optional" do
       cred = CompletionKit::ProviderCredential.new(provider: "azure_foundry", api_key: "k")
       expect(cred).not_to be_valid
       expect(cred.errors[:api_endpoint]).to be_present
-      expect(cred.errors[:api_version]).to be_present
+      expect(cred.errors[:api_version]).to be_empty
     end
 
-    it "is valid with an endpoint, key, and api-version" do
-      cred = CompletionKit::ProviderCredential.new(provider: "azure_foundry", api_key: "k",
+    it "is valid with an endpoint and key, with or without an api-version" do
+      with_version = CompletionKit::ProviderCredential.new(provider: "azure_foundry", api_key: "k",
         api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21")
-      expect(cred).to be_valid
+      expect(with_version).to be_valid
+
+      without_version = CompletionKit::ProviderCredential.new(provider: "azure_foundry", api_key: "k",
+        api_endpoint: "https://my-resource.openai.azure.com")
+      expect(without_version).to be_valid
     end
 
     it "carries the api-version in the config hash" do

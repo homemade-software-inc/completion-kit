@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.4] - 2026-07-13
+
+### Added
+- **Azure AI Foundry now works without an api-version, via Azure's v1 API.** Leaving the API version blank routes generation, judging, and discovery through the v1 endpoints — `POST /openai/v1/chat/completions` (deployment name in the body) and `GET /openai/v1/models` — with no `api-version` query parameter. Setting a dated version still uses the legacy data-plane API (`/openai/deployments/…?api-version=…`), which lists your specific deployments during discovery. The api-version field is now optional (and only shown when Azure AI Foundry is the selected provider).
+
 ## [0.26.3] - 2026-07-13
 
 ### Fixed

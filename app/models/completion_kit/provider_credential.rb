@@ -26,7 +26,6 @@ module CompletionKit
     validates :provider, presence: true, inclusion: { in: PROVIDERS }
     validates :provider, tenant_scoped_uniqueness: true
     validates :api_endpoint, presence: true, if: :azure_foundry?
-    validates :api_version, presence: true, if: :azure_foundry?
     validate :api_endpoint_not_internal
 
     after_save :enqueue_discovery

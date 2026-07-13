@@ -37,6 +37,7 @@
       <%= form.label :api_version, "API version", class: "ck-label" %>
       <%= form.text_field :api_version, class: "ck-input", placeholder: "e.g. 2024-10-21", **ck_field_aria(form, :api_version) %>
       <%= ck_field_error(form, :api_version) %>
+      <p class="ck-field-hint">Optional. Leave blank to use Azure's v1 API, or set a dated version for the legacy API (which also lists your deployments during discovery).</p>
     </div>
 
     <div class="ck-actions">

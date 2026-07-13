@@ -133,7 +133,7 @@ module CompletionKit
     def custom_endpoint_404_message
       message = "No OpenAI-compatible model list was found at #{custom_endpoint_host}/v1/models (404). Check that the base URL is correct."
       return message unless azure_custom_host?
-      "#{message} This looks like an Azure endpoint; add it with the Azure AI Foundry provider, which uses an api-version and an api-key header."
+      "#{message} This looks like an Azure endpoint; add it with the Azure AI Foundry provider."
     end
 
     def with_detail(message, detail)
@@ -155,13 +155,20 @@ module CompletionKit
 
     def fetch_azure_foundry_models
       raise DiscoveryError, "An Azure endpoint URL is required." if @api_endpoint.blank?
-      raise DiscoveryError, "An Azure api-version is required." if @api_version.blank?
 
-      response = fetch_connection(azure_base_url).get("/openai/deployments?api-version=#{@api_version}") do |req|
+      response = fetch_connection(azure_base_url).get(azure_models_path) do |req|
         req.headers["api-key"] = @api_key
       end
       raise DiscoveryError, azure_error_message(response) unless response.success?
       JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
+    end
+
+    def azure_v1_mode?
+      @api_version.blank?
+    end
+
+    def azure_models_path
+      azure_v1_mode? ? "/openai/v1/models" : "/openai/deployments?api-version=#{@api_version}"
     end
 
     def azure_base_url
@@ -170,7 +177,9 @@ module CompletionKit
 
     def azure_error_message(response)
       detail = extract_provider_error_message(response.body)
-      with_detail("Azure did not return a deployments list at /openai/deployments (#{response.status}). Check the endpoint base URL and api-version.", detail)
+      hint = azure_v1_mode? ? "Check the endpoint base URL." : "Check the endpoint base URL and api-version."
+      path = azure_v1_mode? ? "/openai/v1/models" : "/openai/deployments"
+      with_detail("Azure did not return a model list at #{path} (#{response.status}). #{hint}", detail)
     end
 
     def reconcile(discovered)
@@ -428,11 +437,13 @@ module CompletionKit
         f.request :retry, max: 1, interval: 0.5
         f.adapter Faraday.default_adapter
       end
+      body = { messages: [{ role: "user", content: input }], max_tokens: max_tokens }
+      body[:model] = model_id if azure_v1_mode?
       conn.post do |req|
-        req.url "/openai/deployments/#{model_id}/chat/completions?api-version=#{@api_version}"
+        req.url(azure_v1_mode? ? "/openai/v1/chat/completions" : "/openai/deployments/#{model_id}/chat/completions?api-version=#{@api_version}")
         req.headers["Content-Type"] = "application/json"
         req.headers["api-key"] = @api_key
-        req.body = { messages: [{ role: "user", content: input }], max_tokens: max_tokens }.to_json
+        req.body = body.to_json
       end
     end
   end

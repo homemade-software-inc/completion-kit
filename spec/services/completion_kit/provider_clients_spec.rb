@@ -31,15 +31,20 @@ RSpec.describe "CompletionKit provider clients", type: :service do
   end
 
   def stub_faraday_get(response)
-    request = Struct.new(:headers).new({})
+    request = Struct.new(:headers, :path).new({}, nil)
     connection = double("Faraday::Connection")
 
     allow(connection).to receive(:request)
     allow(connection).to receive(:adapter)
     allow(connection).to receive(:options).and_return(Struct.new(:timeout, :open_timeout).new)
-    allow(connection).to receive(:get).and_yield(request).and_return(response)
+    capture = ->(path = nil, &blk) {
+      request.path = path
+      blk&.call(request)
+      response
+    }
+    allow(connection).to receive(:get, &capture)
     allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
-    allow(Faraday).to receive(:get).and_yield(request).and_return(response)
+    allow(Faraday).to receive(:get, &capture)
 
     request
   end
@@ -370,13 +375,13 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(client.available_models).to eq([])
   end
 
-  it "reports Azure configuration problems for each missing field" do
+  it "reports Azure configuration problems for each missing field, treating api-version as optional" do
     expect(CompletionKit::AzureFoundryClient.new(api_key: "k", api_version: "v").configuration_errors)
       .to include("Azure endpoint is not configured")
     expect(CompletionKit::AzureFoundryClient.new(api_endpoint: "https://azure.example.test", api_version: "v").configuration_errors)
       .to include("Azure API key is not configured")
     expect(CompletionKit::AzureFoundryClient.new(api_endpoint: "https://azure.example.test", api_key: "k").configuration_errors)
-      .to include("Azure api-version is not configured")
+      .to eq([])
 
     unconfigured = CompletionKit::AzureFoundryClient.new
     expect(unconfigured.configured?).to eq(false)
@@ -413,5 +418,21 @@ RSpec.describe "CompletionKit provider clients", type: :service do
 
     allow(Faraday).to receive(:new).and_raise(StandardError, "boom")
     expect(client.available_models).to eq([])
+  end
+
+  it "uses Azure's v1 API (no api-version) when the api-version is blank" do
+    client = CompletionKit::AzureFoundryClient.new(api_key: "azure-key", api_endpoint: "https://azure.example.test")
+    expect(client.configured?).to eq(true)
+
+    gen = stub_faraday(faraday_response(success: true, body: { choices: [{ message: { content: "hi" } }] }.to_json))
+    expect(client.generate_completion("prompt", model: "my-gpt4o")).to eq("hi")
+    expect(gen.path).to eq("/openai/v1/chat/completions")
+    expect(gen.headers["api-key"]).to eq("azure-key")
+    expect(gen.body).to include("\"model\":\"my-gpt4o\"")
+
+    list = stub_faraday_get(faraday_get_response(success: true, body: { data: [{ id: "gpt-4.1" }] }.to_json))
+    expect(client.available_models).to eq([{ id: "gpt-4.1", name: "gpt-4.1" }])
+    expect(list.path).to eq("/openai/v1/models")
+    expect(list.headers["api-key"]).to eq("azure-key")
   end
 end

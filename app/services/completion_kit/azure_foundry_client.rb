@@ -49,7 +49,7 @@ module CompletionKit
       return [] unless configured?
       return [] unless ProviderEndpoint.safe?(api_endpoint)
 
-      response = build_connection(azure_base_url).get("/openai/deployments?api-version=#{api_version}") do |req|
+      response = build_connection(azure_base_url).get(models_path) do |req|
         req.headers["api-key"] = api_key
       end
       return [] unless response.success?
@@ -67,7 +67,6 @@ module CompletionKit
       errors = []
       errors << "Azure endpoint is not configured" if api_endpoint.blank?
       errors << "Azure API key is not configured" if api_key.blank?
-      errors << "Azure api-version is not configured" if api_version.blank?
       errors
     end
 
@@ -89,12 +88,21 @@ module CompletionKit
       api_endpoint.to_s.strip.delete_suffix("/")
     end
 
+    def v1_mode?
+      api_version.blank?
+    end
+
+    def models_path
+      v1_mode? ? "/openai/v1/models" : "/openai/deployments?api-version=#{api_version}"
+    end
+
     def post_chat(model:, prompt:, max_tokens:, temperature:)
       body = { messages: [{ role: "user", content: prompt }], max_tokens: max_tokens }
+      body[:model] = model if v1_mode?
       body[:temperature] = temperature unless temperature.nil?
 
       build_connection(azure_base_url, timeout: 30, open_timeout: 5).post do |req|
-        req.url "/openai/deployments/#{model}/chat/completions?api-version=#{api_version}"
+        req.url(v1_mode? ? "/openai/v1/chat/completions" : "/openai/deployments/#{model}/chat/completions?api-version=#{api_version}")
         req.headers["Content-Type"] = "application/json"
         req.headers["api-key"] = api_key
         req.body = body.to_json
