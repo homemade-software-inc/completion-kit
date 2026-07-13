@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.6] - 2026-07-13
+
+### Fixed
+- **Azure AI Foundry project endpoints discovered a wall of catalog models (or nothing) instead of the project's own deployments.** A Foundry *project* endpoint (`…services.ai.azure.com/api/projects/<project>`) doesn't serve the classic `/openai/deployments` API, and `/openai/v1/models` returns the entire model catalog (hundreds of models, with duplicate ids). Discovery now detects a project endpoint and lists the project's actual deployments at `GET {endpoint}/deployments?api-version=v1`, using each deployment name as the model id.
+- **Newer Azure models (gpt-5.x, o-series) failed generation and capability probing** because they reject `max_tokens` in favor of `max_completion_tokens`. The Azure client and the discovery probe now retry with `max_completion_tokens` when a model rejects `max_tokens`, mirroring the existing temperature fallback.
+- **The provider new/edit breadcrumb read "Settings" instead of "Providers"** (the link already pointed at the providers list).
+
+### Added
+- **The run detail page now shows the generation Model** in the run configuration, alongside Judge, Temperature, and the rest.
+
 ## [0.26.5] - 2026-07-13
 
 ### Fixed

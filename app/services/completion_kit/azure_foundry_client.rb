@@ -12,12 +12,21 @@ module CompletionKit
       model = options[:model]
       max_tokens = options[:max_tokens] || 1000
       temperature = options[:temperature] || 0.7
+      max_completion = false
 
-      response = post_chat(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
+      response = post_chat(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature, max_completion: max_completion)
 
-      if response.status == 400 && temperature_unsupported?(response.body)
-        @temperature_dropped = true
-        response = post_chat(model: model, prompt: prompt, max_tokens: max_tokens, temperature: nil)
+      2.times do
+        break unless response.status == 400
+        if !max_completion && max_tokens_unsupported?(response.body)
+          max_completion = true
+        elsif !temperature.nil? && temperature_unsupported?(response.body)
+          @temperature_dropped = true
+          temperature = nil
+        else
+          break
+        end
+        response = post_chat(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature, max_completion: max_completion)
       end
 
       if response.status == 429
@@ -49,12 +58,12 @@ module CompletionKit
       return [] unless configured?
       return [] unless ProviderEndpoint.safe?(api_endpoint)
 
-      response = build_connection(azure_base_url).get(models_path) do |req|
+      response = build_connection(azure_base_url).get(models_url) do |req|
         req.headers["api-key"] = api_key
       end
       return [] unless response.success?
 
-      JSON.parse(response.body).fetch("data", []).map { |entry| { id: entry["id"], name: entry["id"] } }
+      parse_models(response.body)
     rescue StandardError
       []
     end
@@ -92,13 +101,33 @@ module CompletionKit
       api_version.blank?
     end
 
-    def models_path
-      v1_mode? ? "/openai/v1/models" : "/openai/deployments?api-version=#{api_version}"
+    def foundry_project?
+      api_endpoint.to_s.include?("/api/projects/")
     end
 
-    def post_chat(model:, prompt:, max_tokens:, temperature:)
-      body = { messages: [{ role: "user", content: prompt }], max_tokens: max_tokens }
+    def models_url
+      if foundry_project?
+        "#{azure_base_url}/deployments?api-version=v1"
+      elsif v1_mode?
+        "/openai/v1/models"
+      else
+        "/openai/deployments?api-version=#{api_version}"
+      end
+    end
+
+    def parse_models(body)
+      json = JSON.parse(body)
+      if foundry_project?
+        json.fetch("value", []).map { |d| { id: d["name"], name: d["name"] } }
+      else
+        json.fetch("data", []).map { |e| { id: e["id"], name: e["id"] } }
+      end
+    end
+
+    def post_chat(model:, prompt:, max_tokens:, temperature:, max_completion: false)
+      body = { messages: [{ role: "user", content: prompt }] }
       body[:model] = model if v1_mode?
+      body[max_completion ? :max_completion_tokens : :max_tokens] = max_tokens
       body[:temperature] = temperature unless temperature.nil?
 
       build_connection(azure_base_url, timeout: 30, open_timeout: 5).post do |req|
@@ -112,6 +141,11 @@ module CompletionKit
     def temperature_unsupported?(body)
       s = body.to_s
       s.include?("temperature") && (s.include?("deprecated") || s.include?("not supported") || s.include?("Unsupported parameter"))
+    end
+
+    def max_tokens_unsupported?(body)
+      s = body.to_s
+      s.include?("max_tokens") && (s.include?("max_completion_tokens") || s.include?("not supported") || s.include?("Unsupported parameter"))
     end
   end
 end

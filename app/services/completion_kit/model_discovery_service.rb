@@ -156,15 +156,24 @@ module CompletionKit
     def fetch_azure_foundry_models
       raise DiscoveryError, "An Azure endpoint URL is required." if @api_endpoint.blank?
 
-      response = fetch_connection(azure_base_url).get(azure_models_path) do |req|
+      response = fetch_connection(azure_base_url).get(azure_foundry_project? ? "#{azure_base_url}/deployments?api-version=v1" : azure_models_path) do |req|
         req.headers["api-key"] = @api_key
       end
       raise DiscoveryError, azure_error_message(response) unless response.success?
-      JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
+      body = JSON.parse(response.body)
+      if azure_foundry_project?
+        body.fetch("value", []).map { |d| { id: d["name"], display_name: d["name"] } }
+      else
+        body.fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
+      end
     end
 
     def azure_v1_mode?
       @api_version.blank?
+    end
+
+    def azure_foundry_project?
+      @api_endpoint.to_s.include?("/api/projects/")
     end
 
     def azure_models_path
@@ -177,8 +186,16 @@ module CompletionKit
 
     def azure_error_message(response)
       detail = extract_provider_error_message(response.body)
-      hint = azure_v1_mode? ? "Check the endpoint base URL." : "Check the endpoint base URL and api-version."
-      path = azure_v1_mode? ? "/openai/v1/models" : "/openai/deployments"
+      if azure_foundry_project?
+        path = "/deployments"
+        hint = "Check the project endpoint URL."
+      elsif azure_v1_mode?
+        path = "/openai/v1/models"
+        hint = "Check the endpoint base URL."
+      else
+        path = "/openai/deployments"
+        hint = "Check the endpoint base URL and api-version."
+      end
       with_detail("Azure did not return a model list at #{path} (#{response.status}). #{hint}", detail)
     end
 
@@ -437,14 +454,28 @@ module CompletionKit
         f.request :retry, max: 1, interval: 0.5
         f.adapter Faraday.default_adapter
       end
-      body = { messages: [{ role: "user", content: input }], max_tokens: max_tokens }
+      response = azure_probe_post(conn, model_id, input, max_tokens, max_completion: false)
+      if response.status == 400 && azure_max_tokens_unsupported?(response.body)
+        response = azure_probe_post(conn, model_id, input, max_tokens, max_completion: true)
+      end
+      response
+    end
+
+    def azure_probe_post(conn, model_id, input, max_tokens, max_completion:)
+      body = { messages: [{ role: "user", content: input }] }
       body[:model] = model_id if azure_v1_mode?
+      body[max_completion ? :max_completion_tokens : :max_tokens] = max_tokens
       conn.post do |req|
         req.url(azure_v1_mode? ? "/openai/v1/chat/completions" : "/openai/deployments/#{model_id}/chat/completions?api-version=#{@api_version}")
         req.headers["Content-Type"] = "application/json"
         req.headers["api-key"] = @api_key
         req.body = body.to_json
       end
+    end
+
+    def azure_max_tokens_unsupported?(body)
+      s = body.to_s
+      s.include?("max_tokens") && (s.include?("max_completion_tokens") || s.include?("not supported") || s.include?("Unsupported parameter"))
     end
   end
 end

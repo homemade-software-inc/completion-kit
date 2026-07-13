@@ -975,6 +975,62 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
         expect(error.message).not_to include("api-version")
       end
     end
+
+    context "with a Foundry project endpoint" do
+      let(:project_config) do
+        { provider: "azure_foundry", api_key: "azure-key",
+          api_endpoint: "https://res.example.test/api/projects/notes", api_version: nil }
+      end
+
+      it "lists the project's deployments at /deployments and probes them" do
+        request = stub_faraday_get(faraday_response(success: true, body: {
+          value: [{ name: "gpt-5.4-nano-notes", type: "ModelDeployment", capabilities: { chat_completion: "true" } }]
+        }.to_json))
+        probe = stub_faraday_post(probe_response)
+
+        described_class.new(config: project_config).refresh!
+
+        expect(faraday_connection_stub).to have_received(:get).with("https://res.example.test/api/projects/notes/deployments?api-version=v1")
+        models = CompletionKit::Model.where(provider: "azure_foundry")
+        expect(models.pluck(:model_id)).to contain_exactly("gpt-5.4-nano-notes")
+        expect(models.first.supports_generation).to eq(true)
+        expect(request.headers["api-key"]).to eq("azure-key")
+        expect(probe.path).to eq("/openai/v1/chat/completions")
+      end
+
+      it "reports the /deployments path (not api-version) when the project list fails" do
+        stub_faraday_get(faraday_response(success: false, status: 404, body: "not found"))
+
+        expect { described_class.new(config: project_config).refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError) do |error|
+          expect(error.message).to include("/deployments")
+          expect(error.message).not_to include("api-version")
+        end
+      end
+    end
+
+    it "retries the probe with max_completion_tokens when the model rejects max_tokens" do
+      stub_faraday_get(faraday_response(success: true, body: {
+        value: [{ name: "gpt-5.4-nano-notes" }]
+      }.to_json))
+
+      allow(faraday_connection_stub).to receive(:post) do |&block|
+        req = Struct.new(:headers, :body, :path, keyword_init: true) do
+          def url(value); self.path = value; end
+        end.new(headers: {})
+        block.call(req) if block
+        if JSON.parse(req.body).key?("max_tokens")
+          faraday_response(success: false, status: 400, body: "Unsupported parameter: 'max_tokens' is not supported. Use 'max_completion_tokens' instead.")
+        else
+          faraday_response(success: true, body: { choices: [{ message: { content: "PING-OK\nScore: 4\nFeedback: ok" } }] }.to_json)
+        end
+      end
+
+      described_class.new(config: config.merge(api_endpoint: "https://res.example.test/api/projects/notes", api_version: nil)).refresh!
+
+      model = CompletionKit::Model.find_by(model_id: "gpt-5.4-nano-notes")
+      expect(model.supports_generation).to eq(true)
+      expect(model.supports_judging).to eq(true)
+    end
   end
 
   describe "#refresh! for unknown provider" do

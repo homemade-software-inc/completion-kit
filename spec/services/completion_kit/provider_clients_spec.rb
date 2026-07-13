@@ -389,6 +389,66 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(unconfigured.available_models).to eq([])
   end
 
+  def stub_post_sequence(*responses)
+    request_class = Struct.new(:headers, :body, :path, keyword_init: true) do
+      def url(value); self.path = value; end
+    end
+    posted = []
+    connection = double("Faraday::Connection")
+    allow(connection).to receive(:request)
+    allow(connection).to receive(:adapter)
+    allow(connection).to receive(:options).and_return(Struct.new(:timeout, :open_timeout).new)
+    allow(connection).to receive(:post) do |&block|
+      req = request_class.new(headers: {})
+      block&.call(req)
+      posted << req
+      responses[[posted.length - 1, responses.length - 1].min]
+    end
+    allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
+    posted
+  end
+
+  it "retries with max_completion_tokens when the model rejects max_tokens" do
+    client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "https://azure.example.test")
+    posted = stub_post_sequence(
+      faraday_response(success: false, status: 400, body: { error: { message: "Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead." } }.to_json, headers: {}),
+      faraday_response(success: true, body: { choices: [{ message: { content: "ok" } }] }.to_json, headers: {})
+    )
+    expect(client.generate_completion("hi", model: "gpt-5", temperature: nil)).to eq("ok")
+    expect(posted[0].body).to include("\"max_tokens\"")
+    expect(posted[1].body).to include("\"max_completion_tokens\"")
+    expect(posted[1].body).not_to include("\"max_tokens\"")
+  end
+
+  it "drops both max_tokens and temperature when a reasoning model rejects both" do
+    client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "https://azure.example.test")
+    posted = stub_post_sequence(
+      faraday_response(success: false, status: 400, body: { error: { message: "max_tokens is not supported. Use max_completion_tokens instead." } }.to_json, headers: {}),
+      faraday_response(success: false, status: 400, body: { error: { message: "temperature is not supported with this model." } }.to_json, headers: {}),
+      faraday_response(success: true, body: { choices: [{ message: { content: "ok" } }] }.to_json, headers: {})
+    )
+    expect(client.generate_completion("hi", model: "o3", temperature: 0.7)).to eq("ok")
+    expect(posted.length).to eq(3)
+    expect(posted[2].body).to include("\"max_completion_tokens\"")
+    expect(posted[2].body).not_to include("\"temperature\"")
+    expect(client.temperature_dropped?).to be(true)
+  end
+
+  it "returns the error when a 400 is neither a max_tokens nor a temperature problem" do
+    client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "https://azure.example.test")
+    stub_post_sequence(faraday_response(success: false, status: 400, body: "bad request", headers: {}))
+    expect(client.generate_completion("hi", model: "gpt-4o", temperature: 0.7)).to eq("Error: 400 - bad request")
+  end
+
+  it "lists Azure AI Foundry project deployments as available models" do
+    client = CompletionKit::AzureFoundryClient.new(api_key: "azure-key", api_endpoint: "https://res.example.test/api/projects/proj")
+    request = stub_faraday_get(faraday_get_response(success: true, body: { value: [{ name: "gpt-5-notes", type: "ModelDeployment" }, { name: "mini-notes" }] }.to_json))
+
+    expect(client.available_models).to eq([{ id: "gpt-5-notes", name: "gpt-5-notes" }, { id: "mini-notes", name: "mini-notes" }])
+    expect(request.path).to eq("https://res.example.test/api/projects/proj/deployments?api-version=v1")
+    expect(request.headers["api-key"]).to eq("azure-key")
+  end
+
   it "retries the Azure request without temperature when the deployment rejects it" do
     client = CompletionKit::AzureFoundryClient.new(
       api_key: "k", api_endpoint: "https://azure.example.test", api_version: "2024-10-21"
