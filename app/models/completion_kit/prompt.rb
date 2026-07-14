@@ -5,10 +5,12 @@ module CompletionKit
     has_many :runs, dependent: :destroy
     has_many :responses, through: :runs
 
+    attr_accessor :cloned_from_llm_model
+
     validates :name, presence: true
     validates :template, presence: true
     validates :llm_model, presence: true
-    validate :llm_model_usable_for_generation, if: :llm_model_changed?
+    validate :llm_model_usable_for_generation, if: :llm_model_newly_selected?
     validates :family_key, presence: true
     validates :version_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
@@ -53,8 +55,8 @@ module CompletionKit
       self.class.where(family_key: family_key).order(version_number: :desc, created_at: :desc)
     end
 
-    def clone_as_new_version(overrides = {})
-      self.class.create!(
+    def build_next_version(overrides = {})
+      version = self.class.new(
         {
           name: name,
           description: description,
@@ -66,6 +68,14 @@ module CompletionKit
           published_at: nil
         }.merge(overrides.compact)
       )
+      version.cloned_from_llm_model = llm_model
+      version
+    end
+
+    def clone_as_new_version(overrides = {})
+      version = build_next_version(overrides)
+      version.save!
+      version
     end
 
     def publish!
@@ -87,9 +97,14 @@ module CompletionKit
 
     private
 
-    def llm_model_usable_for_generation
-      return if llm_model.blank?
+    def llm_model_newly_selected?
+      return false if llm_model.blank?
+      return llm_model != cloned_from_llm_model if new_record? && cloned_from_llm_model.present?
 
+      llm_model_changed?
+    end
+
+    def llm_model_usable_for_generation
       rows = Model.where(model_id: llm_model)
       return if rows.empty?
       return if rows.where(supports_generation: true, status: "active").exists?

@@ -203,4 +203,24 @@ RSpec.describe CompletionKit::PromptfooImporter do
     expect(result.ok).to be(true)
     expect(CompletionKit::Metric.pluck(:name).uniq.length).to eq(CompletionKit::Metric.count)
   end
+
+  it "returns a failure result, not a 500, when the resolved model can't generate" do
+    CompletionKit::Model.create!(provider: "openai", model_id: "demoted-import",
+      status: "active", supports_generation: false, supports_judging: false)
+
+    yaml = <<~YAML
+      providers:
+        - openai:demoted-import
+      prompts:
+        - "Summarize {{text}}."
+      tests:
+        - vars: { text: "Hello" }
+    YAML
+
+    result = import(yaml)
+
+    expect(result.ok).to be(false)
+    expect(result.error).to match(/not available for generating responses/)
+    expect(CompletionKit::Prompt.count).to eq(0)
+  end
 end

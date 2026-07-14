@@ -176,6 +176,20 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(new_prompt.current).to eq(true)
   end
 
+  it "returns 422 instead of 500 when re-versioning onto a model that can't generate" do
+    CompletionKit::Model.create!(provider: "azure_foundry", model_id: "demoted-x",
+      status: "active", supports_generation: false, supports_judging: false)
+    prompt = create(:completion_kit_prompt, name: "Demoted Reversion", family_key: "family-demoted", version_number: 1)
+    create(:completion_kit_run, prompt: prompt)
+
+    expect do
+      patch "#{base_path}/#{prompt.id}", params: { prompt: { template: "Updated {{content}}", llm_model: "demoted-x" } }
+    end.not_to change(CompletionKit::Prompt, :count)
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include("is not available for generating responses")
+  end
+
   it "applies tag_names to the cloned version when prompt has existing runs" do
     prompt = create(:completion_kit_prompt, name: "Tagged Versioned", family_key: "family-tagged", version_number: 1)
     create(:completion_kit_run, prompt: prompt)

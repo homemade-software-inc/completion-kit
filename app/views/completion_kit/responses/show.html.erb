@@ -79,7 +79,9 @@
   </div>
   <% if @response.status == "failed" %>
     <% err = @response.error_payload || {} %>
-    <div class="ck-code-scroll-wrap"><pre class="ck-code ck-code--error"><%= err[:provider]&.titleize %><%= " #{err[:status]}" if err[:status].present? %><%= "\n\n" if err[:provider].present? || err[:status].present? %><%= err[:message] %></pre></div>
+    <% head = [err[:provider]&.titleize, err[:status].presence].compact.join(" ").presence %>
+    <% error_text = [head, @response.error_message.presence].compact.join("\n\n").presence || "The provider returned no error detail." %>
+    <div class="ck-code-scroll-wrap"><pre class="ck-code ck-code--error"><%= error_text %></pre></div>
   <% else %>
     <div class="ck-code-scroll-wrap"><pre class="ck-code"><%= ck_format_maybe_json(@response.response_text) %></pre></div>
   <% end %>

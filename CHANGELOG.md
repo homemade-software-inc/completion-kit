@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-07-14
+
+### Fixed
+- **Re-versioning a prompt whose model was later demoted by discovery 500'd.** The 0.27.0 generation-model validation fired on the re-version path, so editing any field of a prompt that has runs — or applying a suggestion — raised an unhandled 500 once discovery demoted its in-use model. A model inherited from the version being edited is no longer re-validated, so those edits succeed; genuinely selecting an unusable model now returns a clean 422 (web and REST) with no partially-written version. Importing a promptfoo config whose resolved model can't generate reports an error instead of 500ing. (#108)
+- **A failed response with no error detail rendered an empty error box.** The response detail page now falls back to the error message, or "The provider returned no error detail." when nothing is set, instead of a blank block. (#107)
+
 ## [0.27.0] - 2026-07-13
 
 ### Added

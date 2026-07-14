@@ -27,6 +27,8 @@ module CompletionKit
         metrics = import_metrics(config)
         Result.new(ok: true, error: nil, prompts: prompts, dataset: dataset, metrics: metrics, providers: providers)
       end
+    rescue ActiveRecord::RecordInvalid => e
+      failure(e.record.errors.full_messages.to_sentence.presence || e.message)
     end
 
     private

@@ -34,6 +34,17 @@ RSpec.describe "CompletionKit responses", type: :request do
     expect(response.body).to include("ck-code--error")
   end
 
+  it "renders a fallback message when a failed response has no error detail" do
+    blank = create(:completion_kit_response, :failed, run: run,
+      error_provider: nil, error_class: nil, error_status: nil, error_message: nil)
+
+    get "/completion_kit/runs/#{run.id}/responses/#{blank.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(">Error<")
+    expect(response.body).to include("The provider returned no error detail.")
+  end
+
   it "makes a failed response row clickable through to its detail page" do
     failed = create(:completion_kit_response, :failed, run: run, error_message: "boom")
 

@@ -103,6 +103,21 @@ RSpec.describe "API V1 Prompts", type: :request do
       expect(body["current"]).to be true
       expect(prompt.reload.template).not_to eq("Updated {{content}}")
     end
+
+    it "returns 422 instead of 500 when re-versioning onto a model that can't generate" do
+      CompletionKit::Model.create!(provider: "azure_foundry", model_id: "demoted-x",
+        status: "active", supports_generation: false, supports_judging: false)
+      prompt = create(:completion_kit_prompt)
+      create(:completion_kit_run, prompt: prompt)
+
+      expect do
+        patch "/completion_kit/api/v1/prompts/#{prompt.id}",
+          params: {llm_model: "demoted-x"}.to_json, headers: headers
+      end.not_to change(CompletionKit::Prompt, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("is not available for generating responses")
+    end
   end
 
   describe "tag_names round-trip" do

@@ -51,6 +51,27 @@ RSpec.describe CompletionKit::Prompt, type: :model do
       prompt.template = "Updated {{content}} here"
       expect(prompt).to be_valid
     end
+
+    it "allows re-versioning a prompt whose in-use model was demoted after the fact" do
+      CompletionKit::Model.create!(provider: "openai", model_id: "kept-model",
+        status: "active", supports_generation: true, supports_judging: true)
+      original = create(:completion_kit_prompt, llm_model: "kept-model")
+      CompletionKit::Model.where(model_id: "kept-model").update_all(supports_generation: false)
+
+      clone = original.clone_as_new_version(template: "New {{content}} version")
+
+      expect(clone).to be_persisted
+      expect(clone.llm_model).to eq("kept-model")
+    end
+
+    it "still blocks re-versioning onto a different model that can't generate" do
+      CompletionKit::Model.create!(provider: "azure_foundry", model_id: "switch-target",
+        status: "active", supports_generation: false, supports_judging: false)
+      original = create(:completion_kit_prompt, llm_model: "gpt-4.1-mini")
+
+      expect { original.clone_as_new_version(llm_model: "switch-target") }
+        .to raise_error(ActiveRecord::RecordInvalid, /not available for generating responses/)
+    end
   end
 
   it "extracts variables from the template" do
