@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-07-13
+
+### Added
+- **Azure AI Foundry providers now show how many models are available to deploy.** A Foundry project endpoint only serves the models you've actually deployed, but the resource holds a much larger catalog you can deploy from. The models card now shows a **"N models available to deploy in Azure AI Foundry →"** line, so the full catalog is visible and one click from the portal without cluttering the usable-model list. Only your real deployments stay selectable for prompt runs and judges.
+- **Prompts can no longer be saved with a model that is known not to generate.** The prompt dropdown already hid non-generation models, but the REST API, MCP tools, and imports accepted any model string. A prompt whose model has been discovered and confirmed unusable for generation is now rejected; unknown and not-yet-probed models are still allowed.
+
+### Changed
+- **The empty-models state reuses the "Available models 0" summary** with the circular refresh icon, replacing the standalone "Discover models" button.
+
 ## [0.26.8] - 2026-07-13
 
 ### Fixed

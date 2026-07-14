@@ -71,12 +71,19 @@
           </div>
         </details>
       <% elsif provider_credential.discovery_status != "discovering" %>
-        <div class="ck-model-list__empty">
-          <% unless provider_credential.discovery_status == "failed" %>
-            <span class="ck-meta-copy">No models discovered yet.</span>
-          <% end %>
-          <button type="button" class="<%= ck_button_classes(:light, variant: :outline) %>" onclick="fetch('<%= refresh_provider_credential_path(provider_credential) %>', {method:'POST',headers:{'X-CSRF-Token':document.querySelector('meta[name=csrf-token]').content}});if(window.ckStartDiscoveryPolling)ckStartDiscoveryPolling(8000)">Discover models</button>
+        <div class="ck-model-list__summary">
+          <span class="ck-model-list__summary-label">Available models <span class="ck-model-list__summary-count">0</span></span>
+          <span class="ck-model-list__summary-meta">
+            <button type="button" class="ck-icon-btn ck-model-list__refresh" title="Refresh models" aria-label="Refresh available models" onclick="event.preventDefault();fetch('<%= refresh_provider_credential_path(provider_credential) %>', {method:'POST',headers:{'X-CSRF-Token':document.querySelector('meta[name=csrf-token]').content}});if(window.ckStartDiscoveryPolling)ckStartDiscoveryPolling(8000)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="13" height="13" aria-hidden="true"><path fill-rule="evenodd" d="M13.836 2.477a.75.75 0 0 1 .75.75v3.182a.75.75 0 0 1-.75.75h-3.182a.75.75 0 0 1 0-1.5h1.37l-.84-.841a4.5 4.5 0 0 0-7.08.681.75.75 0 0 1-1.264-.808 6 6 0 0 1 9.44-.908l.84.84V3.227a.75.75 0 0 1 .75-.75Zm-.911 7.5A.75.75 0 0 1 13.199 11a6 6 0 0 1-9.44.908l-.84-.84v1.68a.75.75 0 0 1-1.5 0V9.567a.75.75 0 0 1 .75-.75h3.182a.75.75 0 0 1 0 1.5h-1.37l.84.841a4.5 4.5 0 0 0 7.08-.681.75.75 0 0 1 1.024-.274Z" clip-rule="evenodd"/></svg></button>
+          </span>
         </div>
+      <% end %>
+
+      <% if provider_credential.foundry_catalog_available? %>
+        <p class="ck-meta-copy ck-model-list__catalog">
+          <%= pluralize(provider_credential.catalog_model_count, "model") %> available to deploy in
+          <a href="https://ai.azure.com/" target="_blank" rel="noopener" class="ck-model-list__catalog-link">Azure AI Foundry <span aria-hidden="true">&rarr;</span></a>
+        </p>
       <% end %>
     </div>
 </div>

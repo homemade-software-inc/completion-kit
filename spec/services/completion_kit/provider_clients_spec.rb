@@ -447,6 +447,9 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(client.available_models).to eq([{ id: "gpt-5-notes", name: "gpt-5-notes" }, { id: "mini-notes", name: "mini-notes" }])
     expect(request.path).to eq("https://res.example.test/api/projects/proj/deployments?api-version=v1")
     expect(request.headers["api-key"]).to eq("azure-key")
+
+    stub_faraday_get(faraday_get_response(success: false, body: "nope", status: 404))
+    expect(client.available_models).to eq([])
   end
 
   it "retries the Azure request without temperature when the deployment rejects it" do

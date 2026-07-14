@@ -961,14 +961,6 @@ tr:hover .ck-chip--publish {
   max-width: 36rem;
 }
 
-.ck-model-list__empty {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding: 0.35rem 0.25rem;
-}
-
 .ck-form-card__footer-header {
   display: flex;
   align-items: center;
@@ -1502,6 +1494,26 @@ tr:hover .ck-chip--publish {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
+}
+
+.ck-model-list__catalog {
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--ck-line);
+  font-family: var(--ck-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+}
+
+.ck-model-list__catalog-link {
+  color: var(--ck-accent);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ck-model-list__catalog-link:hover {
+  color: var(--ck-accent-hover);
 }
 
 .ck-model-list__summary-stamp {

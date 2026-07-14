@@ -48,7 +48,12 @@ module CompletionKit
         credential.broadcast_discovery_progress
       end
 
-      credential.update_columns(discovery_status: "completed", discovery_error: nil, updated_at: Time.current)
+      credential.update_columns(
+        discovery_status: "completed",
+        discovery_error: nil,
+        catalog_model_count: service.catalog_model_count,
+        updated_at: Time.current
+      )
       credential.reload
       credential.broadcast_discovery_complete
     end

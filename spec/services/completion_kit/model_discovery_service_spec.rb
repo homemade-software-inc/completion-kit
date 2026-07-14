@@ -984,7 +984,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
 
       it "lists the project's deployments at /deployments and probes them" do
         request = stub_faraday_get(faraday_response(success: true, body: {
-          value: [{ name: "gpt-5.4-nano-notes", type: "ModelDeployment", capabilities: { chat_completion: "true" } }]
+          value: [{ name: "my-chat-deployment", type: "ModelDeployment", capabilities: { chat_completion: "true" } }]
         }.to_json))
         probe = stub_faraday_post(probe_response)
 
@@ -992,7 +992,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
 
         expect(faraday_connection_stub).to have_received(:get).with("https://res.example.test/api/projects/notes/deployments?api-version=v1")
         models = CompletionKit::Model.where(provider: "azure_foundry")
-        expect(models.pluck(:model_id)).to contain_exactly("gpt-5.4-nano-notes")
+        expect(models.pluck(:model_id)).to contain_exactly("my-chat-deployment")
         expect(models.first.supports_generation).to eq(true)
         expect(request.headers["api-key"]).to eq("azure-key")
         expect(probe.path).to eq("/openai/v1/chat/completions")
@@ -1006,11 +1006,56 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
           expect(error.message).not_to include("api-version")
         end
       end
+
+      def stub_project_gets(&catalog_response)
+        allow(faraday_connection_stub).to receive(:get) do |url, &blk|
+          blk&.call(Struct.new(:headers).new({}))
+          if url.include?("/deployments")
+            faraday_response(success: true, body: { value: [{ name: "my-chat-deployment" }] }.to_json)
+          else
+            catalog_response.call
+          end
+        end
+      end
+
+      it "records the resource-root catalog model count discovered alongside the deployments" do
+        stub_project_gets { faraday_response(success: true, body: { data: Array.new(228) { |i| { id: "m#{i}" } } }.to_json) }
+        stub_faraday_post(probe_response)
+
+        service = described_class.new(config: project_config)
+        service.refresh!
+
+        expect(service.catalog_model_count).to eq(228)
+      end
+
+      it "leaves the catalog count nil when the resource-root catalog endpoint errors" do
+        stub_project_gets { faraday_response(success: false, status: 403, body: "denied") }
+        stub_faraday_post(probe_response)
+
+        service = described_class.new(config: project_config)
+        service.refresh!
+
+        expect(service.catalog_model_count).to be_nil
+      end
+
+      it "leaves the catalog count nil when the catalog request raises" do
+        allow(faraday_connection_stub).to receive(:get) do |url, &blk|
+          blk&.call(Struct.new(:headers).new({}))
+          raise Faraday::ConnectionFailed, "boom" if url.include?("/openai/v1/models")
+          faraday_response(success: true, body: { value: [{ name: "my-chat-deployment" }] }.to_json)
+        end
+        stub_faraday_post(probe_response)
+
+        service = described_class.new(config: project_config)
+        service.refresh!
+
+        expect(service.catalog_model_count).to be_nil
+      end
     end
 
     it "retries the probe with max_completion_tokens when the model rejects max_tokens" do
       stub_faraday_get(faraday_response(success: true, body: {
-        value: [{ name: "gpt-5.4-nano-notes" }]
+        value: [{ name: "my-chat-deployment" }]
       }.to_json))
 
       allow(faraday_connection_stub).to receive(:post) do |&block|
@@ -1027,7 +1072,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
 
       described_class.new(config: config.merge(api_endpoint: "https://res.example.test/api/projects/notes", api_version: nil)).refresh!
 
-      model = CompletionKit::Model.find_by(model_id: "gpt-5.4-nano-notes")
+      model = CompletionKit::Model.find_by(model_id: "my-chat-deployment")
       expect(model.supports_generation).to eq(true)
       expect(model.supports_judging).to eq(true)
     end

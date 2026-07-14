@@ -58,14 +58,24 @@ module CompletionKit
       return [] unless configured?
       return [] unless ProviderEndpoint.safe?(api_endpoint)
 
-      response = build_connection(azure_base_url).get(models_url) do |req|
+      path = foundry_project? ? "#{azure_base_url}/deployments?api-version=v1" : models_path
+      response = build_connection(azure_base_url).get(path) do |req|
         req.headers["api-key"] = api_key
       end
       return [] unless response.success?
 
-      parse_models(response.body)
+      body = JSON.parse(response.body)
+      if foundry_project?
+        body.fetch("value", []).map { |d| { id: d["name"], name: d["name"] } }
+      else
+        body.fetch("data", []).map { |entry| { id: entry["id"], name: entry["id"] } }
+      end
     rescue StandardError
       []
+    end
+
+    def foundry_project?
+      api_endpoint.to_s.include?("/api/projects/")
     end
 
     def configured?
@@ -101,27 +111,8 @@ module CompletionKit
       api_version.blank?
     end
 
-    def foundry_project?
-      api_endpoint.to_s.include?("/api/projects/")
-    end
-
-    def models_url
-      if foundry_project?
-        "#{azure_base_url}/deployments?api-version=v1"
-      elsif v1_mode?
-        "/openai/v1/models"
-      else
-        "/openai/deployments?api-version=#{api_version}"
-      end
-    end
-
-    def parse_models(body)
-      json = JSON.parse(body)
-      if foundry_project?
-        json.fetch("value", []).map { |d| { id: d["name"], name: d["name"] } }
-      else
-        json.fetch("data", []).map { |e| { id: e["id"], name: e["id"] } }
-      end
+    def models_path
+      v1_mode? ? "/openai/v1/models" : "/openai/deployments?api-version=#{api_version}"
     end
 
     def post_chat(model:, prompt:, max_tokens:, temperature:, max_completion: false)

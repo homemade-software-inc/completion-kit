@@ -68,6 +68,12 @@ RSpec.describe CompletionKit::ModelDiscoveryJob, type: :job do
     described_class.perform_now(credential.id, force: true)
   end
 
+  it "persists the discovery service's catalog model count on completion" do
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:catalog_model_count).and_return(228)
+    described_class.perform_now(credential.id)
+    expect(credential.reload.catalog_model_count).to eq(228)
+  end
+
   it "does nothing if credential not found" do
     expect { described_class.perform_now(-1) }.not_to raise_error
   end

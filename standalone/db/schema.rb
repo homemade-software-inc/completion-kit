@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_044859) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_14_011534) do
   create_table "completion_kit_agreements", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -142,6 +142,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_044859) do
     t.text "api_endpoint"
     t.text "api_key"
     t.string "api_version"
+    t.integer "catalog_model_count"
     t.datetime "created_at", null: false
     t.integer "discovery_current", default: 0
     t.text "discovery_error"

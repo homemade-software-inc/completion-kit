@@ -78,6 +78,7 @@ ActiveRecord::Schema.define do
     t.integer :discovery_current, default: 0
     t.integer :discovery_total, default: 0
     t.text :discovery_error
+    t.integer :catalog_model_count
     t.timestamps
   end
 

@@ -8,6 +8,7 @@ module CompletionKit
     validates :name, presence: true
     validates :template, presence: true
     validates :llm_model, presence: true
+    validate :llm_model_usable_for_generation, if: :llm_model_changed?
     validates :family_key, presence: true
     validates :version_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
@@ -85,6 +86,17 @@ module CompletionKit
     end
 
     private
+
+    def llm_model_usable_for_generation
+      return if llm_model.blank?
+
+      rows = Model.where(model_id: llm_model)
+      return if rows.empty?
+      return if rows.where(supports_generation: true, status: "active").exists?
+      return unless rows.where(supports_generation: false).exists?
+
+      errors.add(:llm_model, "is not available for generating responses")
+    end
 
     def assign_family_key
       self.family_key ||= SecureRandom.uuid

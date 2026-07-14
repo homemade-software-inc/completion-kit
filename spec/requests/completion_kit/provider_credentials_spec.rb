@@ -56,12 +56,25 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(CompletionKit::ProviderCredential.last.api_version).to eq("2024-10-21")
   end
 
-  it "offers a Discover models button on the edit page when a provider has no models yet" do
+  it "offers a refresh control on the edit page when a provider has no models yet" do
     credential = create(:completion_kit_provider_credential, provider: "openai")
     credential.update_columns(discovery_status: "completed")
 
     get "#{base_path}/#{credential.id}/edit"
-    expect(response.body).to include("Discover models")
+    expect(response.body).to include("Available models")
+    expect(response.body).to include("ck-model-list__summary-count")
+    expect(response.body).to include("ck-model-list__refresh")
+  end
+
+  it "shows the Azure Foundry catalog deploy-more line when a catalog count is known" do
+    azure = create(:completion_kit_provider_credential, provider: "azure_foundry", api_key: "k",
+      api_endpoint: "https://res.example.test/api/projects/notes")
+    azure.update_columns(catalog_model_count: 228, discovery_status: "completed")
+
+    get "#{base_path}/#{azure.id}/edit"
+    expect(response.body).to include("228 models available to deploy")
+    expect(response.body).to include("ck-model-list__catalog-link")
+    expect(response.body).to include("ai.azure.com")
   end
 
   it "hides the API version field unless the Azure provider is selected" do

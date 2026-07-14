@@ -61,6 +61,10 @@ module CompletionKit
       Model.where(provider: provider).active.count
     end
 
+    def foundry_catalog_available?
+      azure_foundry? && catalog_model_count.to_i.positive?
+    end
+
     def self.discovery_in_progress?
       where(discovery_status: "discovering").exists?
     end

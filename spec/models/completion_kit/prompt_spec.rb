@@ -23,6 +23,36 @@ RSpec.describe CompletionKit::Prompt, type: :model do
     expect(described_class.available_models).to include(hash_including(id: "gpt-5.4-mini"))
   end
 
+  describe "llm_model generation-usability validation" do
+    it "rejects a model that is known not to support generation" do
+      CompletionKit::Model.create!(provider: "azure_foundry", model_id: "catalog-only",
+        status: "active", supports_generation: false, supports_judging: false)
+      prompt = build(:completion_kit_prompt, llm_model: "catalog-only")
+
+      expect(prompt).not_to be_valid
+      expect(prompt.errors[:llm_model]).to include("is not available for generating responses")
+    end
+
+    it "allows a model that has not been probed yet" do
+      CompletionKit::Model.create!(provider: "azure_foundry", model_id: "unprobed",
+        status: "active", supports_generation: nil, supports_judging: nil)
+
+      expect(build(:completion_kit_prompt, llm_model: "unprobed")).to be_valid
+    end
+
+    it "allows a model_id the tool has never discovered" do
+      expect(build(:completion_kit_prompt, llm_model: "totally-unknown-model")).to be_valid
+    end
+
+    it "does not re-validate an unchanged model when other attributes change" do
+      prompt = create(:completion_kit_prompt, llm_model: "gpt-4.1-mini")
+      CompletionKit::Model.where(model_id: "gpt-4.1-mini").update_all(supports_generation: false)
+
+      prompt.template = "Updated {{content}} here"
+      expect(prompt).to be_valid
+    end
+  end
+
   it "extracts variables from the template" do
     prompt = build(:completion_kit_prompt, template: "Hello {{ name }} and {{audience}}")
 

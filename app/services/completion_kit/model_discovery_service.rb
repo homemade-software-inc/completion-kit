@@ -8,11 +8,14 @@ module CompletionKit
 
     AZURE_HOST_SUFFIXES = [".openai.azure.com", ".services.ai.azure.com"].freeze
 
+    attr_reader :catalog_model_count
+
     def initialize(config:)
       @provider = config[:provider]
       @api_key = config[:api_key]
       @api_endpoint = config[:api_endpoint]
       @api_version = config[:api_version]
+      @catalog_model_count = nil
     end
 
     def refresh!(force: false, &on_progress)
@@ -156,16 +159,30 @@ module CompletionKit
     def fetch_azure_foundry_models
       raise DiscoveryError, "An Azure endpoint URL is required." if @api_endpoint.blank?
 
-      response = fetch_connection(azure_base_url).get(azure_foundry_project? ? "#{azure_base_url}/deployments?api-version=v1" : azure_models_path) do |req|
+      path = azure_foundry_project? ? "#{azure_base_url}/deployments?api-version=v1" : azure_models_path
+      response = fetch_connection(azure_base_url).get(path) do |req|
         req.headers["api-key"] = @api_key
       end
       raise DiscoveryError, azure_error_message(response) unless response.success?
+
       body = JSON.parse(response.body)
       if azure_foundry_project?
+        @catalog_model_count = fetch_azure_catalog_count
         body.fetch("value", []).map { |d| { id: d["name"], display_name: d["name"] } }
       else
         body.fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
       end
+    end
+
+    def fetch_azure_catalog_count
+      response = fetch_connection(azure_base_url).get("/openai/v1/models") do |req|
+        req.headers["api-key"] = @api_key
+      end
+      return nil unless response.success?
+
+      JSON.parse(response.body).fetch("data", []).length
+    rescue StandardError
+      nil
     end
 
     def azure_v1_mode?
