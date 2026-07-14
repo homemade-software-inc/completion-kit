@@ -190,6 +190,48 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).to include("is not available for generating responses")
   end
 
+  it "returns 422 instead of 500 when re-versioning with a malformed tag name" do
+    prompt = create(:completion_kit_prompt, family_key: "family-badtag", version_number: 1)
+    create(:completion_kit_run, prompt: prompt)
+
+    expect do
+      patch "#{base_path}/#{prompt.id}", params: { prompt: { template: "Updated {{content}}", tag_names: ["c++"] } }
+    end.not_to change(CompletionKit::Prompt, :count)
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include("not allowed")
+  end
+
+  it "keeps the submitted tag selection when a re-version fails validation" do
+    CompletionKit::Tag.create!(name: "keepme")
+    CompletionKit::Model.create!(provider: "azure_foundry", model_id: "demoted-z",
+      status: "active", supports_generation: false, supports_judging: false)
+    prompt = create(:completion_kit_prompt, family_key: "family-preserve", version_number: 1)
+    create(:completion_kit_run, prompt: prompt)
+
+    patch "#{base_path}/#{prompt.id}", params: { prompt: { llm_model: "demoted-z", tag_names: ["keepme"] } }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    box = Nokogiri::HTML5(response.body).at_css('input[type="checkbox"][value="keepme"]')
+    expect(box).to be_present
+    expect(box.key?("checked")).to be(true)
+  end
+
+  it "keeps a newly-typed tag name (and creates no orphan) when a re-version fails validation" do
+    CompletionKit::Model.create!(provider: "azure_foundry", model_id: "demoted-w",
+      status: "active", supports_generation: false, supports_judging: false)
+    prompt = create(:completion_kit_prompt, family_key: "family-newtag", version_number: 1)
+    create(:completion_kit_run, prompt: prompt)
+
+    patch "#{base_path}/#{prompt.id}", params: { prompt: { llm_model: "demoted-w", tag_names: ["freshly-typed"] } }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    box = Nokogiri::HTML5(response.body).at_css('input[type="checkbox"][value="freshly-typed"]')
+    expect(box).to be_present
+    expect(box.key?("checked")).to be(true)
+    expect(CompletionKit::Tag.where(name: "freshly-typed")).not_to exist
+  end
+
   it "applies tag_names to the cloned version when prompt has existing runs" do
     prompt = create(:completion_kit_prompt, name: "Tagged Versioned", family_key: "family-tagged", version_number: 1)
     create(:completion_kit_run, prompt: prompt)

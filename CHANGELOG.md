@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.27.1] - 2026-07-14
+## [0.27.2] - 2026-07-14
+
+### Fixed
+- **A malformed tag name returned a 500 instead of a validation error.** Assigning a tag with punctuation (e.g. `c++`) or over 64 characters raised mid-assignment on every tagged form and API (prompts, metrics, runs, datasets, metric groups). Tag names are now validated as part of the record and rejected with a clear message and a 422, and no partial tag rows are created on a failed save. The submitted tag selection — including a just-typed new tag — is preserved when a form fails validation for any reason.
 
 ### Fixed
 - **Re-versioning a prompt whose model was later demoted by discovery 500'd.** The 0.27.0 generation-model validation fired on the re-version path, so editing any field of a prompt that has runs — or applying a suggestion — raised an unhandled 500 once discovery demoted its in-use model. A model inherited from the version being edited is no longer re-validated, so those edits succeed; genuinely selecting an unusable model now returns a clean 422 (web and REST) with no partially-written version. Importing a promptfoo config whose resolved model can't generate reports an error instead of 500ing. (#108)

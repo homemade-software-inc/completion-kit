@@ -25,12 +25,11 @@ module CompletionKit
 
         def update
           if @prompt.runs.exists?
-            new_prompt = @prompt.build_next_version(prompt_params.except(:tag_names).to_h)
+            new_prompt = @prompt.build_next_version(prompt_params.to_h)
             if new_prompt.valid?
               CompletionKit::ApplicationRecord.transaction do
                 new_prompt.save!
                 new_prompt.publish!
-                new_prompt.update!(tag_names: prompt_params[:tag_names]) if prompt_params.key?(:tag_names)
               end
               render json: new_prompt.reload
             else

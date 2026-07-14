@@ -2,13 +2,19 @@
   <% label_text = local_assigns[:label].presence || "#{param_namespace.to_s.titleize} tags" %>
   <%= label_tag "#{param_namespace}_tags", label_text, class: "ck-label" %>
   <% all_tags = CompletionKit::Tag.order(:name) %>
-  <% selected_ids = (record.persisted? || record.tags.loaded?) ? record.tags.map(&:id) : [] %>
+  <% selected_names = record.tag_names %>
   <div class="ck-tag-picker">
     <% all_tags.each do |tag| %>
-      <% checked = selected_ids.include?(tag.id) %>
+      <% checked = selected_names.include?(tag.name) %>
       <label class="tag-mark" style="--mark-color: var(--tag-<%= tag.color %>);">
         <%= check_box_tag "#{param_namespace}[tag_names][]", tag.name, checked, class: "ck-visually-hidden", "aria-label": "Tag: #{tag.name}" %>
         <span aria-hidden="true"><%= tag.name %></span>
+      </label>
+    <% end %>
+    <% (selected_names - all_tags.map(&:name)).each do |pending_name| %>
+      <label class="tag-mark" style="--mark-color: var(--ck-muted);">
+        <%= check_box_tag "#{param_namespace}[tag_names][]", pending_name, true, class: "ck-visually-hidden", "aria-label": "Tag: #{pending_name}" %>
+        <span aria-hidden="true"><%= pending_name %></span>
       </label>
     <% end %>
     <%= text_field_tag "#{param_namespace}[tag_names][]", "",

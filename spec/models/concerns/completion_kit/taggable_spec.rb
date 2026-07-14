@@ -49,6 +49,19 @@ RSpec.describe CompletionKit::Taggable, type: :model do
       metric.update!(tag_names: [])
       expect(metric.tag_names).to eq([])
     end
+
+    it "adds a validation error instead of raising on a malformed name" do
+      result = nil
+      expect { result = metric.update(tag_names: ["c++"]) }.not_to raise_error
+      expect(result).to be(false)
+      expect(metric.errors[:base].join).to match(/not allowed/i)
+      expect(CompletionKit::Tag.where(name: "c++")).not_to exist
+    end
+
+    it "reflects the assigned names before the record is saved" do
+      metric.tag_names = ["pending-one", "pending-two"]
+      expect(metric.tag_names).to eq(["pending-one", "pending-two"])
+    end
   end
 
   describe "destroy cascade" do
