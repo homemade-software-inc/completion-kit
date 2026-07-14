@@ -20,7 +20,7 @@ module CompletionKit
         human_examples: human_examples)
 
       response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
-      raise StandardError, response if response.start_with?("Error:")
+      raise CompletionKit::ProviderError.from_client_error(response) if response.start_with?("Error:")
       parse_judge_response(response)
     end
 

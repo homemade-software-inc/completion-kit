@@ -56,13 +56,16 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     expect { service.evaluate("actual") }.to raise_error(CompletionKit::JudgeParseError, /Could not parse judge response/)
   end
 
-  it "raises when the LLM client returns an Error:-prefixed response" do
+  it "raises a structured ProviderError when the LLM client returns an Error:-prefixed response" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).and_return("Error: 404 - model not found")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
     service = described_class.new
-    expect { service.evaluate("actual") }.to raise_error(StandardError, /Error: 404/)
+    expect { service.evaluate("actual") }.to raise_error(CompletionKit::ProviderError) do |error|
+      expect(error.status).to eq(404)
+      expect(error.message).to eq("model not found")
+    end
   end
 
   it "re-raises any StandardError the judge client raises" do

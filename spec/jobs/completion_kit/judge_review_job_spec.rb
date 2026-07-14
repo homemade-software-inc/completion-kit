@@ -27,6 +27,22 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     expect(review.metric_name).to eq("Quality")
   end
 
+  it "records a provider error from the judge as a failed review without paging the error tracker" do
+    fake_judge = double("judge")
+    allow(fake_judge).to receive(:evaluate).and_raise(CompletionKit::ProviderError.from_client_error("Error: 402 - Insufficient credits"))
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+    expect(Rails.error).not_to receive(:report)
+
+    described_class.perform_now(response.id, metric.id, run.id)
+
+    review = response.reviews.find_by(metric_id: metric.id)
+    expect(review.status).to eq("failed")
+    expect(review.error_status).to eq(402)
+    expect(review.error_class).to eq("CompletionKit::ProviderError")
+    expect(review.error_message).to include("Insufficient credits")
+  end
+
   it "evaluates a judge-only response (no prompt template) without blowing up" do
     judge_only = create(:completion_kit_run,
                         prompt: nil,
@@ -51,7 +67,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     expect(bare_response.reviews.find_by(metric_id: metric.id).status).to eq("succeeded")
   end
 
-  it "records terminal failure context" do
+  it "retries a rate-limited review instead of failing it immediately" do
     fake_judge = double("judge")
     allow(fake_judge).to receive(:evaluate).and_raise(
       CompletionKit::RateLimitError.new("limit", provider: "anthropic", status: 429)
@@ -59,12 +75,58 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
 
-    expect { described_class.perform_now(response.id, metric.id) }.not_to raise_error
+    expect { described_class.perform_now(response.id, metric.id) }.to have_enqueued_job(described_class)
+
+    review = response.reviews.find_by(metric_id: metric.id)
+    expect(review.status).not_to eq("failed")
+  end
+
+  it "records terminal failure once rate-limit retries are exhausted" do
+    fake_judge = double("judge")
+    allow(fake_judge).to receive(:evaluate).and_raise(
+      CompletionKit::RateLimitError.new("limit", provider: "anthropic", status: 429)
+    )
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+
+    job = described_class.new(response.id, metric.id)
+    job.exception_executions = { "[CompletionKit::RateLimitError]" => 4 }
+
+    expect { job.perform_now }.not_to raise_error
 
     review = response.reviews.find_by(metric_id: metric.id)
     expect(review.status).to eq("failed")
     expect(review.error_class).to eq("CompletionKit::RateLimitError")
     expect(review.error_status).to eq(429)
+  end
+
+  it "records terminal failure once connection retries are exhausted" do
+    fake_judge = double("judge")
+    allow(fake_judge).to receive(:evaluate).and_raise(Faraday::TimeoutError)
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+
+    job = described_class.new(response.id, metric.id)
+    job.exception_executions = { "[Faraday::TimeoutError, Faraday::ConnectionFailed]" => 4 }
+
+    expect { job.perform_now }.not_to raise_error
+
+    review = response.reviews.find_by(metric_id: metric.id)
+    expect(review.status).to eq("failed")
+    expect(review.error_class).to eq("Faraday::TimeoutError")
+  end
+
+  it "records terminal failure and discards when the judge is not configured" do
+    fake_judge = double("judge")
+    allow(fake_judge).to receive(:evaluate).and_raise(CompletionKit::ConfigurationError, "Judge not configured")
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+
+    expect { described_class.perform_now(response.id, metric.id) }.not_to raise_error
+
+    review = response.reviews.find_by(metric_id: metric.id)
+    expect(review.status).to eq("failed")
+    expect(review.error_class).to eq("CompletionKit::ConfigurationError")
   end
 
   it "promotes an untested judge model to confirmed after a successful review" do

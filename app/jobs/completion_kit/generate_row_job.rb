@@ -12,20 +12,30 @@ module CompletionKit
       30 * executions
     end
 
-    retry_on Faraday::TimeoutError,
-             Faraday::ConnectionFailed,
-             wait: :polynomially_longer, attempts: 5
-
-    retry_on CompletionKit::RateLimitError,
-             wait: method(:rate_limit_wait), attempts: 5
-
-    discard_on ActiveJob::DeserializationError
-    discard_on CompletionKit::ConfigurationError
-
     rescue_from(StandardError) do |error|
       Rails.error.report(error, handled: true, context: { job: self.class.name, run_id: @run_id, response_id: @response_id })
       record_terminal_failure!(error)
       enqueue_completion_check
+    end
+
+    retry_on Faraday::TimeoutError,
+             Faraday::ConnectionFailed,
+             wait: :polynomially_longer, attempts: 5 do |job, error|
+      job.send(:record_terminal_failure!, error)
+      job.send(:enqueue_completion_check)
+    end
+
+    retry_on CompletionKit::RateLimitError,
+             wait: ->(executions) { rate_limit_wait(executions) }, attempts: 5 do |job, error|
+      job.send(:record_terminal_failure!, error)
+      job.send(:enqueue_completion_check)
+    end
+
+    discard_on ActiveJob::DeserializationError
+
+    discard_on CompletionKit::ConfigurationError do |job, error|
+      job.send(:record_terminal_failure!, error)
+      job.send(:enqueue_completion_check)
     end
 
     before_perform do |job|
@@ -49,7 +59,12 @@ module CompletionKit
       raise ConfigurationError, client.configuration_errors.join(", ") unless client.configured?
 
       text = client.generate_completion(rendered, model: prompt.llm_model, temperature: run.temperature)
-      raise StandardError, text.to_s.sub(/\AError:\s*/, "") if text.to_s.start_with?("Error:")
+
+      if text.to_s.start_with?("Error:")
+        record_terminal_failure!(ProviderError.from_client_error(text))
+        enqueue_completion_check
+        return
+      end
 
       if client.respond_to?(:temperature_dropped?) && client.temperature_dropped? && !run.temperature_ignored?
         run.update_columns(temperature_ignored: true)

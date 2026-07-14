@@ -44,7 +44,21 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     expect(response.response_text).to be_nil
   end
 
-  it "records terminal failure context after exhaustion of retries" do
+  it "records a provider HTTP error as a clean failed response without paging the error tracker" do
+    fake_client = double("client", generate_completion: 'Error: 402 - {"error":{"message":"Insufficient credits"}}', configured?: true)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
+    expect(Rails.error).not_to receive(:report)
+
+    described_class.perform_now(run.id, response.id)
+
+    response.reload
+    expect(response.status).to eq("failed")
+    expect(response.error_status).to eq(402)
+    expect(response.error_class).to eq("CompletionKit::ProviderError")
+    expect(response.error_message).to include("Insufficient credits")
+  end
+
+  it "retries a rate-limited row with backoff instead of failing it immediately" do
     fake_client = double("client", configured?: true)
     allow(fake_client).to receive(:generate_completion).and_raise(
       CompletionKit::RateLimitError.new("over budget", provider: "openai", status: 429)
@@ -53,7 +67,22 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
 
     expect {
       described_class.perform_now(run.id, response.id)
-    }.not_to raise_error
+    }.to have_enqueued_job(described_class)
+
+    expect(response.reload.status).not_to eq("failed")
+  end
+
+  it "records terminal failure once rate-limit retries are exhausted" do
+    fake_client = double("client", configured?: true)
+    allow(fake_client).to receive(:generate_completion).and_raise(
+      CompletionKit::RateLimitError.new("over budget", provider: "openai", status: 429)
+    )
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
+
+    job = described_class.new(run.id, response.id)
+    job.exception_executions = { "[CompletionKit::RateLimitError]" => 4 }
+
+    expect { job.perform_now }.not_to raise_error
 
     response.reload
     expect(response.status).to eq("failed")
@@ -61,6 +90,21 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     expect(response.error_status).to eq(429)
     expect(response.error_class).to eq("CompletionKit::RateLimitError")
     expect(response.error_message).to include("over budget")
+  end
+
+  it "records terminal failure once connection retries are exhausted" do
+    fake_client = double("client", configured?: true)
+    allow(fake_client).to receive(:generate_completion).and_raise(Faraday::TimeoutError)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
+
+    job = described_class.new(run.id, response.id)
+    job.exception_executions = { "[Faraday::TimeoutError, Faraday::ConnectionFailed]" => 4 }
+
+    expect { job.perform_now }.not_to raise_error
+
+    response.reload
+    expect(response.status).to eq("failed")
+    expect(response.error_class).to eq("Faraday::TimeoutError")
   end
 
   it "enqueues a JudgeReviewJob per metric on success" do

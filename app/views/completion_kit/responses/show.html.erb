@@ -125,6 +125,8 @@
                 <% end %>
               <% elsif review.check? && !review.passed.nil? %>
                 <%= ck_check_badge(review.passed) %>
+              <% elsif review.status == "failed" %>
+                <span class="<%= ck_badge_classes(:failed) %>" title="<%= review.error_message.presence || "Judge failed" %>">Failed</span>
               <% else %>
                 <span class="<%= ck_badge_classes(:pending) %>">Pending</span>
               <% end %>

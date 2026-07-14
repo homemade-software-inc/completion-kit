@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.27.3] - 2026-07-14
+## [0.27.4] - 2026-07-14
+
+### Fixed
+- **Provider HTTP errors (e.g. OpenRouter 402 "insufficient credits") failed hard and paged the error tracker on every row instead of recording a clean failed response.** During generation and judging, a provider HTTP error is now recorded as a `failed` response/review carrying the provider, status, and message — not raised as a generic error and reported as noise. (#110)
+- **Transient errors weren't actually retried.** A handler-ordering bug (`rescue_from(StandardError)` shadowing `retry_on`/`discard_on`) made rate limits and timeouts fail on the first attempt; they now retry with backoff and record a terminal failure only after exhaustion. This also surfaced a latent bug where the rate-limit backoff was never computable.
+- **A failed judge review displayed as "Pending"** with no error; it now shows the failure.
 
 ### Fixed
 - **Deleting a metric that had been used in a run raised a foreign-key violation (500).** `Metric` had no cleanup for its `completion_kit_run_metrics` join rows, and that FK does not cascade, so deleting any metric ever attached to a run failed. `Metric` now destroys its `run_metrics` on delete; reviews keep their score snapshot (their metric link is nullified). An audit of every other delete action found no further instances. (#109)

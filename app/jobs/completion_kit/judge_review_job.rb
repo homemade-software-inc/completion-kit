@@ -14,20 +14,30 @@ module CompletionKit
       30 * executions
     end
 
-    retry_on Faraday::TimeoutError,
-             Faraday::ConnectionFailed,
-             wait: :polynomially_longer, attempts: 5
-
-    retry_on CompletionKit::RateLimitError,
-             wait: method(:rate_limit_wait), attempts: 5
-
-    discard_on ActiveJob::DeserializationError
-    discard_on CompletionKit::ConfigurationError
-
     rescue_from(StandardError) do |error|
       Rails.error.report(error, handled: true, context: { job: self.class.name, run_id: @run_id, review_id: @review_id })
       record_terminal_failure!(error)
       enqueue_completion_check
+    end
+
+    retry_on Faraday::TimeoutError,
+             Faraday::ConnectionFailed,
+             wait: :polynomially_longer, attempts: 5 do |job, error|
+      job.send(:record_terminal_failure!, error)
+      job.send(:enqueue_completion_check)
+    end
+
+    retry_on CompletionKit::RateLimitError,
+             wait: ->(executions) { rate_limit_wait(executions) }, attempts: 5 do |job, error|
+      job.send(:record_terminal_failure!, error)
+      job.send(:enqueue_completion_check)
+    end
+
+    discard_on ActiveJob::DeserializationError
+
+    discard_on CompletionKit::ConfigurationError do |job, error|
+      job.send(:record_terminal_failure!, error)
+      job.send(:enqueue_completion_check)
     end
 
     before_perform do |job|
@@ -52,15 +62,21 @@ module CompletionKit
       config = ApiConfig.for_model(run.judge_model).merge(judge_model: run.judge_model)
       judge = JudgeService.new(config)
 
-      evaluation = judge.evaluate(
-        response.response_text,
-        response.expected_output,
-        run.prompt&.template,
-        criteria: metric.instruction.to_s,
-        rubric_text: metric.display_rubric_text,
-        input_data: response.input_data,
-        human_examples: review_examples_for(metric, response)
-      )
+      begin
+        evaluation = judge.evaluate(
+          response.response_text,
+          response.expected_output,
+          run.prompt&.template,
+          criteria: metric.instruction.to_s,
+          rubric_text: metric.display_rubric_text,
+          input_data: response.input_data,
+          human_examples: review_examples_for(metric, response)
+        )
+      rescue CompletionKit::ProviderError => e
+        record_terminal_failure!(e)
+        enqueue_completion_check
+        return
+      end
 
       review = response.reviews.find_or_initialize_by(metric_id: metric.id)
       current_metric_version = MetricVersion.ensure_current_for(metric)
