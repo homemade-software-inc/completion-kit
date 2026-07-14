@@ -15,6 +15,15 @@ RSpec.describe CompletionKit::Metric, type: :model do
 
       expect(review.reload.metric_id).to be_nil
     end
+
+    it "destroys run_metrics join rows so a metric used in a run can be deleted" do
+      metric = create(:completion_kit_metric)
+      run = create(:completion_kit_run, prompt: create(:completion_kit_prompt, template: "Static prompt without variables"))
+      CompletionKit::RunMetric.create!(run: run, metric: metric)
+
+      expect { metric.destroy! }.to change(CompletionKit::RunMetric, :count).by(-1)
+      expect(CompletionKit::RunMetric.where(metric_id: metric.id)).not_to exist
+    end
   end
 
   it "fills in default rubric bands on a new metric" do

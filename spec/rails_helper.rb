@@ -1,5 +1,7 @@
 ENV["RAILS_ENV"] ||= "test"
 
+%w[OPENAI_API_KEY ANTHROPIC_API_KEY OLLAMA_API_KEY OLLAMA_API_ENDPOINT OPENROUTER_API_KEY].each { |k| ENV.delete(k) }
+
 DUMMY_APP_ROOT ||= File.expand_path("dummy", __dir__)
 
 require "bundler/setup"

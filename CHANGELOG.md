@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.27.2] - 2026-07-14
+## [0.27.3] - 2026-07-14
+
+### Fixed
+- **Deleting a metric that had been used in a run raised a foreign-key violation (500).** `Metric` had no cleanup for its `completion_kit_run_metrics` join rows, and that FK does not cascade, so deleting any metric ever attached to a run failed. `Metric` now destroys its `run_metrics` on delete; reviews keep their score snapshot (their metric link is nullified). An audit of every other delete action found no further instances. (#109)
 
 ### Fixed
 - **A malformed tag name returned a 500 instead of a validation error.** Assigning a tag with punctuation (e.g. `c++`) or over 64 characters raised mid-assignment on every tagged form and API (prompts, metrics, runs, datasets, metric groups). Tag names are now validated as part of the record and rejected with a clear message and a 422, and no partial tag rows are created on a failed save. The submitted tag selection — including a just-typed new tag — is preserved when a form fails validation for any reason.
