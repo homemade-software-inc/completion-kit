@@ -5,7 +5,7 @@ module CompletionKit
 
       TOOLS = {
         "judges_replay" => {
-          description: "Run the current judge against a dataset (scores existing outputs). Wraps runs_create with prompt_id omitted and output_column supplied. Re-judges existing dataset outputs so you can compare against human verdicts.",
+          description: "Create a scoring run for the current judge over a dataset's existing outputs (wraps runs_create with prompt_id omitted and output_column supplied). This only sets up the run; call runs_generate to actually re-judge the outputs so you can compare against human verdicts.",
           inputSchema: {
             type: "object",
             properties: {
@@ -20,7 +20,7 @@ module CompletionKit
           handler: :replay
         },
         "judges_compare" => {
-          description: "Compare two metric versions' agreement stats side by side. Pass either two metric_version_ids or one metric_id with metric_version_a_id / metric_version_b_id.",
+          description: "Compare two versions of one metric's agreement stats side by side. Requires metric_id, metric_version_a_id, and metric_version_b_id (both versions must belong to that metric). Unavailable for check metrics.",
           inputSchema: {
             type: "object",
             properties: {

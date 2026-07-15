@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.27.6] - 2026-07-15
+## [0.27.7] - 2026-07-15
+
+### Fixed
+- **Documentation audit across every doc surface.** A full cross-check of the API reference, MCP tool descriptions, and READMEs against the code corrected 21 inaccuracies. Highlights: **metric groups are now documented as taggable** (they were the only taggable resource omitted from the tagging docs); the run `/rerun` status is 202 (not 201); the `/compare` one-sided-case behavior, the responses `status` enum (added `retrying`), and the prompt PATCH versioning behavior were corrected; the provider-credentials `api_key` requiredness, one-per-provider rule, and in-use DELETE (422) are documented; the promptfoo import response shape and the agreements contract (conditional `corrected_score`, idempotent create 201/200, `judge_agreement_enabled` gating, the nested index endpoint) were corrected; the `judges_compare` and `judges_replay` MCP tool descriptions were fixed; and the READMEs gained the Azure AI Foundry provider and the provider/encryption env vars.
 
 ### Fixed
 - **API reference documentation accuracy.** Corrected several stale or misleading entries in the API reference: `/agreements` POST marked `created_by` required when it is optional (defaults to `"api"`); provider-credentials POST omitted `azure_foundry` from the provider list and the `api_version` param, and flatly labeled `api_endpoint` optional when it is required for `azure_foundry`; the run `/compare` response shape was missing `left_run_id`/`right_run_id`; `/runs` POST omitted `temperature`; and `retry_failures` didn't mention its optional `only` param or 409 response. Added missing curl examples across create, update, publish, and action endpoints (provider credentials incl. an Azure variant, metric groups, PATCHes, and a filtered `GET /runs`). (#112)

@@ -45,8 +45,15 @@ All configuration is via environment variables:
 | `COMPLETION_KIT_USERNAME` | Web UI username | `admin` |
 | `COMPLETION_KIT_PASSWORD` | Web UI password | (none) |
 | `DATABASE_URL` | PostgreSQL URL (production) | SQLite |
+| `SECRET_KEY_BASE` | Rails secret key base (production) | (none) |
+| `COMPLETION_KIT_ENCRYPTION_PRIMARY_KEY` | Active Record encryption primary key (encrypts provider api_keys; set in production) | dev default |
+| `COMPLETION_KIT_ENCRYPTION_DETERMINISTIC_KEY` | Active Record encryption deterministic key (set in production) | dev default |
+| `COMPLETION_KIT_ENCRYPTION_KEY_DERIVATION_SALT` | Active Record encryption key derivation salt (set in production) | dev default |
 | `OPENAI_API_KEY` | OpenAI provider key | (none) |
 | `ANTHROPIC_API_KEY` | Anthropic provider key | (none) |
+| `OPENROUTER_API_KEY` | OpenRouter provider key | (none) |
+| `OLLAMA_API_KEY` | Ollama / local OpenAI-compatible endpoint auth key (optional for most local servers) | (none) |
+| `OLLAMA_API_ENDPOINT` | Ollama / local endpoint base URL | `http://localhost:11434/v1` |
 | `SOLID_QUEUE_THREADS` | Worker thread pool size | `10` |
 | `SOLID_QUEUE_PROCESSES` | Worker process count | `1` |
 | `COMPLETION_KIT_LLM_CONCURRENCY` | Soft global cap on simultaneous LLM calls (must be ≤ `SOLID_QUEUE_THREADS`) | `10` |

@@ -65,6 +65,17 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     expect(html).to include("<code>only</code>")
   end
 
+  it "documents metric groups as taggable and corrects run/agreement/provider details" do
+    html = render_body(base_url: "https://docs.example.test")
+
+    expect(html).to include("Metrics, prompts, runs, datasets, and metric groups accept a <code>tag_names</code>")
+    expect(html).to include("attach to metrics, prompts, runs, datasets, and metric groups")
+    expect(html).to include("<code>metric_groups_create</code>")
+    expect(html).to include("Returns the new run with 202 Accepted")
+    expect(html).to include("Agreement disabled")
+    expect(html).to include(">4</span>")
+  end
+
   it "documents the promptfoo import endpoint" do
     html = render_body(base_url: "https://docs.example.test")
 

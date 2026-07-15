@@ -86,6 +86,7 @@ CompletionKit discovers available models from each provider's API automatically.
 | **Anthropic** | `ANTHROPIC_API_KEY` | Claude Opus, Sonnet, Haiku |
 | **Ollama / local endpoint** | `OLLAMA_API_ENDPOINT` (default: `http://localhost:11434/v1`) | Any model you've `ollama pull`-ed, or any OpenAI-compatible local server (vLLM, LM Studio, llama.cpp) |
 | **OpenRouter** | `OPENROUTER_API_KEY` | 100+ models from 30+ providers through one API key |
+| **Azure AI Foundry** | No env var — add via the Providers UI / a `ProviderCredential` (`api_key` + `api_endpoint` required, `api_version` optional) | Azure OpenAI deployments and Foundry projects |
 
 Set these as environment variables or configure them in the generated initializer. You can also add provider credentials through the web UI under Settings.
 

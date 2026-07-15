@@ -30,7 +30,7 @@
     <label for="ck-tab-datasets" class="ck-api-tabs__label">Datasets <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-metrics" class="ck-api-tabs__label">Metrics <span class="ck-api-tabs__count">10</span></label>
     <label for="ck-tab-metric-groups" class="ck-api-tabs__label">Metric Groups <span class="ck-api-tabs__count">5</span></label>
-    <label for="ck-tab-agreements" class="ck-api-tabs__label">Agreements <span class="ck-api-tabs__count">3</span></label>
+    <label for="ck-tab-agreements" class="ck-api-tabs__label">Agreements <span class="ck-api-tabs__count">4</span></label>
     <label for="ck-tab-tags" class="ck-api-tabs__label">Tags <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-providers" class="ck-api-tabs__label">Providers <span class="ck-api-tabs__count">5</span></label>
     <label for="ck-tab-imports" class="ck-api-tabs__label">Imports <span class="ck-api-tabs__count">1</span></label>
@@ -83,7 +83,7 @@
       <p class="ck-copy">Create, version, and manage LLM prompt templates.</p>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/prompts</p>
-        <p class="ck-meta-copy">List all prompts, ordered by most recent.</p>
+        <p class="ck-meta-copy">List all prompts, ordered by most recent. Supports pagination (<code>limit</code>, <code>offset</code>) and <code>tag[]</code> filtering.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl #{base_url}/api/v1/prompts \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
@@ -94,7 +94,7 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/prompts/:id</p>
-        <p class="ck-meta-copy">Get a single prompt by ID.</p>
+        <p class="ck-meta-copy">Get a single prompt by numeric ID or slug.</p>
       </div>
       <%= render "completion_kit/api_reference/resource_list", title: "Your published prompts",
             items: published_prompts.map { |p|
@@ -103,7 +103,7 @@
             } %>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/prompts/:id</p>
-        <p class="ck-meta-copy">Update a prompt. Accepts same params as create.</p>
+        <p class="ck-meta-copy">Update a prompt. Accepts same params as create. If the prompt has no runs it is updated in place; if it already has runs, a new published version is created and returned (with a new id), leaving the original unchanged.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X PATCH #{base_url}/api/v1/prompts/1 \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"template\": \"Summarize concisely: {{text}}\"}'" %>
       </div>
       <div class="ck-api-endpoint">
@@ -155,7 +155,7 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/rerun</p>
-        <p class="ck-meta-copy">Clone the run and start generating responses on the copy against the current prompt and metric versions. Returns the new run with 201 Created. Useful for capturing a fresh baseline after metric edits.</p>
+        <p class="ck-meta-copy">Clone the run and start generating responses on the copy against the current prompt and metric versions. Returns the new run with 202 Accepted. Useful for capturing a fresh baseline after metric edits.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/rerun \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
@@ -165,7 +165,7 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:id/compare?with=:other_id</p>
-        <p class="ck-meta-copy">Side-by-side comparison against another run. Returns <code>{left_run_id, right_run_id, metric_ids: [...], rows: [...]}</code> with one row per input case, per-metric scores on both sides, and the delta. Cases that exist on only one side are still returned with the missing side nulled out.</p>
+        <p class="ck-meta-copy">Side-by-side comparison against another run. Returns <code>{left_run_id, right_run_id, metric_ids: [...], rows: [...]}</code> with one row per input case, per-metric scores on both sides, and the delta. Rows are keyed by the left run's input cases: a case present only in the left run is returned with the right side nulled out, and a case present only in the right run is omitted.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl \"#{base_url}/api/v1/runs/1/compare?with=2\" \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
@@ -185,7 +185,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:run_id/responses</p>
         <p class="ck-meta-copy">List responses for a run, including nested review scores.</p>
-        <p class="ck-api-params"><strong>Optional filters:</strong>&ensp;<code>status</code> (<code>pending</code>, <code>succeeded</code>, <code>failed</code>), plus <code>limit</code> and <code>offset</code></p>
+        <p class="ck-api-params"><strong>Optional filters:</strong>&ensp;<code>status</code> (<code>pending</code>, <code>retrying</code>, <code>succeeded</code>, <code>failed</code>), plus <code>limit</code> and <code>offset</code></p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl #{base_url}/api/v1/runs/1/responses \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
@@ -256,7 +256,7 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics/:id/suggest_variants</p>
-        <p class="ck-meta-copy">Generate draft metric versions from the current disagreements. Returns 201 with the new draft versions, 422 if no disagreements exist or the model produced nothing usable.</p>
+        <p class="ck-meta-copy">Generate draft metric versions from the current disagreements. Only rubric-style (llm_judge) metrics can suggest variants. Returns 201 with the new draft versions, or 422 if the metric is a check (checks are exact and have no variants to suggest), if no disagreements exist, or if the model produced nothing usable.</p>
         <p class="ck-api-params"><strong>Optional:</strong>&ensp;<code>count</code>, <code>model</code></p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/metrics/1/suggest_variants \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
@@ -294,7 +294,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metric_groups</p>
         <p class="ck-meta-copy">Create a metric group.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>description</code>, <code>metric_ids</code> (array)</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>description</code>, <code>metric_ids</code> (array), <code>tag_names</code> (array)</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/metric_groups \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"core quality\", \"metric_ids\": [1, 2, 3]}'" %>
       </div>
       <div class="ck-api-endpoint">
@@ -312,6 +312,7 @@
     <div class="ck-api-tabs__panel">
       <h2 class="ck-section-title">Agreements</h2>
       <p class="ck-copy">Per-verdict feedback events on a response/metric pair: agree, disagree (with a corrected score and note), or borderline. Agreements capture the metric version that was current when the verdict was cast, which is what drives the trust signal and the "stale" indicators across the rest of the API.</p>
+      <p class="ck-meta-copy">All agreement endpoints require the <code>judge_agreement_enabled</code> configuration (on by default). When it is disabled every agreement action returns <code>404</code> with <code>{"error": "Agreement disabled"}</code>.</p>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/agreements</p>
         <p class="ck-meta-copy">List agreements across all runs. Supports filtering by any combination of the query params below.</p>
@@ -320,9 +321,13 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:run_id/responses/:response_id/metrics/:metric_id/agreements</p>
-        <p class="ck-meta-copy">Cast an agreement on a specific response/metric pair. The metric version on the record is set automatically from the run's review.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>verdict</code>&emsp;<strong>Optional:</strong>&ensp;<code>corrected_score</code>, <code>note</code>, <code>created_by</code> (defaults to <code>"api"</code>)</p>
+        <p class="ck-meta-copy">Cast an agreement on a specific response/metric pair. The metric version on the record is set automatically from the run's review. Idempotent per <code>(response, metric, created_by)</code>: the first cast creates the agreement (201 Created), and re-casting for the same <code>created_by</code> updates it in place (200 OK) rather than creating a duplicate.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>verdict</code> (<code>agree</code>, <code>disagree</code>, or <code>borderline</code>); <code>corrected_score</code> (1&ndash;5) is required when <code>verdict</code> is <code>disagree</code>&emsp;<strong>Optional:</strong>&ensp;<code>corrected_score</code> (for <code>agree</code>/<code>borderline</code>), <code>note</code>, <code>created_by</code> (defaults to <code>"api"</code>)</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/responses/42/metrics/3/agreements \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"verdict\": \"disagree\", \"corrected_score\": 3, \"note\": \"too generous\", \"created_by\": \"alice\"}'" %>
+      </div>
+      <div class="ck-api-endpoint">
+        <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:run_id/responses/:response_id/metrics/:metric_id/agreements</p>
+        <p class="ck-meta-copy">List agreements scoped to a specific run, response, and metric &mdash; the nested equivalent of the top-level index filtered by those three ids.</p>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/agreements/:id</p>
@@ -332,7 +337,7 @@
 
     <div class="ck-api-tabs__panel">
       <h2 class="ck-section-title">Tags</h2>
-      <p class="ck-copy">Domain labels you can attach to metrics, prompts, runs, and datasets. Tags are auto-assigned a color from a 10-color palette. Each index page can be filtered by one or more tags using <code>?tag[]=name</code> query params (OR semantics).</p>
+      <p class="ck-copy">Domain labels you can attach to metrics, prompts, runs, datasets, and metric groups. Tags are auto-assigned a color from a 10-color palette. Each index page can be filtered by one or more tags using <code>?tag[]=name</code> query params (OR semantics).</p>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/tags</p>
         <p class="ck-meta-copy">List all tags with name and color.</p>
@@ -355,7 +360,7 @@
             } %>
       <div class="ck-api-endpoint" style="padding-top: 1rem;">
         <p class="ck-kicker" style="margin-bottom: 0.5rem;">Tagging resources</p>
-        <p class="ck-meta-copy">Metrics, prompts, runs, and datasets accept a <code>tag_names</code> array on their create and update endpoints. Passing a name that does not yet exist silently creates the tag. On PATCH, the list replaces all existing tags for that record (omit the field to leave tags unchanged).</p>
+        <p class="ck-meta-copy">Metrics, prompts, runs, datasets, and metric groups accept a <code>tag_names</code> array on their create and update endpoints. Passing a name that does not yet exist silently creates the tag. On PATCH, the list replaces all existing tags for that record (omit the field to leave tags unchanged).</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/metrics \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"Accuracy\", \"tag_names\": [\"real estate\"]}'" %>
       </div>
       <div class="ck-api-endpoint" style="padding-top: 1rem;">
@@ -367,7 +372,7 @@
           <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_update</code><span class="ck-mcp-tool__desc">Update a tag's name</span></div>
           <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_delete</code><span class="ck-mcp-tool__desc">Delete a tag and remove all its taggings</span></div>
         </div>
-        <p class="ck-meta-copy" style="margin-top: 0.75rem;">The existing <code>metrics_create</code>, <code>metrics_update</code>, <code>prompts_create</code>, <code>prompts_update</code>, <code>runs_create</code>, <code>runs_update</code>, <code>datasets_create</code>, and <code>datasets_update</code> tools all accept a <code>tag_names</code> parameter with the same auto-create and replace semantics as the REST API.</p>
+        <p class="ck-meta-copy" style="margin-top: 0.75rem;">The existing <code>metrics_create</code>, <code>metrics_update</code>, <code>prompts_create</code>, <code>prompts_update</code>, <code>runs_create</code>, <code>runs_update</code>, <code>datasets_create</code>, <code>datasets_create_from_url</code>, <code>datasets_update</code>, <code>metric_groups_create</code>, and <code>metric_groups_update</code> tools all accept a <code>tag_names</code> parameter with the same auto-create and replace semantics as the REST API.</p>
       </div>
     </div>
 
@@ -380,14 +385,14 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/provider_credentials</p>
-        <p class="ck-meta-copy">Create a provider credential.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>provider</code> (openai, anthropic, ollama, openrouter, azure_foundry), <code>api_key</code>&emsp;<strong>Optional:</strong>&ensp;<code>api_endpoint</code> (required when <code>provider</code> is <code>azure_foundry</code>), <code>api_version</code></p>
+        <p class="ck-meta-copy">Create a provider credential. Each provider may have only one credential; creating a second for an already-configured provider returns 422.</p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>provider</code> (openai, anthropic, ollama, openrouter, azure_foundry)&emsp;<strong>Optional:</strong>&ensp;<code>api_key</code> (not enforced by the API, but required in practice for hosted providers; local providers like ollama can omit it), <code>api_endpoint</code> (required when <code>provider</code> is <code>azure_foundry</code>), <code>api_version</code></p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/provider_credentials \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"provider\": \"openai\", \"api_key\": \"sk-...\"}'" %>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/provider_credentials \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"provider\": \"azure_foundry\", \"api_key\": \"...\", \"api_endpoint\": \"https://my-resource.openai.azure.com\", \"api_version\": \"2024-10-21\"}'" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/provider_credentials/:id</p>
-        <p class="ck-meta-copy">Get, update, or delete a provider credential.</p>
+        <p class="ck-meta-copy">Get, update, or delete a provider credential. DELETE returns 422 (not 204) when the provider is still in use by prompts or judge runs; remove those references first.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X PATCH #{base_url}/api/v1/provider_credentials/1 \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"api_key\": \"sk-new...\"}'" %>
       </div>
       <%= render "completion_kit/api_reference/resource_list", title: "Your providers",
@@ -399,12 +404,12 @@
 
     <div class="ck-api-tabs__panel">
       <h2 class="ck-section-title">Imports</h2>
-      <p class="ck-copy">Bring an existing <a href="https://www.promptfoo.dev" class="ck-link">promptfoo</a> config into CompletionKit in one call. Prompts, the test dataset, assert-based metrics, and providers are created where they map cleanly and skipped with a reason where they don't.</p>
+      <p class="ck-copy">Bring an existing <a href="https://www.promptfoo.dev" class="ck-link">promptfoo</a> config into CompletionKit in one call. Prompts, the test dataset, and assert-based metrics are created where they map cleanly and skipped with a reason where they don't. Providers are matched against your already-configured credentials; any referenced in the config but not yet configured are reported so you can add them.</p>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/imports/promptfoo</p>
         <p class="ck-meta-copy">Import a promptfooconfig.yaml. Send the YAML as a <code>config</code> param, or POST the raw YAML as the request body. Returns 201 with a mapping summary, or 422 if the YAML cannot be parsed.</p>
         <p class="ck-api-params"><strong>Request:</strong>&ensp;<code>config</code> (the YAML text) or a raw YAML request body</p>
-        <p class="ck-api-params"><strong>Response 201:</strong>&ensp;<code>prompts</code>, <code>dataset</code>, <code>metrics</code>, and <code>providers</code>, each listing what was <code>created</code> and what was <code>skipped</code> (with a reason)</p>
+        <p class="ck-api-params"><strong>Response 201:</strong>&ensp;<code>prompts</code> and <code>metrics</code> each list what was <code>created</code> and what was <code>skipped</code> (with a reason); <code>dataset</code> is <code>{created, rows, columns}</code> (or <code>{skipped}</code>); <code>providers</code> is <code>{matched, unmatched}</code> (provider strings from the config)</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/imports/promptfoo \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/x-yaml\" \\\n  --data-binary @promptfooconfig.yaml" %>
       </div>
     </div>
