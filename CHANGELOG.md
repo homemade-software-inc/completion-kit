@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.3] - 2026-07-15
+
+### Changed
+- **Run comparison table is readable.** It was rendered with every column the same width, so the metric names wrapped onto two or three lines while the score columns sat mostly empty. Columns are now sized to their content: the metric name gets the room and stays on one line, and the score, delta, and version columns are tight. The cryptic "1 / B" case label is replaced by a clear "Case N" heading with separate "A" and "B" links (tooltipped with each run's name) to open that case in either run, and the header now spells out that the delta is B minus A. Each case is grouped into its own block with one divider between cases and a single hover highlight over the whole case, replacing the old per-row highlight that lit only part of a case because of the spanning cell. In a very narrow window the table scrolls sideways within its own box instead of pushing the page.
+- **Responses table shows more of the response.** The Metrics column was far wider than its small pips needed, squeezing the Response text. Metrics is trimmed to fit its content (pips wrap if a run has many metrics) and the Status column is a touch narrower, so the Response column is meaningfully wider.
+
 ## [0.28.2] - 2026-07-15
 
 ### Fixed

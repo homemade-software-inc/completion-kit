@@ -7,7 +7,7 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title">Comparing runs</h1>
-    <p class="ck-meta-copy"><strong>A</strong>: <%= link_to @run.name, run_path(@run), class: "ck-link" %> &middot; <strong>B</strong>: <%= link_to @other_run.name, run_path(@other_run), class: "ck-link" %></p>
+    <p class="ck-meta-copy"><strong>A</strong>: <%= link_to @run.name, run_path(@run), class: "ck-link" %> &middot; <strong>B</strong>: <%= link_to @other_run.name, run_path(@other_run), class: "ck-link" %> &middot; <strong>Δ</strong> = B &minus; A</p>
   </div>
   <div class="ck-actions">
     <%= link_to "Pick another", compare_run_path(@run), class: ck_button_classes(:light, variant: :outline) %>
@@ -19,6 +19,7 @@
     <p>No responses to compare yet.</p>
   </div>
 <% else %>
+  <div class="ck-table-scroll">
   <table class="ck-results-table ck-run-compare-table">
     <thead>
       <tr>
@@ -26,26 +27,35 @@
         <th scope="col">Metric</th>
         <th scope="col">A score</th>
         <th scope="col">B score</th>
-        <th scope="col">Δ</th>
+        <th scope="col" class="ck-num">Δ</th>
         <th scope="col">A version</th>
         <th scope="col">B version</th>
       </tr>
     </thead>
-    <tbody>
       <% @comparison[:rows].each do |row| %>
         <% case_label = ((row[:left_response].row_index || 0) + 1).to_s %>
+        <tbody class="ck-compare-group">
         <% row[:per_metric].each_with_index do |pm, idx| %>
           <tr>
             <% if idx == 0 %>
-              <td rowspan="<%= row[:per_metric].size %>">
-                <%= link_to case_label, run_response_path(@run, row[:left_response]), class: "ck-link" %>
-                <% if row[:right_response] %>
-                  <span class="ck-meta-copy">/ <%= link_to "B", run_response_path(@other_run, row[:right_response]), class: "ck-link" %></span>
-                <% end %>
+              <td rowspan="<%= row[:per_metric].size %>" class="ck-compare-case">
+                <span class="ck-compare-case__num">Case <%= case_label %></span>
+                <span class="ck-compare-case__runs">
+                  <%= link_to "A ↗", run_response_path(@run, row[:left_response]),
+                        class: "ck-link ck-compare-case__run",
+                        title: "Open this case in run A (#{@run.name})" %>
+                  <% if row[:right_response] %>
+                    <%= link_to "B ↗", run_response_path(@other_run, row[:right_response]),
+                          class: "ck-link ck-compare-case__run",
+                          title: "Open this case in run B (#{@other_run.name})" %>
+                  <% else %>
+                    <span class="ck-compare-case__run ck-compare-case__run--absent" title="No matching response in run B">B</span>
+                  <% end %>
+                </span>
               </td>
             <% end %>
-            <td><%= pm[:metric_name] %></td>
-            <td>
+            <td class="ck-compare-metric" data-label="Metric" title="<%= pm[:metric_name] %>"><%= pm[:metric_name] %></td>
+            <td data-label="A score">
               <% if pm[:kind] == "check" %>
                 <% if pm[:left_passed].nil? %>
                   <span class="ck-meta-copy">—</span>
@@ -58,7 +68,7 @@
                 <span class="ck-meta-copy">—</span>
               <% end %>
             </td>
-            <td>
+            <td data-label="B score">
               <% if pm[:kind] == "check" %>
                 <% if pm[:right_passed].nil? %>
                   <span class="ck-meta-copy">—</span>
@@ -71,7 +81,7 @@
                 <span class="ck-meta-copy">—</span>
               <% end %>
             </td>
-            <td>
+            <td class="ck-num" data-label="Δ">
               <% if pm[:kind] == "check" %>
                 <%= ck_result_change_badge(pm[:result_change]) || content_tag(:span, "—", class: "ck-meta-copy") %>
               <% elsif pm[:delta] %>
@@ -81,19 +91,12 @@
                 <span class="ck-meta-copy">—</span>
               <% end %>
             </td>
-            <td>
-              <% if pm[:left_version_label] %>
-                <span class="ck-source-chip ck-source-chip--current"><%= pm[:left_version_label] %></span>
-              <% end %>
-            </td>
-            <td>
-              <% if pm[:right_version_label] %>
-                <span class="ck-source-chip ck-source-chip--current"><%= pm[:right_version_label] %></span>
-              <% end %>
-            </td>
+            <td data-label="A version"><% if pm[:left_version_label] %><span class="ck-source-chip ck-source-chip--current"><%= pm[:left_version_label] %></span><% end %></td>
+            <td data-label="B version"><% if pm[:right_version_label] %><span class="ck-source-chip ck-source-chip--current"><%= pm[:right_version_label] %></span><% end %></td>
           </tr>
         <% end %>
+        </tbody>
       <% end %>
-    </tbody>
   </table>
+  </div>
 <% end %>
