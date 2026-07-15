@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.2] - 2026-07-15
+
+### Fixed
+- **The responses-table hover-expand from 0.28.1 never actually expanded.** The Response cell is a greedy column (`max-width: 0; width: 100%`), which only stays width-bounded when the cell also clips its overflow. 0.28.1 dropped `overflow: hidden` from that cell, so the preview span had no width to clamp against and the hover class had nothing to grow. Restoring the clip makes the cell expand from one line to twelve on hover, as intended. Verified in-browser: the row grows from ~57px to ~309px and the line-clamp goes 1 → 12 when hovered.
+
 ## [0.28.1] - 2026-07-15
 
 ### Changed

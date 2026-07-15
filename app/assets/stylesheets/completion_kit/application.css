@@ -4225,6 +4225,7 @@ table.ck-runs-table {
 .ck-response-cell__text {
   width: 100%;
   max-width: 0;
+  overflow: hidden;
   color: var(--ck-muted);
 }
 
