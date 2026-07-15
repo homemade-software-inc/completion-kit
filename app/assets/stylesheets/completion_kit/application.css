@@ -1609,7 +1609,8 @@ tr:hover .ck-chip--publish {
   border: 0;
   border-radius: 0;
   background: transparent;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   color: #93c5fd;
   font-size: 0.86rem;
   line-height: 1.55;
@@ -4224,10 +4225,24 @@ table.ck-runs-table {
 .ck-response-cell__text {
   width: 100%;
   max-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   color: var(--ck-muted);
+}
+
+.ck-response-cell__preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  overflow: hidden;
+  max-height: 1.7em;
+  overflow-wrap: anywhere;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ck-response-row--expanded .ck-response-cell__preview {
+  -webkit-line-clamp: 12;
+  line-clamp: 12;
+  max-height: 22em;
 }
 
 .ck-response-cell__error {

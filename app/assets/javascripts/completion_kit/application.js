@@ -84,23 +84,27 @@ document.addEventListener("turbo:before-stream-render", function() {
 
 var ckCsvHoverTimer = null;
 var ckCsvHoverRow = null;
+var ckHoverRowSelector = ".ck-csv-table tbody tr, .ck-responses-table tbody tr";
+function ckHoverExpandClass(row) {
+  return row.closest(".ck-responses-table") ? "ck-response-row--expanded" : "ck-csv-row--expanded";
+}
 document.addEventListener("mouseover", function(e) {
-  var row = e.target.closest && e.target.closest(".ck-csv-table tbody tr");
+  var row = e.target.closest && e.target.closest(ckHoverRowSelector);
   if (!row || row === ckCsvHoverRow) return;
-  if (ckCsvHoverRow) ckCsvHoverRow.classList.remove("ck-csv-row--expanded");
+  if (ckCsvHoverRow) ckCsvHoverRow.classList.remove("ck-csv-row--expanded", "ck-response-row--expanded");
   ckCsvHoverRow = row;
   clearTimeout(ckCsvHoverTimer);
   ckCsvHoverTimer = setTimeout(function() {
-    if (ckCsvHoverRow === row) row.classList.add("ck-csv-row--expanded");
+    if (ckCsvHoverRow === row) row.classList.add(ckHoverExpandClass(row));
   }, 350);
 });
 document.addEventListener("mouseout", function(e) {
-  var row = e.target.closest && e.target.closest(".ck-csv-table tbody tr");
+  var row = e.target.closest && e.target.closest(ckHoverRowSelector);
   if (!row) return;
-  var related = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".ck-csv-table tbody tr");
+  var related = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(ckHoverRowSelector);
   if (related === row) return;
   clearTimeout(ckCsvHoverTimer);
-  row.classList.remove("ck-csv-row--expanded");
+  row.classList.remove("ck-csv-row--expanded", "ck-response-row--expanded");
   if (ckCsvHoverRow === row) ckCsvHoverRow = null;
 });
 

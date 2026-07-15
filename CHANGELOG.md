@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.28.0] - 2026-07-15
+## [0.28.1] - 2026-07-15
+
+### Changed
+- **Response text is readable again.** In the run's responses table, the Response cell now expands on hover (like the CSV preview cells, after a short delay) instead of staying truncated on one line, so you can read a response without opening it. On the response detail page, the Input, Response, and Expected code blocks wrap long lines (with vertical scroll for very tall payloads) instead of clipping them off the right edge.
 
 ### Fixed
 - **Large runs (thousands of rows) timed out on start and rendered every response on one page.** (#113)
