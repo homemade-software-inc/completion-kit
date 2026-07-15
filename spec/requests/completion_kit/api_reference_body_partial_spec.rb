@@ -76,6 +76,16 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     expect(html).to include(">4</span>")
   end
 
+  it "documents tag[] filtering consistently on every taggable list endpoint" do
+    html = render_body(base_url: "https://docs.example.test")
+
+    # all five taggable resources' list endpoints mention tag[] filtering
+    expect(html.scan(/List all metrics\. Supports pagination .* <code>tag\[\]<\/code> filtering/).size).to eq(1)
+    expect(html.scan(/List all datasets\. Supports pagination .* <code>tag\[\]<\/code> filtering/).size).to eq(1)
+    expect(html).to include("List all metric groups with their metric IDs. Supports pagination")
+    expect(html).to include("five resources' list endpoints can be filtered")
+  end
+
   it "documents the promptfoo import endpoint" do
     html = render_body(base_url: "https://docs.example.test")
 

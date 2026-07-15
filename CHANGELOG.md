@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.27.8] - 2026-07-15
+## [0.27.9] - 2026-07-15
+
+### Fixed
+- **The Tags API docs were inconsistent about `tag[]` filtering.** The Tags section said every index page could be filtered by tags, but only the Runs and Prompts endpoints documented it — even though the Metrics, Datasets, and Metric Groups list endpoints all support `?tag[]=name` too. All five taggable list endpoints now document `tag[]` filtering and pagination consistently, and the intro names the five resources and spells out the OR semantics.
 
 ### Fixed
 - **The "stale metric versions" banner fired confusingly ("scored by v1; live is v1") for a metric published only once.** The staleness check compared metric versions by row **id** but displayed the version **number**, so two same-number rows (from the #111 race, on deployments that haven't run that dedupe migration yet) were flagged as stale against each other. Staleness is now determined by version **number** — a review is only stale when the metric actually moved to a different version — so the banner, the per-review "scored on vX → vY" chip, and the `retry_failures` 409 guard no longer false-positive on duplicate rows. Running the 0.27.5 migration still removes the duplicate rows themselves.

@@ -204,7 +204,7 @@
       <p class="ck-copy">Data used as input for runs.</p>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/datasets</p>
-        <p class="ck-meta-copy">List all datasets.</p>
+        <p class="ck-meta-copy">List all datasets. Supports pagination (<code>limit</code>, <code>offset</code>) and <code>tag[]</code> filtering.</p>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/datasets</p>
@@ -231,7 +231,7 @@
       <p class="ck-copy">Scoring dimensions used by the judge model.</p>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/metrics</p>
-        <p class="ck-meta-copy">List all metrics.</p>
+        <p class="ck-meta-copy">List all metrics. Supports pagination (<code>limit</code>, <code>offset</code>) and <code>tag[]</code> filtering.</p>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics</p>
@@ -289,7 +289,7 @@
       <p class="ck-copy">Named groups of metrics you can apply to a run as a set.</p>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/metric_groups</p>
-        <p class="ck-meta-copy">List all metric groups with their metric IDs.</p>
+        <p class="ck-meta-copy">List all metric groups with their metric IDs. Supports pagination (<code>limit</code>, <code>offset</code>) and <code>tag[]</code> filtering.</p>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metric_groups</p>
@@ -337,7 +337,7 @@
 
     <div class="ck-api-tabs__panel">
       <h2 class="ck-section-title">Tags</h2>
-      <p class="ck-copy">Domain labels you can attach to metrics, prompts, runs, datasets, and metric groups. Tags are auto-assigned a color from a 10-color palette. Each index page can be filtered by one or more tags using <code>?tag[]=name</code> query params (OR semantics).</p>
+      <p class="ck-copy">Domain labels you can attach to metrics, prompts, runs, datasets, and metric groups. Tags are auto-assigned a color from a 10-color palette. Each of those five resources' list endpoints can be filtered by one or more tags using <code>?tag[]=name</code> query params (OR semantics: a record matching any of the given tags is returned).</p>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/tags</p>
         <p class="ck-meta-copy">List all tags with name and color.</p>
