@@ -65,6 +65,29 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       expect(second.id).to eq(first.id)
     end
 
+    it "recovers by re-finding the current version when a concurrent create wins the race" do
+      metric = create(:completion_kit_metric)
+      winner = described_class.ensure_current_for(metric)
+
+      relation = double("relation")
+      allow(described_class).to receive(:current).and_return(relation)
+      allow(relation).to receive(:find_by).with(metric_id: metric.id).and_return(nil, winner)
+      allow(described_class).to receive(:create!).and_raise(ActiveRecord::RecordNotUnique, "duplicate key")
+
+      expect(described_class.ensure_current_for(metric)).to eq(winner)
+    end
+
+    it "re-raises when creation fails and no current version can be found" do
+      metric = create(:completion_kit_metric)
+
+      relation = double("relation")
+      allow(described_class).to receive(:current).and_return(relation)
+      allow(relation).to receive(:find_by).with(metric_id: metric.id).and_return(nil, nil)
+      allow(described_class).to receive(:create!).and_raise(ActiveRecord::RecordNotUnique, "duplicate key")
+
+      expect { described_class.ensure_current_for(metric) }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+
     it "snapshots metric_type and check_config for a check metric" do
       metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "ok" })
       jv = described_class.ensure_current_for(metric)

@@ -254,7 +254,7 @@ ActiveRecord::Schema.define do
   end
   add_index :completion_kit_metric_versions, [:metric_id, :current], name: "index_ck_metric_versions_on_metric_current"
   add_index :completion_kit_metric_versions, [:metric_id, :state], name: "index_ck_metric_versions_on_metric_state"
-  add_index :completion_kit_metric_versions, [:metric_id, :version_number], name: "index_ck_metric_versions_on_metric_vnum"
+  add_index :completion_kit_metric_versions, [:metric_id, :version_number], unique: true, name: "index_ck_metric_versions_on_metric_vnum"
 
   create_table :completion_kit_agreements, force: true do |t|
     t.references :run, null: false

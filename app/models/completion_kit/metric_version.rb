@@ -30,6 +30,8 @@ module CompletionKit
         state: "published",
         published_at: Time.current
       )
+    rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+      current.find_by(metric_id: metric.id) || raise
     end
 
     def check?

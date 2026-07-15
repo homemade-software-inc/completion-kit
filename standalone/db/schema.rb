@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_14_011534) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_15_005607) do
   create_table "completion_kit_agreements", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -88,7 +88,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_011534) do
     t.integer "version_number", null: false
     t.index ["metric_id", "current"], name: "index_ck_metric_versions_on_metric_current"
     t.index ["metric_id", "state"], name: "index_ck_metric_versions_on_metric_state"
-    t.index ["metric_id", "version_number"], name: "index_ck_metric_versions_on_metric_vnum"
+    t.index ["metric_id", "version_number"], name: "index_ck_metric_versions_on_metric_vnum", unique: true
     t.index ["metric_id"], name: "index_ck_metric_versions_on_metric_id"
   end
 
