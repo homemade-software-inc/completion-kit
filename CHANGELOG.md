@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.27.10] - 2026-07-15
+## [0.28.0] - 2026-07-15
+
+### Fixed
+- **Large runs (thousands of rows) timed out on start and rendered every response on one page.** (#113)
+  - `Run#start!` now bulk-inserts response rows in a single `insert_all` instead of a per-row `create!` loop. The dominant cost was the per-row `after_save_commit` Turbo broadcast firing once for every row on start (thousands of partial renders + ActionCable pushes); bulk insert skips those, so starting a 2000-row run drops from tens of seconds to about a second and no longer times out. Row jobs are still enqueued after the rows are written; the run page's status polling shows progress as they process.
+  - The run detail page paginates its responses table (100 per page, with Prev/Next) instead of loading and rendering every response into one giant DOM.
 
 ### Changed
 - **Trimmed noisy copy and made the delete UX consistent.** The Azure API-version field hint is now just "Optional. Leave blank to use Azure's v1 API." The provider delete control is a plain, always-enabled trash button like every other resource's — the previous disabled button plus a permanent "still in use … remove those references" notice is gone. Attempting to delete an in-use provider now surfaces a short flash on click ("&lt;provider&gt; is in use by N judge runs and can't be deleted.") instead of a persistent banner. The unused `disabled`/`title` options were dropped from the shared delete-trigger helper.

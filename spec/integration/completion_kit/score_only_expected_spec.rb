@@ -50,20 +50,6 @@ RSpec.describe "Score-only run graded against per-row expected_output", type: :m
     expect(blank_review.ai_feedback).to include("4S4BSANC7L3241589")
   end
 
-  it "fails the run with a row-scoped summary when a response cannot be built" do
-    run = build_run
-    invalid = CompletionKit::Response.new
-    invalid.errors.add(:base, "boom")
-    allow(run.responses).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(invalid))
-
-    expect(run.start!).to be(false)
-
-    run.reload
-    expect(run.status).to eq("failed")
-    expect(run.failure_summary).to eq("Row 1: boom")
-    expect(run.responses.count).to eq(0)
-  end
-
   it "fails the run with the bare validation message when the failure is not row-scoped" do
     run = build_run
     invalid = CompletionKit::Run.new

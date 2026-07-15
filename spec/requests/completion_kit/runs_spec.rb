@@ -173,6 +173,27 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to match(/<input(?=[^>]*name="run\[tag_names\]\[\]")(?=[^>]*value="priority")(?=[^>]*\bchecked\b)/)
   end
 
+  it "paginates the responses table for a large (gradable) run and clamps out-of-range pages" do
+    run = create(:completion_kit_run, prompt: prompt, name: "Big Run", status: "completed")
+    now = Time.current
+    attrs = (0...101).map { |i| { run_id: run.id, status: "succeeded", row_index: i, response_text: "row #{i}", attempts: 0, created_at: now, updated_at: now } }
+    CompletionKit::Response.insert_all(attrs)
+    allow_any_instance_of(CompletionKit::Run).to receive(:gradable?).and_return(true)
+
+    get "#{base_path}/#{run.id}"
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Page 1 of 2")
+    expect(response.body).to include("101 responses")
+
+    get "#{base_path}/#{run.id}", params: { page: 2 }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Page 2 of 2")
+
+    get "#{base_path}/#{run.id}", params: { page: 999 }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Page 2 of 2")
+  end
+
   it "sorts responses by rubric score when the run is gradable" do
     run = create(:completion_kit_run, prompt: prompt, name: "Run A")
     r1 = create(:completion_kit_response, run: run)

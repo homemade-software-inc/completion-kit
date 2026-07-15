@@ -201,7 +201,6 @@ module CompletionKit
         end
       end
 
-      failed_row = nil
       begin
         transaction do
           responses.destroy_all
@@ -212,37 +211,46 @@ module CompletionKit
             failure_summary: nil,
             error_message: nil
           )
-          rows.each_with_index do |row, index|
-            failed_row = index
-            input = row.empty? ? nil : row.to_json
-            attrs = {
-              status: "pending",
+
+          now = Time.current
+          out_col = output_column.presence || "actual_output"
+          exp_col = expected_column.presence || "expected_output"
+          judge = judge_only?
+          has_output = judge && dataset && dataset.headers.include?(out_col)
+          scope_defaults = Response.all.where_values_hash.symbolize_keys
+
+          response_attrs = rows.each_with_index.map do |row, index|
+            {
+              run_id: id,
+              status: judge ? "succeeded" : "pending",
               row_index: index,
-              input_data: input,
-              expected_output: row[expected_column.presence || "expected_output"]
-            }
-            if judge_only?
-              attrs[:status] = "succeeded"
-              column = output_column.presence || "actual_output"
-              attrs[:response_text] = row[column].to_s if dataset && dataset.headers.include?(column)
-            end
-
-            response = responses.create!(attrs)
-
-            if judge_only?
-              llm_metrics.each { |m| JudgeReviewJob.perform_later(response.id, m.id, id) } if llm_judge_configured?
-              check_metrics.each { |m| CheckReviewJob.perform_later(response.id, m.id, id) }
-            else
-              GenerateRowJob.perform_later(id, response.id)
-            end
+              input_data: row.empty? ? nil : row.to_json,
+              expected_output: row[exp_col],
+              response_text: (judge && has_output ? row[out_col].to_s : nil),
+              attempts: 0,
+              created_at: now,
+              updated_at: now
+            }.merge(scope_defaults)
           end
+          Response.insert_all(response_attrs)
+          responses.reset
 
-          RunCompletionCheckJob.perform_later(id) if judge_only?
+          response_ids = responses.order(:row_index).pluck(:id)
+          if judge
+            judge_metrics = llm_judge_configured? ? llm_metrics.to_a : []
+            chk_metrics = check_metrics.to_a
+            response_ids.each do |rid|
+              judge_metrics.each { |m| JudgeReviewJob.perform_later(rid, m.id, id) }
+              chk_metrics.each { |m| CheckReviewJob.perform_later(rid, m.id, id) }
+            end
+            RunCompletionCheckJob.perform_later(id)
+          else
+            response_ids.each { |rid| GenerateRowJob.perform_later(id, rid) }
+          end
         end
       rescue ActiveRecord::RecordInvalid => e
         reload
-        detail = e.record.errors.full_messages.to_sentence
-        return fail_with_summary!(failed_row ? "Row #{failed_row + 1}: #{detail}" : detail)
+        return fail_with_summary!(e.record.errors.full_messages.to_sentence)
       end
 
       safely_broadcast do

@@ -286,6 +286,13 @@ form.button_to {
   margin-top: 0.45rem;
 }
 
+.ck-pagination {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
 .ck-title,
 .ck-section-title,
 .ck-card-title,

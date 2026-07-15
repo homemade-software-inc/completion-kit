@@ -197,10 +197,22 @@
   </thead>
   <tbody id="run_responses">
     <% @responses.each_with_index do |response, idx| %>
-      <%= render "response_row", run: @run, response: response, index: idx + 1 %>
+      <%= render "response_row", run: @run, response: response, index: @responses_offset + idx + 1 %>
     <% end %>
   </tbody>
 </table>
+
+<% if @responses_total_pages > 1 %>
+  <nav class="ck-pagination" aria-label="Response pages">
+    <% if @responses_page > 1 %>
+      <%= link_to run_path(@run, page: @responses_page - 1, sort: params[:sort]), class: ck_button_classes(:light, variant: :outline) do %>&larr; Prev<% end %>
+    <% end %>
+    <span class="ck-meta-copy">Page <%= @responses_page %> of <%= @responses_total_pages %> &middot; <%= pluralize(@responses_total, "response") %></span>
+    <% if @responses_page < @responses_total_pages %>
+      <%= link_to run_path(@run, page: @responses_page + 1, sort: params[:sort]), class: ck_button_classes(:light, variant: :outline) do %>Next &rarr;<% end %>
+    <% end %>
+  </nav>
+<% end %>
 
 <% if @run.status.in?(%w[pending running]) %>
   <script>
