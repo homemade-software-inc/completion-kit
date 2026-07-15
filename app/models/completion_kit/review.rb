@@ -21,10 +21,10 @@ module CompletionKit
     end
 
     def stale_against_current_judge?
-      return false unless metric_id && metric_version_id
-      current_id = MetricVersion.current.where(metric_id: metric_id).limit(1).pick(:id)
-      return false if current_id.nil?
-      metric_version_id != current_id
+      return false unless metric_id && metric_version
+      current_number = MetricVersion.current.where(metric_id: metric_id).limit(1).pick(:version_number)
+      return false if current_number.nil?
+      metric_version.version_number != current_number
     end
 
     def as_json(options = {})

@@ -166,9 +166,9 @@ module CompletionKit
       review_pairs.each do |metric_id, version_id, metric_name|
         current = current_by_metric[metric_id]
         next if current.nil?
-        next if version_id == current[:id]
         label = label_by_version[version_id]
         next if label.nil?
+        next if label == current[:label]
         summary[metric_id] ||= { metric_name: metric_name, current_label: current[:label], stale_count: 0, scored_labels: [] }
         summary[metric_id][:stale_count] += 1
         summary[metric_id][:scored_labels] |= [label]

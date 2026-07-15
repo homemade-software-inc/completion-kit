@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.27.7] - 2026-07-15
+## [0.27.8] - 2026-07-15
+
+### Fixed
+- **The "stale metric versions" banner fired confusingly ("scored by v1; live is v1") for a metric published only once.** The staleness check compared metric versions by row **id** but displayed the version **number**, so two same-number rows (from the #111 race, on deployments that haven't run that dedupe migration yet) were flagged as stale against each other. Staleness is now determined by version **number** — a review is only stale when the metric actually moved to a different version — so the banner, the per-review "scored on vX → vY" chip, and the `retry_failures` 409 guard no longer false-positive on duplicate rows. Running the 0.27.5 migration still removes the duplicate rows themselves.
 
 ### Fixed
 - **Documentation audit across every doc surface.** A full cross-check of the API reference, MCP tool descriptions, and READMEs against the code corrected 21 inaccuracies. Highlights: **metric groups are now documented as taggable** (they were the only taggable resource omitted from the tagging docs); the run `/rerun` status is 202 (not 201); the `/compare` one-sided-case behavior, the responses `status` enum (added `retrying`), and the prompt PATCH versioning behavior were corrected; the provider-credentials `api_key` requiredness, one-per-provider rule, and in-use DELETE (422) are documented; the promptfoo import response shape and the agreements contract (conditional `corrected_score`, idempotent create 201/200, `judge_agreement_enabled` gating, the nested index endpoint) were corrected; the `judges_compare` and `judges_replay` MCP tool descriptions were fixed; and the READMEs gained the Azure AI Foundry provider and the provider/encryption env vars.
