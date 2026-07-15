@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.27.5] - 2026-07-15
+## [0.27.6] - 2026-07-15
+
+### Fixed
+- **API reference documentation accuracy.** Corrected several stale or misleading entries in the API reference: `/agreements` POST marked `created_by` required when it is optional (defaults to `"api"`); provider-credentials POST omitted `azure_foundry` from the provider list and the `api_version` param, and flatly labeled `api_endpoint` optional when it is required for `azure_foundry`; the run `/compare` response shape was missing `left_run_id`/`right_run_id`; `/runs` POST omitted `temperature`; and `retry_failures` didn't mention its optional `only` param or 409 response. Added missing curl examples across create, update, publish, and action endpoints (provider credentials incl. an Azure variant, metric groups, PATCHes, and a filtered `GET /runs`). (#112)
 
 ### Fixed
 - **A race in `MetricVersion.ensure_current_for` created duplicate `v1` metric versions.** When a run first scored a metric with no published version, parallel review jobs each created a `current: true, version_number: 1` row — the `(metric_id, version_number)` index wasn't unique and the app-level uniqueness check has a check-then-insert race. The run page then warned "scored against metric versions that are no longer live (scored by v1; live is v1)" for a singly-published metric. Version creation is now race-safe (it recovers by re-finding the current version on a unique violation), a migration promotes `(metric_id, version_number)` to a **unique** index, and any pre-existing duplicates are collapsed (reviews and agreements re-pointed to the surviving row, extras removed) before the index is applied. (#111)

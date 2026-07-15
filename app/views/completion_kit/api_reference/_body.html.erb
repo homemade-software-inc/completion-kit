@@ -104,6 +104,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/prompts/:id</p>
         <p class="ck-meta-copy">Update a prompt. Accepts same params as create.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X PATCH #{base_url}/api/v1/prompts/1 \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"template\": \"Summarize concisely: {{text}}\"}'" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/prompts/:id</p>
@@ -112,6 +113,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/prompts/:id/publish</p>
         <p class="ck-meta-copy">Publish a prompt version, making it the current version in its family.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/prompts/1/publish \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
     </div>
 
@@ -122,11 +124,12 @@
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs</p>
         <p class="ck-meta-copy">List runs with response counts and average scores. Supports pagination (<code>limit</code>, <code>offset</code>) and the following filters.</p>
         <p class="ck-api-params"><strong>Optional filters:</strong>&ensp;<code>status</code> (<code>pending</code>, <code>running</code>, <code>completed</code>, <code>failed</code>), <code>prompt_id</code>, <code>dataset_id</code>, <code>tag[]</code></p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl \"#{base_url}/api/v1/runs?status=completed&prompt_id=1&tag[]=real%20estate\" \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs</p>
         <p class="ck-meta-copy">Create a new run.</p>
-        <p class="ck-api-params"><strong>Optional:</strong>&ensp;<code>name</code>, <code>prompt_id</code>, <code>dataset_id</code>, <code>metric_ids</code>, <code>judge_model</code>, <code>output_column</code> (score existing outputs: omit <code>prompt_id</code> and grade a dataset column instead, default <code>actual_output</code>), <code>expected_column</code> (dataset column holding each row's answer key, given to the judge and to checks that compare against the row's expected value, default <code>expected_output</code>)</p>
+        <p class="ck-api-params"><strong>Optional:</strong>&ensp;<code>name</code>, <code>prompt_id</code>, <code>dataset_id</code>, <code>metric_ids</code>, <code>judge_model</code>, <code>temperature</code>, <code>output_column</code> (score existing outputs: omit <code>prompt_id</code> and grade a dataset column instead, default <code>actual_output</code>), <code>expected_column</code> (dataset column holding each row's answer key, given to the judge and to checks that compare against the row's expected value, default <code>expected_output</code>)</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"prompt_id\": 1, \"dataset_id\": 1, \"metric_ids\": [1, 2]}'" %>
       </div>
       <div class="ck-api-endpoint">
@@ -146,7 +149,9 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/retry_failures</p>
-        <p class="ck-meta-copy">Re-queue any responses that failed during generation. Returns 202 Accepted.</p>
+        <p class="ck-meta-copy">Re-queue responses that failed during generation. Returns 202 Accepted, or 409 Conflict if the judge version has drifted since the run executed (use <code>/rerun</code> instead to avoid mixing versions in one run).</p>
+        <p class="ck-api-params"><strong>Optional:</strong>&ensp;<code>only</code> (array of failed response IDs, to retry just a subset)</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/retry_failures \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/rerun</p>
@@ -156,15 +161,17 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/regrade</p>
         <p class="ck-meta-copy">Re-judge the existing successful responses against the current metric versions without regenerating model output. Returns 202 Accepted, or 422 if no responses are eligible.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/regrade \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:id/compare?with=:other_id</p>
-        <p class="ck-meta-copy">Side-by-side comparison against another run. Returns <code>{rows: [...], metric_ids: [...]}</code> with one row per input case, per-metric scores on both sides, and the delta. Cases that exist on only one side are still returned with the missing side nulled out.</p>
+        <p class="ck-meta-copy">Side-by-side comparison against another run. Returns <code>{left_run_id, right_run_id, metric_ids: [...], rows: [...]}</code> with one row per input case, per-metric scores on both sides, and the delta. Cases that exist on only one side are still returned with the missing side nulled out.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl \"#{base_url}/api/v1/runs/1/compare?with=2\" \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/runs/:id</p>
         <p class="ck-meta-copy">Update a run. Accepts same params as create.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X PATCH #{base_url}/api/v1/runs/1 \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"baseline v2\", \"metric_ids\": [1, 2, 3]}'" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/runs/:id</p>
@@ -210,6 +217,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/datasets/:id</p>
         <p class="ck-meta-copy">Get, update, or delete a dataset.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X PATCH #{base_url}/api/v1/datasets/1 \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"tickets-q3\"}'" %>
       </div>
       <%= render "completion_kit/api_reference/resource_list", title: "Your datasets",
             items: datasets.map { |d|
@@ -234,6 +242,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metrics/:id</p>
         <p class="ck-meta-copy">Get, update, or delete a metric.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X PATCH #{base_url}/api/v1/metrics/1 \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"instruction\": \"Is the response factually accurate?\", \"rubric_bands\": [{\"stars\": 5, \"description\": \"fully accurate\"}]}'" %>
       </div>
       <%= render "completion_kit/api_reference/resource_list", title: "Your metrics",
             items: metrics.map { |m|
@@ -267,6 +276,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics/:metric_id/metric_versions/:id/publish</p>
         <p class="ck-meta-copy">Publish the version as current. Works for a draft (promote) or a superseded published version (revert). Copies the version's instruction and rubric (or check_config for checks) back onto the metric.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/metrics/1/metric_versions/5/publish \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metrics/:metric_id/metric_versions/:id</p>
@@ -285,10 +295,12 @@
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metric_groups</p>
         <p class="ck-meta-copy">Create a metric group.</p>
         <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>name</code>&emsp;<strong>Optional:</strong>&ensp;<code>description</code>, <code>metric_ids</code> (array)</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/metric_groups \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"core quality\", \"metric_ids\": [1, 2, 3]}'" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/metric_groups/:id</p>
         <p class="ck-meta-copy">Get, update, or delete a metric group. PATCH with <code>metric_ids</code> replaces all metric associations.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X PATCH #{base_url}/api/v1/metric_groups/1 \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"metric_ids\": [4, 5]}'" %>
       </div>
       <%= render "completion_kit/api_reference/resource_list", title: "Your metric groups",
             items: metric_groups.map { |g|
@@ -309,7 +321,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:run_id/responses/:response_id/metrics/:metric_id/agreements</p>
         <p class="ck-meta-copy">Cast an agreement on a specific response/metric pair. The metric version on the record is set automatically from the run's review.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>verdict</code>, <code>created_by</code>&emsp;<strong>Optional:</strong>&ensp;<code>corrected_score</code>, <code>note</code></p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>verdict</code>&emsp;<strong>Optional:</strong>&ensp;<code>corrected_score</code>, <code>note</code>, <code>created_by</code> (defaults to <code>"api"</code>)</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/responses/42/metrics/3/agreements \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"verdict\": \"disagree\", \"corrected_score\": 3, \"note\": \"too generous\", \"created_by\": \"alice\"}'" %>
       </div>
       <div class="ck-api-endpoint">
@@ -369,11 +381,14 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/provider_credentials</p>
         <p class="ck-meta-copy">Create a provider credential.</p>
-        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>provider</code> (openai, anthropic, ollama, openrouter), <code>api_key</code>&emsp;<strong>Optional:</strong>&ensp;<code>api_endpoint</code></p>
+        <p class="ck-api-params"><strong>Required:</strong>&ensp;<code>provider</code> (openai, anthropic, ollama, openrouter, azure_foundry), <code>api_key</code>&emsp;<strong>Optional:</strong>&ensp;<code>api_endpoint</code> (required when <code>provider</code> is <code>azure_foundry</code>), <code>api_version</code></p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/provider_credentials \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"provider\": \"openai\", \"api_key\": \"sk-...\"}'" %>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/provider_credentials \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"provider\": \"azure_foundry\", \"api_key\": \"...\", \"api_endpoint\": \"https://my-resource.openai.azure.com\", \"api_version\": \"2024-10-21\"}'" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span>&ensp;<span class="ck-chip ck-chip--soft">PATCH</span>&ensp;<span class="ck-chip" style="color: var(--ck-danger);">DELETE</span> /api/v1/provider_credentials/:id</p>
         <p class="ck-meta-copy">Get, update, or delete a provider credential.</p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X PATCH #{base_url}/api/v1/provider_credentials/1 \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"api_key\": \"sk-new...\"}'" %>
       </div>
       <%= render "completion_kit/api_reference/resource_list", title: "Your providers",
             items: provider_credentials.map { |pc|

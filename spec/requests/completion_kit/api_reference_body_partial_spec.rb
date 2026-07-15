@@ -46,6 +46,25 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     expect(html).to include("or check_config for checks")
   end
 
+  it "documents provider credentials accurately (azure_foundry, api_version, endpoint requiredness, examples)" do
+    html = render_body(base_url: "https://docs.example.test")
+
+    expect(html).to include("openai, anthropic, ollama, openrouter, azure_foundry")
+    expect(html).to include("<code>api_version</code>")
+    expect(html).to include("required when <code>provider</code> is <code>azure_foundry</code>")
+    expect(html).to include("/api/v1/provider_credentials")
+    expect(html).to include("my-resource.openai.azure.com")
+  end
+
+  it "documents run temperature, the compare response shape, and agreement created_by as optional" do
+    html = render_body(base_url: "https://docs.example.test")
+
+    expect(html).to include("<code>temperature</code>")
+    expect(html).to include("{left_run_id, right_run_id, metric_ids: [...], rows: [...]}")
+    expect(html).to include('<code>created_by</code> (defaults to <code>"api"</code>)')
+    expect(html).to include("<code>only</code>")
+  end
+
   it "documents the promptfoo import endpoint" do
     html = render_body(base_url: "https://docs.example.test")
 
