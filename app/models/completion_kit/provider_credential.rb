@@ -99,7 +99,7 @@ module CompletionKit
       parts = []
       parts << "#{prompt_count} #{'prompt'.pluralize(prompt_count)}" if prompt_count.positive?
       parts << "#{judge_count} judge #{'run'.pluralize(judge_count)}" if judge_count.positive?
-      "#{display_provider} is still in use by #{parts.to_sentence}. Remove those references before deleting it."
+      "#{display_provider} is in use by #{parts.to_sentence} and can't be deleted."
     end
 
     def broadcast_discovery_progress

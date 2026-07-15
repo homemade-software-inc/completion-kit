@@ -29,16 +29,15 @@ module CompletionKit
       "#{base} #{styles}"
     end
 
-    def ck_delete_trigger(form_id:, label:, confirm: nil, disabled: false, title: nil)
+    def ck_delete_trigger(form_id:, label:, confirm: nil)
       content_tag(
         :button,
         type: "submit",
-        form: (disabled ? nil : form_id),
+        form: form_id,
         class: "ck-icon-btn",
-        title: title || label,
+        title: label,
         "aria-label": label,
-        disabled: disabled,
-        data: (disabled ? {} : {turbo_confirm: confirm, ck_confirm_label: "Delete", ck_confirm_tone: "danger"})
+        data: {turbo_confirm: confirm, ck_confirm_label: "Delete", ck_confirm_tone: "danger"}
       ) do
         heroicon_tag "trash", variant: :outline, size: 16, "aria-hidden": "true"
       end

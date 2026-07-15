@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.27.9] - 2026-07-15
+## [0.27.10] - 2026-07-15
+
+### Changed
+- **Trimmed noisy copy and made the delete UX consistent.** The Azure API-version field hint is now just "Optional. Leave blank to use Azure's v1 API." The provider delete control is a plain, always-enabled trash button like every other resource's — the previous disabled button plus a permanent "still in use … remove those references" notice is gone. Attempting to delete an in-use provider now surfaces a short flash on click ("&lt;provider&gt; is in use by N judge runs and can't be deleted.") instead of a persistent banner. The unused `disabled`/`title` options were dropped from the shared delete-trigger helper.
 
 ### Fixed
 - **The Tags API docs were inconsistent about `tag[]` filtering.** The Tags section said every index page could be filtered by tags, but only the Runs and Prompts endpoints documented it — even though the Metrics, Datasets, and Metric Groups list endpoints all support `?tag[]=name` too. All five taggable list endpoints now document `tag[]` filtering and pagination consistently, and the intro names the five resources and spells out the OR semantics.

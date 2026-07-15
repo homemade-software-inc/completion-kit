@@ -166,23 +166,24 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
       expect(response.body).to include("Delete provider")
     end
 
-    it "shows a disabled delete control and explains why for an in-use provider" do
+    it "shows an enabled delete control for an in-use provider without a persistent in-use notice (the server rejects on attempt)" do
       credential = create(:completion_kit_provider_credential, provider: "openai")
       create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1", status: "active", supports_generation: true)
       create(:completion_kit_prompt, llm_model: "gpt-4.1")
 
       get "#{base_path}/#{credential.id}/edit"
-      expect(response.body).to match(/in use/i)
+      expect(response.body).not_to match(/in use/i)
 
       doc = Nokogiri::HTML5(response.body)
       target = "#{base_path}/#{credential.id}"
       delete_form = doc.css("form").select { |f| f["action"] == target }
                        .find { |f| f.css("input[name='_method']").any? { |i| i["value"] == "delete" } }
-      disabled_btn = doc.at_css("button[disabled][aria-label='Delete provider']")
+      trigger = doc.at_css("button[aria-label='Delete provider']")
 
-      expect(delete_form).to be_nil
-      expect(disabled_btn).to be_present
-      expect(disabled_btn["form"]).to be_nil
+      expect(delete_form).to be_present
+      expect(trigger).to be_present
+      expect(trigger.key?("disabled")).to be(false)
+      expect(trigger["form"]).to eq(delete_form["id"])
     end
 
     it "renders the delete control as its own form, not nested in the edit form (so it issues DELETE, not a Turbo-swallowed PATCH)" do
