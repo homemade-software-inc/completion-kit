@@ -1,0 +1,12 @@
+<% has_value = kind == "check" ? !passed.nil? : score.present? %>
+<% if has_value && response %>
+  <%= link_to run_response_path(run, response), class: "ck-cmp-score__link", title: "#{side}: open this response (#{run.name})" do %>
+    <% if kind == "check" %>
+      <%= ck_check_badge(passed) %>
+    <% else %>
+      <span class="<%= ck_badge_classes(ck_score_kind(score.to_f)) %>"><%= score %></span>
+    <% end %>
+  <% end %>
+<% else %>
+  <span class="ck-cmp-score__none">—</span>
+<% end %>

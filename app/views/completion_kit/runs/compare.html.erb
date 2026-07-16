@@ -25,11 +25,9 @@
       <tr>
         <th scope="col">Case</th>
         <th scope="col">Metric</th>
-        <th scope="col">A score</th>
-        <th scope="col">B score</th>
+        <th scope="col">A → B</th>
         <th scope="col" class="ck-num">Δ</th>
-        <th scope="col">A version</th>
-        <th scope="col">B version</th>
+        <th scope="col">Version</th>
       </tr>
     </thead>
       <% @comparison[:rows].each do |row| %>
@@ -55,44 +53,25 @@
               </td>
             <% end %>
             <td class="ck-compare-metric" data-label="Metric" title="<%= pm[:metric_name] %>"><%= pm[:metric_name] %></td>
-            <td data-label="A score">
-              <% if pm[:kind] == "check" %>
-                <% if pm[:left_passed].nil? %>
-                  <span class="ck-meta-copy">—</span>
-                <% else %>
-                  <%= ck_check_badge(pm[:left_passed]) %>
-                <% end %>
-              <% elsif pm[:left_score] %>
-                <span class="<%= ck_badge_classes(ck_score_kind(pm[:left_score].to_f)) %>"><%= pm[:left_score] %></span>
-              <% else %>
-                <span class="ck-meta-copy">—</span>
-              <% end %>
+            <td class="ck-cmp-score" data-label="A → B">
+              <span class="ck-cmp-score__pair">
+                <%= render "compare_score", kind: pm[:kind], passed: pm[:left_passed], score: pm[:left_score], response: row[:left_response], run: @run, side: "A" %>
+                <span class="ck-cmp-score__arrow" aria-hidden="true">→</span>
+                <%= render "compare_score", kind: pm[:kind], passed: pm[:right_passed], score: pm[:right_score], response: row[:right_response], run: @other_run, side: "B" %>
+              </span>
             </td>
-            <td data-label="B score">
+            <td class="ck-num ck-cmp-delta" data-label="Δ">
               <% if pm[:kind] == "check" %>
-                <% if pm[:right_passed].nil? %>
-                  <span class="ck-meta-copy">—</span>
-                <% else %>
-                  <%= ck_check_badge(pm[:right_passed]) %>
-                <% end %>
-              <% elsif pm[:right_score] %>
-                <span class="<%= ck_badge_classes(ck_score_kind(pm[:right_score].to_f)) %>"><%= pm[:right_score] %></span>
-              <% else %>
-                <span class="ck-meta-copy">—</span>
-              <% end %>
-            </td>
-            <td class="ck-num" data-label="Δ">
-              <% if pm[:kind] == "check" %>
-                <%= ck_result_change_badge(pm[:result_change]) || content_tag(:span, "—", class: "ck-meta-copy") %>
+                <%= ck_result_change_badge(pm[:result_change]) || content_tag(:span, "—", class: "ck-cmp-score__none") %>
               <% elsif pm[:delta] %>
-                <% delta_class = pm[:delta] > 0 ? "ck-delta--positive" : pm[:delta] < 0 ? "ck-delta--negative" : "ck-delta--zero" %>
-                <span class="ck-delta <%= delta_class %>"><%= pm[:delta].positive? ? "+#{pm[:delta]}" : pm[:delta].to_s %></span>
+                <% d = pm[:delta] %>
+                <% dcls = d > 0 ? "ck-delta--positive" : d < 0 ? "ck-delta--negative" : "ck-delta--zero" %>
+                <span class="ck-delta <%= dcls %>"><span class="ck-delta__arrow" aria-hidden="true"><%= d > 0 ? "▲" : d < 0 ? "▼" : "=" %></span><%= d > 0 ? "+#{d}" : d.to_s %></span>
               <% else %>
-                <span class="ck-meta-copy">—</span>
+                <span class="ck-cmp-score__none">—</span>
               <% end %>
             </td>
-            <td data-label="A version"><% if pm[:left_version_label] %><span class="ck-source-chip ck-source-chip--current"><%= pm[:left_version_label] %></span><% end %></td>
-            <td data-label="B version"><% if pm[:right_version_label] %><span class="ck-source-chip ck-source-chip--current"><%= pm[:right_version_label] %></span><% end %></td>
+            <td class="ck-cmp-ver" data-label="Version"><% lv = pm[:left_version_label]; rv = pm[:right_version_label] %><% if lv && rv && lv != rv %><span class="ck-cmp-ver__pair"><%= lv %><span class="ck-cmp-ver__arrow" aria-hidden="true">→</span><%= rv %></span><% elsif lv || rv %><span class="ck-cmp-ver__one"><%= lv || rv %></span><% end %></td>
           </tr>
         <% end %>
         </tbody>

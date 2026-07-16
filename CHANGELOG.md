@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.4] - 2026-07-15
+
+### Changed
+- **Run comparison table is now built around the decision.** The separate "A score" and "B score" columns are collapsed into one "A → B" column that shows both scores as badges side by side, so you see the shift (for example 5.0 → 3.0, green to amber) at a glance. Both badges are links: click either one to open that side's full response and read the judge's reasoning, so you can dig into the details before deciding. The delta is promoted to a single indicator with direction and colour: a green ▲ when B improved, a red ▼ when it regressed, and a muted "=" when nothing changed. The two version columns are folded into one that shows the version once when A and B match and "v1 → v2" only when they differ, so identical versions stop taking up space. The metric name is brightened and sits right next to its scores instead of drifting to the far left of the row, so it no longer gets lost as your eye travels across. When B has no matching response the cell reads "5.0 → —".
+
 ## [0.28.3] - 2026-07-15
 
 ### Changed
