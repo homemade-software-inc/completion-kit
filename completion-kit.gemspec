@@ -31,6 +31,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "sqlite3", "~> 2.9"
   spec.add_development_dependency "rspec-rails", "~> 8.0"
   spec.add_development_dependency "factory_bot_rails", "~> 6.2"
-  spec.add_development_dependency "simplecov", "~> 0.22"
+  spec.add_development_dependency "simplecov", "~> 1.0"
   spec.add_development_dependency "solid_queue", "~> 1.0"
 end

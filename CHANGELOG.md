@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Routine dependency updates (non-security).** Bumped `puma` (7.2.1 → 8.0.2), `solid_cable` (3.0.12 → 4.0.0), `sqlite3` (2.9.2 → 2.9.5), and `bootsnap` (1.23.0 → 1.24.6) in the standalone app, and raised the `simplecov` development dependency to `~> 1.0` (1.0.1). Verified: full suite green at 100% line and branch coverage under simplecov 1.0, the standalone boots and serves under puma 8, and Solid Cable 4 broadcasts write correctly against the existing `solid_cable_messages` schema (its schema already matches v4, so no migration is needed).
+
 ## [0.28.5] - 2026-07-17
 
 ### Security
