@@ -192,6 +192,10 @@ RSpec.describe "CompletionKit runs", type: :request do
     get "#{base_path}/#{run.id}", params: { page: 999 }
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Page 2 of 2")
+
+    get "#{base_path}/#{run.id}", params: { page: ["1"] }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Page 1 of 2")
   end
 
   it "sorts responses by rubric score when the run is gradable" do

@@ -18,7 +18,7 @@ module CompletionKit
     discard_on ActiveJob::DeserializationError
 
     rescue_from(StandardError) do |error|
-      if error.is_a?(CompletionKit::ModelDiscoveryService::DiscoveryError)
+      unless error.is_a?(CompletionKit::ModelDiscoveryService::DiscoveryError)
         Rails.error.report(error, handled: true, context: { job: self.class.name, provider_credential_id: arguments.first })
       end
       credential = ProviderCredential.find_by(id: arguments.first)

@@ -63,9 +63,19 @@ module CompletionKit
       return nil if body.blank?
       data = JSON.parse(body)
       err = data["error"]
-      (err.is_a?(Hash) && err["message"]) || data["message"] || (err.is_a?(String) && err) || nil
+      message = (err.is_a?(Hash) && err["message"]) || data["message"] || (err.is_a?(String) && err) || nil
+      redact_secrets(message)
     rescue JSON::ParserError
-      body.to_s.truncate(200)
+      redact_secrets(body.to_s.truncate(200))
+    end
+
+    def redact_secrets(text)
+      return text if text.blank?
+      redacted = text.to_s
+      redacted = redacted.gsub(@api_key, "[REDACTED]") if @api_key.present?
+      redacted = redacted.gsub(/\bsk-[A-Za-z0-9_-]{6,}/, "[REDACTED]")
+      redacted = redacted.gsub(/\bBearer\s+\S+/i, "Bearer [REDACTED]")
+      redacted.gsub(/(API key provided:\s*)\S+/i, '\1[REDACTED]')
     end
 
     def fetch_openai_models
@@ -336,11 +346,11 @@ module CompletionKit
         end
       else
         model.supports_generation = false
-        model.generation_error = "#{response.status} - #{response.body.truncate(500)}"
+        model.generation_error = redact_secrets("#{response.status} - #{response.body.truncate(500)}")
       end
     rescue StandardError => e
       model.supports_generation = false
-      model.generation_error = e.message
+      model.generation_error = redact_secrets(e.message)
     end
 
     def probe_judging(model)
@@ -364,11 +374,11 @@ module CompletionKit
         end
       else
         model.supports_judging = false
-        model.judging_error = "#{response.status} - #{response.body.truncate(500)}"
+        model.judging_error = redact_secrets("#{response.status} - #{response.body.truncate(500)}")
       end
     rescue StandardError => e
       model.supports_judging = false
-      model.judging_error = e.message
+      model.judging_error = redact_secrets(e.message)
     end
 
     OPENAI_REASONING_PROBE_BUDGET = 65_536

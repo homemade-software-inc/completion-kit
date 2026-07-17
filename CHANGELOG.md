@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.5] - 2026-07-17
+
+### Security
+- **Provider API keys no longer leak into error tracking or the database on a bad-credential model discovery.** (#118) When a provider returned 401/403 during model discovery, the response body (which for OpenAI echoes the submitted key) was raised as the error message and then sent to the host app's error reporter (Honeybadger/Sentry/etc.) and stored in the `discovery_error` column. Two changes: the discovery service now redacts the submitted key, `sk-…` keys, `Bearer …` tokens, and `API key provided: …` echoes from every provider error message (discovery and per-model probe errors), and the discovery job now treats an expected `DiscoveryError` (a bad key is user input, not an app fault) as handled and does not report it to `Rails.error`, while genuinely unexpected errors are still reported.
+
+### Fixed
+- **A crafted array `page` parameter no longer 500s the run page.** (#114) `RunsController#show` did `params[:page].to_i`, which raised `NoMethodError` on a non-scalar param such as `?page[]=1`. It now coerces with `params[:page].to_s.to_i`, so any non-scalar falls back to page 1.
+
+### Changed
+- **Dependency and Dependabot housekeeping.** Bumped vulnerable transitive gems flagged by Dependabot: `faraday` (recursion DoS), `concurrent-ruby`, `nokogiri`, `net-imap`, and `websocket-driver`, in both the engine and standalone lockfiles. Added the `standalone/` directory to `.github/dependabot.yml`, which previously only watched the engine root, so the deployed app's dependencies are now covered too.
+
 ## [0.28.4] - 2026-07-15
 
 ### Changed

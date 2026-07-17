@@ -304,6 +304,28 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(CompletionKit::Model.find_by(model_id: "gpt-existing").status).to eq("active")
     end
 
+    it "redacts the submitted key and the provider's key echo from the raised error" do
+      leaky_key = "sk-livesecret1234567890"
+      stub_faraday_get(faraday_response(
+        success: false,
+        status: 401,
+        body: { error: { message: "Incorrect API key provided: #{leaky_key}. You can find your API key at https://platform.openai.com/account/api-keys." } }.to_json
+      ))
+
+      service = described_class.new(config: { provider: "openai", api_key: leaky_key })
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError) do |error|
+        expect(error.message).not_to include(leaky_key)
+        expect(error.message).to include("[REDACTED]")
+        expect(error.message).to include("Invalid API key for openai")
+      end
+    end
+
+    it "raises a label-only DiscoveryError when the provider body carries no message" do
+      stub_faraday_get(faraday_response(success: false, status: 401, body: "{}"))
+      service = described_class.new(config: config)
+      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, "Invalid API key for openai")
+    end
+
     it "raises DiscoveryError with rate-limit label when openai responds with 429" do
       stub_faraday_get(faraday_response(success: false, status: 429, body: "Slow down"))
       service = described_class.new(config: config)

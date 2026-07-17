@@ -16,7 +16,7 @@ module CompletionKit
       @responses_total = @run.responses.count
       @responses_per_page = RESPONSES_PER_PAGE
       @responses_total_pages = [(@responses_total.to_f / RESPONSES_PER_PAGE).ceil, 1].max
-      @responses_page = params[:page].to_i.clamp(1, @responses_total_pages)
+      @responses_page = params[:page].to_s.to_i.clamp(1, @responses_total_pages)
       @responses_offset = (@responses_page - 1) * RESPONSES_PER_PAGE
       @responses = ordered_responses_relation(@run, params[:sort])
                      .includes(:reviews)
