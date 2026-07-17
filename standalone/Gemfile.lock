@@ -91,7 +91,7 @@ GEM
       uri (>= 0.13.1)
     base64 (0.3.0)
     bigdecimal (4.1.1)
-    bootsnap (1.23.0)
+    bootsnap (1.24.6)
       msgpack (~> 1.2)
     bootstrap (5.3.8)
       popper_js (>= 2.11.8, < 3)
@@ -176,7 +176,7 @@ GEM
       railties (>= 7.1)
       stimulus-rails
       turbo-rails
-    msgpack (1.8.0)
+    msgpack (1.8.3)
     net-http (0.9.1)
       uri (>= 0.11.1)
     net-imap (0.6.4.1)
