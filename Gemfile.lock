@@ -257,7 +257,7 @@ GEM
       sprockets-rails
       tilt
     securerandom (0.4.1)
-    simplecov (1.0.1)
+    simplecov (1.0.2)
     solid_queue (1.4.0)
       activejob (>= 7.1)
       activerecord (>= 7.1)
