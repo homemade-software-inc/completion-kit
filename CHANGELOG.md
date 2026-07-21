@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.7] - 2026-07-21
+
+### Changed
+- **The MCP endpoint now serves discovery (`initialize`, `tools/list`) without a token; everything that touches org data still requires one.** (#131) Previously the whole endpoint was gated, so registries and health-checkers could not introspect the toolbox without credentials and a hosted server showed as "requires authentication" instead of surfacing its tools. Auth is now method-aware: `initialize`, `tools/list`, and `notifications/initialized` return only static, org-agnostic data (protocol capabilities and tool names + input schemas, which are already public API surface) and are answered without a token; `tools/call` and any other data method still require the Bearer token, which identifies the org. The open methods stay bounded by the same per-IP API rate limit as the rest of the API (120 requests/minute by default), and MCP session rows self-prune on every new session and expire after an hour.
+
+### Fixed
+- **`McpController` could stop a host app from booting.** (#130) The GET/405 fix in 0.28.6 added `skip_before_action :authenticate_api!, only: :stream` without `raise: false`, which raised at class-load time in any host app that had removed or replaced the engine's `authenticate_api!` callback (for example an app with its own tenant-aware auth). The skip now passes `raise: false`, so it is a no-op when the callback is not in the chain, matching how the engine's other controllers tolerate host-app customization.
+
 ## [0.28.6] - 2026-07-21
 
 ### Fixed

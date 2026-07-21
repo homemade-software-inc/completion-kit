@@ -9,13 +9,27 @@ RSpec.describe "MCP endpoint", type: :request do
   after { CompletionKit.instance_variable_set(:@config, nil) }
 
   describe "authentication" do
-    it "returns 401 without token" do
-      post mcp_path, params: {jsonrpc: "2.0", method: "initialize", id: 1}.to_json, headers: {"Content-Type" => "application/json"}
+    let(:no_auth) { {"Content-Type" => "application/json"} }
+
+    it "allows initialize without a token (public discovery method)" do
+      post mcp_path, params: {jsonrpc: "2.0", method: "initialize", id: 1}.to_json, headers: no_auth
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["result"]["serverInfo"]["name"]).to eq("CompletionKit")
+    end
+
+    it "allows tools/list without a token (public discovery method)" do
+      post mcp_path, params: {jsonrpc: "2.0", method: "tools/list", id: 2}.to_json, headers: no_auth
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["result"]["tools"]).to be_an(Array)
+    end
+
+    it "returns 401 for a data method (tools/call) without token" do
+      post mcp_path, params: {jsonrpc: "2.0", method: "tools/call", id: 3, params: {name: "prompts_list", arguments: {}}}.to_json, headers: no_auth
       expect(response).to have_http_status(:unauthorized)
     end
 
-    it "returns 401 with wrong token" do
-      post mcp_path, params: {jsonrpc: "2.0", method: "initialize", id: 1}.to_json,
+    it "returns 401 for a data method (tools/call) with wrong token" do
+      post mcp_path, params: {jsonrpc: "2.0", method: "tools/call", id: 3, params: {name: "prompts_list", arguments: {}}}.to_json,
         headers: {"Authorization" => "Bearer wrong", "Content-Type" => "application/json"}
       expect(response).to have_http_status(:unauthorized)
     end

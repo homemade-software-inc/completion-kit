@@ -1,6 +1,8 @@
 module CompletionKit
   class McpController < Api::V1::BaseController
-    skip_before_action :authenticate_api!, only: :stream
+    PUBLIC_METHODS = %w[initialize notifications/initialized tools/list].freeze
+
+    skip_before_action :authenticate_api!, only: [:stream, :handle], raise: false
 
     def stream
       response.set_header("Allow", "POST, DELETE")
@@ -9,6 +11,7 @@ module CompletionKit
 
     def handle
       request_body = JSON.parse(request.body.read)
+      return unless authorize_mcp_method(request_body["method"])
 
       if request_body["method"] == "initialize"
         result = McpDispatcher.initialize_session
@@ -47,6 +50,12 @@ module CompletionKit
     end
 
     private
+
+    def authorize_mcp_method(method)
+      return true if PUBLIC_METHODS.include?(method)
+      authenticate_api!
+      !performed?
+    end
 
     def jsonrpc_response(id, result)
       {jsonrpc: "2.0", id: id, result: result}
