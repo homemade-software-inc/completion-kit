@@ -198,6 +198,37 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("Page 1 of 2")
   end
 
+  it "renders the responses table without a per-row query (no N+1 on fully_reviewed?)" do
+    metric = create(:completion_kit_metric)
+    build_run = ->(row_count) do
+      run = create(:completion_kit_run, prompt: prompt, status: "completed")
+      run.replace_metrics!([metric.id])
+      row_count.times do |i|
+        resp = create(:completion_kit_response, run: run, status: "succeeded", row_index: i, response_text: "body #{i}")
+        create(:completion_kit_review, response: resp, metric: metric, metric_name: "Quality", status: "succeeded", ai_score: 4.0)
+      end
+      run
+    end
+    small = build_run.call(2)
+    large = build_run.call(8)
+
+    query_count = ->(run) do
+      count = 0
+      sub = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
+        payload = ActiveSupport::Notifications::Event.new(*args).payload
+        count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) || payload[:sql].match?(/\A\s*(BEGIN|COMMIT|SAVEPOINT|RELEASE)/i)
+      end
+      get "#{base_path}/#{run.id}"
+      ActiveSupport::Notifications.unsubscribe(sub)
+      count
+    end
+
+    large_count = query_count.call(large)
+    small_count = query_count.call(small)
+    expect(response).to have_http_status(:ok)
+    expect(large_count).to eq(small_count)
+  end
+
   it "sorts responses by rubric score when the run is gradable" do
     run = create(:completion_kit_run, prompt: prompt, name: "Run A")
     r1 = create(:completion_kit_response, run: run)

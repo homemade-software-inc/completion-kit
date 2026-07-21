@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.10] - 2026-07-21
+
+### Fixed
+- **The run page fired a per-row query for the Status column (N+1), independent of response size.** (#133) The page eager-loads `:reviews`, but `Response#fully_reviewed?` called `reviews.where(status: …).pluck(:metric_id)`, which builds a fresh relation and hits the database on every call, discarding the eager-loaded association. `_response_row` calls it for every succeeded row, so a 100-row page ran ~100 extra queries; this was the dominant cost on large runs with short bodies (which the 0.28.9 preview change did not help). It now filters the already-loaded `reviews` collection in memory, matching the other reviewed-state helpers on the model. Combined with the memoized `run.metric_ids`, the responses table now issues a bounded number of queries regardless of row count, verified by a query-count regression test.
+
 ## [0.28.9] - 2026-07-21
 
 ### Fixed
