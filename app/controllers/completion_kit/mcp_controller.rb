@@ -1,5 +1,12 @@
 module CompletionKit
   class McpController < Api::V1::BaseController
+    skip_before_action :authenticate_api!, only: :stream
+
+    def stream
+      response.set_header("Allow", "POST, DELETE")
+      head :method_not_allowed
+    end
+
     def handle
       request_body = JSON.parse(request.body.read)
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.6] - 2026-07-21
+
+### Fixed
+- **The MCP endpoint returned 404 on a `GET`, which failed directory health checks.** (#129) The endpoint only routed `POST` (the JSON-RPC handshake and tool calls) and `DELETE` (session teardown), so a `GET` matched no route and Rails returned 404, which reads to tooling (and registries like Glama) as "endpoint does not exist" even though the server is fully functional over `POST`. A `GET` (and `HEAD`) now returns `405 Method Not Allowed` with an `Allow: POST, DELETE` header, which is the correct streamable-HTTP response for a server that does not offer a server-initiated SSE stream. The probe is answered without a token, so an unauthenticated health check sees `405`, not `401` or `404`.
+
 ### Changed
 - **Routine dependency updates (non-security).** Bumped `puma` (7.2.1 → 8.0.2), `solid_cable` (3.0.12 → 4.0.0), `sqlite3` (2.9.2 → 2.9.5), and `bootsnap` (1.23.0 → 1.24.6) in the standalone app, and raised the `simplecov` development dependency to `~> 1.0` (1.0.1). Verified: full suite green at 100% line and branch coverage under simplecov 1.0, the standalone boots and serves under puma 8, and Solid Cable 4 broadcasts write correctly against the existing `solid_cable_messages` schema (its schema already matches v4, so no migration is needed).
 

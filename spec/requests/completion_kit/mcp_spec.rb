@@ -21,6 +21,15 @@ RSpec.describe "MCP endpoint", type: :request do
     end
   end
 
+  describe "GET /mcp (health-check probe)" do
+    it "returns 405 with an Allow header rather than 404, without requiring a token" do
+      get mcp_path
+      expect(response).to have_http_status(:method_not_allowed)
+      expect(response.headers["Allow"]).to eq("POST, DELETE")
+      expect(response.body).to be_blank
+    end
+  end
+
   describe "POST /mcp initialize" do
     it "returns server info and session ID" do
       post mcp_path, params: {jsonrpc: "2.0", method: "initialize", id: 1}.to_json, headers: auth_headers

@@ -102,6 +102,7 @@ CompletionKit::Engine.routes.draw do
     end
   end
 
+  get "mcp", to: "mcp#stream"
   post "mcp", to: "mcp#handle"
   delete "mcp", to: "mcp#destroy"
 end
