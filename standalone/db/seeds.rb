@@ -365,6 +365,7 @@ seed_run = lambda do |name:, prompt:, dataset:, metrics:, days_ago:, responses:,
       metric = CompletionKit::Metric.find_by!(name: metric_name)
       response.reviews.find_or_create_by!(metric: metric) do |review|
         review.metric_name = metric_name
+        review.metric_version = CompletionKit::MetricVersion.ensure_current_for(metric)
         review.instruction = metric.instruction
         review.status = "succeeded"
         review.ai_score = score
@@ -392,6 +393,80 @@ runs = [
 ]
 
 runs.each { |attrs| seed_run.call(**attrs) }
+
+triage_score_shifts = { "Category Accuracy" => -1, "Urgency Calibration" => 1, "Confidence" => 0 }
+triage_responses_variant = triage_responses.map do |rd|
+  shifted_scores = rd[:scores].map do |metric_name, (score, feedback)|
+    shifted = [[score + triage_score_shifts.fetch(metric_name, 0), 1].max, 5].min
+    [metric_name, [shifted, feedback]]
+  end.to_h
+  rd.merge(scores: shifted_scores)
+end
+seed_run.call(name: "Ticket Triage v1 #A (baseline)", prompt: triage_prompt, dataset: dataset, metrics: triage_metrics, days_ago: 5, responses: triage_responses, tags: %w[customer-support triage])
+seed_run.call(name: "Ticket Triage v1 #B (variant)", prompt: triage_prompt, dataset: dataset, metrics: triage_metrics, days_ago: 5, responses: triage_responses_variant, tags: %w[customer-support triage])
+
+bulk_count = 150
+bulk_csv = (["ticket"] + (1..bulk_count).map { |i| %("Generated support ticket ##{i} for pagination and load testing.") }).join("\n") + "\n"
+bulk_dataset = CompletionKit::Dataset.find_or_create_by!(name: "Bulk Tickets (generated)") do |d|
+  d.csv_data = bulk_csv
+end
+
+bulk_run = CompletionKit::Run.find_or_create_by!(name: "Ticket Triage — bulk 150") do |r|
+  r.prompt = triage_prompt
+  r.dataset = bulk_dataset
+  r.judge_model = "gpt-4.1-mini"
+  r.status = "completed"
+  r.progress_current = bulk_count
+  r.progress_total = bulk_count
+  r.created_at = 3.days.ago
+  r.updated_at = 3.days.ago
+end
+triage_metrics.each_with_index { |m, i| CompletionKit::RunMetric.find_or_create_by!(run: bulk_run, metric: m) { |rm| rm.position = i + 1 } }
+
+if bulk_run.responses.count < bulk_count
+  long_rationale = "The customer describes a detailed, multi-part grievance spanning order history, prior contacts, and a specific resolution demand. " * 18
+  bulk_count.times do |i|
+    input = "Generated support ticket ##{i + 1} for pagination and load testing."
+    response = bulk_run.responses.find_or_create_by!(input_data: input) do |r|
+      r.row_index = i
+      r.created_at = 3.days.ago
+      r.updated_at = 3.days.ago
+      case i % 20
+      when 19
+        r.status = "failed"
+        r.attempts = 5
+        r.error_provider = "openai"
+        r.error_status = 500
+        r.error_message = "The model provider returned a server error while grading this row."
+      when 18
+        r.status = "retrying"
+        r.attempts = 2
+      when 17
+        r.status = "pending"
+      else
+        r.status = "succeeded"
+        category = %w[refund shipping promo_code account_access loyalty churn_risk][i % 6]
+        urgency = %w[low medium high critical][i % 4]
+        rationale = (i % 8).zero? ? long_rationale : "Routine #{category} classification from the ticket body."
+        r.response_text = %({\n  "category": "#{category}",\n  "urgency": "#{urgency}",\n  "rationale": "#{rationale}"\n})
+      end
+    end
+
+    next unless response.status == "succeeded" && response.reviews.empty?
+    triage_metrics.each do |metric|
+      response.reviews.find_or_create_by!(metric: metric) do |review|
+        review.metric_name = metric.name
+        review.metric_version = CompletionKit::MetricVersion.ensure_current_for(metric)
+        review.instruction = metric.instruction
+        review.status = "succeeded"
+        review.ai_score = [5, 4, 3, 4, 5, 2, 4, 3][i % 8]
+        review.ai_feedback = "Seeded review for load-testing row #{i + 1}."
+        review.created_at = 3.days.ago
+        review.updated_at = 3.days.ago
+      end
+    end
+  end
+end
 
 %w[customer-support reply triage summary].each do |tag_name|
   CompletionKit::Tag.find_or_create_by!(name: tag_name)
