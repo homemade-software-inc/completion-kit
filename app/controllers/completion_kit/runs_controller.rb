@@ -11,6 +11,7 @@ module CompletionKit
     end
 
     RESPONSES_PER_PAGE = 100
+    RESPONSE_PREVIEW_CHARS = 700
 
     def show
       @responses_total = @run.responses.count
@@ -19,6 +20,7 @@ module CompletionKit
       @responses_page = params[:page].to_s.to_i.clamp(1, @responses_total_pages)
       @responses_offset = (@responses_page - 1) * RESPONSES_PER_PAGE
       @responses = ordered_responses_relation(@run, params[:sort])
+                     .with_body_preview(RESPONSE_PREVIEW_CHARS)
                      .includes(:reviews)
                      .limit(RESPONSES_PER_PAGE)
                      .offset(@responses_offset)

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.9] - 2026-07-21
+
+### Fixed
+- **The run page fetched the full response body for every row when the table only shows a 600-character preview (~25x over-fetch).** (#132) On a run with long outputs (production averages ~16 KB per response, up to ~19 KB), one 100-row page pulled ~1.5 MB of `response_text` out of Postgres just to truncate each to 600 characters in Ruby, discarding ~96% of it. The responses index now loads a database-side preview via a new `Response.with_body_preview(n)` scope (`SUBSTR(response_text, 1, 700)`, portable across Postgres and SQLite) instead of the full column, cutting the page's response payload about 25x for long-output runs. The full body is still loaded where it is actually needed (the response detail page and the per-row Turbo broadcasts), so nothing else changes. Works on both the default and the score-sorted (gradable) orderings.
+
+### Changed
+- **Restyled the responses pagination control.** The Prev / "Page X of Y · N responses" / Next bar was left-aligned and read as unstyled; it is now centered with a separating top border.
+
 ## [0.28.8] - 2026-07-21
 
 ### Accessibility

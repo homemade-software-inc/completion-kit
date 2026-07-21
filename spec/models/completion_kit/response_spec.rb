@@ -1,6 +1,24 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::Response, type: :model do
+  describe ".with_body_preview" do
+    it "loads only a truncated response_text while keeping the other attributes intact" do
+      response = create(:completion_kit_response, status: "succeeded", response_text: "A" * 2000, attempts: 3)
+
+      previewed = CompletionKit::Response.with_body_preview(700).find(response.id)
+
+      expect(previewed.response_text.length).to eq(700)
+      expect(previewed.status).to eq("succeeded")
+      expect(previewed.attempts).to eq(3)
+      expect(previewed.run_id).to eq(response.run_id)
+    end
+
+    it "leaves the full body available through an ordinary load (detail/broadcast path)" do
+      response = create(:completion_kit_response, status: "succeeded", response_text: "B" * 2000)
+      expect(CompletionKit::Response.find(response.id).response_text.length).to eq(2000)
+    end
+  end
+
   it "allows nil input_data for no-dataset runs" do
     response = build(:completion_kit_response, input_data: nil)
     expect(response).to be_valid

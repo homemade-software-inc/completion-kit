@@ -8,6 +8,11 @@ module CompletionKit
 
     delegate :prompt, to: :run
 
+    scope :with_body_preview, ->(limit) {
+      other_columns = (column_names - ["response_text"]).map { |column| "#{table_name}.#{column}" }
+      select(*other_columns, "SUBSTR(#{table_name}.response_text, 1, #{limit.to_i}) AS response_text")
+    }
+
     validates :response_text, presence: true, if: :requires_response_text?
 
     before_validation :set_default_status, on: :create
