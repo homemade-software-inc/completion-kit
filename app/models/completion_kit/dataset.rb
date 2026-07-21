@@ -19,9 +19,13 @@ module CompletionKit
       return 0 if csv_data.blank?
 
       require "csv"
-      ::CSV.parse(csv_data, headers: true).length
-    rescue ::CSV::MalformedCSVError
-      0
+      @row_count ||= begin
+        count = 0
+        ::CSV.new(csv_data, headers: true).each { count += 1 }
+        count
+      rescue ::CSV::MalformedCSVError
+        0
+      end
     end
 
     def headers

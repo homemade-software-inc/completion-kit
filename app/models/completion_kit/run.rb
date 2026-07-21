@@ -116,16 +116,19 @@ module CompletionKit
       end
     end
 
+    def reviews_for_summary
+      @reviews_for_summary ||= Review.where(response_id: responses.select(:id)).to_a
+    end
+
     def avg_score
-      all_reviews = responses.flat_map(&:reviews)
-      scores = all_reviews.map(&:ai_score).compact.map(&:to_f)
+      scores = reviews_for_summary.map(&:ai_score).compact.map(&:to_f)
       return nil if scores.empty?
 
       (scores.sum / scores.length).round(2)
     end
 
     def metric_averages
-      responses.flat_map(&:reviews).group_by(&:metric_name).filter_map do |name, reviews|
+      reviews_for_summary.group_by(&:metric_name).filter_map do |name, reviews|
         scored = reviews.select { |r| r.ai_score.present? }
         if scored.any?
           scores = scored.map { |r| r.ai_score.to_f }
@@ -141,7 +144,7 @@ module CompletionKit
     end
 
     def check_pass_rate
-      resolved = responses.flat_map(&:reviews).reject { |r| r.passed.nil? }
+      resolved = reviews_for_summary.reject { |r| r.passed.nil? }
       return nil if resolved.empty?
 
       passed = resolved.count { |r| r.passed == true }

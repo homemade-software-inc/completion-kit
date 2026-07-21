@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.11] - 2026-07-21
+
+### Fixed
+- **The run status panel fired an N+1 across the entire run (not the paginated page), dominating the page load.** (#135) `Run#avg_score`, `#metric_averages`, and `#check_pass_rate` each did `responses.flat_map(&:reviews)`, loading every response and then each response's reviews one query at a time, so a 2000-response run ran ~2000 queries (~19s). The three methods now share a single memoized `reviews_for_summary` load (`Review.where(response_id: responses.select(:id))`), so the panel issues one query regardless of run size. Locked in by a query-count regression test. Independent of the #132 and #133 fixes, which is why the page stayed slow after both.
+- **The run page parsed the entire dataset CSV on every load to render a 50-row preview.** (#136) On a 20k-row / 834 KB dataset this cost hundreds of milliseconds of view time and GC churn per load. Three fixes: removed dead code that split the whole CSV into lines for nothing; the dataset-preview modal now reads row by row and stops after 51 (correctly handling quoted newlines) instead of `CSV.parse`-ing the whole file; and `Dataset#row_count` (called twice per page) now streams the count without materializing every row and memoizes the result. On a 10k-row CSV the modal read dropped from ~38 ms to ~0.3 ms.
+
 ## [0.28.10] - 2026-07-21
 
 ### Fixed

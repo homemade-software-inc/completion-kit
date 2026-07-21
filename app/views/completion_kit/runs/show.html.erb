@@ -14,10 +14,6 @@
   </div>
 <% end %>
 
-<% if @run.dataset %>
-  <% dataset_lines = @run.dataset.csv_data.to_s.lines %>
-  <% dataset_preview_lines = dataset_lines.first(50) %>
-<% end %>
 
 <% if CompletionKit.config.judge_agreement_enabled %>
   <% stale_summary = @run.stale_review_summary %>
@@ -130,16 +126,22 @@
       <div class="ck-modal__body">
         <%
           require "csv"
-          parsed_rows = []
           parse_error = nil
+          headers = []
+          body_rows = []
+          remaining = 0
           begin
-            parsed_rows = ::CSV.parse(@run.dataset.csv_data.to_s)
+            reader = ::CSV.new(@run.dataset.csv_data.to_s)
+            headers = reader.shift || []
+            50.times do
+              row = reader.shift
+              break unless row
+              body_rows << row
+            end
+            remaining = [@run.dataset.row_count - body_rows.length, 0].max
           rescue ::CSV::MalformedCSVError => e
             parse_error = e.message
           end
-          headers = parsed_rows.first || []
-          body_rows = parsed_rows.drop(1).first(50)
-          remaining = parsed_rows.drop(1).count - body_rows.count
         %>
         <% if parse_error %>
           <p class="ck-field-hint" style="color: var(--ck-warning); padding: 1rem;">Could not parse CSV: <%= parse_error %></p>

@@ -12,6 +12,29 @@ RSpec.describe CompletionKit::Run, type: :model do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_clear_responses)
   end
 
+  it "computes the status-panel summaries in one query regardless of run size (no N+1)" do
+    metric = create(:completion_kit_metric)
+    run = create(:completion_kit_run)
+    run.replace_metrics!([metric.id])
+    6.times do |i|
+      response = create(:completion_kit_response, run: run, status: "succeeded", row_index: i)
+      create(:completion_kit_review, response: response, metric: metric, metric_name: "Quality", status: "succeeded", ai_score: 4.0)
+    end
+
+    fresh = CompletionKit::Run.find(run.id)
+    count = 0
+    sub = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
+      payload = ActiveSupport::Notifications::Event.new(*args).payload
+      count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) || payload[:sql].match?(/\A\s*(BEGIN|COMMIT|SAVEPOINT|RELEASE)/i)
+    end
+    fresh.avg_score
+    fresh.metric_averages
+    fresh.check_pass_rate
+    ActiveSupport::Notifications.unsubscribe(sub)
+
+    expect(count).to eq(1)
+  end
+
   describe "on_run_created host callback" do
     after { CompletionKit.config.on_run_created = nil }
 
