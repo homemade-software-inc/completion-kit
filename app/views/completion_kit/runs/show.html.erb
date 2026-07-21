@@ -1,3 +1,4 @@
+<% content_for :ck_title, @run.name %>
 <%= turbo_stream_from "completion_kit_run_#{@run.id}" %>
 
 <ol class="ck-breadcrumb">
@@ -117,11 +118,11 @@
 <% end %>
 
 <% if @run.dataset %>
-  <dialog id="dataset-preview-<%= @run.id %>" class="ck-modal" onclick="if(event.target===this)this.close()">
+  <dialog id="dataset-preview-<%= @run.id %>" class="ck-modal" aria-labelledby="dataset-preview-title-<%= @run.id %>" onclick="if(event.target===this)this.close()">
     <article class="ck-modal__panel" tabindex="-1" autofocus onclick="event.stopPropagation()">
       <header class="ck-modal__header">
         <div class="ck-modal__heading">
-          <h2 class="ck-modal__title"><%= @run.dataset.name %></h2>
+          <h2 class="ck-modal__title" id="dataset-preview-title-<%= @run.id %>"><%= @run.dataset.name %></h2>
           <span class="ck-modal__meta"><%= @run.dataset.row_count %> rows</span>
         </div>
         <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">×</button>
@@ -187,12 +188,12 @@
 <table class="ck-results-table ck-responses-table"<%= ' hidden'.html_safe unless @responses.any? %> id="responses_table">
   <thead>
     <tr>
-      <th>#</th>
-      <th>Response</th>
-      <th>Metrics</th>
-      <th>Avg score</th>
-      <th>Status</th>
-      <th></th>
+      <th scope="col">#</th>
+      <th scope="col">Response</th>
+      <th scope="col">Metrics</th>
+      <th scope="col">Avg score</th>
+      <th scope="col">Status</th>
+      <th scope="col"></th>
     </tr>
   </thead>
   <tbody id="run_responses">

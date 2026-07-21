@@ -1,3 +1,4 @@
+<% content_for :ck_title, "Providers" %>
 <% @provider_credentials.each do |pc| %>
   <%= turbo_stream_from "completion_kit_provider_#{pc.id}" %>
 <% end %>

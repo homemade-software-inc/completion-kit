@@ -3,6 +3,7 @@
     <div class="ck-runs-table__identity">
       <span class="ck-run-name">
         <span class="<%= ck_run_dot(run) %>"></span>
+        <span class="ck-visually-hidden"><%= run.status.to_s.humanize %>:</span>
         <%= link_to ck_run_path(run), class: "ck-record-name" do %><strong><%= run.name %></strong><% end %>
       </span>
       <div class="ck-runs-table__config">
@@ -35,14 +36,14 @@
       <div class="ck-metric-bar ck-metric-bar--compact">
         <% metrics.each do |m| %>
           <% if m[:kind] == "check" %>
-            <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(m[:pass_rate]) %>">
+            <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(m[:pass_rate]) %>" role="img" aria-label="<%= m[:name] %> <%= (m[:pass_rate] * 100).round %>% pass rate">
               <span class="ck-metric-pip__bar"></span>
-              <span class="ck-metric-pip__label"><%= m[:name] %> <strong><%= (m[:pass_rate] * 100).round %>%</strong></span>
+              <span class="ck-metric-pip__label" aria-hidden="true"><%= m[:name] %> <strong><%= (m[:pass_rate] * 100).round %>%</strong></span>
             </span>
           <% else %>
-            <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(m[:avg]) %>">
+            <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(m[:avg]) %>" role="img" aria-label="<%= m[:name] %> average score <%= m[:avg] %>">
               <span class="ck-metric-pip__bar"></span>
-              <span class="ck-metric-pip__label"><%= m[:name] %> <strong><%= m[:avg] %></strong></span>
+              <span class="ck-metric-pip__label" aria-hidden="true"><%= m[:name] %> <strong><%= m[:avg] %></strong></span>
             </span>
           <% end %>
         <% end %>

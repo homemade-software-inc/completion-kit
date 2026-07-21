@@ -352,7 +352,9 @@ form.button_to {
 }
 
 .ck-link {
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--ck-text) 40%, transparent);
+  text-underline-offset: 0.15em;
   color: var(--ck-text);
   transition: color 0.15s;
 }
@@ -664,7 +666,7 @@ form.button_to {
 
 .ck-chip {
   background: var(--ck-surface-soft);
-  border: 1px solid var(--ck-line);
+  border: 1px solid var(--ck-line-strong);
   color: var(--ck-muted);
 }
 
@@ -743,7 +745,7 @@ tr:hover .ck-chip--publish {
 
 .ck-badge--pending {
   background: var(--ck-surface-soft);
-  border: 1px solid var(--ck-line);
+  border: 1px solid var(--ck-line-strong);
   color: var(--ck-dim);
 }
 
@@ -4309,7 +4311,8 @@ table.ck-runs-table {
   transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.ck-response-row--expanded .ck-response-cell__preview {
+.ck-response-row--expanded .ck-response-cell__preview,
+.ck-responses-table tbody tr:focus-within .ck-response-cell__preview {
   -webkit-line-clamp: 12;
   line-clamp: 12;
   max-height: 22em;
@@ -4936,7 +4939,7 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
   text-transform: lowercase;
   white-space: nowrap;
   background: color-mix(in srgb, var(--mark-color) 38%, transparent);
-  color: color-mix(in srgb, var(--mark-color) 88%, var(--ck-text));
+  color: color-mix(in srgb, var(--mark-color) 35%, white);
 }
 
 .tag-mark::before {
@@ -4995,8 +4998,8 @@ a.tag:hover, label.tag:hover { filter: brightness(1.12); }
 .ck-tag-filter .tag-mark:not(.tag-mark--off),
 .ck-metric-tag-filter .tag-mark:not(.tag-mark--off) {
   background: color-mix(in srgb, var(--mark-color) 38%, transparent);
-  color: color-mix(in srgb, var(--mark-color) 95%, var(--ck-text));
-  border-color: color-mix(in srgb, var(--mark-color) 50%, transparent);
+  color: color-mix(in srgb, var(--mark-color) 42%, white);
+  border-color: color-mix(in srgb, var(--mark-color) 70%, transparent);
 }
 
 /* Unselected state — same shape, neutral outline + muted text */
@@ -6486,4 +6489,24 @@ a.tag-mark {
   text-transform: uppercase;
   color: var(--ck-muted);
   margin-right: 0.2rem;
+}
+
+.ck-slider:focus-visible {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 4px;
+}
+.ck-select__option:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--ck-accent);
+}
+.ck-disclosure-toggle:focus-visible {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 2px;
+}
+.ck-settings-menu__trigger:focus-visible {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 2px;
+}
+.ck-tag-picker__input:focus-visible {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 2px;
 }

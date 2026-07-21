@@ -1,3 +1,4 @@
+<% content_for :ck_title, @metric.name %>
 <ol class="ck-breadcrumb">
   <li><%= link_to "Metrics", metrics_path %></li>
   <li><%= @metric.name %></li>
@@ -125,11 +126,11 @@
     <% pred = predecessor_of[v] %>
     <% next unless v.change_summary_against(pred) %>
     <% vs = v.validation_summary %>
-    <dialog id="ck-mvdiff-<%= v.id %>" class="ck-modal" onclick="if(event.target===this)this.close()">
+    <dialog id="ck-mvdiff-<%= v.id %>" class="ck-modal" aria-labelledby="ck-mvdiff-title-<%= v.id %>" onclick="if(event.target===this)this.close()">
       <article class="ck-modal__panel" tabindex="-1" onclick="event.stopPropagation()">
         <header class="ck-modal__header">
           <div class="ck-modal__heading">
-            <h2 class="ck-modal__title"><%= pred.version_label %> &rarr; <%= v.version_label %></h2>
+            <h2 class="ck-modal__title" id="ck-mvdiff-title-<%= v.id %>"><%= pred.version_label %> &rarr; <%= v.version_label %></h2>
             <span class="ck-modal__meta">What changed in <%= v.version_label %><% if v.current? %> (live)<% elsif v.draft? %> (draft)<% end %></span>
           </div>
           <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">&times;</button>

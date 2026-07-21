@@ -7,22 +7,22 @@ SimpleCov.start do
 
   track_files "{app,lib,config}/**/*.rb"
 
-  add_filter "/spec/"
-  add_filter "/db/"
-  add_filter "/vendor/"
-  add_filter "/gems/"
-  add_filter "/pkg/"
-  add_filter "/app/assets/"
-  add_filter "/app/views/"
-  add_filter "/lib/tasks/"
-  add_filter "/lib/generators/completion_kit/templates/"
-  add_filter "/lib/completion_kit/engine.rb"
+  skip "/spec/"
+  skip "/db/"
+  skip "/vendor/"
+  skip "/gems/"
+  skip "/pkg/"
+  skip "/app/assets/"
+  skip "/app/views/"
+  skip "/lib/tasks/"
+  skip "/lib/generators/completion_kit/templates/"
+  skip "/lib/completion_kit/engine.rb"
 
-  add_group "Controllers", "app/controllers"
-  add_group "Models", "app/models"
-  add_group "Services", "app/services"
-  add_group "Engine", "lib/completion_kit"
-  add_group "Generators", "lib/generators"
+  group "Controllers", "app/controllers"
+  group "Models", "app/models"
+  group "Services", "app/services"
+  group "Engine", "lib/completion_kit"
+  group "Generators", "lib/generators"
 end
 
 RSpec.configure do |config|

@@ -119,7 +119,7 @@
     </div>
 
     <div class="ck-field" id="metrics-field">
-      <label class="ck-label">Metrics</label>
+      <p class="ck-label" id="run_metrics_label">Metrics</p>
       <% if @all_metrics.empty? %>
         <p class="ck-field-hint" style="color: var(--ck-warning);">No metrics yet.&ensp;<%= link_to "Create a metric", new_metric_path, class: "ck-link" %></p>
       <% else %>
@@ -158,7 +158,7 @@
           </div>
         <% end %>
 
-        <div class="ck-metric-checkboxes" data-metric-checkboxes>
+        <div class="ck-metric-checkboxes" data-metric-checkboxes role="group" aria-labelledby="run_metrics_label">
           <% @all_metrics.each do |metric| %>
             <label class="ck-checkbox-label" data-metric-tags="<%= metric.tag_names.join(",") %>" data-compare-expected="<%= metric.check? && metric.check_config.to_h["compare_to"] == "expected" ? "1" : "0" %>">
               <%= check_box_tag "run[metric_ids][]", metric.id, run.metric_ids.include?(metric.id), class: "ck-checkbox", id: "run_metric_#{metric.id}" %>

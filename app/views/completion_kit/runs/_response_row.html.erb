@@ -15,14 +15,14 @@
       <span class="ck-metric-bar ck-metric-bar--compact">
         <% pip_reviews.each do |r| %>
           <% if r.ai_score.present? %>
-            <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(r.ai_score.to_f) %>">
+            <span class="ck-metric-pip ck-metric-pip--<%= ck_score_kind(r.ai_score.to_f) %>" role="img" aria-label="<%= r.metric_name %> score <%= r.ai_score %>">
               <span class="ck-metric-pip__bar"></span>
-              <span class="ck-metric-pip__label"><%= r.metric_name %> <strong><%= r.ai_score %></strong></span>
+              <span class="ck-metric-pip__label" aria-hidden="true"><%= r.metric_name %> <strong><%= r.ai_score %></strong></span>
             </span>
           <% else %>
-            <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(r.passed ? 1.0 : 0.0) %>">
+            <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(r.passed ? 1.0 : 0.0) %>" role="img" aria-label="<%= r.metric_name %> <%= r.passed ? "Pass" : "Fail" %>">
               <span class="ck-metric-pip__bar"></span>
-              <span class="ck-metric-pip__label"><%= r.metric_name %> <strong><%= r.passed ? "Pass" : "Fail" %></strong></span>
+              <span class="ck-metric-pip__label" aria-hidden="true"><%= r.metric_name %> <strong><%= r.passed ? "Pass" : "Fail" %></strong></span>
             </span>
           <% end %>
         <% end %>
@@ -69,5 +69,5 @@
             onclick: "event.stopPropagation();" %>
     <% end %>
   </td>
-  <td class="ck-results-table__arrow"><% if clickable %>&rarr;<% end %></td>
+  <td class="ck-results-table__arrow"><% if clickable %><span aria-hidden="true">&rarr;</span><% end %></td>
 </tr>

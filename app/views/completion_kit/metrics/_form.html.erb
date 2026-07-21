@@ -138,7 +138,7 @@
               <input type="hidden" name="metric[rubric_bands][<%= index %>][stars]" value="<%= band["stars"] %>">
             </div>
             <div class="ck-rubric-row__fields">
-              <textarea name="<%= target_name %>" rows="2" class="ck-input ck-input--area"><%= band["description"] %></textarea>
+              <textarea name="<%= target_name %>" rows="2" class="ck-input ck-input--area" aria-label="Rubric description for the <%= band["stars"] %>-star rating"><%= band["description"] %></textarea>
               <% if band_changed %>
                 <div class="ck-inline-suggestion ck-inline-suggestion--band">
                   <div class="ck-inline-suggestion__head">

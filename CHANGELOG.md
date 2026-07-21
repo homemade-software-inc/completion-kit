@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.8] - 2026-07-21
+
+### Accessibility
+- **WCAG 2.1 AA pass over the authenticated product surfaces (prompts, datasets, metrics, metric groups, runs, tags, providers), part 1 of 2.** (#126) An axe-core sweep across 23 surfaces plus a manual code audit produced a set of shared-component fixes, now applied:
+  - **Contrast.** Tag colour pills (`.tag-mark`) put same-hue text on a same-hue fill (2.3–4.4:1); the label is recoloured to a light tint of the hue so every tag clears 4.5:1. This cleared the entire contrast cluster (was ~115 axe nodes across the tag-showing pages). Chip and pending-badge borders were raised to `--ck-line-strong` for 3:1 non-text contrast.
+  - **Use of colour.** Metric pips and the run-status dot conveyed pass/fail/score by colour only, with the text label removed from the accessibility tree; each pip is now `role="img"` with an `aria-label` ("Tone score 5.0", "Coverage 80% pass rate"), and the run-status dot carries a visually-hidden status word.
+  - **Keyboard.** Focus-visible rings were added to the temperature slider, select options, disclosure toggles, the tag-picker input, and the settings menu (they set `outline: none` with no replacement). The responses table's hover-to-expand now also expands on keyboard focus (`:focus-within`). Version-history and suggestion rows that navigated by click only now carry a real keyboard-reachable link.
+  - **Names and structure.** Every page now sets a distinct `<title>` (was all "CompletionKit"). Icon-only controls (copy, the `Δ` and `→`/`↗` glyphs, diff triggers) got accessible names with the decorative glyphs hidden from screen readers. The dataset-preview, metric-version-diff, and prompt-version-diff dialogs got `aria-labelledby`. Metric rubric-editor textareas got labels; form validation errors are now tied to their fields via the shared `aria-invalid`/`aria-describedby` helpers; the metrics checkbox groups became labelled `role="group"`s. In-flow `.ck-link` links are underlined so they are not distinguished by colour alone.
+- Verified with axe-core (0 violations across all 23 surfaces), a keyboard walkthrough (focus rings, focus-driven expand, tab reachability), and the full suite. The remaining part 2 (screen-reader announcement of live run/discovery progress) is held pending a screen-reader verification session.
+
+### Changed
+- Migrated the SimpleCov config off the APIs deprecated in SimpleCov 1.0 (`add_filter`/`add_group` → `skip`/`group`); coverage enforcement is unchanged.
+
 ## [0.28.7] - 2026-07-21
 
 ### Changed

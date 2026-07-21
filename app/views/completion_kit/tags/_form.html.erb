@@ -7,18 +7,16 @@
 <% end %>
 <%= form_with(model: tag, local: true) do |form| %>
   <div class="ck-card ck-form-card">
-    <% name_error = tag.errors[:name].first %>
     <div class="ck-field">
       <%= form.label :name, "Tag name", class: "ck-label" %>
       <%= form.text_field :name,
             id: "tag_name",
-            class: ["ck-input", ("ck-input--error" if name_error)].compact.join(" "),
+            class: ["ck-input", ("ck-input--error" if tag.errors[:name].any?)].compact.join(" "),
             placeholder: "e.g. production",
             autofocus: true,
-            "aria-invalid": name_error ? "true" : nil %>
-      <% if name_error %>
-        <p class="ck-field-error" role="alert"><%= name_error %></p>
-      <% elsif !tag.persisted? %>
+            **ck_field_aria(form, :name) %>
+      <%= ck_field_error(form, :name) %>
+      <% if tag.errors[:name].empty? && !tag.persisted? %>
         <p class="ck-hint">Color is auto-assigned from a 10-color palette.</p>
       <% end %>
     </div>

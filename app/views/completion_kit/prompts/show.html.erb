@@ -1,3 +1,4 @@
+<% content_for :ck_title, @prompt.name %>
 <ol class="ck-breadcrumb">
   <li><%= link_to "Prompts", prompts_path %></li>
   <li><%= @prompt.name %></li>
@@ -15,7 +16,7 @@
     <% end %>
     <div class="ck-endpoint">
       <code class="ck-endpoint__url" id="prompt_endpoint"><%= request.base_url %><%= api_v1_prompt_path(@prompt.slug) %></code>
-      <button type="button" class="ck-icon-btn" title="Copy endpoint" onclick="navigator.clipboard.writeText(document.getElementById('prompt_endpoint').textContent)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg></button>
+      <button type="button" class="ck-icon-btn" title="Copy endpoint" aria-label="Copy endpoint" onclick="navigator.clipboard.writeText(document.getElementById('prompt_endpoint').textContent)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg></button>
     </div>
     <% if @prompt.tags.any? %>
       <div class="tag-marks-row">
@@ -72,7 +73,7 @@
             <td>
               <div class="ck-version-cell">
                 <div class="ck-version-cell__label" onclick="event.stopPropagation()">
-                  <strong>v<%= v.version_number %></strong>
+                  <%= link_to prompt_path(v), class: "ck-record-name" do %><strong>v<%= v.version_number %></strong><% end %>
                   <% if v.current? %>
                     <span class="ck-chip">Published</span>
                   <% else %>
@@ -80,7 +81,7 @@
                   <% end %>
                 </div>
                 <% if version_changed.call(v, pred) %>
-                  <button type="button" class="ck-cell-link ck-cell-link--delta" title="What changed from v<%= pred.version_number %>" onclick="event.stopPropagation();document.getElementById('ck-vdiff-<%= v.id %>').showModal()">&Delta;</button>
+                  <button type="button" class="ck-cell-link ck-cell-link--delta" title="What changed from v<%= pred.version_number %>" aria-label="What changed from v<%= pred.version_number %>" onclick="event.stopPropagation();document.getElementById('ck-vdiff-<%= v.id %>').showModal()"><span aria-hidden="true">&Delta;</span></button>
                 <% end %>
               </div>
             </td>
@@ -106,11 +107,11 @@
   <% versions.each do |v| %>
     <% pred = predecessor_of[v] %>
     <% next unless version_changed.call(v, pred) %>
-    <dialog id="ck-vdiff-<%= v.id %>" class="ck-modal" onclick="if(event.target===this)this.close()">
+    <dialog id="ck-vdiff-<%= v.id %>" class="ck-modal" aria-labelledby="ck-vdiff-title-<%= v.id %>" onclick="if(event.target===this)this.close()">
       <article class="ck-modal__panel" tabindex="-1" autofocus onclick="event.stopPropagation()">
         <header class="ck-modal__header">
           <div class="ck-modal__heading">
-            <h2 class="ck-modal__title">v<%= pred.version_number %> &rarr; v<%= v.version_number %></h2>
+            <h2 class="ck-modal__title" id="ck-vdiff-title-<%= v.id %>">v<%= pred.version_number %> <span aria-hidden="true">&rarr;</span> v<%= v.version_number %></h2>
             <span class="ck-modal__meta">What changed in <%= v.version_label %><% if v.current? %> (published)<% end %></span>
           </div>
           <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">&times;</button>
@@ -168,11 +169,11 @@
       <tbody>
         <% suggestions.each do |s| %>
           <tr onclick="window.location='<%= suggestion_path(s, from: "prompt") %>'" style="cursor: pointer;">
-            <td><strong><%= s.run.name %></strong></td>
+            <td><%= link_to suggestion_path(s, from: "prompt"), class: "ck-record-name" do %><strong><%= s.run.name %></strong><% end %></td>
             <td class="ck-meta-copy"><%= truncate(s.reasoning.to_s, length: 100) %></td>
             <td><%= s.applied_at? ? content_tag(:span, "Applied", class: "ck-chip", style: "background: var(--ck-success-soft); color: var(--ck-success);") : "&mdash;".html_safe %></td>
             <td class="ck-meta-copy"><time data-relative-time datetime="<%= s.created_at.utc.iso8601 %>"><%= time_ago_in_words(s.created_at) %> ago</time></td>
-            <td class="ck-results-table__arrow">&rarr;</td>
+            <td class="ck-results-table__arrow" aria-hidden="true">&rarr;</td>
           </tr>
         <% end %>
       </tbody>

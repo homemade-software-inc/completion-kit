@@ -1,3 +1,4 @@
+<% content_for :ck_title, "#{@run.name} vs #{@other_run.name}" %>
 <ol class="ck-breadcrumb">
   <li><%= link_to "Runs", runs_path %></li>
   <li><%= link_to @run.name, run_path(@run) %></li>
@@ -26,7 +27,7 @@
         <th scope="col">Case</th>
         <th scope="col">Metric</th>
         <th scope="col">A → B</th>
-        <th scope="col" class="ck-num">Δ</th>
+        <th scope="col" class="ck-num"><span aria-hidden="true">Δ</span><span class="ck-visually-hidden">Delta (B minus A)</span></th>
         <th scope="col">Version</th>
       </tr>
     </thead>
