@@ -32,7 +32,7 @@ RSpec.describe "CompletionKit boot smoke" do
     expect { silently_load(File.expand_path("../../lib/completion_kit/engine.rb", __dir__)) }.not_to raise_error
     expect { silently_load(File.expand_path("../../lib/completion_kit.rb", __dir__)) }.not_to raise_error
 
-    expect(CompletionKit::VERSION).to eq("0.28.11")
+    expect(CompletionKit::VERSION).to eq("0.28.12")
     expect(CompletionKit::Engine).to be < Rails::Engine
     expect(CompletionKit::ApplicationController).to be < ActionController::Base
     expect(CompletionKit::ApplicationRecord).to be < ActiveRecord::Base
@@ -82,6 +82,7 @@ RSpec.describe "CompletionKit boot smoke" do
     expect(config.high_quality_threshold).to eq(4)
     expect(config.medium_quality_threshold).to eq(3)
     expect(config.judge_examples_from_reviews).to eq(false)
+    expect(config.max_upload_bytes).to eq(25 * 1024 * 1024)
 
     asset_initializer = CompletionKit::Engine.initializers.find { |initializer| initializer.name == "completion_kit.assets" }
     assets = Struct.new(:precompile).new([])

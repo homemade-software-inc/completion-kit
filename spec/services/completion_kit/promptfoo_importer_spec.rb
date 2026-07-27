@@ -5,6 +5,23 @@ RSpec.describe CompletionKit::PromptfooImporter do
     described_class.call(yaml)
   end
 
+  it "rejects content larger than the configured upload limit without parsing it" do
+    original = CompletionKit.config.max_upload_bytes
+    CompletionKit.config.max_upload_bytes = 16
+    result = import("prompts:\n  - hello world this is over the tiny limit\n")
+    expect(result.ok).to be(false)
+    expect(result.error).to match(/too large/)
+  ensure
+    CompletionKit.config.max_upload_bytes = original
+  end
+
+  it "does not expand YAML aliases (alias-bomb defense)" do
+    yaml = "a: &anchor hi\nprompts:\n  - *anchor\n"
+    result = import(yaml)
+    expect(result.ok).to be(false)
+    expect(result.error).to match(/Could not parse YAML/)
+  end
+
   let(:config) do
     <<~YAML
       providers:

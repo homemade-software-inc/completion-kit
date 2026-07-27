@@ -53,6 +53,17 @@ RSpec.describe "API V1 Datasets", type: :request do
       expect(response).to have_http_status(:created)
       expect(CompletionKit::Dataset.last.csv_data).to include("content,expected_output")
     end
+
+    it "rejects an upload larger than the configured limit with 413" do
+      CompletionKit.config.max_upload_bytes = 8
+      file = Rack::Test::UploadedFile.new(StringIO.new("content,expected_output\nhi,hello\n"), "text/csv", original_filename: "big.csv")
+
+      expect do
+        post "/completion_kit/api/v1/datasets", params: {name: "Big", file: file}, headers: {"Authorization" => "Bearer #{token}"}
+      end.not_to change(CompletionKit::Dataset, :count)
+
+      expect(response).to have_http_status(:payload_too_large)
+    end
   end
 
   describe "PATCH /api/v1/datasets/:id" do

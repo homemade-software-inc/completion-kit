@@ -16,6 +16,10 @@ module CompletionKit
     end
 
     def call
+      if @content.bytesize > CompletionKit.config.max_upload_bytes
+        return failure("The import is too large. The limit is #{CompletionKit.config.max_upload_bytes / (1024 * 1024)} MB.")
+      end
+
       config = parse
       return failure("Could not parse YAML: #{@parse_error}") if config.nil?
       return failure("Top-level YAML must be a mapping of promptfoo config keys.") unless config.is_a?(Hash)
@@ -34,7 +38,7 @@ module CompletionKit
     private
 
     def parse
-      YAML.safe_load(@content, aliases: true)
+      YAML.safe_load(@content)
     rescue Psych::Exception => e
       @parse_error = e.message
       nil

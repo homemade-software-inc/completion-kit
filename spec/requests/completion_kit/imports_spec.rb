@@ -66,6 +66,17 @@ RSpec.describe "CompletionKit promptfoo import (web)", type: :request do
       expect(response.body).to include("Imported prompt 1")
     end
 
+    it "rejects an upload larger than the configured limit with 413" do
+      original = CompletionKit.config.max_upload_bytes
+      CompletionKit.config.max_upload_bytes = 8
+      upload = Rack::Test::UploadedFile.new(StringIO.new(yaml_full), "application/x-yaml", original_filename: "big.yaml")
+
+      expect { post import_path, params: { file: upload } }.not_to change(CompletionKit::Prompt, :count)
+      expect(response).to have_http_status(:payload_too_large)
+    ensure
+      CompletionKit.config.max_upload_bytes = original
+    end
+
     it "summarizes skipped prompts, a skipped dataset, and matched/unmatched providers" do
       create(:completion_kit_provider_credential, provider: "openai")
 

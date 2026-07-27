@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.12] - 2026-07-27
+
+### Security
+- **Hardened the file-upload paths against denial-of-service.** (#142) Two upload handlers read the whole uploaded file into memory with no size limit (the promptfoo import and the API dataset upload), and the promptfoo YAML parse allowed alias expansion (a "YAML alias bomb" where a small file expands exponentially in memory). None allowed code execution (`YAML.safe_load` still blocks object instantiation), but all were memory-exhaustion vectors. Fixes: a configurable `config.max_upload_bytes` (default 25 MB) is now checked against the upload's size **before** it is read, returning `413 Payload Too Large` on both the web import and the API dataset endpoints; `Dataset` validates that `csv_data` is within that limit so the model layer is bounded on every path (API, web, and direct writes); the promptfoo importer caps its input size and no longer parses YAML with `aliases: true`, closing the alias-bomb vector. Host apps can raise or lower the limit via `config.max_upload_bytes`.
+
 ## [0.28.11] - 2026-07-21
 
 ### Fixed

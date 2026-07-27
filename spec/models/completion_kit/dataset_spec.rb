@@ -1,6 +1,27 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::Dataset, type: :model do
+  describe "csv_data size limit" do
+    around do |example|
+      original = CompletionKit.config.max_upload_bytes
+      CompletionKit.config.max_upload_bytes = 32
+      example.run
+    ensure
+      CompletionKit.config.max_upload_bytes = original
+    end
+
+    it "rejects csv_data larger than the configured upload limit" do
+      dataset = build(:completion_kit_dataset, csv_data: "col\n" + ("x" * 100))
+      expect(dataset).not_to be_valid
+      expect(dataset.errors[:csv_data].join).to match(/too large/)
+    end
+
+    it "accepts csv_data within the limit" do
+      dataset = build(:completion_kit_dataset, csv_data: "a\nb\n")
+      expect(dataset).to be_valid
+    end
+  end
+
   describe "destroy cascade" do
     it "destroys associated runs (and their responses + reviews)" do
       prompt = create(:completion_kit_prompt, template: "Static prompt without variables")

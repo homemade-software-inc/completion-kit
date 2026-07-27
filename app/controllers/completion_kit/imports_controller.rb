@@ -4,6 +4,11 @@ module CompletionKit
     end
 
     def create
+      if upload_too_large?(params[:file])
+        flash.now[:alert] = "That file is too large. The limit is #{CompletionKit.config.max_upload_bytes / (1024 * 1024)} MB."
+        return render :new, status: :payload_too_large
+      end
+
       content = uploaded_content
 
       if content.blank?
@@ -26,6 +31,10 @@ module CompletionKit
     def uploaded_content
       file = params[:file]
       file.respond_to?(:read) ? file.read : params[:config]
+    end
+
+    def upload_too_large?(file)
+      file.respond_to?(:size) && file.size > CompletionKit.config.max_upload_bytes
     end
   end
 end

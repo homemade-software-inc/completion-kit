@@ -3,6 +3,7 @@ module CompletionKit
     module V1
       class DatasetsController < BaseController
         before_action :set_dataset, only: [:show, :update, :destroy]
+        before_action :reject_oversized_upload, only: [:create, :update]
 
         def index
           scope = Dataset.includes(:tags)
@@ -49,6 +50,13 @@ module CompletionKit
           upload = params[:file]
           permitted[:csv_data] = upload.read.to_s.force_encoding("UTF-8") if upload.respond_to?(:read)
           permitted
+        end
+
+        def reject_oversized_upload
+          upload = params[:file]
+          return unless upload.respond_to?(:size) && upload.size > CompletionKit.config.max_upload_bytes
+
+          render_error("File exceeds the #{CompletionKit.config.max_upload_bytes / (1024 * 1024)} MB upload limit", status: :payload_too_large)
         end
       end
     end

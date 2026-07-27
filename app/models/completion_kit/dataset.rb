@@ -6,6 +6,14 @@ module CompletionKit
 
     validates :name, presence: true
     validates :csv_data, presence: true
+    validate :csv_data_within_size_limit
+
+    def csv_data_within_size_limit
+      return if csv_data.blank?
+      return if csv_data.bytesize <= CompletionKit.config.max_upload_bytes
+
+      errors.add(:csv_data, "is too large (limit #{CompletionKit.config.max_upload_bytes / (1024 * 1024)} MB)")
+    end
 
     def as_json(options = {})
       {
