@@ -6,6 +6,7 @@ gemspec
 
 # Additional development gems
 gem "puma"
+gem "propshaft"
 
 # For debugging
 group :development, :test do

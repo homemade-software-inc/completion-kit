@@ -1,15 +1,12 @@
 PATH
   remote: ..
   specs:
-    completion-kit (0.28.12)
-      bootstrap (~> 5.2)
+    completion-kit (0.28.13)
       csv (~> 3.2)
       faraday (~> 2.7)
       faraday-retry (~> 2.0)
       heroicons-rails (~> 1.2)
-      jquery-rails (~> 4.5)
       rails (>= 7.0.0, < 9.0.0)
-      sassc-rails (~> 2.1)
       turbo-rails (>= 1.5)
 
 GEM
@@ -93,8 +90,6 @@ GEM
     bigdecimal (4.1.2)
     bootsnap (1.24.6)
       msgpack (~> 1.2)
-    bootstrap (5.3.8)
-      popper_js (>= 2.11.8, < 3)
     builder (3.3.0)
     concurrent-ruby (1.3.7)
     connection_pool (3.0.2)
@@ -118,14 +113,6 @@ GEM
       net-http (~> 0.5)
     faraday-retry (2.4.0)
       faraday (~> 2.0)
-    ffi (1.17.4-aarch64-linux-gnu)
-    ffi (1.17.4-aarch64-linux-musl)
-    ffi (1.17.4-arm-linux-gnu)
-    ffi (1.17.4-arm-linux-musl)
-    ffi (1.17.4-arm64-darwin)
-    ffi (1.17.4-x86_64-darwin)
-    ffi (1.17.4-x86_64-linux-gnu)
-    ffi (1.17.4-x86_64-linux-musl)
     fugit (1.12.1)
       et-orbi (~> 1.4)
       raabro (~> 1.4)
@@ -146,10 +133,6 @@ GEM
       prism (>= 1.3.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
-    jquery-rails (4.6.1)
-      rails-dom-testing (>= 1, < 3)
-      railties (>= 4.2.0)
-      thor (>= 0.14, < 2.0)
     json (2.21.1)
     logger (1.7.0)
     loofah (2.25.2)
@@ -212,11 +195,14 @@ GEM
     pg (1.6.3-x86_64-darwin)
     pg (1.6.3-x86_64-linux)
     pg (1.6.3-x86_64-linux-musl)
-    popper_js (2.11.8)
     pp (0.6.4)
       prettyprint
     prettyprint (0.2.0)
     prism (1.9.0)
+    propshaft (1.3.2)
+      actionpack (>= 7.0.0)
+      activesupport (>= 7.0.0)
+      rack
     puma (8.0.2)
       nio4r (~> 2.0)
     raabro (1.4.0)
@@ -271,14 +257,6 @@ GEM
       tsort
     reline (0.6.3)
       io-console (~> 0.5)
-    sassc (2.4.0)
-      ffi (~> 1.9)
-    sassc-rails (2.1.2)
-      railties (>= 4.0.0)
-      sassc (>= 2.0)
-      sprockets (> 3.0)
-      sprockets-rails
-      tilt
     securerandom (0.4.1)
     solid_cable (4.0.0)
       actioncable (>= 7.2)
@@ -292,14 +270,6 @@ GEM
       fugit (~> 1.11)
       railties (>= 7.1)
       thor (>= 1.3.1)
-    sprockets (4.2.2)
-      concurrent-ruby (~> 1.0)
-      logger
-      rack (>= 2.2.4, < 4)
-    sprockets-rails (3.5.2)
-      actionpack (>= 6.1)
-      activesupport (>= 6.1)
-      sprockets (>= 3.0.0)
     sqlite3 (2.9.5-aarch64-linux-gnu)
     sqlite3 (2.9.5-aarch64-linux-musl)
     sqlite3 (2.9.5-arm-linux-gnu)
@@ -311,7 +281,6 @@ GEM
     stimulus-rails (1.3.4)
       railties (>= 6.0.0)
     thor (1.5.0)
-    tilt (2.7.0)
     timeout (0.6.1)
     tsort (0.2.0)
     turbo-rails (2.0.23)
@@ -345,10 +314,10 @@ DEPENDENCIES
   dotenv-rails
   mission_control-jobs
   pg
+  propshaft
   puma
   solid_cable
   solid_queue
-  sprockets-rails
   sqlite3
 
 RUBY VERSION

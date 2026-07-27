@@ -25,7 +25,7 @@ module CompletionKit
     end
 
     def self.register_assets(app)
-      app.config.assets.precompile += %w(
+      app.config.assets.precompile = Array(app.config.assets.precompile) + %w(
         completion_kit/application.css
         completion_kit/application.js
         completion_kit/logo.png

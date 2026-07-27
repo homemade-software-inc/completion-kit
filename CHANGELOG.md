@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.13] - 2026-07-27
+
+### Fixed
+- **The JetBrains Mono web fonts 404'd under Propshaft (three failed requests per authenticated page load).** (#143) The `@font-face` rules used `url('completion_kit/jetbrains-mono-400.woff2')`. Propshaft resolves `url()` relative to the stylesheet's own directory (`completion_kit/`), so it doubled the path to `completion_kit/completion_kit/…` and left it un-rewritten, producing the 404. Dropped the redundant `completion_kit/` prefix so the path resolves to the font's logical path and Propshaft rewrites it to the digested URL.
+
+### Changed
+- **Dropped the unused `sassc-rails`, `bootstrap`, and `jquery-rails` runtime dependencies and made the engine Propshaft-native.** The engine ships plain CSS and vanilla JS: there is no SCSS, no Bootstrap markup, and no jQuery anywhere in it, so all three were dead weight. `sassc-rails` in particular dragged `sprockets` / `sprockets-rails` into every host app's bundle, which both bloated installs and made the font `url()` above resolve inconsistently between pipelines. The engine's asset-precompile registration now tolerates a Propshaft `config.assets` (which has no `precompile` list), and the bundled standalone app was migrated from `sprockets-rails` to Propshaft (the Rails 8 default). Host apps that genuinely used Bootstrap, jQuery, or Sprockets *through* this gem should declare those gems themselves; the font fix targets Propshaft, so a host app still serving assets through Sprockets will see the monospace font fall back to the system default until it moves to Propshaft.
+
 ## [0.28.12] - 2026-07-27
 
 ### Security
