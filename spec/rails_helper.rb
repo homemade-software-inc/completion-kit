@@ -298,6 +298,11 @@ RSpec.configure do |config|
   config.before { CompletionKit.config.on_run_created = nil }
   config.before { CompletionKit.config.on_run_started = nil }
   config.before do
+    allow(ActiveJob).to receive(:perform_all_later) do |*jobs|
+      jobs.flatten.each { |job| job.class.perform_later(*job.arguments) }
+    end
+  end
+  config.before do
     server = ActionCable.server
     adapter = ActionCable::SubscriptionAdapter::Test.new(server)
     server.instance_variable_set(:@pubsub, adapter)

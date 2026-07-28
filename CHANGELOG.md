@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.22] - 2026-07-28
+
+### Changed
+- **`start!` now bulk-enqueues its row jobs in one `perform_all_later` instead of one `perform_later` per (row × metric).** (partial #150) Starting a run held the request open while it enqueued a job per row (generation) or per row × metric (judging); on Solid Queue each was its own INSERT, so a 35-row judged run made ~140 individual enqueues, each a round-trip to the database. Over MCP that synchronous cost is what surfaced as a `runs_generate` timeout / `-32603` even though the job had started. The jobs are now enqueued in a single bulk call. Measured on 150 jobs in dev SQLite: Solid Queue INSERTs dropped from 300 to 151 and enqueue wall time from ~1119 ms to ~625 ms (~1.8x); on a networked database the win is the eliminated per-row round-trips. This shrinks the window for the timeout but the enqueue is still O(rows); the durable fix (return immediately and enqueue the run asynchronously) is tracked separately in #150.
+
 ## [0.28.21] - 2026-07-28
 
 ### Fixed

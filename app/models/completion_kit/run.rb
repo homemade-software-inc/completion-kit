@@ -314,13 +314,14 @@ module CompletionKit
           if judge
             judge_metrics = llm_judge_configured? ? llm_metrics.to_a : []
             chk_metrics = check_metrics.to_a
-            response_ids.each do |rid|
-              judge_metrics.each { |m| JudgeReviewJob.perform_later(rid, m.id, id) }
-              chk_metrics.each { |m| CheckReviewJob.perform_later(rid, m.id, id) }
+            review_jobs = response_ids.flat_map do |rid|
+              judge_metrics.map { |m| JudgeReviewJob.new(rid, m.id, id) } +
+                chk_metrics.map { |m| CheckReviewJob.new(rid, m.id, id) }
             end
+            ActiveJob.perform_all_later(review_jobs) if review_jobs.any?
             RunCompletionCheckJob.perform_later(id)
           else
-            response_ids.each { |rid| GenerateRowJob.perform_later(id, rid) }
+            ActiveJob.perform_all_later(response_ids.map { |rid| GenerateRowJob.new(id, rid) })
           end
         end
       rescue ActiveRecord::RecordInvalid => e

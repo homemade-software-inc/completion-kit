@@ -444,6 +444,15 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(run.responses.count).to eq(5)
     end
 
+    it "bulk-enqueues the row jobs with a single perform_all_later instead of one enqueue per row" do
+      dataset = create(:completion_kit_dataset, csv_data: "input\na\nb\nc\n")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+
+      run.start!
+
+      expect(ActiveJob).to have_received(:perform_all_later).once
+    end
+
     it "refuses to restart a running run and leaves its responses alone (prevents data loss from a stray POST /generate)" do
       run = create(:completion_kit_run, prompt: prompt, dataset: nil, status: "running")
       existing = create(:completion_kit_response, run: run, status: "succeeded")
