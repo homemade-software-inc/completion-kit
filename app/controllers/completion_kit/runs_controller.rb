@@ -6,8 +6,9 @@ module CompletionKit
     before_action :load_form_collections, only: [:new, :edit, :create, :update]
 
     def index
-      scope = Run.includes(:prompt, :dataset, :tags, responses: :reviews).order(created_at: :desc).display_scoped
-      @runs = apply_tag_filter(scope)
+      scope = Run.includes(:prompt, :dataset, :tags).order(created_at: :desc).display_scoped
+      @runs = apply_tag_filter(scope).load
+      Run.preload_summaries(@runs)
     end
 
     RESPONSES_PER_PAGE = 100

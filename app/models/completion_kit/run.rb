@@ -14,6 +14,8 @@ module CompletionKit
     has_many :suggestions, dependent: :destroy
     has_many :dashboard_dismissals, as: :dismissable, dependent: :destroy
 
+    attr_writer :avg_score, :check_pass_rate, :metric_averages, :response_count
+
     validates :name, presence: true
     validates :status, inclusion: { in: STATUSES }
     validate :dataset_supplies_prompt_variables
@@ -32,6 +34,58 @@ module CompletionKit
 
     def self.visible_run_ids
       display_scoped.select(:id)
+    end
+
+    # Batch-compute the list-view summaries (response count, avg score, check
+    # pass rate, per-metric averages) for a set of runs in a constant number of
+    # grouped queries, injecting the results so the index never loads a single
+    # response or review object. Mirrors the per-run reader methods exactly.
+    def self.preload_summaries(runs)
+      runs = runs.to_a
+      return runs if runs.empty?
+
+      run_ids = runs.map(&:id)
+      counts = Response.where(run_id: run_ids).group(:run_id).count
+
+      run_col = Arel.sql("completion_kit_responses.run_id")
+      base = Review.joins(:response).where(completion_kit_responses: {run_id: run_ids})
+
+      run_rows = base.group(run_col).pluck(
+        run_col,
+        Arel.sql("AVG(ai_score)"),
+        Arel.sql("COUNT(passed)"),
+        Arel.sql("SUM(CASE WHEN passed THEN 1 ELSE 0 END)")
+      )
+      run_stats = run_rows.each_with_object({}) do |(rid, avg, resolved, passed), h|
+        h[rid] = {avg: avg, resolved: resolved.to_i, passed: passed.to_i}
+      end
+
+      metric_rows = base.group(run_col, :metric_name).pluck(
+        run_col,
+        :metric_name,
+        Arel.sql("AVG(ai_score)"),
+        Arel.sql("COUNT(ai_score)"),
+        Arel.sql("COUNT(passed)"),
+        Arel.sql("SUM(CASE WHEN passed THEN 1 ELSE 0 END)")
+      )
+      metrics_by_run = metric_rows.group_by(&:first)
+
+      runs.each do |run|
+        run.response_count = counts.fetch(run.id, 0)
+
+        stats = run_stats[run.id]
+        run.avg_score = stats && stats[:avg] ? stats[:avg].to_f.round(2) : nil
+        run.check_pass_rate = stats && stats[:resolved] > 0 ? (stats[:passed].to_f / stats[:resolved]).round(2) : nil
+
+        run.metric_averages = (metrics_by_run[run.id] || []).filter_map do |(_rid, name, avg, scored, resolved, passed)|
+          if scored.to_i > 0
+            {name: name, avg: avg.to_f.round(1)}
+          elsif resolved.to_i > 0
+            {name: name, kind: "check", pass_rate: (passed.to_i.to_f / resolved.to_i).round(2)}
+          end
+        end
+      end
+      runs
     end
 
     # A scoring-only run grades a pre-existing column on the dataset instead of
@@ -126,7 +180,15 @@ module CompletionKit
         end
     end
 
+    def response_count
+      return @response_count if defined?(@response_count)
+
+      responses.size
+    end
+
     def avg_score
+      return @avg_score if defined?(@avg_score)
+
       scores = reviews_for_summary.map(&:ai_score).compact.map(&:to_f)
       return nil if scores.empty?
 
@@ -134,6 +196,8 @@ module CompletionKit
     end
 
     def metric_averages
+      return @metric_averages if defined?(@metric_averages)
+
       reviews_for_summary.group_by(&:metric_name).filter_map do |name, reviews|
         scored = reviews.select { |r| r.ai_score.present? }
         if scored.any?
@@ -150,6 +214,8 @@ module CompletionKit
     end
 
     def check_pass_rate
+      return @check_pass_rate if defined?(@check_pass_rate)
+
       resolved = reviews_for_summary.reject { |r| r.passed.nil? }
       return nil if resolved.empty?
 

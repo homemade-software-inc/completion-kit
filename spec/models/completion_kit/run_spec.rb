@@ -970,4 +970,54 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
+  describe ".preload_summaries" do
+    let(:sum_prompt) { create(:completion_kit_prompt, template: "Static prompt") }
+
+    it "injects response_count, avg_score, check_pass_rate, and metric_averages matching the per-run reader methods" do
+      metric = create(:completion_kit_metric)
+      check = create(:completion_kit_metric, :check)
+      run = create(:completion_kit_run, prompt: sum_prompt, status: "completed")
+      [3.0, 4.0, 5.0, 2.0].each_with_index do |score, i|
+        resp = create(:completion_kit_response, run: run, status: "succeeded", row_index: i, response_text: "b#{i}")
+        create(:completion_kit_review, response: resp, metric: metric, metric_name: "Quality", ai_score: score)
+        create(:completion_kit_review, :check, response: resp, metric: check, metric_name: "Valid JSON", passed: i.even?)
+      end
+      create(:completion_kit_review, response: run.responses.order(:row_index).first,
+             metric: create(:completion_kit_metric), metric_name: "Unscored",
+             status: "pending", ai_score: nil, passed: nil)
+
+      computed = CompletionKit::Run.find(run.id)
+      expected = {
+        count: computed.responses.size,
+        avg: computed.avg_score,
+        pass: computed.check_pass_rate,
+        metrics: computed.metric_averages.sort_by { |m| m[:name] }
+      }
+
+      preloaded = CompletionKit::Run.preload_summaries([CompletionKit::Run.find(run.id)]).first
+
+      expect(preloaded.response_count).to eq(expected[:count])
+      expect(preloaded.avg_score).to eq(expected[:avg])
+      expect(preloaded.check_pass_rate).to eq(expected[:pass])
+      expect(preloaded.metric_averages.sort_by { |m| m[:name] }).to eq(expected[:metrics])
+    end
+
+    it "injects a zero count and nil aggregates for a run with responses but no reviews" do
+      run = create(:completion_kit_run, prompt: sum_prompt)
+      create(:completion_kit_response, run: run)
+      create(:completion_kit_response, run: run)
+
+      preloaded = CompletionKit::Run.preload_summaries([CompletionKit::Run.find(run.id)]).first
+
+      expect(preloaded.response_count).to eq(2)
+      expect(preloaded.avg_score).to be_nil
+      expect(preloaded.check_pass_rate).to be_nil
+      expect(preloaded.metric_averages).to eq([])
+    end
+
+    it "returns the collection unchanged when given no runs" do
+      expect(CompletionKit::Run.preload_summaries([])).to eq([])
+    end
+  end
+
 end

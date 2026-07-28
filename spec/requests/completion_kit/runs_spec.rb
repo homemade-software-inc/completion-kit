@@ -229,6 +229,39 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(large_count).to eq(small_count)
   end
 
+  it "renders the runs index in a bounded number of queries as runs grow (no per-run summary N+1)" do
+    metric = create(:completion_kit_metric)
+    check = create(:completion_kit_metric, :check)
+    add_run = ->(k) do
+      run = create(:completion_kit_run, prompt: prompt, status: "completed", name: "Run #{k}")
+      run.replace_metrics!([metric.id, check.id])
+      3.times do |i|
+        resp = create(:completion_kit_response, run: run, status: "succeeded", row_index: i, response_text: "b#{i}")
+        create(:completion_kit_review, response: resp, metric: metric, metric_name: "Quality", ai_score: 4.0)
+        create(:completion_kit_review, :check, response: resp, metric: check, metric_name: "Valid JSON", passed: i.even?)
+      end
+    end
+
+    index_queries = -> do
+      count = 0
+      sub = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
+        payload = ActiveSupport::Notifications::Event.new(*args).payload
+        count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) || payload[:sql].match?(/\A\s*(BEGIN|COMMIT|SAVEPOINT|RELEASE)/i)
+      end
+      get base_path
+      ActiveSupport::Notifications.unsubscribe(sub)
+      count
+    end
+
+    2.times { |k| add_run.call(k) }
+    small = index_queries.call
+    4.times { |k| add_run.call(k + 2) }
+    large = index_queries.call
+
+    expect(response).to have_http_status(:ok)
+    expect(large).to eq(small)
+  end
+
   it "sorts responses by rubric score when the run is gradable" do
     run = create(:completion_kit_run, prompt: prompt, name: "Run A")
     r1 = create(:completion_kit_response, run: run)

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.21] - 2026-07-28
+
+### Fixed
+- **The runs index rendered its per-run score summaries by loading every response and review for the whole list into memory.** (#151) This is not a query-count problem (the page already eager-loaded in ~5 queries); the cost was instantiating one ActiveRecord object per review and computing `avg_score` / `metric_averages` / `check_pass_rate` in Ruby, which grows linearly with total reviews. As an org accumulates runs (the reporting org: ~20+ runs, several at 35 responses × 4 metrics), that fans out into thousands of review objects per request and, on a busy single-worker host, tips into a gateway 502. The index now computes those summaries with a constant handful of grouped `GROUP BY run_id` queries and loads zero response or review objects, injecting the results into the runs. Measured on 3,500 reviews (25 runs × 35 × 4) in dev SQLite: median render dropped from 55.8 ms to 3.6 ms (15.4x), loading 0 review objects instead of 3,500; on Postgres the gap should be wider because the row transfer is what is avoided. The batched computation is asserted to produce identical values to the per-run methods, and a request spec locks the index to a bounded query count as runs grow.
+
 ## [0.28.20] - 2026-07-28
 
 ### Fixed
