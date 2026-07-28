@@ -4554,6 +4554,12 @@ table.ck-runs-table {
   border-radius: 0 var(--ck-radius) var(--ck-radius) 0;
 }
 
+.ck-suggest-caveat {
+  margin: 0 0 0.6rem;
+  color: var(--ck-warning);
+  font-size: 0.85rem;
+}
+
 .ck-suggest-reasoning .ck-kicker {
   margin-bottom: 0.5rem;
 }

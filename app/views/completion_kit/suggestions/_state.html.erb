@@ -16,8 +16,8 @@
     <% end %>
 
     <div class="ck-suggest-reasoning">
-      <p class="ck-kicker">Why these changes</p>
-      <div class="ck-suggest-reasoning__body"><%= simple_format(suggestion.reasoning) %></div>
+      <p class="ck-kicker">Reasons for suggested changes</p>
+      <div class="ck-suggest-reasoning__body"><%= ck_markdown(suggestion.reasoning) %></div>
     </div>
 
     <div class="ck-suggest-diff">
@@ -41,6 +41,14 @@
       <pre class="ck-code ck-code--dark"><%= suggestion.suggested_template %></pre>
     </div>
 
+    <% unless suggestion.applied_at? %>
+      <% if !suggestion.validated? %>
+        <p class="ck-suggest-caveat">Couldn't be re-scored against this run's responses, so applying it is unvalidated.</p>
+      <% elsif suggestion.net_negative? %>
+        <% vs = suggestion.validation_summary %>
+        <p class="ck-suggest-caveat">Scored <%= vs["after_avg"] %> on the held-out responses, below your original's <%= vs["before_avg"] %>.</p>
+      <% end %>
+    <% end %>
     <div class="ck-actions">
       <% if suggestion.applied_at? %>
         <span class="ck-chip" style="background: var(--ck-success-soft); color: var(--ck-success);">Applied</span>

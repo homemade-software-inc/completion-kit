@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.16] - 2026-07-28
+
+### Changed
+- **The suggestion rationale now renders its markdown instead of showing raw `**` and backticks.** The "Why these changes" text is model-generated markdown but was printed literally with `simple_format`, so bold labels showed as `**like this**`. It now renders inline bold and code (safely, still HTML-escaped) while keeping paragraphs and bullets. The heading was relabeled from "Why these changes" to "Reasons for suggested changes."
+
+### Fixed
+- **The suggestion "Apply anyway" button gave no on-screen reason for the "anyway."** (#146) When a rewrite couldn't be re-scored, or scored lower than the original, the only explanation was inside the post-click confirm dialog, so the button read as a contextless dead-end (and the unvalidated case showed no scoreboard at all). A short caveat now appears inline above the button before the click: "Couldn't be re-scored against this run's responses, so applying it is unvalidated," or, for a lower-scoring rewrite, "Scored 3.2 on the held-out responses, below your original's 3.8" (with the actual numbers). The confirm dialog stays as a backstop.
+
 ## [0.28.15] - 2026-07-28
 
 ### Fixed

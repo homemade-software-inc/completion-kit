@@ -1,5 +1,14 @@
 module CompletionKit
   module ApplicationHelper
+    def ck_markdown(text)
+      return "".html_safe if text.blank?
+
+      inline = text.to_s
+        .gsub(/\*\*(.+?)\*\*/, '<strong>\1</strong>')
+        .gsub(/`([^`]+)`/, '<code>\1</code>')
+      simple_format(inline)
+    end
+
     def ck_runs_display_footer(runs)
       partial = CompletionKit.config.runs_display_footer_partial
       return unless partial

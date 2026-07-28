@@ -1,6 +1,27 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
+  describe "#ck_markdown" do
+    it "renders bold and inline code, preserves other text, and is html-safe" do
+      html = helper.ck_markdown("• **Weak (3.3/5)**: uses `filler`.\n\nNext point.")
+      expect(html).to include("<strong>Weak (3.3/5)</strong>")
+      expect(html).to include("<code>filler</code>")
+      expect(html).to include("•")
+      expect(html).to be_html_safe
+    end
+
+    it "returns a blank html-safe string for blank input" do
+      expect(helper.ck_markdown(nil)).to eq("")
+      expect(helper.ck_markdown("")).to be_html_safe
+    end
+
+    it "escapes embedded HTML so the reasoning cannot inject markup" do
+      html = helper.ck_markdown("**oops** <script>alert(1)</script>")
+      expect(html).to include("<strong>oops</strong>")
+      expect(html).not_to include("<script>")
+    end
+  end
+
   describe "#ck_button_classes" do
     it "covers every button style branch" do
       expect(helper.ck_button_classes(:dark)).to include("ck-button--primary")
