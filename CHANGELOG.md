@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.18] - 2026-07-28
+
+### Fixed
+- **The new Version column in the prompt-show suggestions table used a plain-text label instead of the brand's version chip.** It now renders the version with the same `ck-chip ck-chip--soft` component used for the version label on the prompt header and the prompts/metrics indexes, so it matches the rest of the app.
+
 ## [0.28.17] - 2026-07-28
 
 ### Changed

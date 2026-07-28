@@ -172,7 +172,7 @@
         <% suggestions.each do |s| %>
           <tr onclick="window.location='<%= suggestion_path(s, from: "prompt") %>'" style="cursor: pointer;">
             <td><%= link_to suggestion_path(s, from: "prompt"), class: "ck-record-name" do %><strong><%= s.run.name %></strong><% end %></td>
-            <td class="ck-meta-copy"><%= s.prompt.version_label %></td>
+            <td><span class="ck-chip ck-chip--soft"><%= s.prompt.version_label %></span></td>
             <td class="ck-meta-copy"><%= truncate(ck_strip_markdown(s.reasoning), length: 100) %></td>
             <td><%= s.applied_at? ? content_tag(:span, "Applied", class: "ck-chip", style: "background: var(--ck-success-soft); color: var(--ck-success);") : "&mdash;".html_safe %></td>
             <td class="ck-meta-copy"><time data-relative-time datetime="<%= s.created_at.utc.iso8601 %>"><%= time_ago_in_words(s.created_at) %> ago</time></td>
