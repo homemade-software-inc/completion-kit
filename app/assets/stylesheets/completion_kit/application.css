@@ -4039,11 +4039,12 @@ select.ck-input {
 .ck-source-chip--past {
   color: var(--ck-dim);
 }
-.ck-suggestions-table th:nth-child(1), .ck-suggestions-table td:nth-child(1) { width: 16rem; white-space: nowrap; }
-.ck-suggestions-table th:nth-child(2), .ck-suggestions-table td:nth-child(2) { width: auto; }
-.ck-suggestions-table th:nth-child(3), .ck-suggestions-table td:nth-child(3) { width: 6rem; white-space: nowrap; }
-.ck-suggestions-table th:nth-child(4), .ck-suggestions-table td:nth-child(4) { width: 9rem; white-space: nowrap; }
-.ck-suggestions-table th:nth-child(5), .ck-suggestions-table td:nth-child(5) { width: 3rem; }
+.ck-suggestions-table th:nth-child(1), .ck-suggestions-table td:nth-child(1) { width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ck-suggestions-table th:nth-child(2), .ck-suggestions-table td:nth-child(2) { width: 5rem; white-space: nowrap; }
+.ck-suggestions-table th:nth-child(3), .ck-suggestions-table td:nth-child(3) { width: auto; }
+.ck-suggestions-table th:nth-child(4), .ck-suggestions-table td:nth-child(4) { width: 6rem; white-space: nowrap; }
+.ck-suggestions-table th:nth-child(5), .ck-suggestions-table td:nth-child(5) { width: 8rem; white-space: nowrap; }
+.ck-suggestions-table th:nth-child(6), .ck-suggestions-table td:nth-child(6) { width: 3rem; }
 
 .ck-metrics-table__groups {
   display: flex;
@@ -4558,6 +4559,37 @@ table.ck-runs-table {
   margin: 0 0 0.6rem;
   color: var(--ck-warning);
   font-size: 0.85rem;
+}
+
+.ck-suggest-untested {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ck-line);
+}
+
+.ck-suggest-untested__headline {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  color: var(--ck-text);
+}
+
+.ck-suggest-untested__copy {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--ck-muted);
+  max-width: 66ch;
+}
+
+.ck-suggest-decision {
+  margin-top: 1.5rem;
+}
+
+.ck-suggest-decision__note {
+  margin: 0 0 0.9rem;
+  font-size: 0.8rem;
+  color: var(--ck-muted);
+  max-width: 66ch;
 }
 
 .ck-suggest-reasoning .ck-kicker {

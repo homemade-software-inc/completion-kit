@@ -153,14 +153,15 @@
 
 <%= ck_runs_display_footer(@runs) %>
 
-<% suggestions = CompletionKit::Suggestion.where(prompt_id: @prompt.family_versions.select(:id)).order(created_at: :desc) %>
+<% suggestions = CompletionKit::Suggestion.where(prompt_id: @prompt.family_versions.select(:id)).includes(:run, :prompt).order(created_at: :desc) %>
 <% if suggestions.any? %>
   <section class="ck-card--spaced">
-    <p class="ck-kicker">Suggestions</p>
+    <p class="ck-kicker">Suggested improvements</p>
     <table class="ck-results-table ck-suggestions-table" style="margin-top: 0.5rem;">
       <thead>
         <tr>
           <th>Run</th>
+          <th>Version</th>
           <th>Reasoning</th>
           <th>Applied</th>
           <th>When</th>
@@ -171,7 +172,8 @@
         <% suggestions.each do |s| %>
           <tr onclick="window.location='<%= suggestion_path(s, from: "prompt") %>'" style="cursor: pointer;">
             <td><%= link_to suggestion_path(s, from: "prompt"), class: "ck-record-name" do %><strong><%= s.run.name %></strong><% end %></td>
-            <td class="ck-meta-copy"><%= truncate(s.reasoning.to_s, length: 100) %></td>
+            <td class="ck-meta-copy"><%= s.prompt.version_label %></td>
+            <td class="ck-meta-copy"><%= truncate(ck_strip_markdown(s.reasoning), length: 100) %></td>
             <td><%= s.applied_at? ? content_tag(:span, "Applied", class: "ck-chip", style: "background: var(--ck-success-soft); color: var(--ck-success);") : "&mdash;".html_safe %></td>
             <td class="ck-meta-copy"><time data-relative-time datetime="<%= s.created_at.utc.iso8601 %>"><%= time_ago_in_words(s.created_at) %> ago</time></td>
             <td class="ck-results-table__arrow" aria-hidden="true">&rarr;</td>

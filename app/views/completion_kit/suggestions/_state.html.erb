@@ -11,14 +11,14 @@
       <%= button_to "Try again", suggest_run_path(run), method: :post, class: ck_button_classes(:light, variant: :outline), form_class: "inline-block" %>
     </div>
   <% else %>
-    <% if suggestion.validation_summary.present? %>
+    <% if suggestion.validated? %>
       <%= render "completion_kit/suggestions/scoreboard", summary: suggestion.validation_summary %>
+    <% else %>
+      <div class="ck-suggest-untested">
+        <p class="ck-suggest-untested__headline">We couldn't test this rewrite</p>
+        <p class="ck-suggest-untested__copy">Testing a rewrite means re-running it on this run's responses and scoring the results. That didn't return a score this time, usually because the run has no AI-judge scores to compare against. So there's no evidence yet that it beats your current prompt.</p>
+      </div>
     <% end %>
-
-    <div class="ck-suggest-reasoning">
-      <p class="ck-kicker">Reasons for suggested changes</p>
-      <div class="ck-suggest-reasoning__body"><%= ck_markdown(suggestion.reasoning) %></div>
-    </div>
 
     <div class="ck-suggest-diff">
       <div class="ck-suggest-diff__pane">
@@ -36,28 +36,30 @@
       </div>
     </div>
 
-    <div class="ck-suggest-full">
-      <p class="ck-kicker">Full suggested prompt</p>
-      <pre class="ck-code ck-code--dark"><%= suggestion.suggested_template %></pre>
+    <div class="ck-suggest-reasoning">
+      <p class="ck-kicker">Reasons for suggested changes</p>
+      <div class="ck-suggest-reasoning__body"><%= ck_markdown(suggestion.reasoning) %></div>
     </div>
 
-    <% unless suggestion.applied_at? %>
-      <% if !suggestion.validated? %>
-        <p class="ck-suggest-caveat">Couldn't be re-scored against this run's responses, so applying it is unvalidated.</p>
-      <% elsif suggestion.net_negative? %>
-        <% vs = suggestion.validation_summary %>
-        <p class="ck-suggest-caveat">Scored <%= vs["after_avg"] %> on the held-out responses, below your original's <%= vs["before_avg"] %>.</p>
-      <% end %>
-    <% end %>
-    <div class="ck-actions">
+    <div class="ck-suggest-decision">
       <% if suggestion.applied_at? %>
-        <span class="ck-chip" style="background: var(--ck-success-soft); color: var(--ck-success);">Applied</span>
-      <% elsif !suggestion.validated? %>
-        <%= button_to "Apply anyway", apply_suggestion_path(suggestion), method: :post, class: ck_button_classes(:light, variant: :outline), form: { class: "inline-block", data: { turbo_confirm: "This rewrite couldn't be re-scored against the run's responses. Apply it anyway?" } } %>
-      <% elsif suggestion.net_negative? %>
-        <%= button_to "Apply anyway", apply_suggestion_path(suggestion), method: :post, class: ck_button_classes(:light, variant: :outline), form: { class: "inline-block", data: { turbo_confirm: "This rewrite scored lower than the original on the held-out responses. Apply it anyway?" } } %>
+        <div class="ck-actions">
+          <span class="ck-chip" style="background: var(--ck-success-soft); color: var(--ck-success);">Applied</span>
+        </div>
       <% else %>
-        <%= button_to "Apply suggestion", apply_suggestion_path(suggestion), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+        <% if suggestion.validated? && suggestion.net_negative? %>
+          <p class="ck-suggest-caveat">This wording scored lower than your current prompt on the responses we tested. Applying it will most likely make results worse.</p>
+        <% end %>
+        <p class="ck-suggest-decision__note">Applying publishes this wording as a new version of your prompt. Your current version stays exactly as it is.</p>
+        <div class="ck-actions">
+          <% if !suggestion.validated? %>
+            <%= button_to "Apply anyway", apply_suggestion_path(suggestion), method: :post, class: ck_button_classes(:light, variant: :outline), form: { class: "inline-block", data: { turbo_confirm: "We couldn't test this rewrite, so there's no evidence it beats your current prompt. Apply it anyway?" } } %>
+          <% elsif suggestion.net_negative? %>
+            <%= button_to "Apply anyway", apply_suggestion_path(suggestion), method: :post, class: ck_button_classes(:light, variant: :outline), form: { class: "inline-block", data: { turbo_confirm: "This rewrite scored lower than your current prompt on the responses we tested. Apply it anyway?" } } %>
+          <% else %>
+            <%= button_to "Apply suggestion", apply_suggestion_path(suggestion), method: :post, class: ck_button_classes(:dark), form_class: "inline-block" %>
+          <% end %>
+        </div>
       <% end %>
     </div>
   <% end %>

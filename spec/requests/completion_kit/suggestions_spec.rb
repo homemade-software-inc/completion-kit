@@ -18,7 +18,8 @@ RSpec.describe "CompletionKit suggestions", type: :request do
       get "/completion_kit/suggestions/#{suggestion.id}"
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Clearer framing")
-      expect(response.body).to include("Improved prompt body")
+      expect(response.body).to include("Improved")
+      expect(response.body).to include("Suggested prompt")
       expect(response.body).to include("Back to prompt")
     end
 
@@ -69,7 +70,7 @@ RSpec.describe "CompletionKit suggestions", type: :request do
       })
 
       get "/completion_kit/suggestions/#{suggestion.id}"
-      expect(response.body).to include("held-out response")
+      expect(response.body).to include("of the run's responses")
       expect(response.body).to include("Apply suggestion")
     end
 
@@ -77,9 +78,9 @@ RSpec.describe "CompletionKit suggestions", type: :request do
       suggestion.update!(validation_summary: { "tested" => 0, "capped" => false, "after_avg" => nil, "before_avg" => nil })
 
       get "/completion_kit/suggestions/#{suggestion.id}"
-      expect(response.body).to include("Couldn't re-score")
+      expect(response.body).to include("We couldn't test this rewrite")
       expect(response.body).to include("Apply anyway")
-      expect(response.body).to include("be re-scored against the run")
+      expect(response.body).to include("no evidence it beats your current prompt")
     end
 
     it "gates publish behind a confirmation when the rewrite scored net negative" do
@@ -90,7 +91,7 @@ RSpec.describe "CompletionKit suggestions", type: :request do
 
       get "/completion_kit/suggestions/#{suggestion.id}"
       expect(response.body).to include("Apply anyway")
-      expect(response.body).to include("scored lower than the original")
+      expect(response.body).to include("scored lower than your current prompt")
     end
 
     it "404s when the suggestion does not exist" do

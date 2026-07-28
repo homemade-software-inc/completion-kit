@@ -9,6 +9,16 @@ module CompletionKit
       simple_format(inline)
     end
 
+    def ck_strip_markdown(text)
+      text.to_s
+        .gsub(/\*\*(.+?)\*\*/, '\1')
+        .gsub(/`([^`]+)`/, '\1')
+        .gsub(/[#>]+/, " ")
+        .gsub(/(?:^|\s)[-*•]\s+/, " ")
+        .gsub(/\s+/, " ")
+        .strip
+    end
+
     def ck_runs_display_footer(runs)
       partial = CompletionKit.config.runs_display_footer_partial
       return unless partial

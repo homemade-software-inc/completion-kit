@@ -22,6 +22,22 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#ck_strip_markdown" do
+    it "strips bold, inline code, bullets, headings, and collapses whitespace to a clean preview" do
+      out = helper.ck_strip_markdown("• **Weak (3.3/5)**: uses `filler`.\n\n- Next # point > here")
+      expect(out).to eq("Weak (3.3/5): uses filler. Next point here")
+    end
+
+    it "returns an empty string for blank input" do
+      expect(helper.ck_strip_markdown(nil)).to eq("")
+      expect(helper.ck_strip_markdown("   ")).to eq("")
+    end
+
+    it "leaves plain prose untouched apart from trimming" do
+      expect(helper.ck_strip_markdown("  Just words  ")).to eq("Just words")
+    end
+  end
+
   describe "#ck_button_classes" do
     it "covers every button style branch" do
       expect(helper.ck_button_classes(:dark)).to include("ck-button--primary")

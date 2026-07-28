@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.17] - 2026-07-28
+
+### Changed
+- **Rewrote the suggestion result panel to be legible to a first-time user.** The verdict was written in internal vocabulary a newcomer can't parse: "held-out responses," "re-scored," "validated"/"unvalidated," "net negative." The panel now leads with a plain verdict ("We re-ran this wording on 12 of the run's responses. It scored 4.1 now, 3.3 before" with a Better/Same/Worse tally, or "We couldn't test this rewrite" with a short explanation of what testing means and why it didn't run), shows the diff, then the reasons underneath the changes, and ends with a plain note that applying publishes the wording as a new prompt version and leaves the current one intact. The redundant "Full suggested prompt" dump is gone (the diff's suggested pane already shows the full new prompt), and the "Apply anyway" states now carry a clear warning above the button instead of only inside the confirm dialog.
+- **The prompt show suggestions section is now clearer.** It's titled "Suggested improvements," renders each suggestion's reasoning as clean plain text (markdown syntax stripped) instead of raw `**bold**` and backticks, and adds a narrow Version column showing the prompt version each suggestion targets. The list eager-loads its runs and prompts to avoid per-row queries.
+
+### Fixed
+- **Adding the Version column exposed an off-by-one in the suggestions-table column widths.** The table sized columns by position, so the new column shifted every rule by one and the Reasoning cell inherited a narrow `nowrap` width meant for the Applied column, spilling its text across the row. The widths are corrected for the six-column layout and the Run name now ellipsizes instead of overflowing.
+
 ## [0.28.16] - 2026-07-28
 
 ### Changed
