@@ -105,8 +105,12 @@ module CompletionKit
     end
 
     def mark_completed!
-      update!(status: "completed")
-      broadcast_ui
+      if all_responses_failed?
+        fail_with_summary!(all_failed_summary)
+      else
+        update!(status: "completed")
+        broadcast_ui
+      end
     end
 
     def gradable_metric_ids
@@ -563,6 +567,17 @@ module CompletionKit
         broadcast_ui
       end
       false
+    end
+
+    def all_responses_failed?
+      responses.exists? && !responses.where.not(status: "failed").exists?
+    end
+
+    def all_failed_summary
+      total = responses.count
+      reason = responses.where(status: "failed").where.not(error_message: [nil, ""]).order(:row_index).limit(1).pick(:error_message)
+      head = "Every response failed to generate (#{total} of #{total})."
+      reason.present? ? "#{head} First error: #{reason}" : "#{head} Check the model and provider configuration."
     end
 
     def render_engine_partial(partial, locals)

@@ -25,6 +25,7 @@ module CompletionKit
     validates :name, presence: true
     validates :key, tenant_scoped_uniqueness: { allow_nil: true }
     validates :metric_type, inclusion: { in: METRIC_TYPES }
+    validates :instruction, presence: { message: "can't be blank. An LLM judge needs a rubric to score against." }, if: :llm_judge?
     validate :validate_check_config, if: :check?
     validate :metric_type_immutable_once_in_use, on: :update
 

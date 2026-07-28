@@ -1029,4 +1029,40 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
+  describe "#mark_completed!" do
+    let(:mc_prompt) { create(:completion_kit_prompt, template: "Static prompt") }
+
+    it "fails the run with an aggregated reason when every response failed" do
+      run = create(:completion_kit_run, prompt: mc_prompt, status: "running")
+      create(:completion_kit_response, run: run, status: "failed", row_index: 0, error_message: "Error: 401 Unauthorized")
+      create(:completion_kit_response, run: run, status: "failed", row_index: 1)
+
+      run.mark_completed!
+
+      expect(run.reload.status).to eq("failed")
+      expect(run.failure_summary).to include("Every response failed to generate (2 of 2)")
+      expect(run.failure_summary).to include("401 Unauthorized")
+    end
+
+    it "falls back to a generic reason when the failed responses carry no error message" do
+      run = create(:completion_kit_run, prompt: mc_prompt, status: "running")
+      create(:completion_kit_response, run: run, status: "failed", row_index: 0)
+
+      run.mark_completed!
+
+      expect(run.reload.status).to eq("failed")
+      expect(run.failure_summary).to include("Check the model and provider configuration")
+    end
+
+    it "completes normally when at least one response succeeded" do
+      run = create(:completion_kit_run, prompt: mc_prompt, status: "running")
+      create(:completion_kit_response, run: run, status: "succeeded", row_index: 0)
+      create(:completion_kit_response, run: run, status: "failed", row_index: 1)
+
+      run.mark_completed!
+
+      expect(run.reload.status).to eq("completed")
+    end
+  end
+
 end

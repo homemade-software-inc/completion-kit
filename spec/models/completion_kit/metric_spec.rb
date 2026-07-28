@@ -27,12 +27,22 @@ RSpec.describe CompletionKit::Metric, type: :model do
   end
 
   it "fills in default rubric bands on a new metric" do
-    metric = described_class.create!(name: "Default metric")
+    metric = described_class.create!(name: "Default metric", instruction: "Rate quality.")
 
-    expect(metric.instruction).to be_nil
     expect(metric.rubric_bands.length).to eq(5)
     expect(metric.rubric_bands.first).to include("stars" => 5)
     expect(metric.rubric_bands.last).to include("stars" => 1)
+  end
+
+  it "rejects an llm_judge metric with a blank instruction" do
+    metric = build(:completion_kit_metric, instruction: "")
+
+    expect(metric).not_to be_valid
+    expect(metric.errors[:instruction].join).to include("needs a rubric to score against")
+  end
+
+  it "allows a check metric with no instruction" do
+    expect(build(:completion_kit_metric, :check)).to be_valid
   end
 
   describe "metric_type" do
@@ -193,6 +203,7 @@ RSpec.describe CompletionKit::Metric, type: :model do
       metric = create(:completion_kit_metric, :check)
 
       metric.metric_type = "llm_judge"
+      metric.instruction = "Rate quality."
       expect(metric.save).to be(true)
     end
 
@@ -210,7 +221,7 @@ RSpec.describe CompletionKit::Metric, type: :model do
   end
 
   it "generates rubric text from star bands" do
-    metric = described_class.create!(name: "Test metric")
+    metric = described_class.create!(name: "Test metric", instruction: "Rate quality.")
 
     expect(metric.display_rubric_text).to include("5 stars:")
     expect(metric.display_rubric_text).to include("1 star:")
@@ -248,7 +259,7 @@ RSpec.describe CompletionKit::Metric, type: :model do
   end
 
   it "generates a unique key from name" do
-    metric = described_class.create!(name: "Hallucination Detection")
+    metric = described_class.create!(name: "Hallucination Detection", instruction: "Rate quality.")
 
     expect(metric.key).to eq("hallucination-detection")
   end

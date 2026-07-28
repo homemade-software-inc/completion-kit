@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.24] - 2026-07-28
+
+### Fixed
+- **An LLM-judge metric could be saved with a completely empty instruction.** (#156) A judge with no rubric has nothing to score against, but a blank instruction was allowed, producing a silently meaningless metric. Saving or publishing an `llm_judge` metric now requires an instruction ("Instruction can't be blank. An LLM judge needs a rubric to score against."); check metrics are unaffected.
+- **A run where every response failed displayed as "completed" with a blank score.** (#157) `mark_completed!` set `completed` unconditionally, so a run whose generations all failed (bad model/provider/auth wiring) looked like a benign empty result instead of a broken one. When every response failed, the run is now marked `failed` with an aggregated reason ("Every response failed to generate (N of N). First error: …"), which surfaces inline through the existing failed-run status header. Partially-failed runs still complete normally.
+
 ## [0.28.23] - 2026-07-28
 
 ### Fixed
