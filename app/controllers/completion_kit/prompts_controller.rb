@@ -32,7 +32,7 @@ module CompletionKit
     end
     
     def update
-      if @prompt.runs.exists?
+      if @prompt.runs.exists? && behavioral_change?
         new_prompt = @prompt.build_next_version(prompt_params.to_h)
         if new_prompt.valid?
           CompletionKit::ApplicationRecord.transaction do
@@ -63,7 +63,16 @@ module CompletionKit
     end
 
     private
-    
+
+    BEHAVIORAL_ATTRS = %w[template llm_model].freeze
+
+    def behavioral_change?
+      permitted = prompt_params
+      BEHAVIORAL_ATTRS.any? do |attr|
+        permitted.key?(attr) && permitted[attr].to_s != @prompt.public_send(attr).to_s
+      end
+    end
+
     def set_prompt
       @prompt = Prompt.find(params[:id])
     end

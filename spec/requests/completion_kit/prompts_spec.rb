@@ -139,14 +139,15 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).not_to include("ck-suggest-diff")
   end
 
-  it "notes on the edit form that saving creates a new version once that version has runs" do
+  it "notes on the edit form that changing the prompt or model saves a new version once that version has runs" do
     prompt = create(:completion_kit_prompt)
     create(:completion_kit_run, prompt: prompt, dataset: create(:completion_kit_dataset))
 
     get "#{base_path}/#{prompt.id}/edit"
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("saving creates a new version")
+    expect(response.body).to include("changing the prompt or model saves a new version")
+    expect(response.body).to include("Name and tags update in place")
   end
 
   it "renders the model refresh button disabled and spinning while discovery is in progress" do
@@ -206,6 +207,21 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(prompt.reload.template).to eq("Summarize {{content}} for {{audience}}")
     expect(new_prompt.version_number).to eq(2)
     expect(new_prompt.current).to eq(true)
+  end
+
+  it "updates name and tags in place without a new version when only metadata changed on a prompt with runs" do
+    prompt = create(:completion_kit_prompt, name: "Original", family_key: "family-meta", version_number: 1)
+    create(:completion_kit_run, prompt: prompt)
+
+    expect do
+      patch "#{base_path}/#{prompt.id}", params: { prompt: {
+        name: "Renamed", template: prompt.template, llm_model: prompt.llm_model, tag_names: ["metaonly"]
+      } }
+    end.not_to change(CompletionKit::Prompt, :count)
+
+    expect(response).to redirect_to("#{base_path}/#{prompt.id}")
+    expect(prompt.reload.name).to eq("Renamed")
+    expect(prompt.tag_names).to eq(["metaonly"])
   end
 
   it "returns 422 instead of 500 when re-versioning onto a model that can't generate" do

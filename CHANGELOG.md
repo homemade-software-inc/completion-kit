@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.23] - 2026-07-28
+
+### Fixed
+- **Editing only a prompt's name, description, or tags created a spurious new version.** A prompt with runs versioned on every save regardless of what changed, so renaming it or changing its tags (metadata that has no effect on how the prompt renders or scores) minted a new version and cluttered the version history. It now mirrors how metrics already behave: a new version is created only when a behavioral attribute changes (the template or the model); name, description, and tags update in place on the current version. The edit-form note reflects this ("changing the prompt or model saves a new version; name and tags update in place").
+
 ## [0.28.22] - 2026-07-28
 
 ### Changed
