@@ -117,7 +117,12 @@ module CompletionKit
     end
 
     def reviews_for_summary
-      @reviews_for_summary ||= Review.where(response_id: responses.select(:id)).to_a
+      @reviews_for_summary ||=
+        if responses.loaded? && responses.all? { |response| response.association(:reviews).loaded? }
+          responses.flat_map(&:reviews)
+        else
+          Review.where(response_id: responses.select(:id)).to_a
+        end
     end
 
     def avg_score

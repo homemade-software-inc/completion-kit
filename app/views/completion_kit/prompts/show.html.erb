@@ -35,7 +35,7 @@
 <section class="ck-card--spaced">
   <div class="ck-prompt-preview__header">
     <p class="ck-kicker">Prompt</p>
-    <% judged_run = @runs.select { |r| r.prompt_id == @prompt.id && r.status == "completed" }.find { |r| r.responses.joins(:reviews).exists? } %>
+    <% judged_run = @runs.select { |r| r.prompt_id == @prompt.id && r.status == "completed" }.find { |r| r.responses.any? { |resp| resp.reviews.any? } } %>
     <% if judged_run %>
       <%= button_to suggest_run_path(judged_run), method: :post, class: ck_button_classes(:light, variant: :outline) + " ck-button--sm", form_class: "inline-block" do %>
         <%= heroicon_tag "sparkles", variant: :outline, class: "ck-magic-icon", "aria-hidden": "true" %>
@@ -48,7 +48,8 @@
   <pre class="ck-code ck-code--dark ck-code--prompt"><%= @prompt.template %></pre>
 </section>
 
-<% versions = @prompt.family_versions.includes(runs: { responses: :reviews }).to_a %>
+<% versions = @prompt.family_versions.to_a %>
+<% runs_by_version = @runs.group_by(&:prompt_id) %>
 <% predecessor_of = versions.index_with { |v| versions.detect { |o| o.version_number < v.version_number } } %>
 <% version_changed = ->(v, pred) { pred && (pred.template != v.template || pred.llm_model != v.llm_model) } %>
 <% if versions.size > 1 %>
@@ -65,7 +66,7 @@
       </thead>
       <tbody>
         <% versions.each do |v| %>
-          <% scoped_runs = v.runs.display_scoped %>
+          <% scoped_runs = runs_by_version[v.id] || [] %>
           <% best_score = scoped_runs.map(&:avg_score).compact.max %>
           <% best_pass_rate = scoped_runs.map(&:check_pass_rate).compact.max %>
           <% pred = predecessor_of[v] %>

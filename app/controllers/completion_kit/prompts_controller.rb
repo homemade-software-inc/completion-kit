@@ -9,7 +9,7 @@ module CompletionKit
     
     def show
       @runs = Run.where(prompt_id: @prompt.family_versions.select(:id))
-                 .includes(:prompt, :dataset, responses: :reviews)
+                 .includes(:prompt, :dataset, :tags, responses: :reviews)
                  .order(created_at: :desc)
                  .display_scoped
     end

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.15] - 2026-07-28
+
+### Fixed
+- **The prompt show page fired ~47 queries (about 9.5s) even on trivial data.** (#145) The page has no single slow query; it was the count of round-trips, all N+1s that scale with runs × versions. Four fixes: `Run#reviews_for_summary` (which backs `avg_score`/`metric_averages`/`check_pass_rate`) now reuses eager-loaded reviews when the run's responses are already loaded with their reviews, instead of always re-querying — so those per-run scores are free on this page, which eager-loads everything, while the run page keeps its single query. The versions table now groups the controller's already-loaded `@runs` in Ruby instead of re-running `v.runs.display_scoped` per version, which had discarded the eager-load and re-queried each run's reviews. The "Suggest improvements" check uses the loaded `:reviews` rather than a fresh `responses.joins(:reviews).exists?` per run. And the runs table's per-row tag rendering no longer fired a tags lookup per run — run `:tags` are eager-loaded. A query-count regression test asserts the page stays bounded as runs are added.
+
 ## [0.28.14] - 2026-07-28
 
 ### Fixed

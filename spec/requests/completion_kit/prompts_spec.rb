@@ -53,6 +53,38 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(response.body).to include("0%")
   end
 
+  it "renders the prompt show page without per-run queries (bounded regardless of run count)" do
+    v1 = create(:completion_kit_prompt, name: "Perf Fam", family_key: "perf-fam", version_number: 1, current: true)
+    metric = create(:completion_kit_metric)
+    add_runs = ->(count) do
+      count.times do
+        run = create(:completion_kit_run, prompt: v1, status: "completed")
+        run.replace_metrics!([metric.id])
+        response_record = create(:completion_kit_response, run: run, status: "succeeded")
+        create(:completion_kit_review, response: response_record, metric: metric, metric_name: "Quality", status: "succeeded", ai_score: 4.0)
+      end
+    end
+
+    query_count = -> do
+      count = 0
+      sub = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
+        payload = ActiveSupport::Notifications::Event.new(*args).payload
+        count += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) || payload[:sql].match?(/\A\s*(BEGIN|COMMIT|SAVEPOINT|RELEASE)/i)
+      end
+      get "#{base_path}/#{v1.id}"
+      ActiveSupport::Notifications.unsubscribe(sub)
+      count
+    end
+
+    add_runs.call(2)
+    baseline = query_count.call
+    add_runs.call(6)
+    scaled = query_count.call
+
+    expect(response).to have_http_status(:ok)
+    expect(scaled).to eq(baseline)
+  end
+
   it "renders show, new, and edit pages" do
     prompt = create(:completion_kit_prompt, name: "Visible Prompt")
 
