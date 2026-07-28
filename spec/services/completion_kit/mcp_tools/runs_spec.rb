@@ -2,13 +2,19 @@ require "rails_helper"
 
 RSpec.describe CompletionKit::McpTools::Runs do
   describe ".definitions" do
-    it "returns 6 tool definitions" do
+    it "returns 9 tool definitions" do
       defs = described_class.definitions
-      expect(defs.length).to eq(6)
+      expect(defs.length).to eq(9)
       expect(defs.map { |d| d[:name] }).to match_array(%w[
         runs_list runs_get runs_create runs_update
         runs_delete runs_generate
+        runs_regrade runs_rerun runs_retry_failures
       ])
+    end
+
+    it "advertises metric_group_id on the create and update schemas" do
+      expect(described_class::TOOLS["runs_create"][:inputSchema][:properties]).to have_key(:metric_group_id)
+      expect(described_class::TOOLS["runs_update"][:inputSchema][:properties]).to have_key(:metric_group_id)
     end
   end
 
@@ -163,6 +169,113 @@ RSpec.describe CompletionKit::McpTools::Runs do
       run.update!(tag_names: ["a", "b"])
       described_class.call("runs_update", {"id" => run.id, "tag_names" => ["c"]})
       expect(run.reload.tag_names).to eq(["c"])
+    end
+
+    it "expands metric_group_id to the group's metrics on runs_create" do
+      metric = create(:completion_kit_metric)
+      group = create(:completion_kit_metric_group)
+      group.replace_metrics!([metric.id])
+
+      result = described_class.call("runs_create", {"name" => "Grouped", "prompt_id" => prompt.id, "metric_group_id" => group.id})
+      content = JSON.parse(result[:content].first[:text])
+
+      expect(content["metric_ids"]).to eq([metric.id])
+    end
+
+    it "expands metric_group_id to the group's metrics on runs_update" do
+      metric = create(:completion_kit_metric)
+      group = create(:completion_kit_metric_group)
+      group.replace_metrics!([metric.id])
+
+      described_class.call("runs_update", {"id" => run.id, "metric_group_id" => group.id})
+
+      expect(run.reload.metric_ids).to eq([metric.id])
+    end
+
+    it "prefers explicit metric_ids over metric_group_id when both are given" do
+      chosen = create(:completion_kit_metric)
+      group = create(:completion_kit_metric_group)
+      group.replace_metrics!([create(:completion_kit_metric).id])
+
+      result = described_class.call("runs_create", {"name" => "Both", "prompt_id" => prompt.id, "metric_ids" => [chosen.id], "metric_group_id" => group.id})
+      content = JSON.parse(result[:content].first[:text])
+
+      expect(content["metric_ids"]).to eq([chosen.id])
+    end
+
+    it "warns when a created run has no metrics attached, so the silent no-op is visible" do
+      result = described_class.call("runs_create", {"name" => "Unjudged", "prompt_id" => prompt.id})
+      content = JSON.parse(result[:content].first[:text])
+
+      expect(content["metric_ids"]).to eq([])
+      expect(content["warning"]).to include("No metrics are attached")
+    end
+
+    it "omits the warning once metrics are attached" do
+      metric = create(:completion_kit_metric)
+      result = described_class.call("runs_create", {"name" => "Judged", "prompt_id" => prompt.id, "metric_ids" => [metric.id]})
+      content = JSON.parse(result[:content].first[:text])
+
+      expect(content).not_to have_key("warning")
+    end
+
+    it "regrades a run's existing responses" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:regrade!).and_return(true)
+      result = described_class.call("runs_regrade", {"id" => run.id})
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["id"]).to eq(run.id)
+    end
+
+    it "reports an error when there is nothing to regrade" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:regrade!).and_return(false)
+      result = described_class.call("runs_regrade", {"id" => run.id})
+      expect(result[:isError]).to be true
+      expect(result[:content].first[:text]).to include("Nothing to re-grade")
+    end
+
+    it "reruns a run as a fresh started copy" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
+      expect do
+        described_class.call("runs_rerun", {"id" => run.id})
+      end.to change(CompletionKit::Run, :count).by(1)
+    end
+
+    it "reports an error when the rerun copy cannot start" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
+      allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("Dataset has no rows")
+      result = described_class.call("runs_rerun", {"id" => run.id})
+      expect(result[:isError]).to be true
+      expect(result[:content].first[:text]).to include("Dataset has no rows")
+    end
+
+    it "retries only the failed responses of a run" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:stale_review_summary).and_return([])
+      succeeded = create(:completion_kit_response, run: run, status: "succeeded")
+      failed = create(:completion_kit_response, run: run, status: "failed")
+
+      described_class.call("runs_retry_failures", {"id" => run.id})
+
+      expect(failed.reload.status).to eq("pending")
+      expect(succeeded.reload.status).to eq("succeeded")
+      expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).with(run.id, failed.id)
+    end
+
+    it "limits a retry to specific response ids via only" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:stale_review_summary).and_return([])
+      first = create(:completion_kit_response, run: run, status: "failed")
+      second = create(:completion_kit_response, run: run, status: "failed")
+
+      described_class.call("runs_retry_failures", {"id" => run.id, "only" => [first.id]})
+
+      expect(first.reload.status).to eq("pending")
+      expect(second.reload.status).to eq("failed")
+    end
+
+    it "refuses to retry failures when the judge version is stale" do
+      allow_any_instance_of(CompletionKit::Run).to receive(:stale_review_summary).and_return([{metric: "x"}])
+      result = described_class.call("runs_retry_failures", {"id" => run.id})
+      expect(result[:isError]).to be true
+      expect(result[:content].first[:text]).to include("Judge has changed")
     end
   end
 end

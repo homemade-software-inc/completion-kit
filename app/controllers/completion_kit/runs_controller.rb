@@ -110,17 +110,7 @@ module CompletionKit
     end
 
     def rerun
-      new_run = Run.create!(
-        prompt_id: @run.prompt_id,
-        dataset_id: @run.dataset_id,
-        judge_model: @run.judge_model,
-        temperature: @run.temperature,
-        output_column: @run.output_column,
-        expected_column: @run.expected_column,
-        tag_names: @run.tag_names,
-        status: "pending"
-      )
-      new_run.replace_metrics!(@run.metric_ids)
+      new_run = @run.rerun!
       if new_run.start!
         redirect_to run_path(new_run), notice: "Re-running with the same configuration."
       else
@@ -162,27 +152,7 @@ module CompletionKit
         return
       end
 
-      scope = @run.responses.where(status: "failed")
-      scope = scope.where(id: params[:only]) if params[:only].present?
-
-      ActiveRecord::Base.transaction do
-        failed_response_ids = scope.pluck(:id)
-        Review.where(response_id: failed_response_ids, status: "failed").update_all(
-          status: "pending",
-          attempts: 0,
-          error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
-          ai_score: nil, passed: nil, ai_feedback: nil
-        )
-        scope.update_all(
-          status: "pending",
-          attempts: 0,
-          error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
-          response_text: nil
-        )
-        @run.update!(status: "running")
-        failed_response_ids.each { |rid| GenerateRowJob.perform_later(@run.id, rid) }
-      end
-
+      @run.retry_failures!(only: params[:only])
       @run.broadcast_ui
       redirect_to run_path(@run)
     end

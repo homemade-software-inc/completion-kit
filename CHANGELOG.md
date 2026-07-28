@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.20] - 2026-07-28
+
+### Fixed
+- **MCP `runs_create`/`runs_update` silently dropped `metric_group_id`, producing a run that judged nothing but reported success.** (#147) Metric groups are first-class MCP objects, so `metric_group_id` reads as the natural way to attach a group's metrics — but the tools accepted only `metric_ids` and ignored anything else, so the run was created with no metrics, generation completed, and the run ended `completed` with `avg_score: null`: a green false-success. The tools now accept `metric_group_id` and expand it to the group's current `metric_ids` (explicit `metric_ids` still wins if both are passed). Independently, any MCP run payload for a run with no metrics attached now carries a `warning` ("No metrics are attached, so this run judges nothing…"), so the no-op is visible on `runs_create`/`runs_update`/`runs_get`/`runs_generate` even if metrics were dropped for another reason.
+
+### Added
+- **MCP tools `runs_regrade`, `runs_rerun`, and `runs_retry_failures`.** (#148) The engine and REST API already had these verbs, and `runs_generate` refuses on a completed run and points at them, but they weren't exposed over MCP — so re-judging an already-generated run (for example after attaching or editing metrics) forced a wasteful delete + recreate + regenerate. `runs_regrade` grades a run's existing responses with its current metrics without regenerating; `runs_rerun` starts a fresh copy; `runs_retry_failures` re-runs only failed responses (optionally limited via `only`). The shared `rerun`/`retry_failures` logic was extracted into `Run#rerun!` / `Run#retry_failures!` so the web controller, REST controller, and MCP tools now go through one implementation.
+
 ## [0.28.19] - 2026-07-28
 
 ### Fixed

@@ -307,6 +307,45 @@ module CompletionKit
       true
     end
 
+    def rerun!
+      new_run = Run.create!(
+        prompt_id: prompt_id,
+        dataset_id: dataset_id,
+        judge_model: judge_model,
+        temperature: temperature,
+        output_column: output_column,
+        expected_column: expected_column,
+        tag_names: tag_names,
+        status: "pending"
+      )
+      new_run.replace_metrics!(metric_ids)
+      new_run
+    end
+
+    def retry_failures!(only: nil)
+      scope = responses.where(status: "failed")
+      scope = scope.where(id: only) if only.present?
+
+      transaction do
+        failed_response_ids = scope.pluck(:id)
+        Review.where(response_id: failed_response_ids, status: "failed").update_all(
+          status: "pending",
+          attempts: 0,
+          error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
+          ai_score: nil, passed: nil, ai_feedback: nil
+        )
+        scope.update_all(
+          status: "pending",
+          attempts: 0,
+          error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
+          response_text: nil
+        )
+        update!(status: "running")
+        failed_response_ids.each { |rid| GenerateRowJob.perform_later(id, rid) }
+      end
+      self
+    end
+
     def progress_snapshot
       generated_done = responses.where(status: "succeeded").count
       generated_failed = responses.where(status: "failed").count
