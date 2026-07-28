@@ -3874,7 +3874,8 @@ select.ck-input {
 
 .ck-prompts-table th:nth-child(1), .ck-prompts-table td:nth-child(1) { width: auto; }
 .ck-prompts-table th:nth-child(2), .ck-prompts-table td:nth-child(2) { width: 6rem; white-space: nowrap; }
-.ck-prompts-table th:nth-child(3), .ck-prompts-table td:nth-child(3) { width: 12rem; white-space: nowrap; }
+.ck-prompts-table th:nth-child(3), .ck-prompts-table td:nth-child(3) { width: 15.5rem; white-space: nowrap; overflow: hidden; }
+.ck-prompts-table td:nth-child(3) .ck-chip { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
 .ck-prompts-table th:nth-child(4), .ck-prompts-table td:nth-child(4) { width: 7.5rem; white-space: nowrap; }
 .ck-prompts-table th:nth-child(5), .ck-prompts-table td:nth-child(5) { width: 7.5rem; white-space: nowrap; }
 .ck-prompts-table th:nth-child(6), .ck-prompts-table td:nth-child(6) { width: 3rem; }

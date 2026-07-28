@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.14] - 2026-07-28
+
+### Fixed
+- **A long model ID in the prompts list overlapped the Best Score badge.** (#144) The Model column was a fixed 12rem with `white-space: nowrap` but no overflow clipping, so a full dated Anthropic ID (for example `claude-haiku-4-5-20251001`, ~24 characters) spilled out of its cell and rendered on top of the next column's score badge. The column is now 15.5rem (enough for a dated snapshot ID to show in full), clips its overflow so nothing can bleed into the score column, and ellipsizes the model chip as a backstop for anything even longer.
+
 ## [0.28.13] - 2026-07-27
 
 ### Fixed
