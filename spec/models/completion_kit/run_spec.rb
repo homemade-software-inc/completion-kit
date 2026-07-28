@@ -428,6 +428,22 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).once
     end
 
+    it "inserts responses in bounded batches so the INSERT statement stays small on large datasets" do
+      stub_const("CompletionKit::Run::INSERT_BATCH_SIZE", 2)
+      dataset = create(:completion_kit_dataset, csv_data: "input\na\nb\nc\nd\ne\n")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+
+      batch_sizes = []
+      allow(CompletionKit::Response).to receive(:insert_all).and_wrap_original do |orig, rows|
+        batch_sizes << rows.size
+        orig.call(rows)
+      end
+
+      expect(run.start!).to be true
+      expect(batch_sizes).to eq([2, 2, 1])
+      expect(run.responses.count).to eq(5)
+    end
+
     it "refuses to restart a running run and leaves its responses alone (prevents data loss from a stray POST /generate)" do
       run = create(:completion_kit_run, prompt: prompt, dataset: nil, status: "running")
       existing = create(:completion_kit_response, run: run, status: "succeeded")

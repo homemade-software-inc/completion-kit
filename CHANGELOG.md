@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.19] - 2026-07-28
+
+### Fixed
+- **Starting a run over a large dataset inserted every response in one `insert_all`, producing a multi-megabyte SQL string that could stall the web worker.** (#149) Since 0.28.0 a run's responses were created in a single INSERT with one value tuple per row; on a ~20k-row dataset that statement is several MB. Anything that regex-scans SQL per query (Honeybadger's breadcrumb obfuscation, Rails SQL logging) then exceeds the 1s `Regexp.timeout` and spins CPU, which on a single-worker host blocks the health check and forces a restart. The insert is now chunked into batches of `INSERT_BATCH_SIZE` (1000) rows, keeping each statement small regardless of dataset size while preserving the batched-insert speedup.
+
 ## [0.28.18] - 2026-07-28
 
 ### Fixed

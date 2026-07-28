@@ -4,6 +4,7 @@ module CompletionKit
     include CompletionKit::Taggable
 
     STATUSES = %w[pending running completed failed].freeze
+    INSERT_BATCH_SIZE = 1000
 
     belongs_to :prompt, optional: true
     belongs_to :dataset, optional: true
@@ -240,7 +241,7 @@ module CompletionKit
               updated_at: now
             }.merge(scope_defaults)
           end
-          Response.insert_all(response_attrs)
+          response_attrs.each_slice(INSERT_BATCH_SIZE) { |batch| Response.insert_all(batch) }
           responses.reset
 
           response_ids = responses.order(:row_index).pluck(:id)
