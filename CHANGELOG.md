@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.26] - 2026-07-28
+
+### Added
+- **Runs now take a generation `max_tokens`, so a prompt whose correct output is long can actually be evaluated.** (#159) Generation previously always used each provider client's built-in default (1000 for Anthropic/Azure/Ollama, 8192 for OpenAI/OpenRouter) with no way to change it, so a prompt that needs a higher cap in production got truncated output in every run and the judge scored the truncation ("the JSON is malformed, several entries missing") rather than the prompt. `max_tokens` is now a run setting on the new-run form, the REST API (`POST`/`PATCH /api/v1/runs`, returned by `GET /api/v1/runs/:id`), and the `runs_create` / `runs_update` MCP tools. Leaving it unset keeps the current per-client default. Changing it on a run that already has responses forks a new run, like the other generation settings, and `rerun` carries it over. The prompt-improvement validator regenerates with the same cap so its candidate outputs stay comparable.
+- **`temperature` is now settable over MCP.** (#159) `runs_create` and `runs_update` accepted neither temperature nor any other generation parameter, so every MCP-created run silently took the column default while the web form and REST API could both set it. Both tools now accept it.
+
+  **Host apps need `bin/rails completion_kit:install:migrations && bin/rails db:migrate` to pick up the new `max_tokens` column.**
+
 ## [0.28.25] - 2026-07-28
 
 ### Added

@@ -83,6 +83,10 @@
       <span class="ck-run-config__warn" style="color: var(--ck-dim);" title="The model rejected the temperature parameter, so CompletionKit re-sent the request without it.">ignored by model</span>
     <% end %>
   </div>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Max tokens</span>
+    <span><%= @run.max_tokens || "Provider default" %></span>
+  </div>
 </div>
 
 <% if @run.prompt %>

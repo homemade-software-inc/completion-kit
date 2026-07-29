@@ -18,6 +18,7 @@ module CompletionKit
 
     validates :name, presence: true
     validates :status, inclusion: { in: STATUSES }
+    validates :max_tokens, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validate :dataset_supplies_prompt_variables
     validate :judge_only_run_supplies_output_column
     validate :dataset_supplies_expected_column
@@ -390,12 +391,23 @@ module CompletionKit
       true
     end
 
+    # The options every generation call for this run sends to the provider.
+    # max_tokens is omitted when unset so each client keeps its own default;
+    # setting it is how a run reproduces a production cap and stops the judge
+    # scoring truncated output.
+    def generation_options(prompt)
+      options = {model: prompt.llm_model, temperature: temperature}
+      options[:max_tokens] = max_tokens if max_tokens
+      options
+    end
+
     def rerun!
       new_run = Run.create!(
         prompt_id: prompt_id,
         dataset_id: dataset_id,
         judge_model: judge_model,
         temperature: temperature,
+        max_tokens: max_tokens,
         output_column: output_column,
         expected_column: expected_column,
         tag_names: tag_names,
@@ -476,6 +488,7 @@ module CompletionKit
         output_column: output_column,
         expected_column: expected_column,
         created_at: created_at, updated_at: updated_at,
+        max_tokens: max_tokens,
         responses_count: responses.count, avg_score: avg_score,
         check_pass_rate: check_pass_rate,
         metric_averages: metric_averages,

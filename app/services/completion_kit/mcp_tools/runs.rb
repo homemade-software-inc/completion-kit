@@ -3,6 +3,15 @@ module CompletionKit
     module Runs
       extend Base
 
+      TEMPERATURE_DESCRIPTION = "Sampling temperature for generation, 0 to 1. Defaults to the column default. " \
+                                "Reasoning models ignore it and the run is flagged temperature_ignored.".freeze
+
+      MAX_TOKENS_DESCRIPTION = "Cap on generated tokens per row. Leave unset to use the provider client's default, " \
+                               "which is what silently truncates long outputs and makes the judge score malformed " \
+                               "JSON. Set it to whatever the prompt uses in production so the eval matches.".freeze
+
+      GENERATION_FIELDS = %w[temperature max_tokens].freeze
+
       TOOLS = {
         "runs_list" => {
           description: "List all runs",
@@ -23,6 +32,8 @@ module CompletionKit
             properties: {
               name: {type: "string"}, prompt_id: {type: "integer"},
               dataset_id: {type: "integer"}, judge_model: {type: "string"},
+              temperature: {type: "number", description: TEMPERATURE_DESCRIPTION},
+              max_tokens: {type: "integer", description: MAX_TOKENS_DESCRIPTION},
               output_column: {type: "string", description: "Dataset column to grade when prompt_id is omitted; defaults to \"actual_output\"."},
               expected_column: {type: "string", description: "Dataset column holding each row's answer key / ground truth, graded by checks with compare_to \"expected\" and passed to the judge; defaults to \"expected_output\"."},
               metric_ids: {type: "array", items: {type: "integer"}},
@@ -40,6 +51,8 @@ module CompletionKit
             properties: {
               id: {type: "integer"}, name: {type: "string"},
               dataset_id: {type: "integer"}, judge_model: {type: "string"},
+              temperature: {type: "number", description: TEMPERATURE_DESCRIPTION},
+              max_tokens: {type: "integer", description: MAX_TOKENS_DESCRIPTION},
               output_column: {type: "string"},
               expected_column: {type: "string"},
               metric_ids: {type: "array", items: {type: "integer"}},
@@ -86,7 +99,7 @@ module CompletionKit
       end
 
       def self.create(args)
-        run = Run.new(args.slice("name", "prompt_id", "dataset_id", "judge_model", "output_column", "expected_column"))
+        run = Run.new(args.slice("name", "prompt_id", "dataset_id", "judge_model", "output_column", "expected_column", *GENERATION_FIELDS))
         if run.save
           run.replace_metrics!(resolve_metric_ids(args))
           run.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
@@ -98,7 +111,7 @@ module CompletionKit
 
       def self.update(args)
         run = Run.find(args["id"])
-        if run.update(args.except("id", "metric_ids", "metric_group_id", "tag_names").slice("name", "dataset_id", "judge_model", "output_column", "expected_column"))
+        if run.update(args.except("id", "metric_ids", "metric_group_id", "tag_names").slice("name", "dataset_id", "judge_model", "output_column", "expected_column", *GENERATION_FIELDS))
           run.replace_metrics!(resolve_metric_ids(args)) if args.key?("metric_ids") || args["metric_group_id"].present?
           run.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(run_payload(run.reload))

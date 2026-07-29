@@ -16,6 +16,12 @@ RSpec.describe CompletionKit::McpTools::Runs do
       expect(described_class::TOOLS["runs_create"][:inputSchema][:properties]).to have_key(:metric_group_id)
       expect(described_class::TOOLS["runs_update"][:inputSchema][:properties]).to have_key(:metric_group_id)
     end
+
+    it "advertises the generation parameters on the create and update schemas" do
+      %w[runs_create runs_update].each do |tool|
+        expect(described_class::TOOLS[tool][:inputSchema][:properties]).to include(:temperature, :max_tokens)
+      end
+    end
   end
 
   describe ".call" do
@@ -61,6 +67,28 @@ RSpec.describe CompletionKit::McpTools::Runs do
       result = described_class.call("runs_create", {"name" => "New Run", "prompt_id" => prompt.id})
       content = JSON.parse(result[:content].first[:text])
       expect(content["name"]).to eq("New Run")
+    end
+
+    it "creates a run with generation parameters" do
+      result = described_class.call("runs_create", {
+        "name" => "Long output", "prompt_id" => prompt.id, "temperature" => 0.2, "max_tokens" => 2048
+      })
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["temperature"]).to eq(0.2)
+      expect(content["max_tokens"]).to eq(2048)
+    end
+
+    it "updates a run's generation parameters" do
+      result = described_class.call("runs_update", {"id" => run.id, "temperature" => 0.0, "max_tokens" => 4096})
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["temperature"]).to eq(0.0)
+      expect(content["max_tokens"]).to eq(4096)
+    end
+
+    it "rejects a non-positive max_tokens" do
+      result = described_class.call("runs_create", {"name" => "Bad", "prompt_id" => prompt.id, "max_tokens" => 0})
+      expect(result[:isError]).to be(true)
+      expect(result[:content].first[:text]).to match(/Max tokens/i)
     end
 
     it "creates a run with metric_ids" do

@@ -93,6 +93,14 @@
       </div>
     </div>
 
+    <div class="ck-field">
+      <label class="ck-label" for="run_max_tokens" style="position: relative;">
+        Max tokens<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup">The ceiling on how many tokens the model may generate per row. Leave it blank to use the provider's default. Set it when your prompt produces long output: if generation hits the cap the response is cut off mid-sentence, and the judge scores the truncation rather than the prompt. Match whatever your production caller uses so the evaluation reflects reality.</span>
+      </label>
+      <%= form.number_field :max_tokens, min: 1, step: 1, class: "ck-input", id: "run_max_tokens", placeholder: "Provider default", **ck_field_aria(form, :max_tokens) %>
+      <%= ck_field_error(form, :max_tokens) %>
+    </div>
+
     <div class="ck-field" id="judge-field">
       <label class="ck-label" for="run_judge_model" style="position: relative;">
         Judge model<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup">Judge models score generated responses against your metrics. Pick one when configuring a run.</span>

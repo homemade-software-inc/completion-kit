@@ -77,7 +77,7 @@ module CompletionKit
       client = LlmClient.for_model(model, ApiConfig.for_model(model))
       raise CompletionKit::ConfigurationError, client.configuration_errors.join(", ") unless client.configured?
 
-      text = client.generate_completion(rendered, model: model, temperature: @run.temperature)
+      text = client.generate_completion(rendered, **@run.generation_options(@run.prompt))
       raise StandardError, text if text.to_s.start_with?("Error:")
 
       text

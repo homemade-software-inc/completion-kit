@@ -23,6 +23,28 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     expect(response.error_class).to be_nil
   end
 
+  it "sends the run's max_tokens so long outputs are not silently truncated" do
+    run.update!(max_tokens: 2048)
+    fake_client = double("client", configured?: true)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
+    expect(fake_client).to receive(:generate_completion).with(
+      anything, hash_including(max_tokens: 2048, temperature: run.temperature)
+    ).and_return("ok")
+
+    described_class.perform_now(run.id, response.id)
+  end
+
+  it "omits max_tokens when the run leaves it unset, so the client default applies" do
+    fake_client = double("client", configured?: true)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
+    expect(fake_client).to receive(:generate_completion) { |_prompt, options|
+      expect(options).not_to have_key(:max_tokens)
+      "ok"
+    }
+
+    described_class.perform_now(run.id, response.id)
+  end
+
   it "marks the run as temperature_ignored when the client reports the parameter was dropped" do
     fake_client = double("client", generate_completion: "ok", configured?: true, temperature_dropped?: true)
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)

@@ -95,6 +95,12 @@ RSpec.describe "API V1 Runs", type: :request do
       expect(body).to have_key("check_pass_rate")
     end
 
+    it "exposes the generation cap so a caller can reproduce a production max_tokens" do
+      run = create(:completion_kit_run, max_tokens: 2048)
+      get "/completion_kit/api/v1/runs/#{run.id}", headers: headers
+      expect(JSON.parse(response.body)["max_tokens"]).to eq(2048)
+    end
+
     it "breaks the score down per metric so callers need not list responses" do
       run = create(:completion_kit_run)
       resp = create(:completion_kit_response, run: run)
