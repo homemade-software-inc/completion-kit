@@ -95,6 +95,18 @@ RSpec.describe "API V1 Runs", type: :request do
       expect(body).to have_key("check_pass_rate")
     end
 
+    it "breaks the score down per metric so callers need not list responses" do
+      run = create(:completion_kit_run)
+      resp = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: resp, metric_name: "Tone", ai_score: 2.0)
+
+      get "/completion_kit/api/v1/runs/#{run.id}", headers: headers
+
+      expect(JSON.parse(response.body)["metric_averages"]).to eq(
+        [{"name" => "Tone", "avg" => 2.0, "count" => 1, "low_count" => 1}]
+      )
+    end
+
     it "returns 404 for missing run" do
       get "/completion_kit/api/v1/runs/999999", headers: headers
       expect(response).to have_http_status(:not_found)

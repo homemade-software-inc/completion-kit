@@ -87,6 +87,20 @@ RSpec.describe "Results and scoring", type: :model do
       expect(clarity[:avg]).to eq(2.5)
     end
 
+    it "reports how many rows each metric graded and how many scored low" do
+      avgs = run.metric_averages
+
+      expect(avgs.find { |m| m[:name] == "Relevance" }).to eq(name: "Relevance", avg: 4.5, count: 2, low_count: 0)
+      expect(avgs.find { |m| m[:name] == "Clarity" }).to eq(name: "Clarity", avg: 2.5, count: 2, low_count: 1)
+    end
+
+    it "follows the configured medium quality threshold when counting low scores" do
+      CompletionKit.config.medium_quality_threshold = 5
+      expect(run.metric_averages.find { |m| m[:name] == "Relevance" }[:low_count]).to eq(1)
+    ensure
+      CompletionKit.instance_variable_set(:@config, nil)
+    end
+
     it "keeps {name, avg} for rubric metrics and adds a kind-tagged pass-rate entry for checks" do
       resp = create(:completion_kit_response, run: run)
       create(:completion_kit_review, :check, response: resp, passed: true, metric_name: "Valid JSON")
@@ -96,9 +110,8 @@ RSpec.describe "Results and scoring", type: :model do
       relevance = avgs.find { |m| m[:name] == "Relevance" }
       check = avgs.find { |m| m[:name] == "Valid JSON" }
 
-      expect(relevance).to eq(name: "Relevance", avg: 4.5)
-      expect(check[:kind]).to eq("check")
-      expect(check[:pass_rate]).to eq(0.5)
+      expect(relevance).to eq(name: "Relevance", avg: 4.5, count: 2, low_count: 0)
+      expect(check).to eq(name: "Valid JSON", kind: "check", pass_rate: 0.5, count: 2, low_count: 1)
     end
 
     it "omits a metric whose reviews are all unresolved" do

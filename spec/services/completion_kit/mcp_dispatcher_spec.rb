@@ -67,7 +67,7 @@ RSpec.describe CompletionKit::McpDispatcher do
       create(:completion_kit_response, run: run)
       result = described_class.dispatch("tools/call", {"name" => "responses_list", "arguments" => {"run_id" => run.id}})
       content = JSON.parse(result[:content].first[:text])
-      expect(content).to be_an(Array)
+      expect(content["responses"]).to be_an(Array)
     end
 
     it "calls a dataset tool through dispatcher" do

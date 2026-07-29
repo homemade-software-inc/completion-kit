@@ -38,6 +38,25 @@ RSpec.describe "API V1 Responses", type: :request do
       expect(JSON.parse(response.body).size).to eq(2)
       expect(response.headers["X-Total-Count"]).to eq("3")
     end
+
+    it "returns only the requested fields" do
+      resp = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: resp, metric_name: "Tone", ai_score: 3.0)
+      get "/completion_kit/api/v1/runs/#{run.id}/responses?fields=score,reviews.metric_name", headers: headers
+      body = JSON.parse(response.body).first
+      expect(body.keys).to match_array(%w[id score reviews])
+      expect(body["reviews"]).to eq([{"metric_name" => "Tone"}])
+    end
+
+    it "returns the worst rows first, filtered to the low scorers" do
+      good = create(:completion_kit_response, run: run)
+      bad = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: good, ai_score: 5.0)
+      create(:completion_kit_review, response: bad, ai_score: 1.0)
+      get "/completion_kit/api/v1/runs/#{run.id}/responses?max_score=2&sort=score_asc", headers: headers
+      expect(JSON.parse(response.body).map { |r| r["id"] }).to eq([bad.id])
+      expect(response.headers["X-Total-Count"]).to eq("1")
+    end
   end
 
   describe "GET /api/v1/runs/:run_id/responses/:id" do

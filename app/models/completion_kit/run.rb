@@ -65,6 +65,7 @@ module CompletionKit
         :metric_name,
         Arel.sql("AVG(ai_score)"),
         Arel.sql("COUNT(ai_score)"),
+        Arel.sql("SUM(CASE WHEN ai_score < #{low_score_ceiling} THEN 1 ELSE 0 END)"),
         Arel.sql("COUNT(passed)"),
         Arel.sql("SUM(CASE WHEN passed THEN 1 ELSE 0 END)")
       )
@@ -77,15 +78,23 @@ module CompletionKit
         run.avg_score = stats && stats[:avg] ? stats[:avg].to_f.round(2) : nil
         run.check_pass_rate = stats && stats[:resolved] > 0 ? (stats[:passed].to_f / stats[:resolved]).round(2) : nil
 
-        run.metric_averages = (metrics_by_run[run.id] || []).filter_map do |(_rid, name, avg, scored, resolved, passed)|
+        run.metric_averages = (metrics_by_run[run.id] || []).filter_map do |(_rid, name, avg, scored, low, resolved, passed)|
           if scored.to_i > 0
-            {name: name, avg: avg.to_f.round(1)}
+            {name: name, avg: avg.to_f.round(1), count: scored.to_i, low_count: low.to_i}
           elsif resolved.to_i > 0
-            {name: name, kind: "check", pass_rate: (passed.to_i.to_f / resolved.to_i).round(2)}
+            {name: name, kind: "check", pass_rate: (passed.to_i.to_f / resolved.to_i).round(2),
+             count: resolved.to_i, low_count: resolved.to_i - passed.to_i}
           end
         end
       end
       runs
+    end
+
+    # Scores below this are the ones worth reading: `low_count` on each metric
+    # average counts them, so a caller can spot the dragging metric without
+    # pulling every review.
+    def self.low_score_ceiling
+      CompletionKit.config.medium_quality_threshold.to_f
     end
 
     # A scoring-only run grades a pre-existing column on the dataset instead of
@@ -202,17 +211,20 @@ module CompletionKit
     def metric_averages
       return @metric_averages if defined?(@metric_averages)
 
+      ceiling = self.class.low_score_ceiling
       reviews_for_summary.group_by(&:metric_name).filter_map do |name, reviews|
         scored = reviews.select { |r| r.ai_score.present? }
         if scored.any?
           scores = scored.map { |r| r.ai_score.to_f }
-          { name: name, avg: (scores.sum / scores.length).round(1) }
+          { name: name, avg: (scores.sum / scores.length).round(1), count: scores.length,
+            low_count: scores.count { |score| score < ceiling } }
         else
           resolved = reviews.reject { |r| r.passed.nil? }
           next if resolved.empty?
 
           passed = resolved.count { |r| r.passed == true }
-          { name: name, kind: "check", pass_rate: (passed.to_f / resolved.length).round(2) }
+          { name: name, kind: "check", pass_rate: (passed.to_f / resolved.length).round(2),
+            count: resolved.length, low_count: resolved.length - passed }
         end
       end
     end
@@ -466,6 +478,7 @@ module CompletionKit
         created_at: created_at, updated_at: updated_at,
         responses_count: responses.count, avg_score: avg_score,
         check_pass_rate: check_pass_rate,
+        metric_averages: metric_averages,
         progress_current: snap[:generated_done],
         progress_total: snap[:generated_total],
         progress: {

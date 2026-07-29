@@ -10,7 +10,9 @@ module CompletionKit
           handler: :list
         },
         "runs_get" => {
-          description: "Get a run by ID",
+          description: "Get a run by ID, including \"metric_averages\": a per-metric breakdown with each metric's " \
+                       "average score (or pass rate for checks), how many rows it graded, and how many scored low. " \
+                       "Use this to find the metric dragging a prompt down without listing responses.",
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :get
         },

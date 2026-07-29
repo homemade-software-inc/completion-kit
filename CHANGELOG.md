@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.25] - 2026-07-28
+
+### Added
+- **Runs now report a per-metric score breakdown, so "which metric is dragging this prompt down" no longer costs a full response dump.** (#160) `GET /api/v1/runs/:id` and the `runs_get` MCP tool return `metric_averages`: one entry per metric with its average score (`pass_rate` for checks), `count` (rows graded) and `low_count` (rows scoring below the configured medium quality threshold). The breakdown already existed for the runs index; it is now on the run payload itself and costs no extra queries.
+- **`GET /api/v1/runs/:run_id/responses` and the `responses_list` MCP tool can now return just what you asked for.** (#160) New `fields` (comma-separated response keys, `id` always included, `reviews.`-prefixed keys trim each nested review), `min_score` / `max_score` (filter on a row's average judge score) and `sort` (`id`, `score_asc`, `score_desc`) parameters. Fetching the ten worst rows with only their scores is now one call instead of downloading every `input_data`, `response_text` and `ai_feedback` in the run and aggregating client-side.
+
+### Changed
+- **`responses_list` (MCP) now pages by default and returns a `{total, limit, offset, returned, responses}` envelope instead of a bare array.** (#160) It previously returned every response with no limit, which on a normal run is multiple MB and trips the MCP "result exceeds max tokens" cap. It now defaults to 50 rows (max 500) and accepts `limit` / `offset`. The REST endpoint is unchanged: it still returns a bare array with the totals in the `X-Total-Count` / `X-Limit` / `X-Offset` headers.
+
 ## [0.28.24] - 2026-07-28
 
 ### Fixed

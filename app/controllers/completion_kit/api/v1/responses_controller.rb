@@ -6,9 +6,12 @@ module CompletionKit
         before_action :set_response, only: [:show]
 
         def index
-          scope = @run.responses.includes(:reviews)
-          scope = scope.where(status: params[:status]) if params[:status].present?
-          render json: paginate(scope.order(:id))
+          query = ResponseQuery.new(
+            @run,
+            status: params[:status], min_score: params[:min_score], max_score: params[:max_score],
+            sort: params[:sort], fields: params[:fields]
+          )
+          render json: paginate(query.relation).map { |response| query.serialize(response) }
         end
 
         def show

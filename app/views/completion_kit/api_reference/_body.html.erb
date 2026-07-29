@@ -135,6 +135,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:id</p>
         <p class="ck-meta-copy">Get a run with status, progress, response count, and average score.</p>
+        <p class="ck-api-params"><strong>Also returns:</strong>&ensp;<code>metric_averages</code>, a per-metric breakdown with each metric's average score (<code>pass_rate</code> for checks), the number of rows it graded, and <code>low_count</code>, how many scored below the medium quality threshold</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl #{base_url}/api/v1/runs/1 \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <%= render "completion_kit/api_reference/resource_list", title: "Your recent runs",
@@ -185,8 +186,9 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:run_id/responses</p>
         <p class="ck-meta-copy">List responses for a run, including nested review scores.</p>
-        <p class="ck-api-params"><strong>Optional filters:</strong>&ensp;<code>status</code> (<code>pending</code>, <code>retrying</code>, <code>succeeded</code>, <code>failed</code>), plus <code>limit</code> and <code>offset</code></p>
-        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl #{base_url}/api/v1/runs/1/responses \\\n  -H \"Authorization: Bearer #{token}\"" %>
+        <p class="ck-api-params"><strong>Optional filters:</strong>&ensp;<code>status</code> (<code>pending</code>, <code>retrying</code>, <code>succeeded</code>, <code>failed</code>), <code>min_score</code>, <code>max_score</code>, <code>sort</code> (<code>id</code>, <code>score_asc</code>, <code>score_desc</code>), plus <code>limit</code> and <code>offset</code></p>
+        <p class="ck-api-params"><strong>Trim the payload:</strong>&ensp;<code>fields</code> takes a comma-separated list of response keys and always returns <code>id</code>. Prefix with <code>reviews.</code> to trim each nested review, e.g. <code>fields=score,reviews.metric_name,reviews.ai_score</code></p>
+        <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl \"#{base_url}/api/v1/runs/1/responses?sort=score_asc&limit=10&fields=id,score,reviews.metric_name,reviews.ai_score\" \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:run_id/responses/:id</p>
