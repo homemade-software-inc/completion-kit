@@ -99,6 +99,30 @@ module CompletionKit
       CompletionKit.config.medium_quality_threshold.to_f
     end
 
+    TOP_SCORE = 5.0
+    CEILING_MEAN = 4.8
+    CEILING_TOP_SHARE = 0.9
+    CEILING_MIN_REVIEWS = 10
+
+    # A judge that scores almost everything at the top is usually failing to
+    # separate good output from bad, which reads as success to anyone who has
+    # not calibrated it. Detected either as a near-max mean or as nearly every
+    # score landing on the top band, and only once there are enough scores for
+    # the shape to mean anything.
+    def scores_at_ceiling?
+      return false unless status == "completed"
+
+      scores = reviews_for_summary.filter_map { |review| review.ai_score&.to_f }
+      return false if scores.length < CEILING_MIN_REVIEWS
+      return true if (scores.sum / scores.length) >= CEILING_MEAN
+
+      (scores.count { |score| score >= TOP_SCORE }.to_f / scores.length) >= CEILING_TOP_SHARE
+    end
+
+    def calibratable_metric
+      llm_metrics.first
+    end
+
     # A scoring-only run grades a pre-existing column on the dataset instead of
     # generating new outputs. No prompt is attached; the response text is read
     # from row[output_column]; no LLM generation happens.

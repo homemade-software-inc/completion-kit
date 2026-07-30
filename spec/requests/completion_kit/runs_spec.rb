@@ -620,6 +620,49 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(CompletionKit::Run.order(:id).last.temperature).to eq(0.3)
   end
 
+  describe "score-ceiling warning" do
+    def run_scored(scores)
+      metric = create(:completion_kit_metric)
+      run = create(:completion_kit_run, prompt: prompt, status: "completed")
+      run.replace_metrics!([metric.id])
+      scores.each do |score|
+        response = create(:completion_kit_response, run: run)
+        create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: score)
+      end
+      run
+    end
+
+    it "warns and offers both next steps when scores cluster at the top" do
+      run = run_scored([5.0] * 11)
+
+      get "#{base_path}/#{run.id}"
+
+      expect(response.body).to include("Scores are clustered near the top")
+      expect(response.body).to include("#{base_path}/#{run.id}?sort=score_asc")
+      expect(response.body).to include("Check the judge")
+    end
+
+    it "stays quiet when the judge discriminates" do
+      run = run_scored([5.0, 4.0, 3.0, 2.0, 1.0] * 3)
+
+      get "#{base_path}/#{run.id}"
+
+      expect(response.body).not_to include("Scores are clustered near the top")
+    end
+
+    it "omits the calibrate action when judge agreement is disabled" do
+      run = run_scored([5.0] * 11)
+      CompletionKit.config.judge_agreement_enabled = false
+
+      get "#{base_path}/#{run.id}"
+
+      expect(response.body).to include("Scores are clustered near the top")
+      expect(response.body).not_to include("Check the judge")
+    ensure
+      CompletionKit.config.judge_agreement_enabled = true
+    end
+  end
+
   it "forks a new run when the judge temperature changes on a run with responses" do
     run = create(:completion_kit_run, prompt: prompt, judge_temperature: 0.0)
     run.responses.create!(response_text: "Some output")

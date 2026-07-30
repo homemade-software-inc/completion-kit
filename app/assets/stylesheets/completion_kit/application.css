@@ -3184,7 +3184,8 @@ select.ck-input {
   line-height: 1.55;
 }
 
-.ck-stale-versions-banner {
+.ck-stale-versions-banner,
+.ck-score-ceiling-banner {
   margin: 0 0 1rem;
   padding: 0.9rem 1rem;
   border: 1px solid rgba(224, 164, 88, 0.4);
@@ -3196,8 +3197,11 @@ select.ck-input {
   gap: 1rem;
   flex-wrap: wrap;
 }
-.ck-stale-versions-banner__body { min-width: 0; flex: 1 1 320px; }
-.ck-stale-versions-banner .ck-kicker { color: var(--ck-warning); }
+.ck-stale-versions-banner__body,
+.ck-score-ceiling-banner__body { min-width: 0; flex: 1 1 320px; }
+.ck-stale-versions-banner .ck-kicker,
+.ck-score-ceiling-banner .ck-kicker { color: var(--ck-warning); }
+.ck-score-ceiling-banner__actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
 .ck-delta {
   font-family: var(--ck-mono);

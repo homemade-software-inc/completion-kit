@@ -12,6 +12,28 @@
     </div>
   <% end %>
 
+  <% if run.scores_at_ceiling? %>
+    <div class="ck-score-ceiling-banner" role="status">
+      <div class="ck-score-ceiling-banner__body">
+        <p class="ck-kicker">Scores are clustered near the top</p>
+        <p class="ck-meta-copy">
+          A near-perfect average usually means the judge is not separating good output from bad, not that every
+          output is good. Check it against your own reading before you trust the number.
+        </p>
+      </div>
+      <div class="ck-score-ceiling-banner__actions">
+        <%= link_to "Worst first", run_path(run, sort: "score_asc"),
+              class: ck_button_classes(:light, variant: :outline) + " ck-button--sm",
+              title: "Sort the responses lowest score first to see whether the judge ever penalises anything." %>
+        <% if CompletionKit.config.judge_agreement_enabled && run.calibratable_metric %>
+          <%= link_to "Check the judge", metric_path(run.calibratable_metric, anchor: "agreement"),
+                class: ck_button_classes(:dark) + " ck-button--sm",
+                title: "Score a few outputs yourself and see how often the judge agrees with you." %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
   <section class="ck-page-header">
     <div>
       <span class="ck-status-badge ck-status-badge--<%= run.status %>">

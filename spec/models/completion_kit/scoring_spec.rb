@@ -122,6 +122,67 @@ RSpec.describe "Results and scoring", type: :model do
     end
   end
 
+  describe "Run#scores_at_ceiling?" do
+    let(:ceiling_run) { create(:completion_kit_run, status: "completed") }
+
+    def score_rows(scores)
+      scores.each do |score|
+        resp = create(:completion_kit_response, run: ceiling_run)
+        create(:completion_kit_review, response: resp, metric: metric1, metric_name: "Relevance", ai_score: score)
+      end
+      CompletionKit::Run.find(ceiling_run.id)
+    end
+
+    it "flags a near-max average" do
+      expect(score_rows([5.0] * 9 + [4.0]).scores_at_ceiling?).to be(true)
+    end
+
+    it "flags nearly every score landing on the top band even when the mean is lower" do
+      run = score_rows([5.0] * 18 + [1.0, 1.0])
+      expect(run.avg_score).to be < CompletionKit::Run::CEILING_MEAN
+      expect(run.scores_at_ceiling?).to be(true)
+    end
+
+    it "stays quiet on a discriminating judge" do
+      expect(score_rows([5.0, 4.0, 3.0, 2.0, 1.0] * 2).scores_at_ceiling?).to be(false)
+    end
+
+    it "stays quiet below the sample-size floor, however perfect the scores" do
+      expect(score_rows([5.0] * 9).scores_at_ceiling?).to be(false)
+    end
+
+    it "stays quiet until the run has completed" do
+      ceiling_run.update_columns(status: "running")
+      expect(score_rows([5.0] * 12).scores_at_ceiling?).to be(false)
+    end
+
+    it "stays quiet on a check-only run where no judge score exists" do
+      12.times do
+        resp = create(:completion_kit_response, run: ceiling_run)
+        create(:completion_kit_review, :check, response: resp, passed: true)
+      end
+      expect(CompletionKit::Run.find(ceiling_run.id).scores_at_ceiling?).to be(false)
+    end
+  end
+
+  describe "Run#calibratable_metric" do
+    it "returns a judge metric and never a check" do
+      run = create(:completion_kit_run)
+      check = create(:completion_kit_metric, :check)
+      judge = create(:completion_kit_metric)
+      run.replace_metrics!([check.id, judge.id])
+
+      expect(run.reload.calibratable_metric).to eq(judge)
+    end
+
+    it "returns nil when the run only has checks" do
+      run = create(:completion_kit_run)
+      run.replace_metrics!([create(:completion_kit_metric, :check).id])
+
+      expect(run.reload.calibratable_metric).to be_nil
+    end
+  end
+
   describe "Run#check_pass_rate" do
     it "computes passed over resolved on a check run" do
       resp = create(:completion_kit_response, run: run)

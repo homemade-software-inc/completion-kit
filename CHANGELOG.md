@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.28] - 2026-07-30
+
+### Added
+- **A completed run whose scores cluster at the top now says so, instead of presenting it as an unqualified success.** (#153) A near-max average with almost no spread nearly always means the judge is not separating good output from bad, but nothing on the page distinguished that from genuinely excellent output, so a first-time user reads a 4.95/5 as "the model is great". A completed run now shows a warning when the mean judge score reaches 4.8 or when 90% or more of scores land on the top band, provided there are at least ten scores so the shape means something. The banner offers the two next steps that turn the warning into an action: sorting the responses worst-first to see whether the judge ever penalises anything, and jumping to the judge's agreement section to score a few outputs by hand. It lives in the polled status header, so it appears on its own when a running run completes rather than waiting for a reload.
+
 ## [0.28.27] - 2026-07-30
 
 ### Changed
