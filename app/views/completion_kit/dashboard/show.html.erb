@@ -80,6 +80,33 @@
   </div>
 <% end %>
 
+<div class="ck-card ck-card--spaced ck-rise" id="top_served_card" style="--rise-delay: 280ms;">
+  <p class="ck-kicker">Prompts served · last 7 days</p>
+  <% if @top_served.any? %>
+    <% serve_max = @serve_activity.map { |d| d[:count] }.max %>
+    <div class="ck-sparkline" role="img" aria-label="<%= @serve_activity.sum { |d| d[:count] } %> prompt fetches over the last 14 days">
+      <% @serve_activity.each do |day| %>
+        <span class="ck-sparkline__bar<%= ' is-peak' if serve_max.positive? && day[:count] == serve_max %>"
+              style="height: <%= serve_max.positive? ? [(day[:count] * 100.0 / serve_max).round, 4].max : 4 %>%;"
+              title="<%= day[:date].strftime('%b %-d') %>: <%= day[:count] %>"></span>
+      <% end %>
+    </div>
+    <ul class="ck-improvements">
+      <% @top_served.each do |row| %>
+        <li class="ck-improvement">
+          <%= link_to row[:prompt].name, prompt_path(row[:prompt]), class: "ck-improvement__name ck-link" %>
+          <span class="ck-improvement__versions"><%= row[:prompt].version_label %></span>
+          <span class="ck-improvement__scores"><span class="ck-serve-figure"><%= number_with_delimiter(row[:count]) %></span> fetches</span>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="ck-improvements__empty">
+      No prompts fetched in the last 7 days. Once your application reads a published prompt from the API, the prompts it uses most show up here.
+    </p>
+  <% end %>
+</div>
+
 <section class="ck-card--spaced">
   <div class="ck-split">
     <h2 class="ck-section-title">Recent runs</h2>

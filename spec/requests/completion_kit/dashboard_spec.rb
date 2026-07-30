@@ -218,4 +218,27 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       expect(response.body).to include("No measured changes yet")
     end
   end
+  describe "prompts served card" do
+    it "shows an honest empty state before anything has been fetched" do
+      ready_workspace!
+
+      get "/completion_kit/dashboard"
+
+      expect(response.body).to include("Prompts served")
+      expect(response.body).to include("No prompts fetched in the last 7 days")
+    end
+
+    it "lists the most-fetched prompts without needing any runs to exist" do
+      ready_workspace!
+      prompt = create(:completion_kit_prompt, name: "Hot Prompt")
+      CompletionKit::PromptServe.create!(prompt_id: prompt.id, family_key: prompt.family_key,
+                                        served_on: Date.current, serve_count: 17, last_served_at: Time.current)
+
+      get "/completion_kit/dashboard"
+
+      expect(response.body).to include("Hot Prompt")
+      expect(response.body).to include("17")
+      expect(response.body).not_to include("No prompts fetched in the last 7 days")
+    end
+  end
 end

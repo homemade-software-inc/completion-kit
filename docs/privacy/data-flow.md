@@ -53,6 +53,19 @@ Summary of what a run produces:
 | `completion_kit_reviews` | `ai_feedback`, `ai_score`, `metric_name`, `instruction` | The judge's verdict for one (response, metric) pair, plus the rubric instruction that was active at judge time. |
 | `completion_kit_reviews` | `error_*` | Same captured-provider-error pattern as responses. |
 
+### Prompt serving
+
+Fetching a published prompt (over `GET /api/v1/prompts/:id`, or through
+`CompletionKit.current_prompt` and friends) increments a daily counter.
+
+| Stored where | Field | What it holds |
+|---|---|---|
+| `completion_kit_prompt_serves` | `prompt_id`, `family_key`, `served_on`, `serve_count`, `last_served_at` | How many times a prompt was fetched on a given day. One row per prompt per day. |
+
+No request details are recorded: no caller identity, IP, user agent, or
+variables. The counter answers "how often is this prompt used", nothing about
+who used it.
+
 Raw provider response payloads are **not** stored. The engine extracts the
 text content from the JSON response and discards the rest.
 

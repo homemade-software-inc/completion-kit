@@ -154,4 +154,18 @@ RSpec.describe "API V1 Prompts", type: :request do
       expect(new_prompt.tag_names).to eq(["cloned-tag"])
     end
   end
+  describe "serve counting" do
+    it "records a fetch for both the slug and the numeric id, and not for other actions" do
+      prompt = create(:completion_kit_prompt, name: "Served One")
+
+      expect {
+        get "/completion_kit/api/v1/prompts/#{prompt.slug}", headers: headers
+        get "/completion_kit/api/v1/prompts/#{prompt.id}", headers: headers
+      }.to change { CompletionKit::PromptServe.where(prompt_id: prompt.id).sum(:serve_count) }.by(2)
+
+      expect {
+        patch "/completion_kit/api/v1/prompts/#{prompt.id}", params: {description: "edited"}.to_json, headers: headers
+      }.not_to change { CompletionKit::PromptServe.sum(:serve_count) }
+    end
+  end
 end

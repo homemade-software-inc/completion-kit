@@ -16,6 +16,35 @@ module CompletionKit
       end
     end
 
+    # Prompts fetched most often by consumers in the window, with the daily
+    # counts behind each so the caller can draw a trend. Serving is independent
+    # of evaluating, so this deliberately does not go through display_scoped.
+    def self.top_served(since:, limit: 5)
+      rows = PromptServe.where("served_on >= ?", since.to_date)
+                        .group(:prompt_id)
+                        .pluck(Arel.sql("prompt_id"), Arel.sql("SUM(serve_count)"), Arel.sql("MAX(last_served_at)"))
+      return [] if rows.empty?
+
+      prompts = Prompt.where(id: rows.map(&:first)).index_by(&:id)
+      rows.filter_map do |prompt_id, total, last_at|
+        prompt = prompts[prompt_id]
+        next unless prompt
+
+        { prompt: prompt, count: total.to_i, last_served_at: last_at }
+      end.sort_by { |row| -row[:count] }.first(limit)
+    end
+
+    # One entry per day, zero-filled, matching the shape `activity` returns so
+    # the same sparkline markup renders it.
+    def self.serve_activity(days: 14)
+      since = (days - 1).days.ago.to_date
+      counts = PromptServe.where("served_on >= ?", since).group(:served_on).sum(:serve_count)
+      (0...days).map do |offset|
+        date = since + offset
+        { date: date, count: counts[date] || counts[date.to_s] || 0 }
+      end
+    end
+
     # The metric with the lowest average judge score across succeeded reviews
     # in the window — the prompt-engineering target. Dismissed metrics are
     # skipped while their average holds at or above the score snapshotted when

@@ -18,6 +18,19 @@
       <code class="ck-endpoint__url" id="prompt_endpoint"><%= request.base_url %><%= api_v1_prompt_path(@prompt.slug) %></code>
       <button type="button" class="ck-icon-btn" title="Copy endpoint" aria-label="Copy endpoint" onclick="navigator.clipboard.writeText(document.getElementById('prompt_endpoint').textContent)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg></button>
     </div>
+    <p class="ck-meta-copy" id="prompt_serves">
+      <% if @serve_summary[:total].positive? %>
+        Served <span class="ck-serve-figure"><%= number_with_delimiter(@serve_summary[:total]) %></span>
+        <%= "time".pluralize(@serve_summary[:total]) %><% if @serve_summary[7] < @serve_summary[:total] %>,
+        <%= number_with_delimiter(@serve_summary[7]) %> in the last 7 days<% end %>.
+        <% if @serve_summary[:last_served_at] %>
+          Last fetched <time data-relative-time datetime="<%= @serve_summary[:last_served_at].utc.iso8601 %>"><%= time_ago_in_words(@serve_summary[:last_served_at]) %> ago</time>.
+        <% end %>
+      <% else %>
+        Not fetched yet. Counts appear here once something requests this prompt from the URL above.
+      <% end %>
+    </p>
+
     <% if @prompt.tags.any? %>
       <div class="tag-marks-row">
         <%= render "completion_kit/tags/marks", tags: @prompt.tags %>

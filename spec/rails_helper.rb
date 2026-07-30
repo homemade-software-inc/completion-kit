@@ -275,6 +275,19 @@ ActiveRecord::Schema.define do
             unique: true,
             name: "index_ck_agreements_on_response_metric_user"
 
+  create_table :completion_kit_prompt_serves, force: true do |t|
+    t.integer :prompt_id
+    t.string :family_key, null: false
+    t.date :served_on, null: false
+    t.integer :serve_count, null: false, default: 0
+    t.datetime :last_served_at
+    t.timestamps
+  end
+  add_index :completion_kit_prompt_serves, [:prompt_id, :served_on],
+            unique: true, name: "index_ck_prompt_serves_on_prompt_and_day"
+  add_index :completion_kit_prompt_serves, [:family_key, :served_on],
+            name: "index_ck_prompt_serves_on_family_and_day"
+
   create_table :completion_kit_starter_metric_dismissals, force: true do |t|
     t.string :starter_key, null: false
     t.timestamps

@@ -53,8 +53,11 @@ module CompletionKit
       yield(config) if block_given?
     end
 
+    # current_prompt_payload and render_current_prompt both come through here,
+    # so this is the one place a library-side fetch is counted. The REST show
+    # action records its own, since it can also resolve by numeric id.
     def current_prompt(identifier)
-      Prompt.current_for(identifier)
+      Prompt.current_for(identifier).tap { |prompt| PromptServe.record!(prompt) }
     end
 
     def current_prompt_payload(identifier)

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.31] - 2026-07-30
+
+### Added
+- **Prompt serving is now visible: how often each prompt is actually fetched, and when it was last used.** (#158) CompletionKit served published prompts over the API but recorded nothing about it, so there was no way to tell which prompts are live in production, which are dormant, and which a team could safely retire. Fetches are now counted per prompt per day in a new `completion_kit_prompt_serves` table, rolled up daily so it stays bounded by prompts times days rather than growing with traffic. The prompt page shows the family total, the last-7-days count, and when it was last fetched, sitting directly under the endpoint URL it refers to. The dashboard gains a "Prompts served" card with a 14-day trend and the most-fetched prompts.
+
+  Counting happens at the two places a consumer actually reads a prompt: the REST `show` action (covering both the slug and the numeric id) and `CompletionKit.current_prompt`, which `current_prompt_payload` and `render_current_prompt` both route through. Editing, publishing or deleting a prompt is not a fetch and is not counted. No request details are recorded, only the count: see `docs/privacy/data-flow.md`.
+
+  The dashboard card sits outside the existing five-run gate, because a workspace that serves prompts to production and never runs an eval is exactly the audience for it. `family_key` is denormalised onto each row so a family's history survives deleting an individual version.
+
+  **Host apps need `bin/rails completion_kit:install:migrations && bin/rails db:migrate` to pick up the new table.**
+
 ## [0.28.30] - 2026-07-30
 
 ### Fixed

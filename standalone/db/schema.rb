@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_30_173125) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_30_180140) do
   create_table "completion_kit_agreements", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -120,6 +120,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_173125) do
     t.boolean "supports_reasoning_effort"
     t.datetime "updated_at", null: false
     t.index ["provider", "model_id"], name: "index_completion_kit_models_on_provider_and_model_id", unique: true
+  end
+
+  create_table "completion_kit_prompt_serves", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "family_key", null: false
+    t.datetime "last_served_at"
+    t.integer "prompt_id"
+    t.integer "serve_count", default: 0, null: false
+    t.date "served_on", null: false
+    t.datetime "updated_at", null: false
+    t.index ["family_key", "served_on"], name: "index_ck_prompt_serves_on_family_and_day"
+    t.index ["prompt_id", "served_on"], name: "index_ck_prompt_serves_on_prompt_and_day", unique: true
   end
 
   create_table "completion_kit_prompts", force: :cascade do |t|

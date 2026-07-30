@@ -11,6 +11,7 @@ module CompletionKit
         end
 
         def show
+          PromptServe.record!(@prompt)
           render json: @prompt
         end
 

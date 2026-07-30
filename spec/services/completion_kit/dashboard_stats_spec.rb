@@ -415,4 +415,58 @@ RSpec.describe CompletionKit::DashboardStats, type: :service do
       expect(result.first).to include(prompt: v2, from_version: 1, to_version: 2, from_score: 3.0, to_score: 5.0, delta: 2.0)
     end
   end
+  describe ".top_served and .serve_activity" do
+    let(:prompt) { create(:completion_kit_prompt, name: "Served Prompt") }
+
+    it "returns nothing and a zero-filled trend when no prompt has been fetched" do
+      expect(described_class.top_served(since: 7.days.ago)).to eq([])
+
+      trend = described_class.serve_activity(days: 3)
+      expect(trend.length).to eq(3)
+      expect(trend.map { |d| d[:count] }).to eq([0, 0, 0])
+    end
+
+    it "ranks prompts by fetches in the window and skips days outside it" do
+      quiet = create(:completion_kit_prompt, name: "Quiet Prompt")
+      CompletionKit::PromptServe.create!(prompt_id: prompt.id, family_key: prompt.family_key,
+                                        served_on: Date.current, serve_count: 9, last_served_at: Time.current)
+      CompletionKit::PromptServe.create!(prompt_id: quiet.id, family_key: quiet.family_key,
+                                        served_on: Date.current, serve_count: 2)
+      CompletionKit::PromptServe.create!(prompt_id: prompt.id, family_key: prompt.family_key,
+                                        served_on: Date.current - 40, serve_count: 500)
+
+      rows = described_class.top_served(since: 7.days.ago)
+
+      expect(rows.map { |r| r[:prompt].id }).to eq([prompt.id, quiet.id])
+      expect(rows.first[:count]).to eq(9)
+      expect(rows.first[:last_served_at]).to be_present
+    end
+
+    it "honours the limit" do
+      3.times do |i|
+        other = create(:completion_kit_prompt, name: "P#{i}")
+        CompletionKit::PromptServe.create!(prompt_id: other.id, family_key: other.family_key,
+                                          served_on: Date.current, serve_count: i + 1)
+      end
+
+      expect(described_class.top_served(since: 7.days.ago, limit: 2).length).to eq(2)
+    end
+
+    it "drops rows whose prompt version has since been deleted" do
+      CompletionKit::PromptServe.create!(prompt_id: 999_999, family_key: "gone",
+                                        served_on: Date.current, serve_count: 4)
+
+      expect(described_class.top_served(since: 7.days.ago)).to eq([])
+    end
+
+    it "buckets fetches by day for the trend" do
+      CompletionKit::PromptServe.create!(prompt_id: prompt.id, family_key: prompt.family_key,
+                                        served_on: Date.current, serve_count: 6)
+
+      trend = described_class.serve_activity(days: 2)
+
+      expect(trend.last[:count]).to eq(6)
+      expect(trend.first[:count]).to eq(0)
+    end
+  end
 end

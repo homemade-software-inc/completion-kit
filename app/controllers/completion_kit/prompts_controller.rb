@@ -8,6 +8,7 @@ module CompletionKit
     end
     
     def show
+      @serve_summary = PromptServe.summary_for(@prompt)
       @runs = Run.where(prompt_id: @prompt.family_versions.select(:id))
                  .includes(:prompt, :dataset, :tags, responses: :reviews)
                  .order(created_at: :desc)

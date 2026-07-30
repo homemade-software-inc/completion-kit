@@ -441,4 +441,39 @@ RSpec.describe "CompletionKit prompts", type: :request do
     expect(trigger["data-turbo-confirm"]).to be_present
   end
 
+  describe "serving stat on the prompt page" do
+    it "invites a first fetch when nothing has requested the prompt" do
+      prompt = create(:completion_kit_prompt, name: "Unserved")
+
+      get "/completion_kit/prompts/#{prompt.id}"
+
+      expect(response.body).to include("Not fetched yet")
+    end
+
+    it "shows the family total, the 7-day count, and when it was last fetched" do
+      prompt = create(:completion_kit_prompt, name: "Busy")
+      CompletionKit::PromptServe.create!(prompt_id: prompt.id, family_key: prompt.family_key,
+                                        served_on: Date.current, serve_count: 12, last_served_at: Time.current)
+      CompletionKit::PromptServe.create!(prompt_id: prompt.id, family_key: prompt.family_key,
+                                        served_on: Date.current - 20, serve_count: 30)
+
+      get "/completion_kit/prompts/#{prompt.id}"
+
+      expect(response.body).to include("Served")
+      expect(response.body).to include("42")
+      expect(response.body).to include("12 in the last 7 days")
+      expect(response.body).to include("Last fetched")
+    end
+
+    it "drops the redundant window clause when every fetch is inside it" do
+      prompt = create(:completion_kit_prompt, name: "All recent")
+      CompletionKit::PromptServe.create!(prompt_id: prompt.id, family_key: prompt.family_key,
+                                        served_on: Date.current, serve_count: 5, last_served_at: Time.current)
+
+      get "/completion_kit/prompts/#{prompt.id}"
+
+      expect(response.body).to include("Served")
+      expect(response.body).not_to include("in the last 7 days")
+    end
+  end
 end
