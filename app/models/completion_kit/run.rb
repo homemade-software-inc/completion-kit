@@ -19,6 +19,7 @@ module CompletionKit
     validates :name, presence: true
     validates :status, inclusion: { in: STATUSES }
     validates :max_tokens, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+    validates :judge_temperature, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 1 }, allow_nil: true
     validate :dataset_supplies_prompt_variables
     validate :judge_only_run_supplies_output_column
     validate :dataset_supplies_expected_column
@@ -401,6 +402,17 @@ module CompletionKit
       options
     end
 
+    # Everything JudgeService needs to score this run. Judging defaults to
+    # temperature 0 so re-judging the same output yields the same score;
+    # anything above that makes the run's numbers irreproducible.
+    def judge_config
+      ApiConfig.for_model(judge_model).merge(judge_model: judge_model, judge_temperature: judge_temperature)
+    end
+
+    def nondeterministic_judge?
+      judge_temperature.to_f > 0
+    end
+
     def rerun!
       new_run = Run.create!(
         prompt_id: prompt_id,
@@ -408,6 +420,7 @@ module CompletionKit
         judge_model: judge_model,
         temperature: temperature,
         max_tokens: max_tokens,
+        judge_temperature: judge_temperature,
         output_column: output_column,
         expected_column: expected_column,
         tag_names: tag_names,
@@ -488,7 +501,7 @@ module CompletionKit
         output_column: output_column,
         expected_column: expected_column,
         created_at: created_at, updated_at: updated_at,
-        max_tokens: max_tokens,
+        max_tokens: max_tokens, judge_temperature: judge_temperature,
         responses_count: responses.count, avg_score: avg_score,
         check_pass_rate: check_pass_rate,
         metric_averages: metric_averages,

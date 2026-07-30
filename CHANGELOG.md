@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.27] - 2026-07-30
+
+### Changed
+- **The judge now scores at temperature 0 by default, and the judge temperature is separate from the generation temperature.** (#155) Judging previously passed no temperature at all, so every provider client fell back to its own `0.7` default. That made scoring non-deterministic: re-judging the same output could return a different score, which quietly undermines comparing one run against another. Runs gain a `judge_temperature` setting, defaulting to `0`, threaded through all three `JudgeService` callers (the review job, the prompt-improvement validator, and the metric-improvement validator, which previously each rebuilt the same config hash by hand and would otherwise have drifted apart). It is settable on the run form, the REST API, and the `runs_create` / `runs_update` MCP tools, is carried over by `rerun`, and forks a new run when changed on a run that already has responses. Above 0 the run page shows a "scores not reproducible" marker and the MCP payload returns a warning.
+
+  Note for anyone reading the issue: its premise was slightly off. The judge was not inheriting the run's generation temperature and was not at 1.0, it was at each client's 0.7 fallback. The reproducibility problem, and the fix, are the same.
+
+  **Host apps need `bin/rails completion_kit:install:migrations && bin/rails db:migrate` to pick up the new `judge_temperature` column.**
+
 ## [0.28.26] - 2026-07-28
 
 ### Added

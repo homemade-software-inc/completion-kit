@@ -59,8 +59,7 @@ module CompletionKit
       metric = Metric.find(metric_id)
       run = response.run
 
-      config = ApiConfig.for_model(run.judge_model).merge(judge_model: run.judge_model)
-      judge = JudgeService.new(config)
+      judge = JudgeService.new(run.judge_config)
 
       begin
         evaluation = judge.evaluate(

@@ -87,9 +87,8 @@ module CompletionKit
 
     def rescore(response, candidate)
       run = response.run
-      config = ApiConfig.for_model(run.judge_model).merge(judge_model: run.judge_model)
       rubric_text = Metric.rubric_text_for(Metric.normalize_rubric_bands(candidate.rubric_bands))
-      result = JudgeService.new(config).evaluate(
+      result = JudgeService.new(run.judge_config).evaluate(
         response.response_text,
         response.expected_output,
         run.prompt&.template,

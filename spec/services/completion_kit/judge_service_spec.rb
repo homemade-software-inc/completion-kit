@@ -17,11 +17,29 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     expect { service.evaluate("output") }.to raise_error(CompletionKit::ConfigurationError, /Judge not configured/)
   end
 
+  it "judges at temperature 0 by default so a re-judge reproduces the score" do
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+    expect(client).to receive(:generate_completion)
+      .with(anything, hash_including(temperature: 0.0)).and_return("Score: 4\nFeedback: ok")
+
+    described_class.new.evaluate("actual")
+  end
+
+  it "honours an explicit judge_temperature" do
+    client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+    expect(client).to receive(:generate_completion)
+      .with(anything, hash_including(temperature: 0.4)).and_return("Score: 4\nFeedback: ok")
+
+    described_class.new(judge_temperature: 0.4).evaluate("actual")
+  end
+
   it "parses score and feedback from judge response" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).with(
       include("1 to 5", "AI output to evaluate:"),
-      model: "gpt-4.1"
+      model: "gpt-4.1", temperature: 0.0
     ).and_return("Score: 4\nFeedback: Strong match")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
@@ -90,7 +108,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).with(
       include("Criteria:", "Check for accuracy", "Custom rubric"),
-      model: "gpt-4.1"
+      model: "gpt-4.1", temperature: 0.0
     ).and_return("Score: 3\nFeedback: Calibrated")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
@@ -117,7 +135,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
         "Original prompt: Summarize releases, never mention pricing",
         "Reminder: score only the dimension"
       ),
-      model: "gpt-4.1"
+      model: "gpt-4.1", temperature: 0.0
     ).and_return("Score: 4\nFeedback: Scoped")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
@@ -131,7 +149,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).with(
       satisfy { |p| !p.include?("Original prompt") && !p.include?("Weigh it only when the dimension") },
-      model: "gpt-4.1"
+      model: "gpt-4.1", temperature: 0.0
     ).and_return("Score: 3\nFeedback: No prompt")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
@@ -142,7 +160,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
   it "includes input_data in the judge prompt when provided" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion)
-      .with(include("Input data: {customer: acme}"), model: "gpt-4.1")
+      .with(include("Input data: {customer: acme}"), model: "gpt-4.1", temperature: 0.0)
       .and_return("Score: 5\nFeedback: Accurate")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 
@@ -155,7 +173,7 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true)
     allow(client).to receive(:generate_completion).with(
       include("Reviewed examples", "The judge scored this 4/5", "corrected it to 2/5", "way off", "corrected it to 5/5."),
-      model: "gpt-4.1"
+      model: "gpt-4.1", temperature: 0.0
     ).and_return("Score: 2\nFeedback: Recalibrated")
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
 

@@ -87,6 +87,13 @@
     <span class="ck-run-config__key">Max tokens</span>
     <span><%= @run.max_tokens || "Provider default" %></span>
   </div>
+  <div class="ck-run-config__row">
+    <span class="ck-run-config__key">Judge temperature</span>
+    <span><%= @run.judge_temperature %></span>
+    <% if @run.nondeterministic_judge? %>
+      <span class="ck-run-config__warn" style="color: var(--ck-warning);" title="Judging above temperature 0 makes scores irreproducible. The same output can get a different score on a re-judge.">scores not reproducible</span>
+    <% end %>
+  </div>
 </div>
 
 <% if @run.prompt %>

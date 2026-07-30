@@ -85,6 +85,26 @@ RSpec.describe CompletionKit::McpTools::Runs do
       expect(content["max_tokens"]).to eq(4096)
     end
 
+    it "warns that a judge above temperature 0 makes scores irreproducible" do
+      run.replace_metrics!([create(:completion_kit_metric).id])
+      result = described_class.call("runs_update", {"id" => run.id, "judge_temperature" => 0.7})
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["judge_temperature"]).to eq(0.7)
+      expect(content["warning"]).to include("irreproducible")
+    end
+
+    it "omits the judge-temperature warning at the deterministic default" do
+      run.replace_metrics!([create(:completion_kit_metric).id])
+      result = described_class.call("runs_get", {"id" => run.id})
+      expect(JSON.parse(result[:content].first[:text])).not_to have_key("warning")
+    end
+
+    it "rejects a judge_temperature outside 0 to 1" do
+      result = described_class.call("runs_create", {"name" => "Bad judge", "prompt_id" => prompt.id, "judge_temperature" => 2})
+      expect(result[:isError]).to be(true)
+      expect(result[:content].first[:text]).to match(/Judge temperature/i)
+    end
+
     it "rejects a non-positive max_tokens" do
       result = described_class.call("runs_create", {"name" => "Bad", "prompt_id" => prompt.id, "max_tokens" => 0})
       expect(result[:isError]).to be(true)

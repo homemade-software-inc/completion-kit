@@ -126,6 +126,15 @@
       <% end %>
     </div>
 
+    <div class="ck-field" id="judge-temperature-field">
+      <label class="ck-label" for="run_judge_temperature" style="position: relative;">
+        Judge temperature<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup">How random the judge is when it scores. This is separate from the generation temperature above. Keep it at 0 so re-judging the same output gives the same score, which is what makes one run comparable to another. Raise it only when you are deliberately measuring how much the judge disagrees with itself.</span>
+      </label>
+      <%= form.number_field :judge_temperature, in: 0..1, step: 0.1, class: "ck-input", id: "run_judge_temperature", **ck_field_aria(form, :judge_temperature) %>
+      <%= ck_field_error(form, :judge_temperature) %>
+      <p class="ck-field-hint" id="judge-temperature-hint">0 is deterministic and recommended. Above 0, the same output can score differently on a re-judge.</p>
+    </div>
+
     <div class="ck-field" id="metrics-field">
       <p class="ck-label" id="run_metrics_label">Metrics</p>
       <% if @all_metrics.empty? %>

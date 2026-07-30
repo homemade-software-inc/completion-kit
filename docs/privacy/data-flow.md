@@ -47,7 +47,7 @@ Summary of what a run produces:
 
 | Stored where | Field | What it holds |
 |---|---|---|
-| `completion_kit_runs` | `name`, `judge_model`, `temperature`, status / progress / error fields | Run metadata. |
+| `completion_kit_runs` | `name`, `judge_model`, `temperature`, `judge_temperature`, `max_tokens`, status / progress / error fields | Run metadata. |
 | `completion_kit_responses` | `input_data`, `response_text`, `expected_output` | The dataset row for that response, the model's completion, and (optional) the reference answer. |
 | `completion_kit_responses` | `error_class`, `error_message`, `error_provider`, `error_status` | Captured when a provider call fails. `error_message` is the truncated response body from the provider. |
 | `completion_kit_reviews` | `ai_feedback`, `ai_score`, `metric_name`, `instruction` | The judge's verdict for one (response, metric) pair, plus the rubric instruction that was active at judge time. |

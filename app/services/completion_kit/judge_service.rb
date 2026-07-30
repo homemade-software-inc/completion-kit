@@ -4,9 +4,12 @@ module CompletionKit
   class JudgeParseError < StandardError; end
 
   class JudgeService
+    DEFAULT_TEMPERATURE = 0.0
+
     def initialize(config = {})
       @config = config
       @judge_model = config[:judge_model].presence || ApiConfig.default_judge_model
+      @judge_temperature = config[:judge_temperature] || DEFAULT_TEMPERATURE
       @judge_client = LlmClient.for_model(@judge_model, ApiConfig.for_model(@judge_model))
     end
 
@@ -19,7 +22,7 @@ module CompletionKit
         input_data: input_data,
         human_examples: human_examples)
 
-      response = @judge_client.generate_completion(judge_prompt, model: @judge_model)
+      response = @judge_client.generate_completion(judge_prompt, model: @judge_model, temperature: @judge_temperature)
       raise CompletionKit::ProviderError.from_client_error(response) if response.start_with?("Error:")
       parse_judge_response(response)
     end

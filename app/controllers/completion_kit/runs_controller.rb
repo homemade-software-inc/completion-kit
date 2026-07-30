@@ -215,13 +215,13 @@ module CompletionKit
     end
 
     def run_params
-      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :max_tokens, :output_column, :expected_column, metric_ids: [], tag_names: [])
+      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :max_tokens, :judge_temperature, :output_column, :expected_column, metric_ids: [], tag_names: [])
     end
 
     # Editing a run that already has results forks a new run — but only when a
     # field that affects generation or judging changed. Renaming or retagging is
     # pure metadata and updates the run in place.
-    GENERATION_RUN_FIELDS = %i[prompt_id dataset_id judge_model temperature max_tokens output_column expected_column].freeze
+    GENERATION_RUN_FIELDS = %i[prompt_id dataset_id judge_model temperature max_tokens judge_temperature output_column expected_column].freeze
 
     def run_generation_changed?
       GENERATION_RUN_FIELDS.each do |field|
@@ -236,7 +236,7 @@ module CompletionKit
       s = value.to_s.strip
       return nil if s.empty?
       case field
-      when :temperature then s.to_f
+      when :temperature, :judge_temperature then s.to_f
       when :prompt_id, :dataset_id, :max_tokens then s.to_i
       else s
       end

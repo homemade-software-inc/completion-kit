@@ -10,7 +10,11 @@ module CompletionKit
                                "which is what silently truncates long outputs and makes the judge score malformed " \
                                "JSON. Set it to whatever the prompt uses in production so the eval matches.".freeze
 
-      GENERATION_FIELDS = %w[temperature max_tokens].freeze
+      JUDGE_TEMPERATURE_DESCRIPTION = "Sampling temperature for the judge, 0 to 1. Defaults to 0 so re-judging the " \
+                                      "same output gives the same score. Raise it only to measure judge variance " \
+                                      "on purpose; any value above 0 makes the run's scores irreproducible.".freeze
+
+      GENERATION_FIELDS = %w[temperature max_tokens judge_temperature].freeze
 
       TOOLS = {
         "runs_list" => {
@@ -34,6 +38,7 @@ module CompletionKit
               dataset_id: {type: "integer"}, judge_model: {type: "string"},
               temperature: {type: "number", description: TEMPERATURE_DESCRIPTION},
               max_tokens: {type: "integer", description: MAX_TOKENS_DESCRIPTION},
+              judge_temperature: {type: "number", description: JUDGE_TEMPERATURE_DESCRIPTION},
               output_column: {type: "string", description: "Dataset column to grade when prompt_id is omitted; defaults to \"actual_output\"."},
               expected_column: {type: "string", description: "Dataset column holding each row's answer key / ground truth, graded by checks with compare_to \"expected\" and passed to the judge; defaults to \"expected_output\"."},
               metric_ids: {type: "array", items: {type: "integer"}},
@@ -53,6 +58,7 @@ module CompletionKit
               dataset_id: {type: "integer"}, judge_model: {type: "string"},
               temperature: {type: "number", description: TEMPERATURE_DESCRIPTION},
               max_tokens: {type: "integer", description: MAX_TOKENS_DESCRIPTION},
+              judge_temperature: {type: "number", description: JUDGE_TEMPERATURE_DESCRIPTION},
               output_column: {type: "string"},
               expected_column: {type: "string"},
               metric_ids: {type: "array", items: {type: "integer"}},
@@ -171,9 +177,16 @@ module CompletionKit
 
       def self.run_payload(run)
         json = run.as_json
-        return json unless run.metric_ids.empty?
+        warnings = []
+        if run.metric_ids.empty?
+          warnings << "No metrics are attached, so this run judges nothing. Attach metric_ids or a metric_group_id before generating."
+        end
+        if run.nondeterministic_judge?
+          warnings << "Judge temperature is #{run.judge_temperature}. Judging above 0 makes scores irreproducible: the same output can get a different score on a re-judge. Set judge_temperature to 0 unless you are deliberately measuring judge variance."
+        end
+        return json if warnings.empty?
 
-        json.merge("warning" => "No metrics are attached, so this run judges nothing. Attach metric_ids or a metric_group_id before generating.")
+        json.merge("warning" => warnings.join(" "))
       end
     end
   end

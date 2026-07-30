@@ -620,6 +620,17 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(CompletionKit::Run.order(:id).last.temperature).to eq(0.3)
   end
 
+  it "forks a new run when the judge temperature changes on a run with responses" do
+    run = create(:completion_kit_run, prompt: prompt, judge_temperature: 0.0)
+    run.responses.create!(response_text: "Some output")
+
+    expect do
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Original", prompt_id: prompt.id, judge_temperature: "0.5" } }
+    end.to change(CompletionKit::Run, :count).by(1)
+
+    expect(CompletionKit::Run.order(:id).last.judge_temperature).to eq(0.5)
+  end
+
   it "forks a new run when max_tokens changes on a run with responses" do
     run = create(:completion_kit_run, prompt: prompt, max_tokens: 1024)
     run.responses.create!(response_text: "Some output")
@@ -685,7 +696,7 @@ RSpec.describe "CompletionKit runs", type: :request do
   it "rerun creates a new run with the same configuration and starts it" do
     metric = create(:completion_kit_metric)
     dataset = create(:completion_kit_dataset)
-    source_run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1", temperature: 0.3, max_tokens: 2048, status: "completed")
+    source_run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1", temperature: 0.3, max_tokens: 2048, judge_temperature: 0.2, status: "completed")
     source_run.replace_metrics!([metric.id])
     allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
 
@@ -699,6 +710,7 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(new_run.judge_model).to eq("gpt-4.1")
     expect(new_run.temperature).to eq(0.3)
     expect(new_run.max_tokens).to eq(2048)
+    expect(new_run.judge_temperature).to eq(0.2)
     expect(new_run.metric_ids).to eq([metric.id])
     expect(response).to redirect_to("/completion_kit/runs/#{new_run.id}")
   end
