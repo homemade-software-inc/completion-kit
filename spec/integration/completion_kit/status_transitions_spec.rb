@@ -19,7 +19,7 @@ RSpec.describe "Run status transitions", type: :model do
   it "pending -> running after start!" do
     run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "No judge")
 
-    run.start!
+    start_run!(run)
     expect(run.reload.status).to eq("running")
   end
 
@@ -28,7 +28,7 @@ RSpec.describe "Run status transitions", type: :model do
     allow(CompletionKit::CsvProcessor).to receive(:process_self).and_return([])
     run = CompletionKit::Run.create!(prompt: prompt, dataset: dataset, name: "Empty dataset")
 
-    result = run.start!
+    result = start_run!(run)
     expect(result).to be false
     expect(run.reload.status).to eq("failed")
   end
@@ -38,7 +38,7 @@ RSpec.describe "Run status transitions", type: :model do
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(bad_client)
     run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "Bad config")
 
-    result = run.start!
+    result = start_run!(run)
     expect(result).to be false
     expect(run.reload.status).to eq("failed")
   end
@@ -67,7 +67,7 @@ RSpec.describe "Run status transitions", type: :model do
       run.run_metrics.build(metric: check, position: 1)
       run.save!
 
-      run.start!
+      start_run!(run)
 
       expect(run.reload.status).to eq("completed")
       review = run.responses.flat_map(&:reviews).first
@@ -83,7 +83,7 @@ RSpec.describe "Run status transitions", type: :model do
       run.run_metrics.build(metric: check, position: 1)
       run.save!
 
-      run.start!
+      start_run!(run)
 
       expect(run.reload.status).to eq("completed")
       review = run.responses.flat_map(&:reviews).first

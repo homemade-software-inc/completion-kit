@@ -33,7 +33,7 @@ RSpec.describe "End-to-end generation pipeline", type: :model do
       run = CompletionKit::Run.create!(prompt: prompt, dataset: dataset, name: "Pipeline test")
 
       expect(run.status).to eq("pending")
-      result = run.start!
+      result = start_run!(run)
 
       expect(result).to be true
       expect(run.reload.status).to eq("running")
@@ -50,7 +50,7 @@ RSpec.describe "End-to-end generation pipeline", type: :model do
     it "creates a single pending response with nil input_data" do
       run = CompletionKit::Run.create!(prompt: prompt, dataset: nil, name: "No dataset test")
 
-      run.start!
+      start_run!(run)
 
       expect(run.reload.status).to eq("running")
       expect(run.responses.count).to eq(1)

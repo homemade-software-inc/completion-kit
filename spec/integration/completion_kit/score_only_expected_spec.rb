@@ -38,7 +38,7 @@ RSpec.describe "Score-only run graded against per-row expected_output", type: :m
   it "grades a blank cell in the graded column as a failed row instead of crashing" do
     run = build_run
 
-    expect(run.start!).to be(true), -> { "start! failed: #{run.reload.failure_summary}" }
+    expect(start_run!(run)).to be(true), -> { "start! failed: #{run.reload.failure_summary}" }
     perform_enqueued_jobs
 
     run.reload
@@ -56,7 +56,22 @@ RSpec.describe "Score-only run graded against per-row expected_output", type: :m
     invalid.errors.add(:base, "run invalid")
     allow(run).to receive(:update!).and_raise(ActiveRecord::RecordInvalid.new(invalid))
 
-    expect(run.start!).to be(false)
+    expect(start_run!(run)).to be(false)
+
+    run.reload
+    expect(run.status).to eq("failed")
+    expect(run.failure_summary).to eq("run invalid")
+  end
+
+  it "fails the run with the bare validation message when the insert stage is not row-scoped" do
+    run = build_run
+    expect(run.start!).to be(true)
+
+    invalid = CompletionKit::Run.new
+    invalid.errors.add(:base, "run invalid")
+    allow(run).to receive(:update!).and_raise(ActiveRecord::RecordInvalid.new(invalid))
+
+    expect(run.execute_start!).to be(false)
 
     run.reload
     expect(run.status).to eq("failed")
@@ -68,7 +83,7 @@ RSpec.describe "Score-only run graded against per-row expected_output", type: :m
     CompletionKit.config.on_run_started = ->(run) { observed << run.id }
     run = build_run
 
-    expect(run.start!).to be(true)
+    expect(start_run!(run)).to be(true)
 
     expect(observed).to eq([run.id])
   ensure
@@ -85,7 +100,7 @@ RSpec.describe "Score-only run graded against per-row expected_output", type: :m
                                      output_column: "actual_output", expected_column: "true_vin")
     run.replace_metrics!([metric.id])
 
-    expect(run.start!).to be(true), -> { "start! failed: #{run.reload.failure_summary}" }
+    expect(start_run!(run)).to be(true), -> { "start! failed: #{run.reload.failure_summary}" }
     perform_enqueued_jobs
 
     responses = run.reload.responses.order(:row_index)

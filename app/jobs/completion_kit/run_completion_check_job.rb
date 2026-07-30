@@ -10,6 +10,10 @@ module CompletionKit
       run = Run.find_by(id: run_id)
       return unless run
       return unless run.status == "running"
+      # A run that has been claimed but whose rows are still being inserted by
+      # StartRunJob has no outstanding work yet, and would otherwise complete
+      # itself with zero responses.
+      return if run.progress_total.zero?
       return unless run.outstanding_work_zero?
 
       run.mark_completed!

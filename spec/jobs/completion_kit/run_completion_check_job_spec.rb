@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::RunCompletionCheckJob, type: :job do
-  let(:run) { create(:completion_kit_run, status: "running") }
+  let(:run) { create(:completion_kit_run, status: "running", progress_total: 1) }
 
   before do
     allow_any_instance_of(CompletionKit::Run).to receive(:broadcast_progress)
@@ -17,6 +17,15 @@ RSpec.describe CompletionKit::RunCompletionCheckJob, type: :job do
     described_class.perform_now(run.id)
 
     expect(run.reload.status).to eq("completed")
+  end
+
+  it "leaves a just-claimed run alone until StartRunJob has inserted its rows" do
+    run.update_columns(progress_total: 0)
+    expect_any_instance_of(CompletionKit::Run).not_to receive(:mark_completed!)
+
+    described_class.perform_now(run.id)
+
+    expect(run.reload.status).to eq("running")
   end
 
   it "leaves the run as running when work is outstanding" do

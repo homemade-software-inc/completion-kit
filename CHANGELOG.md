@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.30] - 2026-07-30
+
+### Fixed
+- **Starting a run now returns as soon as the run is claimed, instead of holding the request open through the whole setup.** (#150) `start!` parsed the entire dataset, deleted and re-inserted a response per row, and enqueued a job per row (or per row times metric) inside the caller's request. On a normal dataset that is most of a second, which is what surfaced over MCP as a `-32603` or "operation timed out" on `runs_generate` even though the run had started perfectly well, leaving an agent unable to tell a false failure from a real one. The cheap checks still run synchronously and still fail the call immediately (bad state, empty dataset, missing output column, unconfigured provider), then the run is claimed and the expensive work handed to a new `StartRunJob`. Measured on the 150-row by 3-metric dataset in dev SQLite: the caller now blocks for a median of **47 ms instead of 787 ms, a 16.6x reduction**, with the remaining ~740 ms moved onto the worker. On a networked database the gap should be wider, since the deferred part is where the per-row round-trips live.
+
+  The tenant columns the inserted rows need are resolved in the request, where the host's tenant context exists, and passed to the job, so a tenanted host app does not end up with unscoped responses. `StartRunJob` is a per-run singleton and re-checks the run's state, so a retry or a double submit cannot insert twice, and the completion check now ignores a run that has been claimed but whose rows have not landed yet, which would otherwise have completed it with zero responses.
+
+### Changed
+- **The run page's poll now refreshes the progress panel and the response rows, not just the status badge.** Required by the change above, since the rows no longer exist when the page first renders, but it also fixes live updating during a run: response rows previously relied on Turbo broadcasts from the worker, which do not reliably publish in production.
+
 ## [0.28.29] - 2026-07-30
 
 ### Added

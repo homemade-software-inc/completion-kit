@@ -197,24 +197,7 @@
 
 <%= render "sort_toolbar", run: @run %>
 
-<p class="ck-kicker" style="margin-top: 1.5rem;<%= ' display:none;' unless @responses.any? %>" id="responses_kicker">Responses</p>
-<table class="ck-results-table ck-responses-table"<%= ' hidden'.html_safe unless @responses.any? %> id="responses_table">
-  <thead>
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">Response</th>
-      <th scope="col">Metrics</th>
-      <th scope="col">Avg score</th>
-      <th scope="col">Status</th>
-      <th scope="col"></th>
-    </tr>
-  </thead>
-  <tbody id="run_responses">
-    <% @responses.each_with_index do |response, idx| %>
-      <%= render "response_row", run: @run, response: response, index: @responses_offset + idx + 1 %>
-    <% end %>
-  </tbody>
-</table>
+<%= render "responses_region", run: @run, responses: @responses, responses_offset: @responses_offset %>
 
 <% if @responses_total_pages > 1 %>
   <nav class="ck-pagination" aria-label="Response pages">

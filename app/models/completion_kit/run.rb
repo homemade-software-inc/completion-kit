@@ -305,18 +305,17 @@ module CompletionKit
       summary
     end
 
+    # Validates what can be checked cheaply, claims the run, and hands the
+    # expensive part (parsing the dataset, inserting a response per row, and
+    # enqueueing a job per row) to StartRunJob. Holding all that open inside the
+    # caller's request is what made runs_generate look like it had timed out
+    # when the run had in fact started.
     def start!
       unless %w[pending failed].include?(status)
         return fail_with_summary!("Cannot start a run in state \"#{status}\". Use rerun to create a fresh copy, or retry_failures / regrade to work with the existing responses.")
       end
 
-      rows = if dataset
-               CsvProcessor.process_self(self)
-             else
-               [{}]
-             end
-
-      return fail_with_summary!("Dataset has no rows") if rows.empty?
+      return fail_with_summary!("Dataset has no rows") if dataset && dataset.row_count.zero?
 
       if judge_only?
         column = output_column.presence || "actual_output"
@@ -336,17 +335,39 @@ module CompletionKit
           update!(
             status: "running",
             progress_current: 0,
-            progress_total: rows.length,
+            progress_total: 0,
             failure_summary: nil,
             error_message: nil
           )
+        end
+      rescue ActiveRecord::RecordInvalid => e
+        reload
+        return fail_with_summary!(e.record.errors.full_messages.to_sentence)
+      end
+
+      StartRunJob.perform_later(id, Response.all.where_values_hash.symbolize_keys)
+      safely_broadcast { broadcast_ui }
+      true
+    end
+
+    def fail_to_start!(message)
+      fail_with_summary!(message)
+    end
+
+    def execute_start!(scope_defaults = {})
+      rows = dataset ? CsvProcessor.process_self(self) : [{}]
+
+      return fail_with_summary!("Dataset has no rows") if rows.empty?
+
+      begin
+        transaction do
+          update!(progress_current: 0, progress_total: rows.length)
 
           now = Time.current
           out_col = output_column.presence || "actual_output"
           exp_col = expected_column.presence || "expected_output"
           judge = judge_only?
           has_output = judge && dataset && dataset.headers.include?(out_col)
-          scope_defaults = Response.all.where_values_hash.symbolize_keys
 
           response_attrs = rows.each_with_index.map do |row, index|
             {

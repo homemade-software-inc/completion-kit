@@ -420,7 +420,7 @@ RSpec.describe CompletionKit::Run, type: :model do
     it "creates pending Responses and enqueues GenerateRowJob for each row" do
       run = create(:completion_kit_run, prompt: prompt, dataset: nil)
 
-      result = run.start!
+      result = start_run!(run)
 
       expect(result).to be true
       expect(run.responses.count).to eq(1)
@@ -439,7 +439,7 @@ RSpec.describe CompletionKit::Run, type: :model do
         orig.call(rows)
       end
 
-      expect(run.start!).to be true
+      expect(start_run!(run)).to be true
       expect(batch_sizes).to eq([2, 2, 1])
       expect(run.responses.count).to eq(5)
     end
@@ -448,7 +448,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       dataset = create(:completion_kit_dataset, csv_data: "input\na\nb\nc\n")
       run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
 
-      run.start!
+      start_run!(run)
 
       expect(ActiveJob).to have_received(:perform_all_later).once
     end
@@ -457,7 +457,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = create(:completion_kit_run, prompt: prompt, dataset: nil, status: "running")
       existing = create(:completion_kit_response, run: run, status: "succeeded")
 
-      result = run.start!
+      result = start_run!(run)
 
       expect(result).to be false
       expect(CompletionKit::Response.where(id: existing.id)).to exist
@@ -468,7 +468,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = create(:completion_kit_run, prompt: prompt, dataset: nil, status: "completed")
       existing = create(:completion_kit_response, run: run, status: "succeeded")
 
-      result = run.start!
+      result = start_run!(run)
 
       expect(result).to be false
       expect(CompletionKit::Response.where(id: existing.id)).to exist
@@ -476,7 +476,7 @@ RSpec.describe CompletionKit::Run, type: :model do
 
     it "still allows restarting a failed run (Retry button path)" do
       run = create(:completion_kit_run, prompt: prompt, dataset: nil, status: "failed")
-      result = run.start!
+      result = start_run!(run)
       expect(result).to be true
       expect(run.reload.status).to eq("running")
     end
@@ -484,7 +484,7 @@ RSpec.describe CompletionKit::Run, type: :model do
     it "transitions status to running" do
       run = create(:completion_kit_run, prompt: prompt, dataset: nil)
 
-      run.start!
+      start_run!(run)
 
       expect(run.reload.status).to eq("running")
     end
@@ -494,7 +494,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       allow(run).to receive(:broadcast_ui)
         .and_raise(ActionController::UrlGenerationError.new("missing required keys: [:org_slug]"))
 
-      expect(run.start!).to be(true)
+      expect(start_run!(run)).to be(true)
       expect(run.reload.status).to eq("running")
       expect(CompletionKit::GenerateRowJob).to have_received(:perform_later).once
     end
@@ -504,7 +504,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
       allow(CompletionKit::CsvProcessor).to receive(:process_self).and_return([])
 
-      result = run.start!
+      result = start_run!(run)
 
       expect(result).to be false
       expect(run.reload.status).to eq("failed")
@@ -516,7 +516,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       allow(CompletionKit::LlmClient).to receive(:for_model).and_return(bad_client)
       run = create(:completion_kit_run, prompt: prompt, dataset: nil)
 
-      result = run.start!
+      result = start_run!(run)
 
       expect(result).to be false
       expect(run.reload.status).to eq("failed")
@@ -528,7 +528,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       allow(CompletionKit::LlmClient).to receive(:for_model).and_return(bad_client)
       run = build(:completion_kit_run, prompt: prompt, dataset: nil)
 
-      result = run.start!
+      result = start_run!(run)
 
       expect(result).to be false
       expect(run).not_to be_persisted
@@ -603,7 +603,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       end
 
       it "marks every response succeeded with response_text from the output_column and skips GenerateRowJob" do
-        result = run.start!
+        result = start_run!(run)
 
         expect(result).to be true
         expect(run.responses.count).to eq(2)
@@ -613,7 +613,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       end
 
       it "enqueues JudgeReviewJob per response per metric when judging is configured" do
-        run.start!
+        start_run!(run)
 
         expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).twice
       end
@@ -621,14 +621,14 @@ RSpec.describe CompletionKit::Run, type: :model do
       it "skips JudgeReviewJob when no judge is configured but still creates succeeded responses" do
         bare = create(:completion_kit_run, prompt: nil, dataset: dataset_with_output, judge_model: nil)
 
-        bare.start!
+        start_run!(bare)
 
         expect(bare.responses.pluck(:status).uniq).to eq(["succeeded"])
         expect(CompletionKit::JudgeReviewJob).not_to have_received(:perform_later)
       end
 
       it "enqueues RunCompletionCheckJob once" do
-        run.start!
+        start_run!(run)
 
         expect(CompletionKit::RunCompletionCheckJob).to have_received(:perform_later).with(run.id)
       end
@@ -637,7 +637,7 @@ RSpec.describe CompletionKit::Run, type: :model do
         mismatched = build(:completion_kit_run, prompt: nil, dataset: dataset_with_output, output_column: "expected_output")
         mismatched.save(validate: false)
 
-        result = mismatched.start!
+        result = start_run!(mismatched)
 
         expect(result).to be false
         expect(mismatched.reload.status).to eq("failed")
@@ -690,7 +690,7 @@ RSpec.describe CompletionKit::Run, type: :model do
         run = create(:completion_kit_run, prompt: nil, dataset: dataset, judge_model: nil)
         run.run_metrics.create!(metric: check_metric, position: 1)
 
-        expect(run.start!).to be(true)
+        expect(start_run!(run)).to be(true)
         expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).once
         expect(CompletionKit::JudgeReviewJob).not_to have_received(:perform_later)
         expect(CompletionKit::RunCompletionCheckJob).to have_received(:perform_later).with(run.id)
@@ -702,7 +702,7 @@ RSpec.describe CompletionKit::Run, type: :model do
         run.run_metrics.create!(metric: llm_metric, position: 1)
         run.run_metrics.create!(metric: check_metric, position: 2)
 
-        run.start!
+        start_run!(run)
 
         expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).once
         expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).once
@@ -727,7 +727,7 @@ RSpec.describe CompletionKit::Run, type: :model do
         expect(run).to be_valid
         run.save!
 
-        expect(run.start!).to be(true)
+        expect(start_run!(run)).to be(true)
         expect(run.responses.pluck(:status).uniq).to eq(["succeeded"])
         expect(run.responses.first.response_text).to be_nil
         expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).once

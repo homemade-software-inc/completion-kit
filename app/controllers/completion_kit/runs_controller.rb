@@ -119,14 +119,21 @@ module CompletionKit
       end
     end
 
+    # The web process drives the live run page, because worker-side Turbo
+    # broadcasts do not reliably publish in production. Since a run is now
+    # started asynchronously, this has to carry the rows and the progress panel
+    # too, not just the status badge, or the page sits empty until a reload.
     def refresh_status
+      show
+
       respond_to do |format|
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            "run_status_header",
-            partial: "completion_kit/runs/status_header",
-            locals: { run: @run }
-          )
+          render turbo_stream: [
+            turbo_stream.replace("run_status_header", partial: "completion_kit/runs/status_header", locals: { run: @run }),
+            turbo_stream.replace("run_status_panel", partial: "completion_kit/runs/status_panel", locals: { run: @run }),
+            turbo_stream.replace("run_responses_region", partial: "completion_kit/runs/responses_region",
+                                 locals: { run: @run, responses: @responses, responses_offset: @responses_offset })
+          ]
         end
       end
     end
