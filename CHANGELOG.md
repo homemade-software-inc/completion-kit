@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.29] - 2026-07-30
+
+### Added
+- **A run now shows how often a human agreed with its judge, and says "Unverified" when nobody has checked.** (#154) The agreement maths already existed but the number only appeared in a card at the bottom of the metric page, so a run could show a confident average next to no evidence that the judge was ever right. The run status panel gains a "Judge agreement" figure beside the average score, reading the verdicts cast on that run's own responses rather than a metric's current-version sample, so the number describes the scores actually on screen. With no labels it renders an explicit "Unverified" alongside a link into the judge's agreement section rather than a blank or a misleading zero. Hidden entirely on check-only runs and when `judge_agreement_enabled` is off.
+
 ## [0.28.28] - 2026-07-30
 
 ### Added

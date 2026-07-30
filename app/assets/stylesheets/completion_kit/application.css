@@ -1295,6 +1295,18 @@ tr:hover .ck-chip--publish {
   margin: 0 0.15rem;
 }
 
+.ck-run-status__cell-value--split {
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ck-run-status__cell-unverified {
+  font-family: var(--ck-mono);
+  font-size: 0.95rem;
+  color: var(--ck-warning);
+  letter-spacing: 0.02em;
+}
+
 .ck-run-status__cell-empty {
   font-family: var(--ck-mono);
   font-size: 1.4rem;

@@ -620,6 +620,54 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(CompletionKit::Run.order(:id).last.temperature).to eq(0.3)
   end
 
+  describe "judge agreement on the run page" do
+    before { allow(CompletionKit::ApiConfig).to receive(:valid_for_model?).and_return(true) }
+
+    def judged_run
+      metric = create(:completion_kit_metric)
+      run = create(:completion_kit_run, prompt: prompt, status: "completed", judge_model: "gpt-4.1",
+                   progress_total: 1, progress_current: 1)
+      run.replace_metrics!([metric.id])
+      response = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, response: response, metric: metric, metric_name: metric.name, ai_score: 4.0)
+      [run, metric, response]
+    end
+
+    it "says unverified and offers the check when nobody has labelled anything" do
+      run, metric, _ = judged_run
+
+      get "#{base_path}/#{run.id}"
+
+      expect(response.body).to include("Judge agreement")
+      expect(response.body).to include("Unverified")
+      expect(response.body).to include("/completion_kit/metrics/#{metric.id}#agreement")
+    end
+
+    it "shows the agreement rate and label count once the judge has been checked" do
+      run, metric, resp = judged_run
+      version = CompletionKit::MetricVersion.ensure_current_for(metric)
+      CompletionKit::Agreement.create!(run: run, response: resp, metric: metric, metric_version: version,
+                                       verdict: "agree", created_by: "spec")
+
+      get "#{base_path}/#{run.id}"
+
+      expect(response.body).to include("Judge agreement")
+      expect(response.body).to include("1 label")
+      expect(response.body).not_to include("Unverified")
+    end
+
+    it "is hidden when judge agreement is disabled" do
+      run, _, _ = judged_run
+      CompletionKit.config.judge_agreement_enabled = false
+
+      get "#{base_path}/#{run.id}"
+
+      expect(response.body).not_to include("Judge agreement")
+    ensure
+      CompletionKit.config.judge_agreement_enabled = true
+    end
+  end
+
   describe "score-ceiling warning" do
     def run_scored(scores)
       metric = create(:completion_kit_metric)

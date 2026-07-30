@@ -165,6 +165,30 @@ RSpec.describe "Results and scoring", type: :model do
     end
   end
 
+  describe "Run#judge_agreement" do
+    it "is nil when nobody has checked the judge on this run" do
+      expect(run.judge_agreement).to be_nil
+    end
+
+    it "reports the agreement rate and how many labels back it" do
+      version = CompletionKit::MetricVersion.ensure_current_for(metric1)
+      %w[agree agree disagree].each do |verdict|
+        response = create(:completion_kit_response, run: run)
+        create(:completion_kit_review, response: response, metric: metric1, metric_name: "Relevance", ai_score: 4.0)
+        CompletionKit::Agreement.create!(run: run, response: response, metric: metric1,
+                                         metric_version: version, verdict: verdict,
+                                         corrected_score: (verdict == "disagree" ? 2.0 : nil),
+                                         created_by: "spec")
+      end
+
+      summary = run.judge_agreement
+      expect(summary[:sample_size]).to eq(3)
+      expect(summary[:rate]).to be_within(0.001).of(
+        CompletionKit::AgreementMath.wilson_interval(successes: 2, n: 3)[:point]
+      )
+    end
+  end
+
   describe "Run#calibratable_metric" do
     it "returns a judge metric and never a check" do
       run = create(:completion_kit_run)

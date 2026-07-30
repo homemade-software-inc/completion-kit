@@ -123,6 +123,18 @@ module CompletionKit
       llm_metrics.first
     end
 
+    # How often a human agreed with the judge on this run's own responses.
+    # Scoped to the run rather than to a metric's current version, so the
+    # figure describes the scores actually shown on this page. Uses the same
+    # Wilson point as MetricAgreementStats so the two surfaces never disagree.
+    def judge_agreement
+      verdicts = Agreement.where(run_id: id).pluck(:verdict)
+      return nil if verdicts.empty?
+
+      point = AgreementMath.wilson_interval(successes: verdicts.count { |v| v == "agree" }, n: verdicts.length)[:point]
+      { rate: point, sample_size: verdicts.length }
+    end
+
     # A scoring-only run grades a pre-existing column on the dataset instead of
     # generating new outputs. No prompt is attached; the response text is read
     # from row[output_column]; no LLM generation happens.
