@@ -1,19 +1,48 @@
+<% resolved = check_activity.sum { |day| day[:resolved] } %>
+<% passed = check_activity.sum { |day| day[:passed] } %>
 <div class="ck-card ck-stat-card ck-rise" id="ck-failing-checks-card" style="--rise-delay: 200ms;">
-  <p class="ck-kicker">Failing checks · last 7 days</p>
+  <p class="ck-kicker">Checks · 14D</p>
   <div class="ck-stat-card__body">
-    <span class="ck-stat-card__count<%= failing_checks[:count].positive? ? ' is-danger' : ' is-clean' %>"><%= failing_checks[:count] %></span>
+    <% if resolved.positive? %>
+      <% rate = passed.to_f / resolved %>
+      <span class="ck-stat-card__count is-<%= ck_pass_rate_kind(rate) %>"><%= (rate * 100).round %>%</span>
+      <span class="ck-stat-card__unit">passing</span>
+    <% else %>
+      <span class="ck-stat-card__metric ck-stat-card__metric--empty">Not run yet</span>
+    <% end %>
+  </div>
+
+  <div class="ck-sparkline ck-sparkline--compact" role="img"
+       aria-label="Daily check pass rate over the last 14 days">
+    <% check_activity.each do |day| %>
+      <% kind = day[:rate] && ck_pass_rate_kind(day[:rate]) %>
+      <span class="ck-sparkline__bar<%= " is-#{kind}" if kind && kind != :high %>"
+            style="height: <%= day[:rate] ? [(day[:rate] * 100).round, 6].max : 0 %>%;"
+            title="<%= day[:date].strftime('%b %-d') %>: <%= day[:rate] ? "#{(day[:rate] * 100).round}% of #{day[:resolved]}" : 'no checks' %>"></span>
+    <% end %>
   </div>
 
   <% if failing_checks[:items].any? %>
     <ul class="ck-failure-list">
-      <% failing_checks[:items].first(5).each do |item| %>
+      <% failing_checks[:items].first(2).each do |item| %>
         <li class="ck-failure-list__item">
-          <span class="ck-failure-list__surface ck-failure-list__surface--check">check</span>
-          <%= link_to item[:metric_name], completion_kit.run_path(item[:run]), class: "ck-link ck-failure-list__cause" %>
+          <span class="ck-failure-list__surface ck-failure-list__surface--check">fail</span>
+          <%= link_to item[:metric_name], completion_kit.run_path(item[:run]),
+                class: "ck-link ck-failure-list__cause", title: "Failed in #{item[:run].name}" %>
         </li>
       <% end %>
     </ul>
-  <% else %>
-    <div class="ck-stat-card__foot"><span>No failing checks this week.</span></div>
   <% end %>
+
+  <div class="ck-stat-card__foot">
+    <% if failing_checks[:count] > 2 %>
+      <span><%= failing_checks[:count] - 2 %> more failing.</span>
+    <% elsif failing_checks[:count].positive? %>
+      <span><%= pluralize(failing_checks[:count], "check") %> failing in the window.</span>
+    <% elsif resolved.positive? %>
+      <span>Every check passed in the window.</span>
+    <% else %>
+      <span>Add a check metric to a run to populate this.</span>
+    <% end %>
+  </div>
 </div>

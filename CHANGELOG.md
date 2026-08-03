@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.32] - 2026-08-03
+
+### Changed
+- **The dashboard's pulse cards say something on every workspace, or they don't show up at all.** (#166) The failing-checks card sat at a permanent `0 / No failing checks this week` in any workspace with no check metrics, which is filler dressed as a signal, so it is now hidden entirely and the card row narrows to three. Where checks do exist it reads as an instrument instead of a lone weekly count: the headline is the pass rate across the trailing fortnight, a daily sparkline underneath shows the shape of it, and each bar takes the same three-tier colour as the headline so a 90% day is not painted the same red as a 25% day. A new `DashboardStats.check_activity` supplies the series.
+
+  The failures card named the error class on every row, which truncated to an identical `CompletionKi…` and answered a question nobody was asking. Each row now names the run that failed, with the cause on hover, and the `generation` chip shortens to `gen` so the name gets the width. The trend-card headers dropped `· LAST 7 DAYS`, which repeated on three of four cards and wrapped onto a second line on each; they now read `· 7D` and `· 14D` and fit on one line. The activity card leads with the run count and demotes its sparkline to supporting texture, so a fortnight where everything landed on one day no longer reads as a broken chart.
+
+- **The stale-metrics banner on a run now names the action it is actually recommending.** (#166) Its closing line read "Re-run to refresh the scores with the current metrics", but re-scoring the existing responses against the current metrics is precisely what **Re-grade** does, at no generation cost, so the copy was steering people toward the expensive button. It now says Re-grade, and Re-grade leads. The difference between the two actions, and the cost gap, previously appeared only in `title` tooltips and so were invisible at a glance; each button now carries its consequence on a line underneath it.
+
 ## [0.28.31] - 2026-07-30
 
 ### Added

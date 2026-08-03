@@ -99,6 +99,31 @@ module CompletionKit
       (resolved.where(passed: true).count.to_f / total).round(2)
     end
 
+    # Daily pass rate for deterministic checks across the trailing window,
+    # zero-filled and oldest first. `rate` is nil on days nothing resolved, so
+    # a quiet day stays distinguishable from a day everything failed.
+    def self.check_activity(days: 14)
+      since = (days - 1).days.ago.to_date
+      counts = Review.joins(:response)
+                     .where.not(passed: nil)
+                     .where("completion_kit_reviews.created_at >= ?", since.beginning_of_day)
+                     .where(completion_kit_responses: { run_id: Run.visible_run_ids })
+                     .group(Arel.sql("DATE(completion_kit_reviews.created_at)"), :passed)
+                     .count
+      by_day = counts.each_with_object({}) do |((day, passed), total), acc|
+        bucket = acc[day.to_s] ||= { passed: 0, resolved: 0 }
+        bucket[:passed] += total if passed
+        bucket[:resolved] += total
+      end
+
+      (0...days).map do |offset|
+        date = since + offset
+        bucket = by_day[date.to_s] || { passed: 0, resolved: 0 }
+        rate = bucket[:resolved].zero? ? nil : (bucket[:passed].to_f / bucket[:resolved]).round(2)
+        { date: date, resolved: bucket[:resolved], passed: bucket[:passed], rate: rate }
+      end
+    end
+
     def self.failing_checks(since:)
       reviews = Review.where(passed: false)
                       .where("completion_kit_reviews.created_at >= ?", since)

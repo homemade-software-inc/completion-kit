@@ -20,7 +20,12 @@ module CompletionKit
       @activity = DashboardStats.activity
       @worst_metric = DashboardStats.worst_metric(since: 7.days.ago)
       @failures = DashboardStats.failures(since: 7.days.ago)
-      @failing_checks = DashboardStats.failing_checks(since: 7.days.ago)
+      # A workspace with no check metrics can never populate this card, so it
+      # would sit at a permanent zero and read as filler.
+      if Metric.exists?(metric_type: "check")
+        @failing_checks = DashboardStats.failing_checks(since: 14.days.ago)
+        @check_activity = DashboardStats.check_activity
+      end
       @ignored_metrics = DashboardDismissal.metrics
       @ignored_failures = DashboardDismissal.failures
       @prompt_changes = DashboardStats.prompt_changes

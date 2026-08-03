@@ -1,5 +1,5 @@
 <div class="ck-card ck-stat-card ck-rise" id="ck-failures-card" style="--rise-delay: 180ms;">
-  <p class="ck-kicker">Failures · last 7 days</p>
+  <p class="ck-kicker">Failures · 7D</p>
   <div class="ck-stat-card__body">
     <span class="ck-stat-card__count<%= failures[:count].positive? ? ' is-danger' : ' is-clean' %>"><%= failures[:count] %></span>
   </div>
@@ -8,11 +8,12 @@
     <ul class="ck-failure-list">
       <% failures[:items].each do |item| %>
         <li class="ck-failure-list__item">
-          <span class="ck-failure-list__surface ck-failure-list__surface--<%= item[:surface] %>"><%= item[:surface] %></span>
+          <span class="ck-failure-list__surface ck-failure-list__surface--<%= item[:surface] %>"><%= item[:surface] == "generation" ? "gen" : item[:surface] %></span>
           <% if item[:run] %>
-            <%= link_to item[:cause], completion_kit.run_path(item[:run]), class: "ck-link ck-failure-list__cause" %>
+            <%= link_to item[:run].name, completion_kit.run_path(item[:run]),
+                  class: "ck-link ck-failure-list__cause", title: item[:cause] %>
           <% else %>
-            <span class="ck-failure-list__cause"><%= item[:cause] %></span>
+            <span class="ck-failure-list__cause" title="<%= item[:cause] %>">Deleted run</span>
           <% end %>
           <%= button_to completion_kit.dashboard_dismissals_path,
                 params: { dashboard_dismissal: { dismissable_type: item[:record].class.name,
@@ -26,7 +27,7 @@
 
   <% if failures[:items].empty? || ignored_failures.any? %>
     <div class="ck-stat-card__foot ck-stat-card__foot--split">
-      <span><% if failures[:items].empty? %>All clear — nothing failed this week.<% end %></span>
+      <span><% if failures[:items].empty? %>All clear. Nothing failed this week.<% end %></span>
       <% if ignored_failures.any? %>
         <details class="ck-flyout">
           <summary class="ck-flyout__toggle"><%= ignored_failures.size %> ignored</summary>

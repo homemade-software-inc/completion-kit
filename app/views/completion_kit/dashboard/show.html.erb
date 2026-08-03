@@ -28,20 +28,30 @@
 </nav>
 
 <% if @activity %>
-  <div class="ck-grid ck-grid--cards ck-grid--cards-4 ck-pulse-grid">
+  <div class="ck-grid ck-grid--cards <%= @failing_checks ? "ck-grid--cards-4" : "ck-grid--cards-3" %> ck-pulse-grid">
     <div class="ck-card ck-stat-card ck-rise" style="--rise-delay: 60ms;">
-      <p class="ck-kicker">Activity · last 14 days</p>
+      <p class="ck-kicker">Activity · 14D</p>
+      <% activity_total = @activity.sum { |d| d[:count] } %>
       <% activity_max = @activity.map { |d| d[:count] }.max %>
-      <div class="ck-sparkline" role="img" aria-label="<%= @activity.sum { |d| d[:count] } %> runs over the last 14 days">
+      <div class="ck-stat-card__body">
+        <span class="ck-stat-card__count"><%= activity_total %></span>
+        <span class="ck-stat-card__unit"><%= "run".pluralize(activity_total) %></span>
+      </div>
+      <div class="ck-sparkline ck-sparkline--compact" role="img" aria-label="<%= activity_total %> runs over the last 14 days">
         <% @activity.each do |day| %>
           <span class="ck-sparkline__bar<%= ' is-peak' if activity_max.to_i.positive? && day[:count] == activity_max %>"
-                style="height: <%= activity_max.to_i.zero? ? 0 : (day[:count] * 100.0 / activity_max).round %>%"
+                style="height: <%= activity_max.to_i.zero? ? 0 : [(day[:count] * 100.0 / activity_max).round, 6].max %>%"
                 title="<%= day[:date].strftime('%b %-d') %>: <%= day[:count] %> run<%= 's' unless day[:count] == 1 %>"></span>
         <% end %>
       </div>
-      <p class="ck-stat-card__foot">
-        <span class="ck-stat-card__figure"><%= @activity.sum { |d| d[:count] } %></span> runs in the window
-      </p>
+      <div class="ck-stat-card__foot">
+        <% if activity_total.positive? %>
+          <% peak = @activity.max_by { |d| d[:count] } %>
+          <span>Busiest day <%= peak[:date].strftime("%b %-d") %> · <%= peak[:count] %></span>
+        <% else %>
+          <span>No runs in the window.</span>
+        <% end %>
+      </div>
     </div>
 
     <%= render "completion_kit/dashboard/worst_metric_card",
@@ -50,8 +60,10 @@
     <%= render "completion_kit/dashboard/failures_card",
                failures: @failures, ignored_failures: @ignored_failures %>
 
-    <%= render "completion_kit/dashboard/failing_checks_card",
-               failing_checks: @failing_checks %>
+    <% if @failing_checks %>
+      <%= render "completion_kit/dashboard/failing_checks_card",
+                 failing_checks: @failing_checks, check_activity: @check_activity %>
+    <% end %>
   </div>
 
   <div class="ck-card ck-card--spaced ck-rise" style="--rise-delay: 240ms;">
@@ -81,7 +93,7 @@
 <% end %>
 
 <div class="ck-card ck-card--spaced ck-rise" id="top_served_card" style="--rise-delay: 280ms;">
-  <p class="ck-kicker">Prompts served · last 7 days</p>
+  <p class="ck-kicker">Prompts served · 7D</p>
   <% if @top_served.any? %>
     <% serve_max = @serve_activity.map { |d| d[:count] }.max %>
     <div class="ck-sparkline" role="img" aria-label="<%= @serve_activity.sum { |d| d[:count] } %> prompt fetches over the last 14 days">

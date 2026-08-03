@@ -25,20 +25,26 @@
           This run was scored against metric versions that are no longer live.
           <% stale_summary.values.each_with_index do |s, i| %>
             <%= ", " if i > 0 %><strong><%= s[:metric_name] %></strong> (scored by <%= s[:scored_labels].join(", ") %>; live is <%= s[:current_label] %>)<% end %>.
-          Re-run to refresh the scores with the current metrics.
+          Re-grade to refresh the scores with the current metrics.
         </p>
       </div>
       <% if @run.status == "completed" %>
-        <%= button_to "Re-run from scratch",
-              rerun_run_path(@run), method: :post,
-              class: ck_button_classes(:light, variant: :outline), form_class: "inline-block",
-              title: "Create a new run that regenerates responses and grades them with the current metrics.",
-              data: { turbo_confirm: "Create a new run with fresh responses and the current metrics? The original run stays as a record." } %>
-        <%= button_to "Re-grade with current metrics",
-              regrade_run_path(@run), method: :post,
-              class: ck_button_classes(:dark), form_class: "inline-block",
-              title: "Re-grade this run's existing responses against the current metrics. Faster and cheaper than re-running.",
-              data: { turbo_confirm: "Re-grade this run's existing responses against the current metrics?" } %>
+        <div class="ck-banner-actions">
+          <div class="ck-banner-action">
+            <%= button_to "Re-grade with current metrics",
+                  regrade_run_path(@run), method: :post,
+                  class: ck_button_classes(:dark), form_class: "inline-block",
+                  data: { turbo_confirm: "Re-grade this run's existing responses against the current metrics?" } %>
+            <p class="ck-banner-action__note">Re-scores the responses you already have. No generation cost.</p>
+          </div>
+          <div class="ck-banner-action">
+            <%= button_to "Re-run from scratch",
+                  rerun_run_path(@run), method: :post,
+                  class: ck_button_classes(:light, variant: :outline), form_class: "inline-block",
+                  data: { turbo_confirm: "Create a new run with fresh responses and the current metrics? The original run stays as a record." } %>
+            <p class="ck-banner-action__note">Generates fresh responses first. Costs a full run.</p>
+          </div>
+        </div>
       <% end %>
     </div>
   <% end %>
@@ -120,7 +126,7 @@
     <div class="ck-prompt-preview__header">
       <p class="ck-kicker">Output source</p>
     </div>
-    <p class="ck-prompt-preview__text">Dataset column <code><%= @run.output_column.presence || "actual_output" %></code> — no prompt generated these outputs.</p>
+    <p class="ck-prompt-preview__text">Dataset column <code><%= @run.output_column.presence || "actual_output" %></code>. No prompt generated these outputs.</p>
   </div>
 <% end %>
 

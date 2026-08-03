@@ -519,8 +519,16 @@ form.button_to {
   font-size: 2.6rem;
   line-height: 1;
 }
-.ck-stat-card__count.is-clean { color: var(--ck-success, #4ade80); }
-.ck-stat-card__count.is-danger { color: var(--ck-danger, #f87171); }
+.ck-stat-card__count.is-clean,
+.ck-stat-card__count.is-high { color: var(--ck-success, #4ade80); }
+.ck-stat-card__count.is-medium { color: var(--ck-warning); }
+.ck-stat-card__count.is-danger,
+.ck-stat-card__count.is-low { color: var(--ck-danger, #f87171); }
+.ck-stat-card__unit {
+  font-family: var(--ck-mono);
+  font-size: 0.78rem;
+  color: var(--ck-muted);
+}
 
 /* Dashboard activity sparkline — fixed-height row of bars, height set
    inline per day. Bars hug the bottom; quiet days collapse to a sliver.
@@ -542,7 +550,16 @@ form.button_to {
   transition: background 0.15s ease;
 }
 .ck-sparkline__bar.is-peak { background: var(--ck-accent); }
+.ck-sparkline__bar.is-medium { background: var(--ck-warning); }
+.ck-sparkline__bar.is-low { background: var(--ck-danger); }
 .ck-sparkline__bar:hover { background: var(--ck-accent-hover); }
+
+/* The number carries the headline; the bars are supporting texture, so they
+   take about half the height of a standalone sparkline. */
+.ck-sparkline--compact {
+  height: 1.9rem;
+  margin: 0.55rem 0 0;
+}
 
 /* One orchestrated page-load reveal — the dashboard "boots up". */
 @keyframes ck-rise {
@@ -3221,6 +3238,28 @@ select.ck-input {
 .ck-stale-versions-banner .ck-kicker,
 .ck-score-ceiling-banner .ck-kicker { color: var(--ck-warning); }
 .ck-score-ceiling-banner__actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* Each action carries its own consequence line, because the difference
+   between re-grading and re-running is the whole decision. */
+.ck-banner-actions {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.ck-banner-action {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 16rem;
+}
+.ck-banner-action__note {
+  margin: 0;
+  font-family: var(--ck-mono);
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--ck-muted);
+}
 
 .ck-delta {
   font-family: var(--ck-mono);

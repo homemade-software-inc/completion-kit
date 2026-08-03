@@ -10,6 +10,13 @@ RSpec.describe "CompletionKit dashboard", type: :request do
     create_list(:completion_kit_run, run_count, prompt: prompt, dataset: dataset)
   end
 
+  def stub_pulse_cards!
+    allow(CompletionKit::DashboardStats).to receive(:activity).and_return([{ date: Date.new(2026, 5, 3), count: 1 }])
+    allow(CompletionKit::DashboardStats).to receive(:worst_metric).and_return(nil)
+    allow(CompletionKit::DashboardStats).to receive(:failures).and_return(count: 0, items: [])
+    allow(CompletionKit::DashboardStats).to receive(:prompt_changes).and_return([])
+  end
+
   describe "GET /completion_kit/dashboard" do
     it "redirects an unconfigured workspace to onboarding" do
       get dashboard
@@ -25,7 +32,7 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       expect(response.body).to include("Prompt Testing Lab")
       expect(response.body).to include("Workspace totals")
       expect(response.body).to include("Recent runs")
-      expect(response.body).not_to include("Activity · last 14 days")
+      expect(response.body).not_to include("Activity · 14D")
     end
 
     it "renders the no-runs state when onboarding was dismissed before any run exists" do
@@ -35,7 +42,7 @@ RSpec.describe "CompletionKit dashboard", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("No runs yet")
-      expect(response.body).not_to include("Activity · last 14 days")
+      expect(response.body).not_to include("Activity · 14D")
     end
 
     it "renders the activity grid and a populated prompt-changes list when more than five runs exist" do
@@ -57,41 +64,84 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       get dashboard
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Activity · last 14 days")
+      expect(response.body).to include("Activity · 14D")
       expect(response.body).to include("is-peak")
       expect(response.body).to include("Prompt changes")
       expect(response.body).to include("is-gain")
     end
 
-    it "surfaces a failing-checks card with a count and a run link when checks have failed" do
+    it "drops the checks card and narrows the grid when the workspace has no check metrics" do
+      ready_workspace!(run_count: 6)
+      stub_pulse_cards!
+
+      get dashboard
+
+      expect(response.body).to include("ck-grid--cards-3")
+      expect(response.body).not_to include("ck-failing-checks-card")
+    end
+
+    it "leads the checks card with a pass rate and names the run behind each failure" do
       ready_workspace!(run_count: 6)
       run = CompletionKit::Run.first
       check = create(:completion_kit_metric, :check, name: "Valid JSON")
-      response_row = create(:completion_kit_response, run: run)
-      create(:completion_kit_review, :check, response: response_row, metric: check, metric_name: "Valid JSON", passed: false)
-      allow(CompletionKit::DashboardStats).to receive(:activity).and_return([{ date: Date.new(2026, 5, 3), count: 1 }])
-      allow(CompletionKit::DashboardStats).to receive(:worst_metric).and_return(nil)
-      allow(CompletionKit::DashboardStats).to receive(:failures).and_return(count: 0, items: [])
-      allow(CompletionKit::DashboardStats).to receive(:prompt_changes).and_return([])
+      3.times do
+        row = create(:completion_kit_response, run: run)
+        create(:completion_kit_review, :check, response: row, metric: check, metric_name: "Valid JSON", passed: false)
+      end
+      passing_row = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, :check, response: passing_row, metric: check, metric_name: "Valid JSON", passed: true)
+      stub_pulse_cards!
 
       get dashboard
 
-      expect(response.body).to include("Failing checks · last 7 days")
-      expect(response.body).to include("Valid JSON")
-      expect(response.body).to include("ck-failing-checks-card")
+      expect(response.body).to include("ck-grid--cards-4")
+      expect(response.body).to include("Checks · 14D")
+      expect(response.body).to include("25%")
+      expect(response.body).to include("is-low")
+      expect(response.body).to include("ck-sparkline__bar is-low")
+      expect(response.body).to include("Failed in #{run.name}")
+      expect(response.body).to include("1 more failing")
     end
 
-    it "shows the clean failing-checks state when no checks have failed" do
+    it "reads as all-clear when every resolved check passed" do
       ready_workspace!(run_count: 6)
-      allow(CompletionKit::DashboardStats).to receive(:activity).and_return([{ date: Date.new(2026, 5, 3), count: 1 }])
-      allow(CompletionKit::DashboardStats).to receive(:worst_metric).and_return(nil)
-      allow(CompletionKit::DashboardStats).to receive(:failures).and_return(count: 0, items: [])
-      allow(CompletionKit::DashboardStats).to receive(:prompt_changes).and_return([])
+      run = CompletionKit::Run.first
+      check = create(:completion_kit_metric, :check, name: "Valid JSON")
+      row = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, :check, response: row, metric: check, metric_name: "Valid JSON", passed: true)
+      stub_pulse_cards!
 
       get dashboard
 
-      expect(response.body).to include("Failing checks · last 7 days")
-      expect(response.body).to include("No failing checks this week")
+      expect(response.body).to include("100%")
+      expect(response.body).to include("is-high")
+      expect(response.body).not_to include("ck-sparkline__bar is-low")
+      expect(response.body).not_to include("ck-sparkline__bar is-medium")
+      expect(response.body).to include("Every check passed in the window")
+    end
+
+    it "invites the first check run when a check metric exists but nothing has resolved" do
+      ready_workspace!(run_count: 6)
+      create(:completion_kit_metric, :check, name: "Valid JSON")
+      stub_pulse_cards!
+
+      get dashboard
+
+      expect(response.body).to include("Not run yet")
+      expect(response.body).to include("Add a check metric to a run to populate this")
+    end
+
+    it "counts a single failing check without the overflow line" do
+      ready_workspace!(run_count: 6)
+      run = CompletionKit::Run.first
+      check = create(:completion_kit_metric, :check, name: "Valid JSON")
+      row = create(:completion_kit_response, run: run)
+      create(:completion_kit_review, :check, response: row, metric: check, metric_name: "Valid JSON", passed: false)
+      stub_pulse_cards!
+
+      get dashboard
+
+      expect(response.body).to include("1 check failing in the window")
     end
 
     it "renders a regression row in prompt changes" do
@@ -193,7 +243,7 @@ RSpec.describe "CompletionKit dashboard", type: :request do
 
       get dashboard
 
-      expect(response.body).to include("Activity · last 14 days")
+      expect(response.body).to include("Activity · 14D")
     ensure
       CompletionKit.config.runs_display_scope = nil
     end
@@ -213,7 +263,7 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       get dashboard
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Activity · last 14 days")
+      expect(response.body).to include("Activity · 14D")
       expect(response.body).not_to include("is-peak")
       expect(response.body).to include("No measured changes yet")
     end

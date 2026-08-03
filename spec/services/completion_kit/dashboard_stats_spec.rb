@@ -124,6 +124,45 @@ RSpec.describe CompletionKit::DashboardStats, type: :service do
     end
   end
 
+  describe ".check_activity" do
+    it "zero-fills quiet days and leaves their rate unmeasured" do
+      activity = described_class.check_activity(days: 4)
+
+      expect(activity.length).to eq(4)
+      expect(activity.map { |d| d[:resolved] }).to eq([0, 0, 0, 0])
+      expect(activity.map { |d| d[:rate] }).to eq([nil, nil, nil, nil])
+      expect(activity.map { |d| d[:date] }).to eq(activity.map { |d| d[:date] }.sort)
+    end
+
+    it "reduces a day's resolved checks to a pass rate" do
+      check = create(:completion_kit_metric, :check)
+      3.times do
+        create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: true)
+      end
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check, passed: false)
+
+      today = described_class.check_activity(days: 3).last
+
+      expect(today[:resolved]).to eq(4)
+      expect(today[:passed]).to eq(3)
+      expect(today[:rate]).to eq(0.75)
+    end
+
+    it "ignores rubric reviews, hidden runs, and days before the window" do
+      check = create(:completion_kit_metric, :check)
+      create(:completion_kit_review, response: create(:completion_kit_response), ai_score: 4.0)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: check,
+                                             passed: false, created_at: 40.days.ago)
+      hidden = create(:completion_kit_response, run: create(:completion_kit_run, created_at: 90.days.ago))
+      create(:completion_kit_review, :check, response: hidden, metric: check, passed: false)
+      CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+      expect(described_class.check_activity(days: 14).sum { |d| d[:resolved] }).to eq(0)
+    ensure
+      CompletionKit.config.runs_display_scope = nil
+    end
+  end
+
   describe ".failing_checks" do
     it "is empty when no checks failed in the window" do
       check = create(:completion_kit_metric, :check)
