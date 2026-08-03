@@ -1300,6 +1300,13 @@ tr:hover .ck-chip--publish {
   flex-wrap: wrap;
 }
 
+.ck-run-status__cell-value--stack {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.15rem;
+}
+
 .ck-run-status__cell-unverified {
   font-family: var(--ck-mono);
   font-size: 0.95rem;

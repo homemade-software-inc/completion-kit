@@ -81,14 +81,14 @@
             <% agreement = run.judge_agreement %>
             <div class="ck-run-status__cell">
               <p class="ck-run-status__metric-label">Judge agreement</p>
-              <div class="ck-run-status__cell-value ck-run-status__cell-value--split">
+              <div class="ck-run-status__cell-value <%= agreement ? "ck-run-status__cell-value--split" : "ck-run-status__cell-value--stack" %>">
                 <% if agreement %>
                   <span class="<%= ck_badge_classes(ck_pass_rate_kind(agreement[:rate])) %> ck-badge--lg"><%= (agreement[:rate] * 100).round %>%</span>
                   <span class="ck-run-status__summary-text"><%= pluralize(agreement[:sample_size], "label") %></span>
                 <% else %>
                   <span class="ck-run-status__cell-unverified">Unverified</span>
                   <% if run.calibratable_metric %>
-                    <%= link_to "Check the judge", metric_path(run.calibratable_metric, anchor: "agreement"), class: "ck-cal-link" %>
+                    <%= link_to "Check the judge &rarr;".html_safe, metric_path(run.calibratable_metric, anchor: "agreement"), class: "ck-cal-link" %>
                   <% end %>
                 <% end %>
               </div>
