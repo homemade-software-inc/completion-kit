@@ -95,11 +95,12 @@
 <% end %>
 
 <% if @reviews.any? %>
+  <% review_header = ck_review_section_header(@reviews, @run.judge_model) %>
   <section class="ck-card--spaced">
-    <div class="ck-prompt-preview__header">
-      <p class="ck-kicker">Judge's review</p>
-      <% if @run.judge_model.present? %>
-        <span class="ck-chip ck-chip--soft" style="text-transform: none;"><%= @run.judge_model %></span>
+    <div class="ck-prompt-preview__header" data-ck-review-header>
+      <p class="ck-kicker"><%= review_header[:heading] %></p>
+      <% if review_header[:judge_model] %>
+        <span class="ck-chip ck-chip--soft" style="text-transform: none;"><%= review_header[:judge_model] %></span>
       <% end %>
     </div>
 
@@ -126,7 +127,7 @@
               <% elsif review.check? && !review.passed.nil? %>
                 <%= ck_check_badge(review.passed) %>
               <% elsif review.status == "failed" %>
-                <span class="<%= ck_badge_classes(:failed) %>" title="<%= review.error_message.presence || "Judge failed" %>">Failed</span>
+                <span class="<%= ck_badge_classes(:failed) %>" title="<%= review.error_message.presence || (review.check? ? "Check failed" : "Judge failed") %>">Failed</span>
               <% else %>
                 <span class="<%= ck_badge_classes(:pending) %>">Pending</span>
               <% end %>

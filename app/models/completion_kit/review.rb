@@ -17,7 +17,11 @@ module CompletionKit
     after_save_commit :broadcast_run_progress, if: :should_broadcast_progress?
 
     def check?
-      metric_version&.metric_type == "check"
+      effective_metric_type == "check"
+    end
+
+    def effective_metric_type
+      metric_version&.metric_type || metric&.metric_type
     end
 
     def stale_against_current_judge?

@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.email       = ["damien@homemade.software"]
   spec.homepage    = "https://github.com/homemade-software-inc/completion-kit"
   spec.summary     = "Your prompts need tests too. Run them against real data, score outputs with an LLM judge, iterate until they work."
-  spec.description = "CompletionKit is a prompt testing platform that runs as a Rails engine or a standalone app. Run prompts against real datasets, score every output with an LLM judge against criteria you define, track prompt versions, and get AI-generated improvement suggestions grounded in your actual results. Includes a web UI, REST API, and a built-in MCP server with 34 tools."
+  spec.description = "CompletionKit is a prompt testing platform that runs as a Rails engine or a standalone app. Run prompts against real datasets, score every output with an LLM judge against criteria you define, track prompt versions, and get AI-generated improvement suggestions grounded in your actual results. Includes a web UI, REST API, and a built-in MCP server with 53 tools."
   spec.license     = "BUSL-1.1"
   spec.required_ruby_version = ">= 3.2.0"
 

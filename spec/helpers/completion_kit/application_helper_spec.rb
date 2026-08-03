@@ -264,6 +264,35 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#ck_review_section_header" do
+    it "keeps the Judge's review wording and the run's judge model for a judge-only list" do
+      out = helper.ck_review_section_header([build(:completion_kit_review)], "gpt-4.1")
+      expect(out).to eq(heading: "Judge's review", judge_model: "gpt-4.1")
+    end
+
+    it "labels a check-only list Checks and withholds the judge model" do
+      out = helper.ck_review_section_header([build(:completion_kit_review, :check)], "gpt-4.1")
+      expect(out).to eq(heading: "Checks", judge_model: nil)
+    end
+
+    it "names both kinds and keeps the judge model for a mixed list" do
+      reviews = [build(:completion_kit_review), build(:completion_kit_review, :check)]
+      out = helper.ck_review_section_header(reviews, "gpt-4.1")
+      expect(out).to eq(heading: "Judge's review and checks", judge_model: "gpt-4.1")
+    end
+
+    it "falls back to a neutral heading when no review can be classified" do
+      reviews = [build(:completion_kit_review, metric: nil, metric_version: nil)]
+      out = helper.ck_review_section_header(reviews, "gpt-4.1")
+      expect(out).to eq(heading: "Reviews", judge_model: nil)
+    end
+
+    it "returns no judge model when the run has none configured" do
+      expect(helper.ck_review_section_header([build(:completion_kit_review)], nil)[:judge_model]).to be_nil
+      expect(helper.ck_review_section_header([build(:completion_kit_review)], "")[:judge_model]).to be_nil
+    end
+  end
+
   describe "check label helpers" do
     it "renders human labels for known check kinds and humanizes unknown ones" do
       expect(helper.ck_check_kind_label("not_contains")).to eq("Does not contain a phrase")

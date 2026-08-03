@@ -9,7 +9,7 @@ module CompletionKit
       ordered_ids = ordered_response_ids
       current_index = ordered_ids.index(@response.id)
       @response_number = current_index + 1
-      @reviews = @response.reviews.includes(:metric)
+      @reviews = @response.reviews.includes(:metric, :metric_version)
       @prev_response = current_index > 0 ? ordered_ids[current_index - 1] : nil
       @next_response = ordered_ids[current_index + 1]
     end

@@ -13,6 +13,64 @@ RSpec.describe "CompletionKit responses", type: :request do
     end
   end
 
+  it "labels a check-only response Checks and drops the judge model chip" do
+    run.update!(judge_model: "gpt-4.1")
+    check = create(:completion_kit_metric, :check, name: "Valid JSON hdr")
+    create(:completion_kit_review, :check, response: response_without_expected, metric: check,
+                                           metric_name: "Valid JSON hdr", passed: true)
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_without_expected.id}"
+
+    header = Nokogiri::HTML5(response.body).at_css("[data-ck-review-header]")
+    expect(header.at_css(".ck-kicker").text).to eq("Checks")
+    expect(header.at_css(".ck-chip")).to be_nil
+  end
+
+  it "keeps the Judge's review heading and the judge model chip for a judge-only response" do
+    run.update!(judge_model: "gpt-4.1")
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_with_output.id}"
+
+    header = Nokogiri::HTML5(response.body).at_css("[data-ck-review-header]")
+    expect(header.at_css(".ck-kicker").text).to eq("Judge's review")
+    expect(header.at_css(".ck-chip").text).to eq("gpt-4.1")
+  end
+
+  it "names both kinds when a response mixes a judge review with a check review" do
+    run.update!(judge_model: "gpt-4.1")
+    check = create(:completion_kit_metric, :check, name: "Valid JSON mix")
+    create(:completion_kit_review, :check, response: response_with_output, metric: check,
+                                           metric_name: "Valid JSON mix", passed: true)
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_with_output.id}"
+
+    header = Nokogiri::HTML5(response.body).at_css("[data-ck-review-header]")
+    expect(header.at_css(".ck-kicker").text).to eq("Judge's review and checks")
+    expect(header.at_css(".ck-chip").text).to eq("gpt-4.1")
+  end
+
+  it "blames the check, not the judge, when a check review failed before its version was recorded" do
+    check = create(:completion_kit_metric, :check, name: "Valid JSON boom")
+    build(:completion_kit_review, :check, response: response_without_expected, metric: check,
+                                          metric_version: nil, metric_name: "Valid JSON boom",
+                                          passed: nil, status: "failed", error_message: nil)
+      .save!(validate: false)
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_without_expected.id}"
+
+    expect(response.body).to include("Check failed")
+    expect(response.body).not_to include("Judge failed")
+  end
+
+  it "blames the judge when a judge review failed without an error message" do
+    create(:completion_kit_review, response: response_without_expected, metric_name: "Quality",
+                                   ai_score: nil, status: "failed", error_message: nil)
+
+    get "/completion_kit/runs/#{run.id}/responses/#{response_without_expected.id}"
+
+    expect(response.body).to include("Judge failed")
+  end
+
   it "renders show with reviews" do
     get "/completion_kit/runs/#{run.id}/responses/#{response_with_output.id}"
 

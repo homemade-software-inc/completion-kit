@@ -26,6 +26,12 @@ RSpec.describe CompletionKit::McpDispatcher do
       expect(result[:tools].first).to have_key(:inputSchema)
     end
 
+    it "matches the tool count the gemspec advertises on the public gem page" do
+      gemspec_path = File.expand_path("../../../completion-kit.gemspec", __dir__)
+      advertised = File.read(gemspec_path)[/MCP server with (\d+) tools/, 1]
+      expect(advertised.to_i).to eq(described_class.dispatch("tools/list", nil)[:tools].length)
+    end
+
     it "handles nil params for tools/call" do
       expect { described_class.dispatch("tools/call", nil) }
         .to raise_error(described_class::MethodNotFound)

@@ -4421,6 +4421,8 @@ table.ck-runs-table {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .ck-prompt-preview__header .ck-kicker {

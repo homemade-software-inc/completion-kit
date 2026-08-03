@@ -202,6 +202,24 @@ module CompletionKit
       end
     end
 
+    def ck_review_section_header(reviews, judge_model)
+      kinds = reviews.filter_map(&:effective_metric_type)
+      judge = kinds.include?("llm_judge")
+      check = kinds.include?("check")
+
+      heading = if judge && check
+                  "Judge's review and checks"
+                elsif judge
+                  "Judge's review"
+                elsif check
+                  "Checks"
+                else
+                  "Reviews"
+                end
+
+      {heading: heading, judge_model: judge ? judge_model.presence : nil}
+    end
+
     CHECK_KIND_LABELS = {
       "contains" => "Contains a phrase",
       "not_contains" => "Does not contain a phrase",

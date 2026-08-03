@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.33] - 2026-08-03
+
+### Fixed
+- **A response scored only by deterministic checks no longer claims a judge reviewed it.** The review section on a response was headed "Judge's review" unconditionally, with a chip naming the run's judge model beside it, even when every review on the page was a pass/fail check that no LLM ever saw. The heading now follows the list: judge-only keeps "Judge's review" and the chip, check-only reads "Checks" with no chip, a mixed list reads "Judge's review and checks", and a list nothing can classify falls back to "Reviews". Heading and chip are derived from the same pair of booleans, so they cannot disagree with each other.
+
+- **A check that failed before its version was recorded is no longer blamed on the judge.** `Review#check?` read only `metric_version`, but `CheckReviewJob` writes a terminally failed review without one, so such a review classified as a judge review and its badge offered a "Judge failed" tooltip on a page correctly headed "Checks". Classification now falls back to the metric the review was queued for, and the tooltip names whichever actually failed. A review still keeps the type of the version that ran when the metric's type is changed afterwards.
+
+### Changed
+- **The gemspec advertised an MCP server with 34 tools against a real count of 53.** The description is public on the gem page, so the number was wrong everywhere the gem is listed. It now reads 53, and a spec asserts the advertised figure against `tools/list` so it cannot drift again.
+
 ## [0.28.32] - 2026-08-03
 
 This is the first release since 0.28.24, so it also carries everything in 0.28.25 through 0.28.31, which were versioned but never published. Those sections are below in full; in short:

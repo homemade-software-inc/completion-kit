@@ -14,6 +14,31 @@ RSpec.describe CompletionKit::Review, type: :model do
       review = build(:completion_kit_review, metric_version: nil)
       expect(review.check?).to be(false)
     end
+
+    it "still recognises a check whose version was never recorded, as happens on a terminal check failure" do
+      review = build(:completion_kit_review, :check, metric_version: nil)
+      expect(review.check?).to be(true)
+    end
+  end
+
+  describe "#effective_metric_type" do
+    it "reads the type off the metric_version that actually produced the review" do
+      expect(create(:completion_kit_review, :check).effective_metric_type).to eq("check")
+    end
+
+    it "falls back to the metric's type when the review has no metric_version" do
+      expect(build(:completion_kit_review, :check, metric_version: nil).effective_metric_type).to eq("check")
+    end
+
+    it "keeps the type of the version that ran when the metric's type changed afterwards" do
+      review = create(:completion_kit_review)
+      review.metric.update_columns(metric_type: "check")
+      expect(review.reload.effective_metric_type).to eq("llm_judge")
+    end
+
+    it "is nil once both the version and the metric are gone" do
+      expect(build(:completion_kit_review, metric: nil, metric_version: nil).effective_metric_type).to be_nil
+    end
   end
 
   describe "broadcast safety" do
