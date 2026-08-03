@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.28.32] - 2026-08-03
 
+This is the first release since 0.28.24, so it also carries everything in 0.28.25 through 0.28.31, which were versioned but never published. Those sections are below in full; in short:
+
+- **0.28.31** Prompt serving is counted and surfaced, so you can tell which prompts are live in production. (#158)
+- **0.28.30** Starting a run returns as soon as the run is claimed, ending false `runs_generate` timeouts over MCP. (#150)
+- **0.28.29** A run shows how often a human agreed with its judge, and says "Unverified" when nobody has checked. (#154)
+- **0.28.28** A completed run whose scores cluster at the top now warns instead of presenting it as success. (#153)
+- **0.28.27** The judge scores at temperature 0 by default, separately from the generation temperature. (#155)
+- **0.28.26** Runs take a generation `max_tokens`, and `temperature` is settable over MCP. (#159)
+- **0.28.25** Per-metric averages on `runs_get`, plus field selection, score filters and paging on `responses_list`. (#160)
+
+**Upgrading from 0.28.24 requires `bin/rails completion_kit:install:migrations && bin/rails db:migrate`.** Three of the releases above add columns or tables: `completion_kit_prompt_serves` (0.28.31), `judge_temperature` (0.28.27) and `max_tokens` (0.28.26).
+
 ### Changed
 - **The dashboard's pulse cards say something on every workspace, or they don't show up at all.** (#166) The failing-checks card sat at a permanent `0 / No failing checks this week` in any workspace with no check metrics, which is filler dressed as a signal, so it is now hidden entirely and the card row narrows to three. Where checks do exist it reads as an instrument instead of a lone weekly count: the headline is the pass rate across the trailing fortnight, a daily sparkline underneath shows the shape of it, and each bar takes the same three-tier colour as the headline so a 90% day is not painted the same red as a 25% day. A new `DashboardStats.check_activity` supplies the series.
 
