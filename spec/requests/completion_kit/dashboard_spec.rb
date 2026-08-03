@@ -99,8 +99,8 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       expect(response.body).to include("25%")
       expect(response.body).to include("is-low")
       expect(response.body).to include("ck-sparkline__bar is-low")
-      expect(response.body).to include("Failed in #{run.name}")
-      expect(response.body).to include("1 more failing")
+      expect(response.body).to include("Most recently in #{run.name}")
+      expect(response.body).to include("3 checks failing in the window")
     end
 
     it "reads as all-clear when every resolved check passed" do

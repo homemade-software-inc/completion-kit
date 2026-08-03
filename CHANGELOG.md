@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.34] - 2026-08-03
+
+### Changed
+- **The dashboard's Checks card no longer shows the same metric twice.** It listed the two most recent failing checks, and because failures cluster by metric, both rows routinely named the same one, so two lines carried a single fact and could only be told apart by hovering. The rows now group by metric and carry a count, so two lines say two things: which checks are failing and how badly. The total moved to the footer, which reports it once instead of as a remainder.
+
+### Added
+- **The seed demonstrates the deterministic check metric type, which it never did before.** A workspace seeded from scratch had no check metric at all, so the Checks card had nothing to show and the check type was invisible to anyone evaluating CompletionKit. Two checks now run alongside the existing LLM judge on the triage runs: `Rationale Length`, a `length_bounds` check reading `rationale` out of the JSON output, and `Triage Schema`, a `not_contains` check for a key the prompt never asked for. Both are evaluated through the real `Checks::Registry` and `TargetResolver` at seed time rather than hand-authored, so a seeded review is what the job would have written and a re-grade reproduces it.
+
+  The result is the case the product exists for. On the triage rows the judge awards five stars and explicitly praises the extra `secondary` key, while the schema check fails the same response for emitting it, and on the bulk rows the judge scores a 2340-character "one-sentence rationale" at five stars while the length check fails it. The seeded data spreads across four days so the card's trend has shape, and the failures span two metrics and four runs so the card's two rows differ.
+
 ## [0.28.33] - 2026-08-03
 
 ### Fixed

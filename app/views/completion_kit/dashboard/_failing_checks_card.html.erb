@@ -23,21 +23,23 @@
   </div>
 
   <% if failing_checks[:items].any? %>
+    <% worst = failing_checks[:items].group_by { |item| item[:metric_name] }
+                                     .sort_by { |name, items| [-items.length, name.to_s] } %>
     <ul class="ck-failure-list">
-      <% failing_checks[:items].first(2).each do |item| %>
+      <% worst.first(2).each do |metric_name, items| %>
         <li class="ck-failure-list__item">
           <span class="ck-failure-list__surface ck-failure-list__surface--check">fail</span>
-          <%= link_to item[:metric_name], completion_kit.run_path(item[:run]),
-                class: "ck-link ck-failure-list__cause", title: "Failed in #{item[:run].name}" %>
+          <%= link_to metric_name, completion_kit.run_path(items.first[:run]),
+                class: "ck-link ck-failure-list__cause",
+                title: "Most recently in #{items.first[:run].name}" %>
+          <span class="ck-failure-list__count"><%= items.length %></span>
         </li>
       <% end %>
     </ul>
   <% end %>
 
   <div class="ck-stat-card__foot">
-    <% if failing_checks[:count] > 2 %>
-      <span><%= failing_checks[:count] - 2 %> more failing.</span>
-    <% elsif failing_checks[:count].positive? %>
+    <% if failing_checks[:count].positive? %>
       <span><%= pluralize(failing_checks[:count], "check") %> failing in the window.</span>
     <% elsif resolved.positive? %>
       <span>Every check passed in the window.</span>

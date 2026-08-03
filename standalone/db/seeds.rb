@@ -112,8 +112,28 @@ brevity = CompletionKit::Metric.find_or_create_by!(name: "Brevity") do |m|
   ]
 end
 
+rationale_length = CompletionKit::Metric.find_or_create_by!(name: "Rationale Length") do |m|
+  m.metric_type = "check"
+  m.check_config = {
+    "check_kind" => "length_bounds",
+    "target" => "json_path",
+    "target_path" => "rationale",
+    "max" => 200
+  }
+end
+
+triage_schema = CompletionKit::Metric.find_or_create_by!(name: "Triage Schema") do |m|
+  m.metric_type = "check"
+  m.check_config = {
+    "check_kind" => "not_contains",
+    "target" => "response_text",
+    "value" => "secondary"
+  }
+end
+
 reply_metrics   = [tone, helpfulness, accuracy]
 triage_metrics  = [category_accuracy, urgency_calibration, confidence]
+triage_checks   = [rationale_length, triage_schema]
 summary_metrics = [clarity, completeness, brevity]
 
 reply_group = CompletionKit::MetricGroup.find_or_create_by!(name: "Reply Quality") do |c|
@@ -334,7 +354,29 @@ summary_v3_responses = [
               "Brevity" => [5, "Two sentences, no wasted words."] } }
 ]
 
-seed_run = lambda do |name:, prompt:, dataset:, metrics:, days_ago:, responses:, tags:|
+seed_check = lambda do |response, metric, at|
+  config = metric.check_config.to_h
+  target = CompletionKit::Checks::TargetResolver.call(response, config)
+  result =
+    if target.equal?(CompletionKit::Checks::TargetResolver::UNRESOLVED)
+      CompletionKit::Checks::Result.new(passed: false, detail: "could not resolve target")
+    else
+      CompletionKit::Checks::Registry.fetch(config["check_kind"]).call(target, config)
+    end
+
+  response.reviews.find_or_create_by!(metric: metric) do |review|
+    review.metric_name = metric.name
+    review.metric_version = CompletionKit::MetricVersion.ensure_current_for(metric)
+    review.status = "succeeded"
+    review.passed = result.passed
+    review.ai_score = nil
+    review.ai_feedback = result.detail
+    review.created_at = at
+    review.updated_at = at
+  end
+end
+
+seed_run = lambda do |name:, prompt:, dataset:, metrics:, days_ago:, responses:, tags:, checks: []|
   at = days_ago.days.ago
   run = CompletionKit::Run.find_or_create_by!(name: name) do |r|
     r.prompt = prompt
@@ -347,7 +389,7 @@ seed_run = lambda do |name:, prompt:, dataset:, metrics:, days_ago:, responses:,
     r.updated_at = at
   end
 
-  metrics.each_with_index do |metric, i|
+  (metrics + checks).each_with_index do |metric, i|
     CompletionKit::RunMetric.find_or_create_by!(run: run, metric: metric) { |rm| rm.position = i + 1 }
   end
 
@@ -374,6 +416,8 @@ seed_run = lambda do |name:, prompt:, dataset:, metrics:, days_ago:, responses:,
         review.updated_at = at
       end
     end
+
+    checks.each { |metric| seed_check.call(response, metric, at) }
   end
 
   run.update!(tag_names: tags) if tags.present? && run.tags.empty?
@@ -382,14 +426,14 @@ end
 
 runs = [
   { name: "Support Reply Generator v1 #1", prompt: reply_prompt,  dataset: dataset, metrics: reply_metrics,   days_ago: 13, responses: reply_responses,     tags: %w[customer-support reply] },
-  { name: "Ticket Triage v1 #1",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 13, responses: triage_responses,    tags: %w[customer-support triage] },
+  { name: "Ticket Triage v1 #1",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 13, responses: triage_responses,    tags: %w[customer-support triage], checks: triage_checks },
   { name: "Ticket Summary v1 #1",          prompt: summary_v1,    dataset: dataset, metrics: summary_metrics, days_ago: 11, responses: summary_v1_responses, tags: %w[customer-support summary] },
   { name: "Ticket Summary v1 #2",          prompt: summary_v1,    dataset: dataset, metrics: summary_metrics, days_ago: 11, responses: summary_v1_responses, tags: %w[customer-support summary] },
   { name: "Ticket Summary v2 #1",          prompt: summary_v2,    dataset: dataset, metrics: summary_metrics, days_ago: 6,  responses: summary_v2_responses, tags: %w[customer-support summary] },
   { name: "Support Reply Generator v1 #2", prompt: reply_prompt,  dataset: dataset, metrics: reply_metrics,   days_ago: 4,  responses: reply_responses,     tags: %w[customer-support reply] },
-  { name: "Ticket Triage v1 #2",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 4,  responses: triage_responses,    tags: %w[customer-support triage] },
+  { name: "Ticket Triage v1 #2",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 4,  responses: triage_responses,    tags: %w[customer-support triage], checks: triage_checks },
   { name: "Ticket Summary v3 #1",          prompt: summary_v3,    dataset: dataset, metrics: summary_metrics, days_ago: 2,  responses: summary_v3_responses, tags: %w[customer-support summary] },
-  { name: "Ticket Triage v1 #3",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 1,  responses: triage_responses,    tags: %w[customer-support triage] }
+  { name: "Ticket Triage v1 #3",           prompt: triage_prompt, dataset: dataset, metrics: triage_metrics,  days_ago: 1,  responses: triage_responses,    tags: %w[customer-support triage], checks: triage_checks }
 ]
 
 runs.each { |attrs| seed_run.call(**attrs) }
@@ -421,7 +465,7 @@ bulk_run = CompletionKit::Run.find_or_create_by!(name: "Ticket Triage — bulk 1
   r.created_at = 3.days.ago
   r.updated_at = 3.days.ago
 end
-triage_metrics.each_with_index { |m, i| CompletionKit::RunMetric.find_or_create_by!(run: bulk_run, metric: m) { |rm| rm.position = i + 1 } }
+(triage_metrics + triage_checks).each_with_index { |m, i| CompletionKit::RunMetric.find_or_create_by!(run: bulk_run, metric: m) { |rm| rm.position = i + 1 } }
 
 if bulk_run.responses.count < bulk_count
   long_rationale = "The customer describes a detailed, multi-part grievance spanning order history, prior contacts, and a specific resolution demand. " * 18
@@ -466,6 +510,10 @@ if bulk_run.responses.count < bulk_count
       end
     end
   end
+end
+
+bulk_run.responses.where(status: "succeeded").find_each do |response|
+  triage_checks.each { |metric| seed_check.call(response, metric, 3.days.ago) }
 end
 
 %w[customer-support reply triage summary].each do |tag_name|
@@ -686,4 +734,6 @@ CompletionKit::MetricVersion.create!(
   state: "draft", source: "edit", current: false
 )
 
+resolved_checks = CompletionKit::Review.where.not(passed: nil)
+puts "Checks: #{resolved_checks.where(passed: false).count} failing of #{resolved_checks.count} resolved"
 puts "Seeded: #{CompletionKit::Model.count} models, #{CompletionKit::Prompt.count} prompts, #{CompletionKit::Dataset.count} datasets, #{CompletionKit::Metric.count} metrics, #{CompletionKit::Run.count} runs, #{CompletionKit::Response.count} responses, #{CompletionKit::Review.count} reviews, #{CompletionKit::Tag.count} tags, #{CompletionKit::Agreement.count} agreements, #{CompletionKit::MetricVersion.drafts.count} draft metric versions"

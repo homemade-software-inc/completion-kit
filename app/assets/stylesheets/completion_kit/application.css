@@ -5688,6 +5688,13 @@ a.tag-mark {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.ck-failure-list__count {
+  margin-left: auto;
+  flex: none;
+  font-family: var(--ck-mono);
+  font-size: 0.72rem;
+  color: var(--ck-dim);
+}
 .ck-failure-list__item .ck-icon-btn { margin-left: auto; }
 
 /* Flyout: lives inline in the card's always-present footer row, so the
