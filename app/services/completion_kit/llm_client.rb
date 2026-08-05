@@ -14,11 +14,16 @@ module CompletionKit
     # recoverable refusal into a failed row.
     #
     # The wording can sit on either side of the parameter name, so both orders
-    # carry the same phrase set. The gap cannot cross a brace, which keeps a
-    # refusal aimed at some other parameter from matching a temperature echoed
-    # back in a neighbouring object of the same error body. That would
-    # otherwise strip a temperature the model was perfectly happy with and
-    # flag the run as having had it ignored.
+    # carry the same phrase set, and a provider that names the offending field
+    # outright gets a branch of its own.
+    #
+    # Neither gap may cross a brace, which stops a refusal aimed at some other
+    # parameter from matching a temperature echoed back in a neighbouring
+    # object of the same body. The phrase-first gap additionally bars commas,
+    # because "unsupported parameter: logprobs. Supported: model, prompt,
+    # temperature" is a list of what IS allowed and must not read as a refusal.
+    # The temperature-first gap has to allow commas, since "temperature, top_p
+    # and top_k are not supported" is a genuine refusal.
     REFUSAL_PHRASE = /
       deprecated | not\s+supported | does\s+not\s+support |
       only\s+the\s+default | unsupported\s+(?:parameter|value)
@@ -26,7 +31,9 @@ module CompletionKit
     TEMPERATURE_REFUSAL = /
       temperature [^{}]{0,80}? #{REFUSAL_PHRASE}
       |
-      #{REFUSAL_PHRASE} [^{}]{0,80}? temperature
+      #{REFUSAL_PHRASE} [^{},]{0,80}? temperature
+      |
+      "param" \s*:\s* "temperature"
     /xi
 
     def initialize(config = {})

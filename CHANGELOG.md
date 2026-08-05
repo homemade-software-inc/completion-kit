@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.36] - 2026-08-04
+
+Follow-ups to 0.28.35, all found by adversarially reviewing it after it shipped.
+
+### Fixed
+- **A list of the parameters a model does support is no longer read as a refusal.** OpenAI-compatible local servers answer with shapes like `unsupported parameter: logprobs. Supported: model, prompt, temperature, top_p`, where the word temperature appears because it is allowed, not because it was refused. The 0.28.35 predicate matched that, so the client burned a second call re-sending the same rejected request and could flag a run as having had its temperature ignored when the model had been perfectly happy with it. The phrase-first branch now stops at a comma, which is what separates a list from a sentence. The temperature-first branch still allows commas, because `temperature, top_p and top_k are not supported` is a real refusal.
+
+- **A provider that names the offending field in `param` rather than in the message is now recognised.** A body reading `{"message":"This parameter is not supported with this model.","param":"temperature"}` matched nothing, so the row failed instead of retrying.
+
+- **The run page no longer renders an empty temperature for a run that deliberately sends none.** It now reads "Not sent, provider default", matching how the Max tokens row two lines below already handles the same situation.
+
+- **The judge-refusal chip appears without a reload.** The run config block was not among the poll's targets, so a run could finish judging and never tell the watching user that its temperature had been refused, which is the one thing the new flag exists to say. The block is now a partial the status poll refreshes alongside the header and the panel.
+
+### Changed
+- **The MCP `temperature` description documents what null now means.** An agent passing null to mean "use the default" would instead get no temperature sent at all, and nothing said so.
+
 ## [0.28.35] - 2026-08-04
 
 ### Fixed

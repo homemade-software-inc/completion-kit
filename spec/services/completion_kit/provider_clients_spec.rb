@@ -177,7 +177,8 @@ RSpec.describe "CompletionKit provider clients", type: :service do
       "Unsupported parameter: 'temperature' is not supported with this model.",
       "The temperature parameter is not supported for this model.",
       "Only the default value is supported for temperature on this model.",
-      "not supported: temperature cannot be set on this model."
+      "not supported: temperature cannot be set on this model.",
+      "temperature, top_p and top_k are not supported on this model."
     ].each do |message|
       client = CompletionKit::OpenAiClient.new(api_key: "k")
       stub_temperature_fallback(
@@ -189,12 +190,24 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     end
   end
 
+  it "recovers when the provider names temperature in the param field rather than in the message" do
+    client = CompletionKit::OpenAiClient.new(api_key: "k")
+    stub_temperature_fallback(
+      deprecated_body: %({"error":{"message":"This parameter is not supported with this model.","param":"temperature"}}),
+      success_body: { output: [{ type: "message", content: [{ type: "output_text", text: "ok" }] }] }.to_json
+    )
+
+    client.generate_completion("prompt", temperature: 0.7)
+    expect(client.temperature_dropped?).to be(true)
+  end
+
   it "does not strip a temperature the model was happy with when some other parameter was refused" do
     [
       %({"error":{"message":"Unsupported parameter: 'top_p' is not supported with this model."},"request":{"temperature":0.7}}),
       %({"request":{"temperature":0.7},"error":{"message":"Unsupported parameter: 'top_p' is not supported with this model."}}),
       %({"error":{"message":"Unsupported value: 'tool_choice' does not support 'required'."},"request":{"temperature":0.7}}),
-      %({"error":{"message":"Unsupported parameter: 'max_tokens' is not supported."},"request":{"temperature":0.7}})
+      %({"error":{"message":"Unsupported parameter: 'max_tokens' is not supported."},"request":{"temperature":0.7}}),
+      %({"object":"error","message":"unsupported parameter: logprobs. Supported: model, prompt, temperature, top_p","type":"BadRequestError"})
     ].each do |body|
       client = CompletionKit::OpenAiClient.new(api_key: "k")
       stub_faraday(faraday_response(success: false, body: body, status: 400))

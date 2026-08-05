@@ -50,59 +50,7 @@
   <% end %>
 <% end %>
 
-<div class="ck-run-config">
-  <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Created</span>
-    <time datetime="<%= @run.created_at.iso8601 %>" data-local-time><%= @run.created_at.utc.strftime("%Y-%m-%d %H:%M UTC") %></time>
-  </div>
-  <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Dataset</span>
-    <% if @run.dataset %>
-      <span class="ck-run-config__dataset">
-        <%= link_to @run.dataset.name, dataset_path(@run.dataset), class: "ck-link" %>
-        <span class="ck-run-config__dataset-meta"><%= @run.dataset.row_count %> rows</span>
-        <button type="button" class="ck-run-config__dataset-preview" onclick="document.getElementById('dataset-preview-<%= @run.id %>').showModal()">Preview</button>
-      </span>
-    <% else %>
-      <span class="ck-run-config__none">None</span>
-    <% end %>
-  </div>
-  <% if @run.judge_model.present? %>
-    <div class="ck-run-config__row">
-      <span class="ck-run-config__key">Judge</span>
-      <span style="text-transform: none;"><%= @run.judge_model %></span>
-      <% unless @run.judge_configured? %>
-        <span class="ck-run-config__warn">provider not configured</span>
-      <% end %>
-    </div>
-  <% end %>
-  <% if @run.metrics.any? %>
-    <div class="ck-run-config__row">
-      <span class="ck-run-config__key">Metrics</span>
-      <span><%= @run.metrics.map { |m| link_to(m.name, metric_path(m), class: "ck-link") }.join(", ").html_safe %></span>
-    </div>
-  <% end %>
-  <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Temperature</span>
-    <span><%= @run.temperature %></span>
-    <% if @run.temperature_ignored? %>
-      <span class="ck-run-config__warn" style="color: var(--ck-dim);" title="The model rejected the temperature parameter, so CompletionKit re-sent the request without it.">ignored by model</span>
-    <% end %>
-  </div>
-  <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Max tokens</span>
-    <span><%= @run.max_tokens || "Provider default" %></span>
-  </div>
-  <div class="ck-run-config__row">
-    <span class="ck-run-config__key">Judge temperature</span>
-    <span><%= @run.judge_temperature %></span>
-    <% if @run.judge_temperature_ignored? %>
-      <span class="ck-run-config__warn" style="color: var(--ck-warning);" title="The judge model refused the temperature parameter, so CompletionKit re-sent the request without it and the provider applied its own default. The scores are not reproducible despite the setting above.">refused by judge, not reproducible</span>
-    <% elsif @run.nondeterministic_judge? %>
-      <span class="ck-run-config__warn" style="color: var(--ck-warning);" title="Judging above temperature 0 makes scores irreproducible. The same output can get a different score on a re-judge.">scores not reproducible</span>
-    <% end %>
-  </div>
-</div>
+<%= render "run_config", run: @run %>
 
 <% if @run.prompt %>
   <div class="ck-prompt-preview">

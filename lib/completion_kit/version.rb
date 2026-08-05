@@ -1,3 +1,3 @@
 module CompletionKit
-  VERSION = "0.28.35"
+  VERSION = "0.28.36"
 end

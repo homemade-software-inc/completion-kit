@@ -829,6 +829,25 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(run.reload.temperature).to eq(0.3)
   end
 
+  it "says the temperature was deliberately not sent rather than rendering a blank" do
+    run = create(:completion_kit_run, prompt: prompt)
+    run.update_columns(temperature: nil)
+
+    get "/completion_kit/runs/#{run.id}"
+
+    expect(response.body).to include("Not sent, provider default")
+  end
+
+  it "refreshes the run config on the status poll, so a refusal chip appears without a reload" do
+    run = create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4.1")
+    run.update_columns(judge_temperature_ignored: true)
+
+    get "/completion_kit/runs/#{run.id}/refresh_status", headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    expect(response.body).to include(%(target="run_config"))
+    expect(response.body).to include("refused by judge, not reproducible")
+  end
+
   it "keeps the temperature when the omit box is present but unticked" do
     post "/completion_kit/runs", params: {
       run: { name: "KeepTemp", prompt_id: prompt.id, temperature: "0.4", omit_temperature: "0" }

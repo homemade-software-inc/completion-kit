@@ -130,6 +130,7 @@ module CompletionKit
         format.turbo_stream do
           render turbo_stream: [
             turbo_stream.replace("run_status_header", partial: "completion_kit/runs/status_header", locals: { run: @run }),
+          turbo_stream.replace("run_config", partial: "completion_kit/runs/run_config", locals: { run: @run }),
             turbo_stream.replace("run_status_panel", partial: "completion_kit/runs/status_panel", locals: { run: @run }),
             turbo_stream.replace("run_responses_region", partial: "completion_kit/runs/responses_region",
                                  locals: { run: @run, responses: @responses, responses_offset: @responses_offset })
