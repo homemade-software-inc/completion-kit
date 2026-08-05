@@ -112,7 +112,7 @@ ActiveRecord::Schema.define do
     t.integer :progress_total, default: 0
     t.text :error_message
     t.text :failure_summary
-    t.float :temperature, default: 1.0
+    t.float :temperature
     t.boolean :temperature_ignored, default: false, null: false
     t.boolean :judge_temperature_ignored, default: false, null: false
     t.integer :max_tokens

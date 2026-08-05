@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.37] - 2026-08-04
+
+### Changed
+- **Temperature is no longer something you configure. Runs send none by default.** The parameter has aged out. Most current frontier models refuse it outright, several accept it and silently discard it, and the ones that still honour it are the previous generation and anything served locally, where sampling happens in your own process and no vendor API can say no. A knob that most models ignore is worse than no knob, because it invites you to believe you set something you did not.
+
+  The generation temperature slider and the judge temperature field are both gone from the run form, and the run's `temperature` column now defaults to unset, so a new run sends no temperature at all and the model applies its own. This also settles a default that had drifted: the engine migration said 1.0 while installed copies said 0.7, and now both say nothing.
+
+  **Nothing is removed from the API.** `temperature` and `judge_temperature` remain on the REST endpoints, the MCP tools and the run payload, so anything scripted against them keeps working, and anyone deliberately targeting a model that honours temperature can still set one. The drop-and-retry, the two ignored flags and the refusal warnings all remain, and they now do their real job: telling you a value you deliberately chose was refused.
+
+  The run page mentions either temperature only when there is something to say. A run carrying a temperature still shows it, which keeps historical runs honest about what they sent, and the judge temperature row appears only when the scores are not reproducible.
+
+  **Existing runs are untouched.** A column default change does not rewrite rows, so a run that sent 0.7 still records 0.7. Host apps need `bin/rails completion_kit:install:migrations && bin/rails db:migrate` to pick up the new default.
+
 ## [0.28.36] - 2026-08-04
 
 Follow-ups to 0.28.35, all found by adversarially reviewing it after it shipped.

@@ -3,10 +3,12 @@ module CompletionKit
     module Runs
       extend Base
 
-      TEMPERATURE_DESCRIPTION = "Sampling temperature for generation, 0 to 1. Defaults to the column default. " \
-                                "Reasoning models ignore it and the run is flagged temperature_ignored. " \
-                                "Pass null to send no temperature at all, which is what models that refuse " \
-                                "the parameter require.".freeze
+      TEMPERATURE_DESCRIPTION = "Sampling temperature for generation, 0 to 1. Leave it unset, which is the " \
+                                "default, and no temperature is sent at all, so the model applies its own. " \
+                                "Most current frontier models refuse the parameter outright; set it only when " \
+                                "you are targeting a model that honours it, such as anything served locally " \
+                                "through Ollama. A refused value is re-sent without one and the run is " \
+                                "flagged temperature_ignored.".freeze
 
       MAX_TOKENS_DESCRIPTION = "Cap on generated tokens per row. Leave unset to use the provider client's default, " \
                                "which is what silently truncates long outputs and makes the judge score malformed " \

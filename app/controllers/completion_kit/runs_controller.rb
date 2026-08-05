@@ -223,10 +223,7 @@ module CompletionKit
     end
 
     def run_params
-      permitted = params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :max_tokens, :judge_temperature, :output_column, :expected_column, :omit_temperature, metric_ids: [], tag_names: [])
-      omit = permitted.delete(:omit_temperature)
-      permitted[:temperature] = nil if omit == "1"
-      permitted
+      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :max_tokens, :judge_temperature, :output_column, :expected_column, metric_ids: [], tag_names: [])
     end
 
     # Editing a run that already has results forks a new run — but only when a

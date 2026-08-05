@@ -815,27 +815,43 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(CompletionKit::Run.order(:id).last.tag_names).to match_array(%w[alpha beta])
   end
 
-  it "sends no temperature at all when the omit box is ticked, and restores it when unticked" do
-    post "/completion_kit/runs", params: {
-      run: { name: "NoTemp", prompt_id: prompt.id, temperature: "0.7", omit_temperature: "1" }
-    }
-    run = CompletionKit::Run.find_by!(name: "NoTemp")
+  it "sends no temperature by default, because most current models refuse the parameter" do
+    post "/completion_kit/runs", params: { run: { name: "DefaultTemp", prompt_id: prompt.id } }
+
+    run = CompletionKit::Run.find_by!(name: "DefaultTemp")
     expect(run.temperature).to be_nil
     expect(run.generation_options(prompt)).to include(temperature: nil)
-
-    patch "/completion_kit/runs/#{run.id}", params: {
-      run: { temperature: "0.3" }
-    }
-    expect(run.reload.temperature).to eq(0.3)
   end
 
-  it "says the temperature was deliberately not sent rather than rendering a blank" do
-    run = create(:completion_kit_run, prompt: prompt)
-    run.update_columns(temperature: nil)
+  it "still honours a temperature set deliberately over the API, for models that accept one" do
+    post "/completion_kit/runs", params: { run: { name: "SetTemp", prompt_id: prompt.id, temperature: "0.3" } }
+
+    expect(CompletionKit::Run.find_by!(name: "SetTemp").temperature).to eq(0.3)
+  end
+
+  it "keeps both temperatures off the run page unless something deliberate happened" do
+    run = create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4.1")
 
     get "/completion_kit/runs/#{run.id}"
 
-    expect(response.body).to include("Not sent, provider default")
+    expect(response.body).not_to include("Temperature")
+    expect(response.body).not_to include("Judge temperature")
+  end
+
+  it "shows the temperature row once a run actually carries one" do
+    run = create(:completion_kit_run, prompt: prompt)
+    run.update_columns(temperature: 0.3)
+
+    get "/completion_kit/runs/#{run.id}"
+
+    expect(response.body).to include("Temperature")
+  end
+
+  it "drops the temperature controls from the run form" do
+    get "/completion_kit/runs/new"
+
+    expect(response.body).not_to include("run_temperature")
+    expect(response.body).not_to include("run_judge_temperature")
   end
 
   it "refreshes the run config on the status poll, so a refusal chip appears without a reload" do

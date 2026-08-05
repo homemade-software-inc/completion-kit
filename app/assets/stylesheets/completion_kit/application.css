@@ -4470,49 +4470,6 @@ table.ck-runs-table {
   -webkit-line-clamp: unset;
 }
 
-.ck-slider-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.ck-slider {
-  flex: 1;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 4px;
-  background: var(--ck-line-strong);
-  border-radius: 2px;
-  outline: none;
-}
-
-.ck-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--ck-accent);
-  cursor: pointer;
-  border: 2px solid var(--ck-bg);
-}
-
-.ck-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--ck-accent);
-  cursor: pointer;
-  border: 2px solid var(--ck-bg);
-}
-
-.ck-slider-value {
-  font-family: var(--ck-mono);
-  font-size: 0.85rem;
-  color: var(--ck-text);
-  min-width: 2rem;
-  text-align: right;
-}
 
 .ck-info-toggle {
   display: inline-flex;
@@ -6609,10 +6566,6 @@ a.tag-mark {
   margin-right: 0.2rem;
 }
 
-.ck-slider:focus-visible {
-  outline: 2px solid var(--ck-accent);
-  outline-offset: 4px;
-}
 .ck-select__option:focus-visible {
   box-shadow: inset 0 0 0 2px var(--ck-accent);
 }

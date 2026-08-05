@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_05_020713) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_05_024034) do
   create_table "completion_kit_agreements", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -232,7 +232,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_020713) do
     t.integer "progress_total", default: 0
     t.integer "prompt_id"
     t.string "status"
-    t.float "temperature", default: 0.7
+    t.float "temperature"
     t.boolean "temperature_ignored", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["dataset_id"], name: "index_completion_kit_runs_on_dataset_id"
