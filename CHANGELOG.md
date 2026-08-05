@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.28.34] - 2026-08-03
+## [0.28.34] - 2026-08-04
+
+This release also carries 0.28.33, which was versioned but never published. Its section is below in full; in short, a response scored only by deterministic checks no longer claims a judge reviewed it, a check that failed before its version was recorded is no longer blamed on the judge, and the gemspec's MCP tool count is corrected from 34 to the real 53. No migrations are needed for either version.
 
 ### Changed
 - **The dashboard's Checks card no longer shows the same metric twice.** It listed the two most recent failing checks, and because failures cluster by metric, both rows routinely named the same one, so two lines carried a single fact and could only be told apart by hovering. The rows now group by metric and carry a count, so two lines say two things: which checks are failing and how badly. The total moved to the footer, which reports it once instead of as a remainder.
