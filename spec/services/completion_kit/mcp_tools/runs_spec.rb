@@ -93,6 +93,16 @@ RSpec.describe CompletionKit::McpTools::Runs do
       expect(content["warning"]).to include("irreproducible")
     end
 
+    it "warns that the judge model refused the temperature rather than that it was set high" do
+      run.replace_metrics!([create(:completion_kit_metric).id])
+      run.update_columns(judge_temperature: 0.0, judge_temperature_ignored: true)
+      result = described_class.call("runs_get", {"id" => run.id})
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["judge_temperature_ignored"]).to be(true)
+      expect(content["warning"]).to include("refused the temperature parameter")
+      expect(content["warning"]).not_to include("Judging above 0")
+    end
+
     it "omits the judge-temperature warning at the deterministic default" do
       run.replace_metrics!([create(:completion_kit_metric).id])
       result = described_class.call("runs_get", {"id" => run.id})

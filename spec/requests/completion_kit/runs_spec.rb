@@ -815,6 +815,27 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(CompletionKit::Run.order(:id).last.tag_names).to match_array(%w[alpha beta])
   end
 
+  it "sends no temperature at all when the omit box is ticked, and restores it when unticked" do
+    post "/completion_kit/runs", params: {
+      run: { name: "NoTemp", prompt_id: prompt.id, temperature: "0.7", omit_temperature: "1" }
+    }
+    run = CompletionKit::Run.find_by!(name: "NoTemp")
+    expect(run.temperature).to be_nil
+    expect(run.generation_options(prompt)).to include(temperature: nil)
+
+    patch "/completion_kit/runs/#{run.id}", params: {
+      run: { temperature: "0.3" }
+    }
+    expect(run.reload.temperature).to eq(0.3)
+  end
+
+  it "keeps the temperature when the omit box is present but unticked" do
+    post "/completion_kit/runs", params: {
+      run: { name: "KeepTemp", prompt_id: prompt.id, temperature: "0.4", omit_temperature: "0" }
+    }
+    expect(CompletionKit::Run.find_by!(name: "KeepTemp").temperature).to eq(0.4)
+  end
+
   it "round-trips tag_names on create and update" do
     post "/completion_kit/runs", params: {
       run: { name: "R", prompt_id: prompt.id, tag_names: ["beta"] }

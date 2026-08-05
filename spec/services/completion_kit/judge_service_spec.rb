@@ -9,6 +9,17 @@ RSpec.describe CompletionKit::JudgeService, type: :service do
     CompletionKit.config.judge_model = original_model
   end
 
+  it "reports whether the judge client had its temperature refused by the model" do
+    dropped = instance_double(CompletionKit::OpenAiClient, temperature_dropped?: true)
+    kept = instance_double(CompletionKit::OpenAiClient, temperature_dropped?: false)
+
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(dropped)
+    expect(described_class.new.temperature_dropped?).to be(true)
+
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(kept)
+    expect(described_class.new.temperature_dropped?).to be(false)
+  end
+
   it "raises ConfigurationError when the judge client is not configured" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: false)
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)

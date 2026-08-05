@@ -75,6 +75,10 @@ module CompletionKit
         record_terminal_failure!(e)
         enqueue_completion_check
         return
+      ensure
+        if judge.temperature_dropped? && !run.judge_temperature_ignored?
+          run.update_columns(judge_temperature_ignored: true)
+        end
       end
 
       review = response.reviews.find_or_initialize_by(metric_id: metric.id)

@@ -1,8 +1,5 @@
 module CompletionKit
   class AzureFoundryClient < LlmClient
-    def temperature_dropped?
-      @temperature_dropped == true
-    end
 
     def generate_completion(prompt, options = {})
       @temperature_dropped = false
@@ -11,7 +8,7 @@ module CompletionKit
 
       model = options[:model]
       max_tokens = options[:max_tokens] || 1000
-      temperature = options[:temperature] || 0.7
+      temperature = resolve_temperature(options)
       max_completion = false
 
       response = post_chat(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature, max_completion: max_completion)
@@ -129,10 +126,6 @@ module CompletionKit
       end
     end
 
-    def temperature_unsupported?(body)
-      s = body.to_s
-      s.include?("temperature") && (s.include?("deprecated") || s.include?("not supported") || s.include?("Unsupported parameter"))
-    end
 
     def max_tokens_unsupported?(body)
       s = body.to_s

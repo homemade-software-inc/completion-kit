@@ -6,9 +6,6 @@ module CompletionKit
       { id: "gpt-4o-mini", name: "GPT-4o Mini" }
     ].freeze
 
-    def temperature_dropped?
-      @temperature_dropped == true
-    end
 
     def generate_completion(prompt, options = {})
       @temperature_dropped = false
@@ -16,11 +13,11 @@ module CompletionKit
 
       model = options[:model] || "gpt-4.1-mini"
       max_tokens = options[:max_tokens] || 8192
-      temperature = options[:temperature] || 0.7
+      temperature = resolve_temperature(options)
 
       response = post_responses(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
 
-      if response.status == 400 && temperature_unsupported?(response.body)
+      if response.status == 400 && !temperature.nil? && temperature_unsupported?(response.body)
         @temperature_dropped = true
         response = post_responses(model: model, prompt: prompt, max_tokens: max_tokens, temperature: nil)
       end
@@ -38,7 +35,7 @@ module CompletionKit
         data = JSON.parse(response.body)
         if data["status"] == "incomplete"
           reason = data.dig("incomplete_details", "reason") || "unknown"
-          return "Error: response incomplete (#{reason}) — increase max_tokens=#{max_tokens} or pick a non-reasoning judge model"
+          return "Error: response incomplete (#{reason}). Increase max_tokens=#{max_tokens} or pick a non-reasoning judge model"
         end
         message = Array(data["output"]).find { |o| o["type"] == "message" }
         content = message&.dig("content", 0, "text").to_s.strip
@@ -93,9 +90,5 @@ module CompletionKit
       end
     end
 
-    def temperature_unsupported?(body)
-      s = body.to_s
-      s.include?("temperature") && (s.include?("deprecated") || s.include?("not supported") || s.include?("Unsupported parameter"))
-    end
   end
 end

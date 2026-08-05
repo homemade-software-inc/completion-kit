@@ -85,12 +85,21 @@
 
     <div class="ck-field">
       <label class="ck-label" for="run_temperature" style="position: relative;">
-        Temperature<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup">Controls how random the model's output is. Lower values are more focused and deterministic — the model picks the most likely words. Higher values are more varied and creative, with more risk of odd phrasing. Most LLMs default to 1.0; for evaluation, try a few values and see how your prompt holds up. Newer reasoning models (Claude Opus 4.7, GPT-5 family, etc.) ignore temperature entirely — CompletionKit detects this and re-sends without the parameter.</span>
+        Temperature<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup">Controls how random the model's output is. Lower values are more focused and deterministic, so the model picks the most likely words. Higher values are more varied and creative, with more risk of odd phrasing. Most LLMs default to 1.0; for evaluation, try a few values and see how your prompt holds up. Newer reasoning models (Claude Opus 4.7, GPT-5 family, etc.) refuse temperature outright. CompletionKit detects that and re-sends without the parameter, and flags the run so you know the value was never applied. Tick the box below to skip sending it in the first place.</span>
       </label>
       <div class="ck-slider-row">
-        <%= form.range_field :temperature, min: 0, max: 1, step: 0.1, class: "ck-slider", id: "run_temperature", oninput: "document.getElementById('temp-value').textContent = this.value" %>
-        <span class="ck-slider-value" id="temp-value"><%= run.temperature || 1.0 %></span>
+        <%= form.range_field :temperature, min: 0, max: 1, step: 0.1, class: "ck-slider", id: "run_temperature", disabled: run.temperature.nil?, oninput: "document.getElementById('temp-value').textContent = this.value" %>
+        <span class="ck-slider-value" id="temp-value"><%= run.temperature.nil? ? "off" : run.temperature %></span>
       </div>
+      <label class="ck-checkbox-label">
+        <%= check_box_tag "run[omit_temperature]", "1", run.temperature.nil?, id: "run_omit_temperature", class: "ck-checkbox",
+              onchange: "document.getElementById('run_temperature').disabled = this.checked; document.getElementById('temp-value').textContent = this.checked ? 'off' : document.getElementById('run_temperature').value;" %>
+        <span class="ck-checkbox-label__box" aria-hidden="true"></span>
+        <span class="ck-checkbox-label__body">
+          <span class="ck-checkbox-label__text">Send no temperature</span>
+          <span class="ck-checkbox-label__hint">The model applies its own default. Required by models that refuse the parameter, which most current frontier models do.</span>
+        </span>
+      </label>
     </div>
 
     <div class="ck-field">

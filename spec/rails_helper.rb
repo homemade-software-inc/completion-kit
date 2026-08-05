@@ -114,6 +114,7 @@ ActiveRecord::Schema.define do
     t.text :failure_summary
     t.float :temperature, default: 1.0
     t.boolean :temperature_ignored, default: false, null: false
+    t.boolean :judge_temperature_ignored, default: false, null: false
     t.integer :max_tokens
     t.float :judge_temperature, default: 0.0
     t.string :output_column

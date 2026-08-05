@@ -14,7 +14,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "creates a Review with succeeded status on a successful evaluation" do
-    fake_judge = double("judge", evaluate: { score: 4, feedback: "good" })
+    fake_judge = double("judge", evaluate: { score: 4, feedback: "good" }, temperature_dropped?: false)
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
 
@@ -28,7 +28,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "records a provider error from the judge as a failed review without paging the error tracker" do
-    fake_judge = double("judge")
+    fake_judge = double("judge", temperature_dropped?: false)
     allow(fake_judge).to receive(:evaluate).and_raise(CompletionKit::ProviderError.from_client_error("Error: 402 - Insufficient credits"))
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
@@ -53,7 +53,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     bare_response = create(:completion_kit_response, run: judge_only, response_text: "hello")
 
     captured_prompt = :unset
-    fake_judge = double("judge")
+    fake_judge = double("judge", temperature_dropped?: false)
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
     allow(fake_judge).to receive(:evaluate) do |_output, _expected, prompt, **_kw|
@@ -68,7 +68,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "retries a rate-limited review instead of failing it immediately" do
-    fake_judge = double("judge")
+    fake_judge = double("judge", temperature_dropped?: false)
     allow(fake_judge).to receive(:evaluate).and_raise(
       CompletionKit::RateLimitError.new("limit", provider: "anthropic", status: 429)
     )
@@ -82,7 +82,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "records terminal failure once rate-limit retries are exhausted" do
-    fake_judge = double("judge")
+    fake_judge = double("judge", temperature_dropped?: false)
     allow(fake_judge).to receive(:evaluate).and_raise(
       CompletionKit::RateLimitError.new("limit", provider: "anthropic", status: 429)
     )
@@ -101,7 +101,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "records terminal failure once connection retries are exhausted" do
-    fake_judge = double("judge")
+    fake_judge = double("judge", temperature_dropped?: false)
     allow(fake_judge).to receive(:evaluate).and_raise(Faraday::TimeoutError)
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
@@ -117,7 +117,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "records terminal failure and discards when the judge is not configured" do
-    fake_judge = double("judge")
+    fake_judge = double("judge", temperature_dropped?: false)
     allow(fake_judge).to receive(:evaluate).and_raise(CompletionKit::ConfigurationError, "Judge not configured")
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
@@ -133,7 +133,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     model = create(:completion_kit_model, provider: "openai", model_id: "gpt-4o",
                    supports_generation: true, supports_judging: nil, judging_error: "stale",
                    status: "active")
-    fake_judge = double("judge", evaluate: { score: 5, feedback: "ok" })
+    fake_judge = double("judge", evaluate: { score: 5, feedback: "ok" }, temperature_dropped?: false)
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
 
@@ -145,7 +145,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   it "leaves a model already flagged as a bad judge alone after a successful review" do
     model = create(:completion_kit_model, provider: "openai", model_id: "gpt-4o",
                    supports_generation: true, supports_judging: false, status: "active")
-    fake_judge = double("judge", evaluate: { score: 5, feedback: "ok" })
+    fake_judge = double("judge", evaluate: { score: 5, feedback: "ok" }, temperature_dropped?: false)
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
 
@@ -157,7 +157,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   it "fails just that review (not the run) and does not touch the model when the judge raises" do
     model = create(:completion_kit_model, provider: "openai", model_id: "gpt-4o",
                    supports_generation: true, supports_judging: nil, status: "active")
-    fake_judge = double("judge")
+    fake_judge = double("judge", temperature_dropped?: false)
     allow(fake_judge).to receive(:evaluate).and_raise(RuntimeError, "judge melted down")
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
@@ -170,8 +170,52 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     expect(model.reload.supports_judging).to be_nil
   end
 
+  it "records that the judge model refused the temperature, so the run stops claiming reproducible scores" do
+    fake_judge = double("judge", evaluate: { score: 4, feedback: "ok" }, temperature_dropped?: true)
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    expect(run.judge_temperature).to eq(0.0)
+    expect(run.nondeterministic_judge?).to be(false)
+
+    described_class.perform_now(response.id, metric.id)
+
+    expect(run.reload.judge_temperature_ignored).to be(true)
+    expect(run.nondeterministic_judge?).to be(true)
+  end
+
+  it "still records the refusal when the judge call itself then fails" do
+    fake_judge = double("judge", temperature_dropped?: true)
+    allow(fake_judge).to receive(:evaluate).and_raise(CompletionKit::ProviderError.new("boom", status: 500))
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+
+    described_class.perform_now(response.id, metric.id)
+
+    expect(run.reload.judge_temperature_ignored).to be(true)
+    expect(response.reviews.first.status).to eq("failed")
+  end
+
+  it "leaves the flag alone when the judge kept the temperature it was given" do
+    fake_judge = double("judge", evaluate: { score: 4, feedback: "ok" }, temperature_dropped?: false)
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+
+    described_class.perform_now(response.id, metric.id)
+
+    expect(run.reload.judge_temperature_ignored).to be(false)
+    expect(run.nondeterministic_judge?).to be(false)
+  end
+
+  it "does not rewrite the flag on a second refusal once it is already set" do
+    run.update_columns(judge_temperature_ignored: true)
+    fake_judge = double("judge", evaluate: { score: 4, feedback: "ok" }, temperature_dropped?: true)
+    allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+    expect_any_instance_of(CompletionKit::Run).not_to receive(:update_columns)
+
+    described_class.perform_now(response.id, metric.id)
+
+    expect(run.reload.judge_temperature_ignored).to be(true)
+  end
+
   it "enqueues RunCompletionCheckJob with the run_id" do
-    fake_judge = double("judge", evaluate: { score: 4, feedback: "ok" })
+    fake_judge = double("judge", evaluate: { score: 4, feedback: "ok" }, temperature_dropped?: false)
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
 
@@ -181,7 +225,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "reuses an existing Review row instead of creating a duplicate" do
-    fake_judge = double("judge", evaluate: { score: 5, feedback: "great" })
+    fake_judge = double("judge", evaluate: { score: 5, feedback: "great" }, temperature_dropped?: false)
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
 
@@ -205,7 +249,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "records terminal failure for errors without a status method" do
-    fake_judge = double("judge")
+    fake_judge = double("judge", temperature_dropped?: false)
     allow(fake_judge).to receive(:evaluate).and_raise(RuntimeError, "something went wrong")
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
@@ -257,7 +301,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
   end
 
   it "uses metric name from deleted metric in record_terminal_failure!" do
-    fake_judge = double("judge")
+    fake_judge = double("judge", temperature_dropped?: false)
     allow(fake_judge).to receive(:evaluate).and_raise(RuntimeError, "boom")
     allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
     allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
@@ -319,7 +363,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
       allow(CompletionKit::MetricAgreementExamples).to receive(:judge_examples_for)
         .with(metric, exclude_response_id: response.id).and_return(examples)
 
-      judge = instance_double(CompletionKit::JudgeService)
+      judge = instance_double(CompletionKit::JudgeService, temperature_dropped?: false)
       allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
       expect(judge).to receive(:evaluate)
         .with(anything, anything, anything, hash_including(human_examples: examples))
@@ -330,7 +374,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
 
     it "passes no examples when the flag is off" do
       CompletionKit.config.judge_examples_from_reviews = false
-      judge = instance_double(CompletionKit::JudgeService)
+      judge = instance_double(CompletionKit::JudgeService, temperature_dropped?: false)
       allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
       expect(judge).to receive(:evaluate)
         .with(anything, anything, anything, hash_including(human_examples: nil))
@@ -342,7 +386,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     it "passes no examples when agreement is disabled" do
       CompletionKit.config.judge_examples_from_reviews = true
       CompletionKit.config.judge_agreement_enabled = false
-      judge = instance_double(CompletionKit::JudgeService)
+      judge = instance_double(CompletionKit::JudgeService, temperature_dropped?: false)
       allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
       expect(judge).to receive(:evaluate)
         .with(anything, anything, anything, hash_including(human_examples: nil))

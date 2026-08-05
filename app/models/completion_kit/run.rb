@@ -337,7 +337,9 @@ module CompletionKit
             progress_current: 0,
             progress_total: 0,
             failure_summary: nil,
-            error_message: nil
+            error_message: nil,
+            temperature_ignored: false,
+            judge_temperature_ignored: false
           )
         end
       rescue ActiveRecord::RecordInvalid => e
@@ -436,7 +438,7 @@ module CompletionKit
           error_status: nil,
           error_message: nil
         )
-        update!(status: "running", failure_summary: nil, error_message: nil)
+        update!(status: "running", failure_summary: nil, error_message: nil, judge_temperature_ignored: false)
 
         response_ids.each do |rid|
           llm_metrics.each { |m| JudgeReviewJob.perform_later(rid, m.id, id) } if llm_judge_configured?
@@ -467,7 +469,7 @@ module CompletionKit
     end
 
     def nondeterministic_judge?
-      judge_temperature.to_f > 0
+      judge_temperature.to_f > 0 || judge_temperature_ignored?
     end
 
     def rerun!
@@ -559,6 +561,7 @@ module CompletionKit
         expected_column: expected_column,
         created_at: created_at, updated_at: updated_at,
         max_tokens: max_tokens, judge_temperature: judge_temperature,
+        temperature_ignored: temperature_ignored, judge_temperature_ignored: judge_temperature_ignored,
         responses_count: responses.count, avg_score: avg_score,
         check_pass_rate: check_pass_rate,
         metric_averages: metric_averages,

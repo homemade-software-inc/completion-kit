@@ -13,6 +13,10 @@ module CompletionKit
       @judge_client = LlmClient.for_model(@judge_model, ApiConfig.for_model(@judge_model))
     end
 
+    def temperature_dropped?
+      @judge_client.temperature_dropped?
+    end
+
     def evaluate(output, expected_output = nil, prompt = nil, criteria: nil, rubric_text: nil, input_data: nil, human_examples: nil, **_extras)
       raise CompletionKit::ConfigurationError, "Judge not configured" unless @judge_client.configured?
 

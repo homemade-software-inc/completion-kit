@@ -181,7 +181,9 @@ module CompletionKit
         if run.metric_ids.empty?
           warnings << "No metrics are attached, so this run judges nothing. Attach metric_ids or a metric_group_id before generating."
         end
-        if run.nondeterministic_judge?
+        if run.judge_temperature_ignored?
+          warnings << "The judge model refused the temperature parameter, so it was re-sent without one and the provider applied its own default. judge_temperature reads #{run.judge_temperature} but was never applied, and these scores are not reproducible. Pick a judge model that accepts temperature if you need reproducible scoring."
+        elsif run.nondeterministic_judge?
           warnings << "Judge temperature is #{run.judge_temperature}. Judging above 0 makes scores irreproducible: the same output can get a different score on a re-judge. Set judge_temperature to 0 unless you are deliberately measuring judge variance."
         end
         return json if warnings.empty?

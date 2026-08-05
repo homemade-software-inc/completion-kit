@@ -96,7 +96,9 @@
   <div class="ck-run-config__row">
     <span class="ck-run-config__key">Judge temperature</span>
     <span><%= @run.judge_temperature %></span>
-    <% if @run.nondeterministic_judge? %>
+    <% if @run.judge_temperature_ignored? %>
+      <span class="ck-run-config__warn" style="color: var(--ck-warning);" title="The judge model refused the temperature parameter, so CompletionKit re-sent the request without it and the provider applied its own default. The scores are not reproducible despite the setting above.">refused by judge, not reproducible</span>
+    <% elsif @run.nondeterministic_judge? %>
       <span class="ck-run-config__warn" style="color: var(--ck-warning);" title="Judging above temperature 0 makes scores irreproducible. The same output can get a different score on a re-judge.">scores not reproducible</span>
     <% end %>
   </div>

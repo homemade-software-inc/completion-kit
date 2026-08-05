@@ -5,9 +5,6 @@ module CompletionKit
       { id: "claude-3-5-haiku-latest", name: "Claude 3.5 Haiku" }
     ].freeze
 
-    def temperature_dropped?
-      @temperature_dropped == true
-    end
 
     def generate_completion(prompt, options = {})
       @temperature_dropped = false
@@ -15,11 +12,11 @@ module CompletionKit
 
       model = options[:model] || "claude-3-7-sonnet-latest"
       max_tokens = options[:max_tokens] || 1000
-      temperature = options[:temperature] || 0.7
+      temperature = resolve_temperature(options)
 
       response = post_messages(model: model, prompt: prompt, max_tokens: max_tokens, temperature: temperature)
 
-      if response.status == 400 && temperature_unsupported?(response.body)
+      if response.status == 400 && !temperature.nil? && temperature_unsupported?(response.body)
         @temperature_dropped = true
         response = post_messages(model: model, prompt: prompt, max_tokens: max_tokens, temperature: nil)
       end
@@ -97,9 +94,5 @@ module CompletionKit
       end
     end
 
-    def temperature_unsupported?(body)
-      s = body.to_s
-      s.include?("temperature") && (s.include?("deprecated") || s.include?("not supported"))
-    end
   end
 end

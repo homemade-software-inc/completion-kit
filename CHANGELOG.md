@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.35] - 2026-08-04
+
+### Fixed
+- **A run whose judge silently lost its temperature no longer claims the scores are reproducible.** `JudgeService` sends the judge temperature and then nobody read whether the provider accepted it, so when a reasoning judge refused the parameter the request was quietly re-sent without one, the provider applied its own default of roughly 1.0, and the run went on reporting `judge_temperature: 0` with `nondeterministic_judge?` returning false. The page was at its most confident exactly when the scores were least reproducible. Runs gain a `judge_temperature_ignored` column, `JudgeReviewJob` records it, and `nondeterministic_judge?` folds it in. The run page and the MCP payload now distinguish a temperature you set high from one the model refused, because the fix for each is different.
+
+  **Host apps need `bin/rails completion_kit:install:migrations && bin/rails db:migrate` to pick up the new column.**
+
+- **Every provider client now recognises a temperature refusal it previously failed on.** All five tested the error body for `"not supported"`, `"deprecated"` or `"Unsupported parameter"`, but OpenAI's current reasoning models answer with `Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.`, which contains none of those three. The drop-and-retry never fired and the row failed outright. The predicate now covers the phrasings in use, in either word order, and it lives on `LlmClient` instead of being copy-pasted into five subclasses, which is how `AnthropicClient` came to be missing a clause the other four had.
+
+  The match is deliberately bounded so it cannot cross a brace in the error body. A refusal aimed at some other parameter, in a response that echoes the request back, would otherwise have stripped a temperature the model was perfectly happy with and flagged the run as having had it ignored.
+
+- **Both ignored flags now clear when the work they describe is redone.** Neither was ever reset, so a run kept asserting that its temperature had been refused after a re-grade against a judge that accepts it. `regrade!` clears the judge flag and starting a run clears both.
+
+### Added
+- **A run can now send no temperature at all, which is the only request many current models accept.** Every client turned a nil into 0.7, so there was no way to express "leave it to the model" and a nil column silently became a value CompletionKit invented. Passing an explicit nil now omits the parameter from the request body, and the run form gains a "Send no temperature" option beside the slider. An absent key still gets the historical default, so no existing caller changes.
+
+### Changed
+- **`temperature_ignored` is now in the run payload.** The MCP tool description told agents that "the run is flagged temperature_ignored" while `Run#as_json` never carried the field, so both REST and MCP pointed at something that did not exist. It and `judge_temperature_ignored` are now returned.
+
 ## [0.28.34] - 2026-08-04
 
 This release also carries 0.28.33, which was versioned but never published. Its section is below in full; in short, a response scored only by deterministic checks no longer claims a judge reviewed it, a check that failed before its version was recorded is no longer blamed on the judge, and the gemspec's MCP tool count is corrected from 34 to the real 53. No migrations are needed for either version.

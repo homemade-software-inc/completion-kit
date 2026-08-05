@@ -170,6 +170,79 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(client.temperature_dropped?).to be(true)
   end
 
+  it "recognises every provider's phrasing of a temperature refusal" do
+    [
+      "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.",
+      "`temperature` is deprecated for this model.",
+      "Unsupported parameter: 'temperature' is not supported with this model.",
+      "The temperature parameter is not supported for this model.",
+      "Only the default value is supported for temperature on this model.",
+      "not supported: temperature cannot be set on this model."
+    ].each do |message|
+      client = CompletionKit::OpenAiClient.new(api_key: "k")
+      stub_temperature_fallback(
+        deprecated_body: { error: { message: message } }.to_json,
+        success_body: { output: [{ type: "message", content: [{ type: "output_text", text: "ok" }] }] }.to_json
+      )
+      client.generate_completion("prompt", temperature: 0.7)
+      expect(client.temperature_dropped?).to be(true), "expected to recover from: #{message}"
+    end
+  end
+
+  it "does not strip a temperature the model was happy with when some other parameter was refused" do
+    [
+      %({"error":{"message":"Unsupported parameter: 'top_p' is not supported with this model."},"request":{"temperature":0.7}}),
+      %({"request":{"temperature":0.7},"error":{"message":"Unsupported parameter: 'top_p' is not supported with this model."}}),
+      %({"error":{"message":"Unsupported value: 'tool_choice' does not support 'required'."},"request":{"temperature":0.7}}),
+      %({"error":{"message":"Unsupported parameter: 'max_tokens' is not supported."},"request":{"temperature":0.7}})
+    ].each do |body|
+      client = CompletionKit::OpenAiClient.new(api_key: "k")
+      stub_faraday(faraday_response(success: false, body: body, status: 400))
+      client.generate_completion("prompt", temperature: 0.7)
+      expect(client.temperature_dropped?).to be(false), "wrongly treated as a temperature refusal: #{body}"
+    end
+  end
+
+  it "recovers from OpenAI's actual reasoning-model refusal, which shares no wording with the other providers" do
+    client = CompletionKit::OpenAiClient.new(api_key: "openai-key")
+    posted = stub_temperature_fallback(
+      deprecated_body: { error: { message: "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", type: "invalid_request_error", param: "temperature" } }.to_json,
+      success_body: { output: [{ type: "message", content: [{ type: "output_text", text: "recovered" }] }] }.to_json
+    )
+
+    expect(client.generate_completion("prompt", model: "gpt-5", temperature: 0.7)).to eq("recovered")
+    expect(posted[1].body).not_to include("temperature")
+    expect(client.temperature_dropped?).to be(true)
+  end
+
+  it "recognises a refusal phrased as an unsupported parameter on every client, not just some of them" do
+    body = { error: { message: "Unsupported parameter: 'temperature' is not supported with this model." } }.to_json
+    [
+      [CompletionKit::AnthropicClient.new(api_key: "k"), { content: [{ text: "ok" }] }.to_json],
+      [CompletionKit::OpenAiClient.new(api_key: "k"), { output: [{ type: "message", content: [{ type: "output_text", text: "ok" }] }] }.to_json],
+      [CompletionKit::OpenRouterClient.new(api_key: "k"), { choices: [{ message: { content: "ok" } }] }.to_json],
+      [CompletionKit::OllamaClient.new(api_key: "k", api_endpoint: "https://ollama.example.test"), { choices: [{ text: "ok" }] }.to_json]
+    ].each do |client, success_body|
+      stub_temperature_fallback(deprecated_body: body, success_body: success_body)
+      client.generate_completion("prompt", temperature: 0.7)
+      expect(client.temperature_dropped?).to be(true), "expected #{client.class} to recover from an unsupported-parameter refusal"
+    end
+  end
+
+  it "sends no temperature at all when the caller passes an explicit nil" do
+    [
+      [CompletionKit::AnthropicClient.new(api_key: "k"), { content: [{ text: "ok" }] }.to_json],
+      [CompletionKit::OpenAiClient.new(api_key: "k"), { output: [{ type: "message", content: [{ type: "output_text", text: "ok" }] }] }.to_json],
+      [CompletionKit::OpenRouterClient.new(api_key: "k"), { choices: [{ message: { content: "ok" } }] }.to_json],
+      [CompletionKit::OllamaClient.new(api_key: "k", api_endpoint: "https://ollama.example.test"), { choices: [{ text: "ok" }] }.to_json]
+    ].each do |client, body|
+      request = stub_faraday(faraday_response(success: true, body: body))
+      client.generate_completion("prompt", temperature: nil)
+      expect(request.body).not_to include("temperature"), "expected #{client.class} to omit temperature"
+      expect(client.temperature_dropped?).to be(false)
+    end
+  end
+
   it "exposes temperature_dropped? as false on each provider client when the request succeeds with temperature" do
     [
       [CompletionKit::AnthropicClient.new(api_key: "k"), { content: [{ text: "hi" }] }.to_json],

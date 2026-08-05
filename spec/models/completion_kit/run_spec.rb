@@ -212,6 +212,17 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).with(response_row.id, metric.id, run.id)
     end
 
+    it "clears a stale judge-temperature-refused flag, because the scores are about to be replaced" do
+      create(:completion_kit_response, run: run, status: "succeeded", response_text: "scored")
+      run.update_columns(judge_temperature_ignored: true)
+      expect(run.nondeterministic_judge?).to be(true)
+
+      expect(run.regrade!).to be(true)
+
+      expect(run.reload.judge_temperature_ignored).to be(false)
+      expect(run.nondeterministic_judge?).to be(false)
+    end
+
     it "returns false and does no work when the run has no eligible succeeded responses" do
       expect(run.regrade!).to be(false)
       expect(CompletionKit::JudgeReviewJob).not_to have_received(:perform_later)
@@ -415,6 +426,16 @@ RSpec.describe CompletionKit::Run, type: :model do
     before do
       allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
       allow(CompletionKit::GenerateRowJob).to receive(:perform_later)
+    end
+
+    it "clears both temperature-ignored flags, because generation and judging are about to be redone" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: nil, status: "failed")
+      run.update_columns(temperature_ignored: true, judge_temperature_ignored: true)
+
+      expect(start_run!(run)).to be true
+
+      expect(run.reload.temperature_ignored).to be(false)
+      expect(run.judge_temperature_ignored).to be(false)
     end
 
     it "creates pending Responses and enqueues GenerateRowJob for each row" do
