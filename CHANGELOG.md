@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.38] - 2026-08-05
+
+### Fixed
+- **The two buttons on the stale-metrics banner were touching.** Each action column was capped at a fixed width chosen for its explanatory note, but a button never shrinks below its own text, so the wider "Re-grade with current metrics" overflowed its column by 26 pixels and closed the gap to the button beside it. Measured, the two buttons sat 3 pixels into each other. The column is now sized by the button rather than by the note, so the gap is the 1.25rem it was always meant to be and the note wraps underneath its own button. Checked at five widths from 1440 down to 520 pixels, where the pair wraps to a stack with the same spacing.
+
 ## [0.28.37] - 2026-08-04
 
 ### Changed
