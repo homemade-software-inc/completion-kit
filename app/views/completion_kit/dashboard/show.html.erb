@@ -37,13 +37,15 @@
         <span class="ck-stat-card__count"><%= activity_total %></span>
         <span class="ck-stat-card__unit"><%= "run".pluralize(activity_total) %></span>
       </div>
-      <div class="ck-sparkline ck-sparkline--compact" role="img" aria-label="<%= activity_total %> runs over the last 14 days">
-        <% @activity.each do |day| %>
-          <span class="ck-sparkline__bar<%= ' is-peak' if activity_max.to_i.positive? && day[:count] == activity_max %>"
-                style="height: <%= activity_max.to_i.zero? ? 0 : [(day[:count] * 100.0 / activity_max).round, 6].max %>%"
-                title="<%= day[:date].strftime('%b %-d') %>: <%= day[:count] %> run<%= 's' unless day[:count] == 1 %>"></span>
-        <% end %>
-      </div>
+      <% if activity_total.positive? %>
+        <div class="ck-sparkline ck-sparkline--compact" role="img" aria-label="<%= activity_total %> runs over the last 14 days">
+          <% @activity.each do |day| %>
+            <span class="ck-sparkline__bar<%= ' is-peak' if day[:count] == activity_max %>"
+                  style="height: <%= [(day[:count] * 100.0 / activity_max).round, 6].max %>%"
+                  title="<%= day[:date].strftime('%b %-d') %>: <%= day[:count] %> run<%= 's' unless day[:count] == 1 %>"></span>
+          <% end %>
+        </div>
+      <% end %>
       <div class="ck-stat-card__foot">
         <% if activity_total.positive? %>
           <% peak = @activity.max_by { |d| d[:count] } %>

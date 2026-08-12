@@ -129,6 +129,7 @@ RSpec.describe "CompletionKit dashboard", type: :request do
 
       expect(response.body).to include("Not run yet")
       expect(response.body).to include("Add a check metric to a run to populate this")
+      expect(response.body).not_to include("Daily check pass rate over the last 14 days")
     end
 
     it "counts a single failing check without the overflow line" do
@@ -248,7 +249,7 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       CompletionKit.config.runs_display_scope = nil
     end
 
-    it "renders an all-zero sparkline and the empty prompt-changes state" do
+    it "drops the activity sparkline and the prompt-changes list when the window is empty" do
       ready_workspace!(run_count: 6)
       allow(CompletionKit::DashboardStats).to receive(:activity).and_return(
         [
@@ -264,7 +265,8 @@ RSpec.describe "CompletionKit dashboard", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Activity · 14D")
-      expect(response.body).not_to include("is-peak")
+      expect(response.body).to include("No runs in the window")
+      expect(response.body).not_to include("runs over the last 14 days")
       expect(response.body).to include("No measured changes yet")
     end
   end

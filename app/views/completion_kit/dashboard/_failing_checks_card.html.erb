@@ -12,15 +12,17 @@
     <% end %>
   </div>
 
-  <div class="ck-sparkline ck-sparkline--compact" role="img"
-       aria-label="Daily check pass rate over the last 14 days">
-    <% check_activity.each do |day| %>
-      <% kind = day[:rate] && ck_pass_rate_kind(day[:rate]) %>
-      <span class="ck-sparkline__bar<%= " is-#{kind}" if kind && kind != :high %>"
-            style="height: <%= day[:rate] ? [(day[:rate] * 100).round, 6].max : 0 %>%;"
-            title="<%= day[:date].strftime('%b %-d') %>: <%= day[:rate] ? "#{(day[:rate] * 100).round}% of #{day[:resolved]}" : 'no checks' %>"></span>
-    <% end %>
-  </div>
+  <% if resolved.positive? %>
+    <div class="ck-sparkline ck-sparkline--compact" role="img"
+         aria-label="Daily check pass rate over the last 14 days">
+      <% check_activity.each do |day| %>
+        <% kind = day[:rate] && ck_pass_rate_kind(day[:rate]) %>
+        <span class="ck-sparkline__bar<%= " is-#{kind}" if kind && kind != :high %>"
+              style="height: <%= day[:rate] ? [(day[:rate] * 100).round, 6].max : 0 %>%;"
+              title="<%= day[:date].strftime('%b %-d') %>: <%= day[:rate] ? "#{(day[:rate] * 100).round}% of #{day[:resolved]}" : 'no checks' %>"></span>
+      <% end %>
+    </div>
+  <% end %>
 
   <% if failing_checks[:items].any? %>
     <% worst = failing_checks[:items].group_by { |item| item[:metric_name] }

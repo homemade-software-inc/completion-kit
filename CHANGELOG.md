@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.41] - 2026-08-11
+
+### Changed
+- **A dashboard card with nothing to plot no longer draws an empty chart.** The Checks card and the Activity card both rendered all fourteen bars whatever the data, and a bar for a day with no data is held at a two-pixel minimum height, so a window with nothing in it came out as a row of dead dashes that reads as a broken chart rather than an absent one. Both cards now drop the sparkline entirely when the window is empty, leaving the headline and the footnote that says what to do about it. Days with no data inside a window that does have some are unaffected, because there the gap is real information.
+
 ## [0.28.40] - 2026-08-11
 
 ### Changed
