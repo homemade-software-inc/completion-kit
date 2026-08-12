@@ -38,6 +38,18 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#ck_retry_failures_label" do
+    it "names scoring when only the reviews failed" do
+      expect(helper.ck_retry_failures_label(0, 1)).to eq("Retry scoring on 1 response")
+      expect(helper.ck_retry_failures_label(0, 3)).to eq("Retry scoring on 3 responses")
+    end
+
+    it "counts every failed response when generation failed too" do
+      expect(helper.ck_retry_failures_label(1, 0)).to eq("Retry 1 failed response")
+      expect(helper.ck_retry_failures_label(2, 3)).to eq("Retry 5 failed responses")
+    end
+  end
+
   describe "#ck_button_classes" do
     it "covers every button style branch" do
       expect(helper.ck_button_classes(:dark)).to include("ck-button--primary")

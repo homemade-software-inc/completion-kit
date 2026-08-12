@@ -25,6 +25,14 @@ module CompletionKit
       render partial, runs: runs
     end
 
+    def ck_retry_failures_label(generated_failed, judged_failed)
+      if generated_failed.zero?
+        "Retry scoring on #{pluralize(judged_failed, "response")}"
+      else
+        "Retry #{pluralize(generated_failed + judged_failed, "failed response")}"
+      end
+    end
+
     def ck_button_classes(tone = :dark, variant: :solid)
       base = "ck-button"
 

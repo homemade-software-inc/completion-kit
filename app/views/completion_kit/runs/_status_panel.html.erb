@@ -111,9 +111,10 @@
       </div>
 
       <% if failed_count > 0 %>
-        <%= button_to retry_failures_run_path(run), method: :post, class: "ck-run-status__retry", form_class: "ck-run-status__action" do %>
-          Retry <%= failed_count %> failed <%= "case".pluralize(failed_count) %>
-        <% end %>
+        <%= button_to ck_retry_failures_label(snap[:generated_failed], snap[:judged_failed]),
+              retry_failures_run_path(run), method: :post,
+              class: ck_button_classes(:light, variant: :outline),
+              form_class: "ck-run-status__action" %>
       <% end %>
     </section>
   <% end %>

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.40] - 2026-08-11
+
+### Changed
+- **The retry button on a run now says what it will actually retry, and it is no longer red.** It read "Retry N failed cases" whatever had gone wrong, which implied regeneration even when the response was fine and only its judge had timed out. The label is now chosen from the failure state: "Retry scoring on 1 response" when only reviews failed, "Retry 1 failed response" when only generation failed, and the combined count when both did. The button also drops its bespoke red styling for the same secondary outline used by Edit and Compare in the page header. Red now belongs to the parts of the panel that report state, the failed count in the summary line and the row chips, rather than to the action that clears them.
+
 ## [0.28.39] - 2026-08-11
 
 ### Fixed

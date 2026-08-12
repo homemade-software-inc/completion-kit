@@ -456,6 +456,21 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).not_to include(">Done<")
   end
 
+  it "offers to retry scoring, not generation, when only a review failed" do
+    metric = create(:completion_kit_metric)
+    run = create(:completion_kit_run, prompt: prompt, status: "completed", judge_model: "gpt-4o", progress_total: 1, progress_current: 1)
+    run.replace_metrics!([metric.id])
+    row = create(:completion_kit_response, run: run, status: "succeeded", response_text: "Output text")
+    version = CompletionKit::MetricVersion.ensure_current_for(metric)
+    row.reviews.create!(metric: metric, metric_name: metric.name, metric_version_id: version.id, status: "failed", error_message: "timeout")
+
+    get "#{base_path}/#{run.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Retry scoring on 1 response")
+    expect(response.body).to include("ck-button ck-button--secondary")
+  end
+
   it "creates a run with valid params" do
     dataset = create(:completion_kit_dataset)
 
