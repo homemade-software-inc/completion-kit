@@ -482,7 +482,7 @@ form.button_to {
   flex-direction: column;
   min-height: 10.5rem;
 }
-.ck-stat-card .ck-kicker { margin-bottom: auto; }
+.ck-stat-card .ck-kicker { margin-bottom: 0; }
 .ck-stat-card__foot {
   margin-top: auto;
   padding-top: 0.85rem;

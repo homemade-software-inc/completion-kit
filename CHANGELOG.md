@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.42] - 2026-08-11
+
+### Changed
+- **The four dashboard stat cards now line their numbers up with each other.** Each card pushed its value into the middle of whatever space was left over, so the value landed at a different height in every card depending on how much content sat below it. The Checks percentage came out 63 pixels above the Activity count in the card beside it. The value now sits directly under the kicker in all four, which puts the kickers on one line, the values on a second, and the footnotes on a third along the bottom, so the row reads across instead of bobbing.
+
 ## [0.28.41] - 2026-08-11
 
 ### Changed
