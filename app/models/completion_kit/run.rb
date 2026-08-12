@@ -5,6 +5,12 @@ module CompletionKit
 
     STATUSES = %w[pending running completed failed].freeze
     INSERT_BATCH_SIZE = 1000
+    REVIEW_RETRY_RESET = {
+      status: "pending",
+      attempts: 0,
+      error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
+      ai_score: nil, passed: nil, ai_feedback: nil
+    }.freeze
 
     belongs_to :prompt, optional: true
     belongs_to :dataset, optional: true
@@ -492,15 +498,21 @@ module CompletionKit
     def retry_failures!(only: nil)
       scope = responses.where(status: "failed")
       scope = scope.where(id: only) if only.present?
+      failed_response_ids = scope.pluck(:id)
+
+      # A response can generate fine and still have a review blow up, so those
+      # reviews are retryable on their own without regenerating the response.
+      unscored = Review.where(status: "failed")
+                       .where.not(metric_id: nil)
+                       .where(response_id: responses.where(status: "succeeded").select(:id))
+      unscored = unscored.where(response_id: only) if only.present?
+      unscored_pairs = unscored.pluck(:response_id, :metric_id)
+
+      return self if failed_response_ids.empty? && unscored_pairs.empty?
 
       transaction do
-        failed_response_ids = scope.pluck(:id)
-        Review.where(response_id: failed_response_ids, status: "failed").update_all(
-          status: "pending",
-          attempts: 0,
-          error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
-          ai_score: nil, passed: nil, ai_feedback: nil
-        )
+        Review.where(response_id: failed_response_ids, status: "failed").update_all(REVIEW_RETRY_RESET)
+        unscored.update_all(REVIEW_RETRY_RESET)
         scope.update_all(
           status: "pending",
           attempts: 0,
@@ -509,8 +521,23 @@ module CompletionKit
         )
         update!(status: "running")
         failed_response_ids.each { |rid| GenerateRowJob.perform_later(id, rid) }
+        enqueue_review_retries(unscored_pairs)
       end
       self
+    end
+
+    def enqueue_review_retries(pairs)
+      return if pairs.empty?
+
+      kinds = Metric.where(id: pairs.map(&:last).uniq).pluck(:id, :metric_type).to_h
+      pairs.each do |response_id, metric_id|
+        if kinds[metric_id] == "check"
+          CheckReviewJob.perform_later(response_id, metric_id, id)
+        else
+          JudgeReviewJob.perform_later(response_id, metric_id, id)
+        end
+      end
+      RunCompletionCheckJob.perform_later(id)
     end
 
     def progress_snapshot

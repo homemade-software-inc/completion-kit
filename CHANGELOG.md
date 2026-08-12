@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.39] - 2026-08-11
+
+### Fixed
+- **"Retry failed cases" did nothing when the failure was a judge, and left the run stuck running.** A response can generate perfectly well and still have its review blow up, which the run header counts as a failed case. The retry only ever looked at responses whose own status was `failed`, so for a failed review it matched nothing, enqueued nothing, and still flipped the run to `running`. Since the completion check is only ever enqueued by a finishing job, that run then had no way back to `completed` and sat running forever. Retry now collects failed reviews on succeeded responses too and re-queues each against its own metric, judge or check, followed by a completion check. When there is genuinely nothing to retry it returns without touching the run's status.
+
+- **A response whose judge failed claimed it was Done.** The row chip treated any review in a terminal state as reviewed, and a failed review is terminal, so the row read Done while the header counted the same response among the failed. The two now agree: a response with a failed review shows a Failed chip once the run has finished. The gap it leaves in the metric bar is expected, because a review that never produced a score has no score to draw.
+
 ## [0.28.38] - 2026-08-05
 
 ### Fixed

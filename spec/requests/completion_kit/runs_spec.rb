@@ -441,6 +441,21 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("Done")
   end
 
+  it "marks the row failed instead of Done when a review failed on a succeeded response" do
+    metric = create(:completion_kit_metric)
+    run = create(:completion_kit_run, prompt: prompt, status: "completed")
+    run.replace_metrics!([metric.id])
+    row = create(:completion_kit_response, run: run, status: "succeeded", response_text: "Output text")
+    version = CompletionKit::MetricVersion.ensure_current_for(metric)
+    row.reviews.create!(metric: metric, metric_name: metric.name, metric_version_id: version.id, status: "failed", error_message: "timeout")
+
+    get "#{base_path}/#{run.id}"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("ck-chip ck-chip--danger\">Failed</span>")
+    expect(response.body).not_to include(">Done<")
+  end
+
   it "creates a run with valid params" do
     dataset = create(:completion_kit_dataset)
 

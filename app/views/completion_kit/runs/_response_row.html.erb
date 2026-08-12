@@ -54,7 +54,9 @@
         <span class="ck-chip ck-chip--warning">Retrying <%= response.attempts %>/5</span>
       <% end %>
     <% when "succeeded" %>
-      <% if response.fully_reviewed? %>
+      <% if response.scoring_failed? && run.status != "running" %>
+        <span class="ck-chip ck-chip--danger">Failed</span>
+      <% elsif response.fully_reviewed? %>
         <span class="ck-chip ck-chip--done">Done</span>
       <% elsif run.status == "running" %>
         <span class="ck-chip">Judging</span>

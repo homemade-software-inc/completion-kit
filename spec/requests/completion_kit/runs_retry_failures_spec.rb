@@ -77,6 +77,71 @@ RSpec.describe "POST /completion_kit/runs/:id/retry_failures", type: :request do
     expect(CompletionKit::GenerateRowJob).not_to have_received(:perform_later).with(run.id, succeeded.id)
   end
 
+  it "re-enqueues a failed judge review on a response that generated fine" do
+    allow(CompletionKit::JudgeReviewJob).to receive(:perform_later)
+    allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+    allow(CompletionKit::ApiConfig).to receive(:valid_for_model?).and_return(true)
+    metric = create(:completion_kit_metric, name: "Quality")
+    run.update!(judge_model: "gpt-4o")
+    run.run_metrics.create!(metric: metric, position: 1)
+    row = create(:completion_kit_response, run: run, status: "succeeded", row_index: 0, response_text: "ok")
+    version = CompletionKit::MetricVersion.ensure_current_for(metric)
+    review = row.reviews.create!(metric: metric, metric_name: metric.name, metric_version_id: version.id, status: "failed", error_message: "timeout")
+
+    post "/completion_kit/runs/#{run.id}/retry_failures"
+
+    expect(review.reload.status).to eq("pending")
+    expect(review.error_message).to be_nil
+    expect(row.reload.status).to eq("succeeded")
+    expect(run.reload.status).to eq("running")
+    expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).with(row.id, metric.id, run.id)
+    expect(CompletionKit::RunCompletionCheckJob).to have_received(:perform_later).with(run.id)
+  end
+
+  it "re-enqueues a failed check review on a response that generated fine" do
+    allow(CompletionKit::CheckReviewJob).to receive(:perform_later)
+    allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+    metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text" })
+    run.run_metrics.create!(metric: metric, position: 1)
+    row = create(:completion_kit_response, run: run, status: "succeeded", row_index: 0, response_text: "ok")
+    version = CompletionKit::MetricVersion.ensure_current_for(metric)
+    review = row.reviews.create!(metric: metric, metric_name: metric.name, metric_version_id: version.id, status: "failed", passed: false)
+
+    post "/completion_kit/runs/#{run.id}/retry_failures"
+
+    expect(review.reload.status).to eq("pending")
+    expect(review.passed).to be_nil
+    expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).with(row.id, metric.id, run.id)
+  end
+
+  it "leaves a completed run completed when the only param matches nothing retryable" do
+    clean = create(:completion_kit_response, run: run, status: "succeeded", row_index: 0, response_text: "ok")
+
+    post "/completion_kit/runs/#{run.id}/retry_failures", params: { only: clean.id }
+
+    expect(run.reload.status).to eq("completed")
+    expect(CompletionKit::GenerateRowJob).not_to have_received(:perform_later)
+  end
+
+  it "scopes a failed review retry to the response named by the only param" do
+    allow(CompletionKit::CheckReviewJob).to receive(:perform_later)
+    allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+    metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text" })
+    run.run_metrics.create!(metric: metric, position: 1)
+    wanted = create(:completion_kit_response, run: run, status: "succeeded", row_index: 0, response_text: "ok")
+    other = create(:completion_kit_response, run: run, status: "succeeded", row_index: 1, response_text: "ok")
+    version = CompletionKit::MetricVersion.ensure_current_for(metric)
+    wanted_review = wanted.reviews.create!(metric: metric, metric_name: metric.name, metric_version_id: version.id, status: "failed")
+    other_review = other.reviews.create!(metric: metric, metric_name: metric.name, metric_version_id: version.id, status: "failed")
+
+    post "/completion_kit/runs/#{run.id}/retry_failures", params: { only: wanted.id }
+
+    expect(wanted_review.reload.status).to eq("pending")
+    expect(other_review.reload.status).to eq("failed")
+    expect(CompletionKit::CheckReviewJob).to have_received(:perform_later).with(wanted.id, metric.id, run.id)
+    expect(CompletionKit::CheckReviewJob).not_to have_received(:perform_later).with(other.id, metric.id, run.id)
+  end
+
   it "scopes to a single response when only param is supplied" do
     failed_a = create(:completion_kit_response, :failed, run: run, row_index: 0)
     failed_b = create(:completion_kit_response, :failed, run: run, row_index: 1)

@@ -57,8 +57,12 @@ module CompletionKit
     def fully_reviewed?
       metric_ids = run.metric_ids
       return true if metric_ids.empty?
-      reviewed_metric_ids = reviews.select { |review| HasJobStatus::TERMINAL_STATUSES.include?(review.status) }.map(&:metric_id).uniq
+      reviewed_metric_ids = reviews.select { |review| review.status == "succeeded" }.map(&:metric_id).uniq
       (metric_ids - reviewed_metric_ids).empty?
+    end
+
+    def scoring_failed?
+      reviews.any? { |review| review.status == "failed" }
     end
 
     private
