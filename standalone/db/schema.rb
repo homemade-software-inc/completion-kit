@@ -189,6 +189,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_020901) do
     t.bigint "metric_version_id"
     t.boolean "passed"
     t.integer "response_id", null: false
+    t.decimal "score_fraction", precision: 5, scale: 4
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["metric_id"], name: "index_completion_kit_reviews_on_metric_id"

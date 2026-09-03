@@ -153,6 +153,7 @@ ActiveRecord::Schema.define do
     t.text :instruction
     t.string :status
     t.decimal :ai_score, precision: 4, scale: 1
+    t.decimal :score_fraction, precision: 5, scale: 4
     t.boolean :passed
     t.text :ai_feedback
     t.string :error_provider

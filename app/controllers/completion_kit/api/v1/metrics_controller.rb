@@ -70,7 +70,7 @@ module CompletionKit
         def metric_params
           params.permit(:name, :instruction, :metric_type,
             rubric_bands: [:stars, :description],
-            check_config: %i[check_kind target target_path compare_to value pattern json_path expected expected_path min max case_sensitive multiline trim],
+            check_config: %i[check_kind target target_path compare_to value pattern json_path expected expected_path min max measure tolerance tolerance_mode case_sensitive multiline trim],
             tag_names: [])
         end
       end
