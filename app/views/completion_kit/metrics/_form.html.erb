@@ -188,7 +188,7 @@
 
       <div class="ck-field" data-ck-check-field="target_path">
         <label class="ck-label" for="metric_check_target_path">Path into the JSON</label>
-        <p class="ck-hint">Where to look inside the response, like data.items.0.name. A number walks into a list.</p>
+        <p class="ck-hint">Where to look inside the response, like data.items.0.name. Use a number to pick an item out of a list.</p>
         <input type="text" name="metric[check_config][target_path]" id="metric_check_target_path" class="ck-input" value="<%= check["target_path"] %>">
       </div>
 
@@ -235,11 +235,11 @@
       </div>
 
       <div class="ck-field" data-ck-check-field="measure">
-        <p class="ck-label" id="metric_check_measure_label">Measure</p>
-        <p class="ck-hint">Recall is the share of the expected list that was found. Precision is the share of what came back that belonged. F1 balances the two, and Jaccard scores the overlap against everything either side named.</p>
+        <p class="ck-label" id="metric_check_measure_label">How to score it</p>
+        <p class="ck-hint">Choose what matters most to you: what the model left out, what it added that should not be there, or a mix of the two.</p>
         <%= render "completion_kit/shared/branded_select",
                    name: "metric[check_config][measure]",
-                   options: CompletionKit::Checks::SetOverlap::MEASURES.map { |measure| [measure, measure.capitalize] },
+                   options: ck_check_measure_options,
                    selected: check["measure"] || CompletionKit::Checks::SetOverlap::DEFAULT_MEASURE,
                    labelledby: "metric_check_measure_label" %>
       </div>
@@ -247,27 +247,27 @@
       <div class="ck-field-row">
         <div class="ck-field" data-ck-check-field="min">
           <label class="ck-label" for="metric_check_min"><span data-ck-check-label="min">Shortest allowed</span></label>
-          <p class="ck-hint" data-ck-check-hint="min">Leave blank for no lower bound.</p>
+          <p class="ck-hint" data-ck-check-hint="min">Leave blank for no minimum.</p>
           <input type="number" step="any" name="metric[check_config][min]" id="metric_check_min" class="ck-input" value="<%= check["min"] %>">
         </div>
         <div class="ck-field" data-ck-check-field="max">
           <label class="ck-label" for="metric_check_max"><span data-ck-check-label="max">Longest allowed</span></label>
-          <p class="ck-hint">Leave blank for no upper bound.</p>
+          <p class="ck-hint">Leave blank for no maximum.</p>
           <input type="number" step="any" name="metric[check_config][max]" id="metric_check_max" class="ck-input" value="<%= check["max"] %>">
         </div>
       </div>
 
       <div class="ck-field" data-ck-check-field="tolerance">
-        <label class="ck-label" for="metric_check_tolerance">Tolerance</label>
-        <p class="ck-hint">How far out a number may be and still count as right. Leave blank to require an exact match.</p>
+        <label class="ck-label" for="metric_check_tolerance">How far off is still right</label>
+        <p class="ck-hint">How far a number can be out and still count as correct. Leave blank to require an exact match.</p>
         <input type="number" step="any" name="metric[check_config][tolerance]" id="metric_check_tolerance" class="ck-input" value="<%= check["tolerance"] %>">
       </div>
 
       <div class="ck-field" data-ck-check-field="tolerance_mode">
-        <p class="ck-label" id="metric_check_tolerance_mode_label">Tolerance is</p>
+        <p class="ck-label" id="metric_check_tolerance_mode_label">Measured as</p>
         <%= render "completion_kit/shared/branded_select",
                    name: "metric[check_config][tolerance_mode]",
-                   options: [["absolute", "A fixed amount"], ["relative", "A share of the expected number"]],
+                   options: ck_check_tolerance_mode_options,
                    selected: check["tolerance_mode"] || "absolute",
                    labelledby: "metric_check_tolerance_mode_label" %>
       </div>
