@@ -13,7 +13,7 @@
     <div class="ck-check-spec__row">
       <dt class="ck-check-spec__term"><%= ck_check_field_label(key, config["check_kind"]) %></dt>
       <dd class="ck-check-spec__val">
-        <% if key == "compare_to" %>
+        <% if ck_check_field_translated?(key) %>
           <%= ck_check_field_value(key, value) %>
         <% else %>
           <code class="ck-check-spec__code"><%= value %></code>

@@ -152,7 +152,7 @@ RSpec.describe CompletionKit::CheckReviewJob, type: :job do
 
       review = response.reviews.find_by(metric_id: metric.id)
       expect(review.score_fraction.to_f).to eq(0.6667)
-      expect(review.ai_feedback).to eq("recall 0.6667 (4 of 6 expected, 4 returned)")
+      expect(review.ai_feedback).to eq("found 4 of 6 expected, 4 returned (score 0.67)")
       expect(review.passed).to be(false)
       expect(review.ai_score).to be_nil
     end

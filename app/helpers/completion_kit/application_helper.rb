@@ -238,13 +238,27 @@ module CompletionKit
       "length_bounds" => "Length is within a range",
       "set_overlap" => "How much of a list was found",
       "numeric_bounds" => "A number is within a range",
-      "numeric_equals" => "A number matches, within a tolerance"
+      "numeric_equals" => "A number is close enough"
     }.freeze
 
     CHECK_COMPARE_TO_LABELS = {
       "constant" => "A value you type",
       "expected" => "Each row's expected value"
     }.freeze
+
+    CHECK_MEASURE_LABELS = {
+      "recall" => "How much of the expected list was found",
+      "precision" => "How much of the answer belonged",
+      "f1" => "A balance of the two",
+      "jaccard" => "How much the two lists overlap"
+    }.freeze
+
+    CHECK_TOLERANCE_MODE_LABELS = {
+      "absolute" => "A fixed amount",
+      "relative" => "A share of the expected number"
+    }.freeze
+
+    CHECK_TRANSLATED_FIELDS = %w[compare_to measure tolerance_mode].freeze
 
     CHECK_TARGET_LABELS = {
       "response_text" => "The response text",
@@ -262,9 +276,9 @@ module CompletionKit
       "target_path" => "Path into the JSON",
       "min" => "Minimum",
       "max" => "Maximum",
-      "measure" => "Measure",
-      "tolerance" => "Tolerance",
-      "tolerance_mode" => "Tolerance is",
+      "measure" => "How to score it",
+      "tolerance" => "How far off is still right",
+      "tolerance_mode" => "Measured as",
       "case_sensitive" => "Case sensitive",
       "multiline" => "Multiline",
       "trim" => "Trim whitespace"
@@ -291,9 +305,24 @@ module CompletionKit
     end
 
     def ck_check_field_value(key, value)
-      return CHECK_COMPARE_TO_LABELS.fetch(value.to_s, value) if key.to_s == "compare_to"
+      case key.to_s
+      when "compare_to" then CHECK_COMPARE_TO_LABELS.fetch(value.to_s, value)
+      when "measure" then CHECK_MEASURE_LABELS.fetch(value.to_s, value)
+      when "tolerance_mode" then CHECK_TOLERANCE_MODE_LABELS.fetch(value.to_s, value)
+      else value
+      end
+    end
 
-      value
+    def ck_check_field_translated?(key)
+      CHECK_TRANSLATED_FIELDS.include?(key.to_s)
+    end
+
+    def ck_check_measure_options
+      CompletionKit::Checks::SetOverlap::MEASURES.map { |measure| [measure, CHECK_MEASURE_LABELS.fetch(measure)] }
+    end
+
+    def ck_check_tolerance_mode_options
+      CHECK_TOLERANCE_MODE_LABELS.to_a
     end
 
     def ck_result_change_badge(change)

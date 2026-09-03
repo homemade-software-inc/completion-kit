@@ -245,7 +245,7 @@ var CK_CHECK_LABELS = {
   numeric_equals: { value: "Expected number" }
 };
 
-var CK_CHECK_DEFAULT_HINTS = { min: "Leave blank for no lower bound." };
+var CK_CHECK_DEFAULT_HINTS = { min: "Leave blank for no minimum." };
 
 var CK_CHECK_HINTS = {
   set_overlap: { min: "Leave blank to require an exact match." }

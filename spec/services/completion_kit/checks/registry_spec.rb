@@ -277,7 +277,7 @@ RSpec.describe CompletionKit::Checks::Registry do
     it "scores recall as the share of the expected set that was returned" do
       result = overlap(%w[a b])
       expect(result.score).to eq(0.5)
-      expect(result.detail).to eq("recall 0.5 (2 of 4 expected, 2 returned)")
+      expect(result.detail).to eq("found 2 of 4 expected, 2 returned (score 0.5)")
     end
 
     it "separates a partial answer from a total miss, which pass/fail cannot" do
@@ -302,7 +302,8 @@ RSpec.describe CompletionKit::Checks::Registry do
     end
 
     it "falls back to recall for an unrecognised measure" do
-      expect(overlap(%w[a b], { "measure" => "nonsense" }).detail).to start_with("recall")
+      expect(overlap(%w[a b x y], { "measure" => "nonsense" }).score).to eq(overlap(%w[a b x y]).score)
+      expect(overlap(%w[a b x y], { "measure" => "nonsense" }).score).to eq(0.5)
     end
 
     it "treats an empty expected set as vacuously satisfied only when nothing was returned either" do
@@ -365,7 +366,7 @@ RSpec.describe CompletionKit::Checks::Registry do
     end
 
     it "reports a JSON object as nothing returned rather than splitting its own source text" do
-      expect(overlap('{"codes":["a","b"]}').detail).to eq("recall 0.0 (0 of 4 expected, 0 returned)")
+      expect(overlap('{"codes":["a","b"]}').detail).to eq("found 0 of 4 expected, 0 returned (score 0.0)")
     end
 
     it "reads a quoted list without carrying the quote characters into the members" do

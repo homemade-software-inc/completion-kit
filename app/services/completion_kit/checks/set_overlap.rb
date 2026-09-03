@@ -17,7 +17,7 @@ module CompletionKit
 
         Result.new(
           passed: score >= threshold,
-          detail: "#{measure} #{score} (#{overlap} of #{expected.length} expected, #{actual.length} returned)",
+          detail: "found #{overlap} of #{expected.length} expected, #{actual.length} returned (score #{score.round(2)})",
           score: score
         )
       end

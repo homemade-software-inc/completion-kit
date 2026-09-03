@@ -330,6 +330,40 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_check_field_value("compare_to", "constant")).to eq("A value you type")
       expect(helper.ck_check_field_value("value", "TOKEN")).to eq("TOKEN")
     end
+
+    it "never shows the scoring jargon the stored value uses" do
+      expect(helper.ck_check_field_value("measure", "recall")).to eq("How much of the expected list was found")
+      expect(helper.ck_check_field_value("measure", "f1")).to eq("A balance of the two")
+      expect(helper.ck_check_field_value("measure", "jaccard")).to eq("How much the two lists overlap")
+      expect(helper.ck_check_field_value("tolerance_mode", "relative")).to eq("A share of the expected number")
+      expect(helper.ck_check_field_value("tolerance_mode", "absolute")).to eq("A fixed amount")
+    end
+
+    it "passes an unrecognised measure through rather than blanking it" do
+      expect(helper.ck_check_field_value("measure", "made_up")).to eq("made_up")
+      expect(helper.ck_check_field_value("tolerance_mode", "made_up")).to eq("made_up")
+    end
+
+    it "knows which config fields need translating on the metric page" do
+      expect(helper.ck_check_field_translated?("measure")).to be(true)
+      expect(helper.ck_check_field_translated?("tolerance_mode")).to be(true)
+      expect(helper.ck_check_field_translated?("compare_to")).to be(true)
+      expect(helper.ck_check_field_translated?("value")).to be(false)
+    end
+
+    it "offers the plain-language options the form renders" do
+      expect(helper.ck_check_measure_options.map(&:first)).to eq(CompletionKit::Checks::SetOverlap::MEASURES)
+      expect(helper.ck_check_measure_options.map(&:last)).to all(match(/\A[A-Z]/))
+      expect(helper.ck_check_measure_options.map(&:last).join).not_to match(/recall|precision|jaccard|F1/i)
+      expect(helper.ck_check_tolerance_mode_options).to eq([["absolute", "A fixed amount"], ["relative", "A share of the expected number"]])
+    end
+
+    it "labels the new numeric and list fields without engineering jargon" do
+      expect(helper.ck_check_field_label("measure")).to eq("How to score it")
+      expect(helper.ck_check_field_label("tolerance")).to eq("How far off is still right")
+      expect(helper.ck_check_field_label("tolerance_mode")).to eq("Measured as")
+      expect(helper.ck_check_kind_label("numeric_equals")).to eq("A number is close enough")
+    end
   end
 
   describe "#ck_result_change_badge" do
