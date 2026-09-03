@@ -3,8 +3,8 @@ module CompletionKit
     class Regex
       def call(target, config)
         options = 0
-        options |= Regexp::IGNORECASE if config["case_sensitive"] == false
-        options |= Regexp::MULTILINE if config["multiline"] == true
+        options |= Regexp::IGNORECASE unless Flag.on?(config, "case_sensitive")
+        options |= Regexp::MULTILINE if Flag.on?(config, "multiline")
         pattern = Regexp.new(config["pattern"].to_s, options)
 
         if pattern.match?(target.to_s)

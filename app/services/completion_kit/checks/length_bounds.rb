@@ -3,13 +3,13 @@ module CompletionKit
     class LengthBounds
       def call(target, config)
         length = target.to_s.length
-        min = config["min"] && config["min"].to_i
-        max = config["max"] && config["max"].to_i
+        min = NumericValue.parse(config["min"])
+        max = NumericValue.parse(config["max"])
 
         if min && length < min
-          Result.new(passed: false, detail: "length #{length} below min #{min}")
+          Result.new(passed: false, detail: "length #{length} below min #{NumericValue.format(min)}")
         elsif max && length > max
-          Result.new(passed: false, detail: "length #{length} above max #{max}")
+          Result.new(passed: false, detail: "length #{length} above max #{NumericValue.format(max)}")
         else
           Result.new(passed: true, detail: "length #{length} within bounds")
         end

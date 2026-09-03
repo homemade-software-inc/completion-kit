@@ -235,7 +235,10 @@ module CompletionKit
       "regex" => "Matches a pattern",
       "valid_json" => "Is valid JSON",
       "json_path_equals" => "A JSON field equals a value",
-      "length_bounds" => "Length is within a range"
+      "length_bounds" => "Length is within a range",
+      "set_overlap" => "How much of a list was found",
+      "numeric_bounds" => "A number is within a range",
+      "numeric_equals" => "A number matches, within a tolerance"
     }.freeze
 
     CHECK_COMPARE_TO_LABELS = {
@@ -257,11 +260,21 @@ module CompletionKit
       "expected_path" => "Field in the answer key",
       "compare_to" => "Compare against",
       "target_path" => "Path into the JSON",
-      "min" => "Shortest allowed",
-      "max" => "Longest allowed",
+      "min" => "Minimum",
+      "max" => "Maximum",
+      "measure" => "Measure",
+      "tolerance" => "Tolerance",
+      "tolerance_mode" => "Tolerance is",
       "case_sensitive" => "Case sensitive",
       "multiline" => "Multiline",
       "trim" => "Trim whitespace"
+    }.freeze
+
+    CHECK_FIELD_LABELS_BY_KIND = {
+      "length_bounds" => { "min" => "Shortest allowed", "max" => "Longest allowed" },
+      "numeric_bounds" => { "min" => "Lowest allowed", "max" => "Highest allowed" },
+      "set_overlap" => { "min" => "Lowest score that passes", "value" => "Expected list" },
+      "numeric_equals" => { "value" => "Expected number" }
     }.freeze
 
     def ck_check_kind_label(kind)
@@ -272,8 +285,9 @@ module CompletionKit
       CHECK_TARGET_LABELS.fetch(target.to_s) { target.to_s.humanize }
     end
 
-    def ck_check_field_label(key)
-      CHECK_FIELD_LABELS.fetch(key.to_s) { key.to_s.humanize }
+    def ck_check_field_label(key, kind = nil)
+      CHECK_FIELD_LABELS_BY_KIND.dig(kind.to_s, key.to_s) ||
+        CHECK_FIELD_LABELS.fetch(key.to_s) { key.to_s.humanize }
     end
 
     def ck_check_field_value(key, value)

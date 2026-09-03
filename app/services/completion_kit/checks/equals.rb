@@ -2,14 +2,9 @@ module CompletionKit
   module Checks
     class Equals
       def call(target, config)
-        actual = target.to_s
-        expected = config["value"].to_s
-        if config["trim"] == true
-          actual = actual.strip
-          expected = expected.strip
-        end
+        expected, actual = Textual.operands(target, config)
 
-        match = if config["case_sensitive"] == true
+        match = if Flag.on?(config, "case_sensitive")
           actual == expected
         else
           actual.casecmp?(expected)

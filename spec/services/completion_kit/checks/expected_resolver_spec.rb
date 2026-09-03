@@ -42,4 +42,27 @@ RSpec.describe CompletionKit::Checks::ExpectedResolver do
       expect(described_class::UNRESOLVED).to be(CompletionKit::Checks::TargetResolver::UNRESOLVED)
     end
   end
+
+  describe ".call_value" do
+    it "keeps the answer key's own type, so a typed comparison is not defeated by stringifying" do
+      response = build(:completion_kit_response, expected_output: '{"code":200}', status: "pending")
+      expect(described_class.call_value(response, { "expected_path" => "code" })).to eq(200)
+      expect(described_class.call(response, { "expected_path" => "code" })).to eq("200")
+    end
+
+    it "returns an expected list as a list" do
+      response = build(:completion_kit_response, expected_output: '{"codes":["A","B"]}', status: "pending")
+      expect(described_class.call_value(response, { "expected_path" => "codes" })).to eq(%w[A B])
+    end
+
+    it "returns the whole answer key when no expected_path is given" do
+      response = build(:completion_kit_response, expected_output: "X1", status: "pending")
+      expect(described_class.call_value(response, {})).to eq("X1")
+    end
+
+    it "returns UNRESOLVED when the row has no answer key" do
+      response = build(:completion_kit_response, expected_output: nil, status: "pending")
+      expect(described_class.call_value(response, {})).to be(described_class::UNRESOLVED)
+    end
+  end
 end

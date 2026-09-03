@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_05_024034) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_182930) do
   create_table "completion_kit_agreements", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -198,6 +198,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_024034) do
     t.bigint "metric_version_id"
     t.boolean "passed"
     t.integer "response_id", null: false
+    t.decimal "score_fraction", precision: 5, scale: 4
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["metric_id"], name: "index_completion_kit_reviews_on_metric_id"

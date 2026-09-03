@@ -247,7 +247,7 @@ module CompletionKit
     def metric_params
       permitted = params.require(:metric).permit(:name, :instruction, :metric_type,
         rubric_bands: [:stars, :description],
-        check_config: %i[check_kind target target_path compare_to value pattern json_path expected expected_path min max case_sensitive multiline trim],
+        check_config: %i[check_kind target target_path compare_to value pattern json_path expected expected_path min max measure tolerance tolerance_mode case_sensitive multiline trim],
         tag_names: [])
       permitted[:check_config] = normalize_check_config(permitted[:check_config]) if permitted.key?(:check_config)
       permitted
@@ -255,16 +255,30 @@ module CompletionKit
 
     def normalize_check_config(config)
       hash = config.to_unsafe_h.stringify_keys
-      %w[min max].each { |key| hash[key] = hash[key].to_i if hash[key].present? }
+      %w[min max tolerance].each { |key| hash[key] = coerce_number(hash[key]) if hash[key].present? }
       %w[case_sensitive multiline trim].each { |key| hash[key] = ActiveModel::Type::Boolean.new.cast(hash[key]) if hash.key?(key) }
       hash["expected"] = coerce_scalar(hash["expected"]) if hash["expected"].present?
       if hash["compare_to"] == "expected"
-        hash.delete("value")
+        hash.delete(CompletionKit::Checks::Registry.expected_key(hash["check_kind"]))
       else
         hash.delete("compare_to")
         hash.delete("expected_path")
       end
-      hash.reject { |_, value| value.nil? || value == "" }
+      hash.delete("target_path") unless hash["target"] == "json_path"
+      prune_check_config(hash)
+    end
+
+    def prune_check_config(hash)
+      allowed = CompletionKit::Checks::Registry::SHARED_KEYS +
+                CompletionKit::Checks::Registry.config_keys(hash["check_kind"])
+      hash.slice(*allowed).reject { |_, value| value.nil? || value == "" }
+    end
+
+    def coerce_number(value)
+      number = CompletionKit::Checks::NumericValue.parse(value)
+      return value if number.nil?
+
+      number == number.to_i ? number.to_i : number
     end
 
     def coerce_scalar(value)

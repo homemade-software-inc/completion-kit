@@ -51,6 +51,74 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(config["max"]).to eq(9)
     end
 
+    it "keeps a decimal bound as a decimal rather than truncating it to zero" do
+      post base_path, params: { metric: { name: "Confident", metric_type: "check",
+                                          check_config: { check_kind: "numeric_bounds", target: "json_path",
+                                                          target_path: "vin.confidence", min: "0.8" } } }
+
+      config = CompletionKit::Metric.find_by(name: "Confident").check_config
+      expect(config["min"]).to eq(0.8)
+      expect(config["target_path"]).to eq("vin.confidence")
+    end
+
+    it "leaves a bound that is not a number alone so the model can reject it" do
+      post base_path, params: { metric: { name: "Bad bound", metric_type: "check",
+                                          check_config: { check_kind: "length_bounds", target: "response_text", min: "abc" } } }
+
+      expect(CompletionKit::Metric.find_by(name: "Bad bound")).to be_nil
+      expect(response.body).to include("must be numbers")
+    end
+
+    it "drops target_path when the check no longer reads the response JSON" do
+      post base_path, params: { metric: { name: "Plain contains", metric_type: "check",
+                                          check_config: { check_kind: "contains", target: "response_text",
+                                                          target_path: "leftover", value: "OK" } } }
+
+      config = CompletionKit::Metric.find_by(name: "Plain contains").check_config
+      expect(config).not_to have_key("target_path")
+    end
+
+    it "drops the fields a previously chosen kind left behind in the hidden form inputs" do
+      post base_path, params: { metric: { name: "Just a regex", metric_type: "check",
+                                          check_config: { check_kind: "regex", target: "response_text", pattern: "ok",
+                                                          value: "leftover", json_path: "leftover", min: "3",
+                                                          case_sensitive: "false", trim: "false" } } }
+
+      config = CompletionKit::Metric.find_by(name: "Just a regex").check_config
+      expect(config).to include("pattern" => "ok", "case_sensitive" => false)
+      expect(config.keys).not_to include("value", "json_path", "min", "trim")
+    end
+
+    it "stores an explicitly unchecked case_sensitive so a regex can be made case-insensitive" do
+      post base_path, params: { metric: { name: "Loose regex", metric_type: "check",
+                                          check_config: { check_kind: "regex", target: "response_text",
+                                                          pattern: "ok", case_sensitive: "false" } } }
+
+      expect(CompletionKit::Metric.find_by(name: "Loose regex").check_config["case_sensitive"]).to be(false)
+    end
+
+    it "persists a set_overlap check with its measure and threshold" do
+      post base_path, params: { metric: { name: "Option codes", metric_type: "check",
+                                          check_config: { check_kind: "set_overlap", target: "json_path",
+                                                          target_path: "optionCodes", compare_to: "expected",
+                                                          expected_path: "optionCodes", measure: "recall", min: "0.8" } } }
+
+      config = CompletionKit::Metric.find_by(name: "Option codes").check_config
+      expect(config).to include("measure" => "recall", "min" => 0.8, "compare_to" => "expected")
+      expect(config).not_to have_key("value")
+    end
+
+    it "persists a numeric_equals check with its tolerance" do
+      post base_path, params: { metric: { name: "Mileage", metric_type: "check",
+                                          check_config: { check_kind: "numeric_equals", target: "json_path",
+                                                          target_path: "mileage", compare_to: "expected",
+                                                          expected_path: "mileage", tolerance: "0.02",
+                                                          tolerance_mode: "relative" } } }
+
+      config = CompletionKit::Metric.find_by(name: "Mileage").check_config
+      expect(config).to include("tolerance" => 0.02, "tolerance_mode" => "relative")
+    end
+
     it "coerces a numeric json_path_equals expected so it can match numeric JSON" do
       post base_path, params: { metric: { name: "Status code", metric_type: "check",
                                           check_config: { check_kind: "json_path_equals", target: "response_text", json_path: "code", expected: "200" } } }

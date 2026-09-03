@@ -15,8 +15,11 @@ module CompletionKit
           expected: {},
           compare_to: {type: "string", enum: %w[constant expected]},
           expected_path: {type: "string"},
-          min: {type: "integer"},
-          max: {type: "integer"},
+          min: {type: "number"},
+          max: {type: "number"},
+          measure: {type: "string", enum: CompletionKit::Checks::SetOverlap::MEASURES},
+          tolerance: {type: "number"},
+          tolerance_mode: {type: "string", enum: CompletionKit::Checks::NumericEquals::MODES},
           case_sensitive: {type: "boolean"},
           multiline: {type: "boolean"},
           trim: {type: "boolean"}
@@ -24,9 +27,15 @@ module CompletionKit
       }.freeze
 
       CHECK_CONFIG_HINT = "For a deterministic check set metric_type:\"check\" and check_config. Per-kind required keys: " \
-        "value (contains/not_contains/equals), pattern (regex), json_path+expected (json_path_equals), " \
-        "min and/or max (length_bounds); valid_json takes no extra keys. target_path is required when target is json_path. " \
-        "For contains, not_contains, and equals, set compare_to:\"expected\" to grade against each row's own expected_output (ground truth) instead of a constant value (drop value); add expected_path to dig into the expected value when it is JSON."
+        "value (contains/not_contains/equals/set_overlap/numeric_equals), pattern (regex), json_path+expected (json_path_equals), " \
+        "min and/or max (length_bounds/numeric_bounds); valid_json takes no extra keys. target_path is required when target is json_path, " \
+        "and it walks array indices, as in items.0.name. " \
+        "set_overlap grades a list-valued field and stores a fraction rather than a verdict: measure is recall, precision, f1 or jaccard (recall by default), " \
+        "and min is the fraction that counts as a pass (an exact match by default). " \
+        "numeric_bounds and numeric_equals read a number, ignoring the commas and currency symbol a figure is written with; " \
+        "numeric_equals takes a tolerance, absolute by default or a share of the expected value when tolerance_mode is relative. " \
+        "Set compare_to:\"expected\" on #{CompletionKit::Checks::Registry.comparable_kinds.join(", ")} to grade against each row's own expected_output (ground truth) " \
+        "instead of a constant; drop value (or expected, for json_path_equals) and add expected_path to dig into the answer key when it is JSON."
 
       TOOLS = {
         "metrics_list" => {

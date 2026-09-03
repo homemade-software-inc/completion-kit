@@ -9,7 +9,7 @@ module CompletionKit
       status: "pending",
       attempts: 0,
       error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
-      ai_score: nil, passed: nil, ai_feedback: nil
+      ai_score: nil, passed: nil, score_fraction: nil, ai_feedback: nil
     }.freeze
 
     belongs_to :prompt, optional: true
@@ -75,7 +75,9 @@ module CompletionKit
         Arel.sql("COUNT(ai_score)"),
         Arel.sql("SUM(CASE WHEN ai_score < #{low_score_ceiling} THEN 1 ELSE 0 END)"),
         Arel.sql("COUNT(passed)"),
-        Arel.sql("SUM(CASE WHEN passed THEN 1 ELSE 0 END)")
+        Arel.sql("SUM(CASE WHEN passed THEN 1 ELSE 0 END)"),
+        Arel.sql("AVG(score_fraction)"),
+        Arel.sql("COUNT(score_fraction)")
       )
       metrics_by_run = metric_rows.group_by(&:first)
 
@@ -86,12 +88,12 @@ module CompletionKit
         run.avg_score = stats && stats[:avg] ? stats[:avg].to_f.round(2) : nil
         run.check_pass_rate = stats && stats[:resolved] > 0 ? (stats[:passed].to_f / stats[:resolved]).round(2) : nil
 
-        run.metric_averages = (metrics_by_run[run.id] || []).filter_map do |(_rid, name, avg, scored, low, resolved, passed)|
+        run.metric_averages = (metrics_by_run[run.id] || []).filter_map do |(_rid, name, avg, scored, low, resolved, passed, fraction_avg, fraction_count)|
           if scored.to_i > 0
             {name: name, avg: avg.to_f.round(1), count: scored.to_i, low_count: low.to_i}
           elsif resolved.to_i > 0
-            {name: name, kind: "check", pass_rate: (passed.to_i.to_f / resolved.to_i).round(2),
-             count: resolved.to_i, low_count: resolved.to_i - passed.to_i}
+            check_summary(name, passed.to_i, resolved.to_i,
+                          fraction_count.to_i > 0 ? fraction_avg.to_f : nil)
           end
         end
       end
@@ -101,6 +103,14 @@ module CompletionKit
     # Scores below this are the ones worth reading: `low_count` on each metric
     # average counts them, so a caller can spot the dragging metric without
     # pulling every review.
+    def self.check_summary(name, passed, resolved, fraction_avg)
+      summary = { name: name, kind: "check", pass_rate: (passed.to_f / resolved).round(2),
+                  count: resolved, low_count: resolved - passed }
+      return summary if fraction_avg.nil?
+
+      summary.merge(avg_fraction: fraction_avg.round(3))
+    end
+
     def self.low_score_ceiling
       CompletionKit.config.medium_quality_threshold.to_f
     end
@@ -266,9 +276,9 @@ module CompletionKit
           resolved = reviews.reject { |r| r.passed.nil? }
           next if resolved.empty?
 
-          passed = resolved.count { |r| r.passed == true }
-          { name: name, kind: "check", pass_rate: (passed.to_f / resolved.length).round(2),
-            count: resolved.length, low_count: resolved.length - passed }
+          fractions = reviews.filter_map { |r| r.score_fraction&.to_f }
+          self.class.check_summary(name, resolved.count { |r| r.passed == true }, resolved.length,
+                                   fractions.any? ? fractions.sum / fractions.length : nil)
         end
       end
     end
@@ -438,6 +448,7 @@ module CompletionKit
           metric_version_id: nil,
           ai_score: nil,
           passed: nil,
+          score_fraction: nil,
           ai_feedback: nil,
           error_provider: nil,
           error_class: nil,

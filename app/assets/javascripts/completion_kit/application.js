@@ -221,10 +221,48 @@ var CK_CHECK_FIELDS = {
   regex: ["pattern", "case_sensitive", "multiline"],
   valid_json: [],
   json_path_equals: ["json_path", "expected"],
-  length_bounds: ["min", "max"]
+  length_bounds: ["min", "max"],
+  set_overlap: ["value", "measure", "min", "case_sensitive"],
+  numeric_bounds: ["min", "max"],
+  numeric_equals: ["value", "tolerance", "tolerance_mode"]
 };
 
-var CK_VALUE_KINDS = ["contains", "not_contains", "equals"];
+var CK_EXPECTED_KEYS = {
+  contains: "value",
+  not_contains: "value",
+  equals: "value",
+  json_path_equals: "expected",
+  set_overlap: "value",
+  numeric_equals: "value"
+};
+
+var CK_CHECK_DEFAULT_LABELS = { min: "Minimum", max: "Maximum", value: "Text to look for" };
+
+var CK_CHECK_LABELS = {
+  length_bounds: { min: "Shortest allowed", max: "Longest allowed" },
+  numeric_bounds: { min: "Lowest allowed", max: "Highest allowed" },
+  set_overlap: { min: "Lowest score that passes", value: "Expected list" },
+  numeric_equals: { value: "Expected number" }
+};
+
+var CK_CHECK_DEFAULT_HINTS = { min: "Leave blank for no lower bound." };
+
+var CK_CHECK_HINTS = {
+  set_overlap: { min: "Leave blank to require an exact match." }
+};
+
+function ckApplyCheckLabels(scope, kind) {
+  var labels = CK_CHECK_LABELS[kind] || {};
+  var hints = CK_CHECK_HINTS[kind] || {};
+  scope.querySelectorAll("[data-ck-check-label]").forEach(function(node) {
+    var key = node.getAttribute("data-ck-check-label");
+    node.textContent = labels[key] || CK_CHECK_DEFAULT_LABELS[key];
+  });
+  scope.querySelectorAll("[data-ck-check-hint]").forEach(function(node) {
+    var key = node.getAttribute("data-ck-check-hint");
+    node.textContent = hints[key] || CK_CHECK_DEFAULT_HINTS[key];
+  });
+}
 
 function ckApplyCheckFields(scope) {
   if (!scope) return;
@@ -234,12 +272,13 @@ function ckApplyCheckFields(scope) {
   var visible = (CK_CHECK_FIELDS[kind] || []).slice();
   var targetSelect = scope.querySelector('[name="metric[check_config][target]"]');
   var targetIsJsonPath = !!(targetSelect && targetSelect.value === "json_path");
+  var expectedKey = CK_EXPECTED_KEYS[kind];
 
-  if (CK_VALUE_KINDS.indexOf(kind) !== -1) {
+  if (expectedKey) {
     visible.push("compare_to");
     var comparison = scope.querySelector('[name="metric[check_config][compare_to]"]:checked');
     if (comparison && comparison.value === "expected") {
-      visible = visible.filter(function(key) { return key !== "value"; });
+      visible = visible.filter(function(key) { return key !== expectedKey; });
       visible.push("expected_path");
     }
   }
@@ -254,6 +293,8 @@ function ckApplyCheckFields(scope) {
     }
     field.hidden = !show;
   });
+
+  ckApplyCheckLabels(scope, kind);
 }
 
 function ckApplyMetricType(group) {
