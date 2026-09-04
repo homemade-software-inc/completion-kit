@@ -9,7 +9,7 @@ module CompletionKit
       status: "pending",
       attempts: 0,
       error_provider: nil, error_class: nil, error_status: nil, error_message: nil,
-      ai_score: nil, passed: nil, score_fraction: nil, ai_feedback: nil
+      ai_score: nil, passed: nil, check_score: nil, ai_feedback: nil
     }.freeze
 
     belongs_to :prompt, optional: true
@@ -76,8 +76,8 @@ module CompletionKit
         Arel.sql("SUM(CASE WHEN ai_score < #{low_score_ceiling} THEN 1 ELSE 0 END)"),
         Arel.sql("COUNT(passed)"),
         Arel.sql("SUM(CASE WHEN passed THEN 1 ELSE 0 END)"),
-        Arel.sql("AVG(score_fraction)"),
-        Arel.sql("COUNT(score_fraction)")
+        Arel.sql("AVG(check_score)"),
+        Arel.sql("COUNT(check_score)")
       )
       metrics_by_run = metric_rows.group_by(&:first)
 
@@ -108,7 +108,7 @@ module CompletionKit
                   count: resolved, low_count: resolved - passed }
       return summary if fraction_avg.nil?
 
-      summary.merge(avg_fraction: fraction_avg.round(3))
+      summary.merge(avg_check_score: fraction_avg.round(3))
     end
 
     def self.low_score_ceiling
@@ -276,7 +276,7 @@ module CompletionKit
           resolved = reviews.reject { |r| r.passed.nil? }
           next if resolved.empty?
 
-          fractions = reviews.filter_map { |r| r.score_fraction&.to_f }
+          fractions = reviews.filter_map { |r| r.check_score&.to_f }
           self.class.check_summary(name, resolved.count { |r| r.passed == true }, resolved.length,
                                    fractions.any? ? fractions.sum / fractions.length : nil)
         end
@@ -448,7 +448,7 @@ module CompletionKit
           metric_version_id: nil,
           ai_score: nil,
           passed: nil,
-          score_fraction: nil,
+          check_score: nil,
           ai_feedback: nil,
           error_provider: nil,
           error_class: nil,

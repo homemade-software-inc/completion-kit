@@ -10,7 +10,7 @@ module CompletionKit
     validates :metric_name, presence: true
     validates :metric_version, presence: true
     validates :ai_score, numericality: { greater_than_or_equal_to: 1, less_than_or_equal_to: 5 }, allow_nil: true
-    validates :score_fraction, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 1 }, allow_nil: true
+    validates :check_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 1 }, allow_nil: true
 
     before_validation :set_default_status
 
@@ -37,7 +37,7 @@ module CompletionKit
         id: id, response_id: response_id, metric_id: metric_id,
         metric_version_id: metric_version_id,
         metric_name: metric_name, ai_score: ai_score, passed: passed,
-        score_fraction: score_fraction,
+        check_score: check_score,
         ai_feedback: ai_feedback, status: status, attempts: attempts,
         error: error_payload
       }

@@ -236,7 +236,7 @@ module CompletionKit
       "valid_json" => "Is valid JSON",
       "json_path_equals" => "A JSON field equals a value",
       "length_bounds" => "Length is within a range",
-      "set_overlap" => "How much of a list was found",
+      "list_overlap" => "How much of a list was found",
       "numeric_bounds" => "A number is within a range",
       "numeric_equals" => "A number is close enough"
     }.freeze
@@ -246,19 +246,14 @@ module CompletionKit
       "expected" => "Each row's expected value"
     }.freeze
 
-    CHECK_MEASURE_LABELS = {
+    CHECK_SCORE_BY_LABELS = {
       "recall" => "How much of the expected list was found",
       "precision" => "How much of the answer belonged",
       "f1" => "A balance of the two",
       "jaccard" => "How much the two lists overlap"
     }.freeze
 
-    CHECK_TOLERANCE_MODE_LABELS = {
-      "absolute" => "A fixed amount",
-      "relative" => "A share of the expected number"
-    }.freeze
-
-    CHECK_TRANSLATED_FIELDS = %w[compare_to measure tolerance_mode].freeze
+    CHECK_TRANSLATED_FIELDS = %w[compare_to score_by].freeze
 
     CHECK_TARGET_LABELS = {
       "response_text" => "The response text",
@@ -276,9 +271,8 @@ module CompletionKit
       "target_path" => "Path into the JSON",
       "min" => "Minimum",
       "max" => "Maximum",
-      "measure" => "How to score it",
+      "score_by" => "How to score it",
       "tolerance" => "How far off is still right",
-      "tolerance_mode" => "Measured as",
       "case_sensitive" => "Case sensitive",
       "multiline" => "Multiline",
       "trim" => "Trim whitespace"
@@ -287,7 +281,7 @@ module CompletionKit
     CHECK_FIELD_LABELS_BY_KIND = {
       "length_bounds" => { "min" => "Shortest allowed", "max" => "Longest allowed" },
       "numeric_bounds" => { "min" => "Lowest allowed", "max" => "Highest allowed" },
-      "set_overlap" => { "min" => "Lowest score that passes", "value" => "Expected list" },
+      "list_overlap" => { "min" => "Lowest score that passes", "value" => "Expected list" },
       "numeric_equals" => { "value" => "Expected number" }
     }.freeze
 
@@ -307,8 +301,7 @@ module CompletionKit
     def ck_check_field_value(key, value)
       case key.to_s
       when "compare_to" then CHECK_COMPARE_TO_LABELS.fetch(value.to_s, value)
-      when "measure" then CHECK_MEASURE_LABELS.fetch(value.to_s, value)
-      when "tolerance_mode" then CHECK_TOLERANCE_MODE_LABELS.fetch(value.to_s, value)
+      when "score_by" then CHECK_SCORE_BY_LABELS.fetch(value.to_s, value)
       else value
       end
     end
@@ -317,12 +310,8 @@ module CompletionKit
       CHECK_TRANSLATED_FIELDS.include?(key.to_s)
     end
 
-    def ck_check_measure_options
-      CompletionKit::Checks::SetOverlap::MEASURES.map { |measure| [measure, CHECK_MEASURE_LABELS.fetch(measure)] }
-    end
-
-    def ck_check_tolerance_mode_options
-      CHECK_TOLERANCE_MODE_LABELS.to_a
+    def ck_check_score_by_options
+      CompletionKit::Checks::ListOverlap::MEASURES.map { |measure| [measure, CHECK_SCORE_BY_LABELS.fetch(measure)] }
     end
 
     def ck_result_change_badge(change)

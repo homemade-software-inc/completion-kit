@@ -8,7 +8,7 @@
     <dt class="ck-check-spec__term">Checks</dt>
     <dd class="ck-check-spec__val"><%= ck_check_target_label(config["target"]) %></dd>
   </div>
-  <% shown = config.except("check_kind", "target").reject { |key, value| value == false || (key == "tolerance_mode" && config["tolerance"].blank?) } %>
+  <% shown = config.except("check_kind", "target").reject { |_key, value| value == false } %>
   <% shown.each do |key, value| %>
     <div class="ck-check-spec__row">
       <dt class="ck-check-spec__term"><%= ck_check_field_label(key, config["check_kind"]) %></dt>

@@ -9,7 +9,7 @@ RSpec.describe CompletionKit::Checks::Registry do
     it "exposes the catalog of check kinds" do
       expect(described_class.kinds).to match_array(
         %w[contains not_contains equals regex valid_json json_path_equals length_bounds
-           set_overlap numeric_bounds numeric_equals]
+           list_overlap numeric_bounds numeric_equals]
       )
     end
 
@@ -25,7 +25,7 @@ RSpec.describe CompletionKit::Checks::Registry do
       expect(described_class.required_keys.fetch("json_path_equals")).to eq(%w[json_path expected])
       expect(described_class.required_keys.fetch("valid_json")).to eq([])
       expect(described_class.required_keys.fetch("length_bounds")).to eq([])
-      expect(described_class.required_keys.fetch("set_overlap")).to eq(%w[value])
+      expect(described_class.required_keys.fetch("list_overlap")).to eq(%w[value])
       expect(described_class.required_keys.fetch("numeric_bounds")).to eq([])
       expect(described_class.required_keys.fetch("numeric_equals")).to eq(%w[value])
     end
@@ -37,7 +37,7 @@ RSpec.describe CompletionKit::Checks::Registry do
       expect(described_class.compares_value?("not_contains")).to be(true)
       expect(described_class.compares_value?("equals")).to be(true)
       expect(described_class.compares_value?("json_path_equals")).to be(true)
-      expect(described_class.compares_value?("set_overlap")).to be(true)
+      expect(described_class.compares_value?("list_overlap")).to be(true)
       expect(described_class.compares_value?("numeric_equals")).to be(true)
       expect(described_class.compares_value?("valid_json")).to be(false)
       expect(described_class.compares_value?("numeric_bounds")).to be(false)
@@ -47,7 +47,7 @@ RSpec.describe CompletionKit::Checks::Registry do
   describe ".expected_key" do
     it "names the config key that the row's expected value fills in" do
       expect(described_class.expected_key("equals")).to eq("value")
-      expect(described_class.expected_key("set_overlap")).to eq("value")
+      expect(described_class.expected_key("list_overlap")).to eq("value")
       expect(described_class.expected_key("numeric_equals")).to eq("value")
     end
 
@@ -63,7 +63,7 @@ RSpec.describe CompletionKit::Checks::Registry do
   describe ".comparable_kinds" do
     it "lists every kind that accepts compare_to expected, for the validation message" do
       expect(described_class.comparable_kinds).to match_array(
-        %w[contains not_contains equals json_path_equals set_overlap numeric_equals]
+        %w[contains not_contains equals json_path_equals list_overlap numeric_equals]
       )
     end
   end
@@ -71,8 +71,8 @@ RSpec.describe CompletionKit::Checks::Registry do
   describe ".config_keys" do
     it "lists the keys each kind actually reads" do
       expect(described_class.config_keys("regex")).to eq(%w[pattern case_sensitive multiline])
-      expect(described_class.config_keys("set_overlap")).to eq(%w[value measure min case_sensitive])
-      expect(described_class.config_keys("numeric_equals")).to eq(%w[value tolerance tolerance_mode])
+      expect(described_class.config_keys("list_overlap")).to eq(%w[value score_by min case_sensitive])
+      expect(described_class.config_keys("numeric_equals")).to eq(%w[value tolerance])
       expect(described_class.config_keys("valid_json")).to eq([])
     end
 
@@ -83,7 +83,7 @@ RSpec.describe CompletionKit::Checks::Registry do
 
   describe ".raw_target? and .raw_expected?" do
     it "marks the kinds that compare parsed JSON rather than strings" do
-      expect(described_class.raw_target?("set_overlap")).to be(true)
+      expect(described_class.raw_target?("list_overlap")).to be(true)
       expect(described_class.raw_target?("numeric_bounds")).to be(true)
       expect(described_class.raw_target?("numeric_equals")).to be(true)
       expect(described_class.raw_target?("equals")).to be(false)
@@ -91,7 +91,7 @@ RSpec.describe CompletionKit::Checks::Registry do
 
     it "reads the expected value raw wherever the operand is typed, including json_path_equals" do
       expect(described_class.raw_expected?("json_path_equals")).to be(true)
-      expect(described_class.raw_expected?("set_overlap")).to be(true)
+      expect(described_class.raw_expected?("list_overlap")).to be(true)
       expect(described_class.raw_expected?("numeric_equals")).to be(true)
       expect(described_class.raw_expected?("contains")).to be(false)
     end
@@ -101,7 +101,7 @@ RSpec.describe CompletionKit::Checks::Registry do
     it "marks the kinds validated for a min/max pair" do
       expect(described_class.bounded?("length_bounds")).to be(true)
       expect(described_class.bounded?("numeric_bounds")).to be(true)
-      expect(described_class.bounded?("set_overlap")).to be(false)
+      expect(described_class.bounded?("list_overlap")).to be(false)
     end
   end
 
@@ -269,9 +269,9 @@ RSpec.describe CompletionKit::Checks::Registry do
     end
   end
 
-  describe "set_overlap" do
+  describe "list_overlap" do
     def overlap(target, config = {})
-      call("set_overlap", target, { "value" => %w[a b c d] }.merge(config))
+      call("list_overlap", target, { "value" => %w[a b c d] }.merge(config))
     end
 
     it "scores recall as the share of the expected set that was returned" do
@@ -286,43 +286,43 @@ RSpec.describe CompletionKit::Checks::Registry do
     end
 
     it "scores precision as the share of what was returned that was expected" do
-      expect(overlap(%w[a b x y], { "measure" => "precision" }).score).to eq(0.5)
+      expect(overlap(%w[a b x y], { "score_by" => "precision" }).score).to eq(0.5)
     end
 
     it "scores jaccard over the union" do
-      expect(overlap(%w[a b x], { "measure" => "jaccard" }).score).to eq(0.4)
+      expect(overlap(%w[a b x], { "score_by" => "jaccard" }).score).to eq(0.4)
     end
 
     it "scores f1 as the harmonic mean of precision and recall" do
-      expect(overlap(%w[a b x y], { "measure" => "f1" }).score).to eq(0.5)
+      expect(overlap(%w[a b x y], { "score_by" => "f1" }).score).to eq(0.5)
     end
 
     it "scores f1 as zero when nothing overlaps, rather than dividing by zero" do
-      expect(overlap(%w[x y], { "measure" => "f1" }).score).to eq(0.0)
+      expect(overlap(%w[x y], { "score_by" => "f1" }).score).to eq(0.0)
     end
 
     it "falls back to recall for an unrecognised measure" do
-      expect(overlap(%w[a b x y], { "measure" => "nonsense" }).score).to eq(overlap(%w[a b x y]).score)
-      expect(overlap(%w[a b x y], { "measure" => "nonsense" }).score).to eq(0.5)
+      expect(overlap(%w[a b x y], { "score_by" => "nonsense" }).score).to eq(overlap(%w[a b x y]).score)
+      expect(overlap(%w[a b x y], { "score_by" => "nonsense" }).score).to eq(0.5)
     end
 
     it "treats an empty expected set as vacuously satisfied only when nothing was returned either" do
-      CompletionKit::Checks::SetOverlap::MEASURES.each do |measure|
-        expect(call("set_overlap", [], { "value" => [], "measure" => measure }).score).to eq(1.0)
+      CompletionKit::Checks::ListOverlap::MEASURES.each do |measure|
+        expect(call("list_overlap", [], { "value" => [], "score_by" => measure }).score).to eq(1.0)
       end
     end
 
     it "never scores an empty answer as perfect, whichever measure is chosen" do
-      CompletionKit::Checks::SetOverlap::MEASURES.each do |measure|
-        result = overlap([], { "measure" => measure })
+      CompletionKit::Checks::ListOverlap::MEASURES.each do |measure|
+        result = overlap([], { "score_by" => measure })
         expect(result.score).to eq(0.0), "#{measure} scored #{result.score} for an empty answer"
         expect(result.passed).to be(false)
       end
     end
 
     it "scores every measure the same way when nothing was expected but something came back" do
-      CompletionKit::Checks::SetOverlap::MEASURES.each do |measure|
-        expect(call("set_overlap", %w[x y z], { "value" => [], "measure" => measure }).score).to eq(0.0)
+      CompletionKit::Checks::ListOverlap::MEASURES.each do |measure|
+        expect(call("list_overlap", %w[x y z], { "value" => [], "score_by" => measure }).score).to eq(0.0)
       end
     end
 
@@ -381,7 +381,7 @@ RSpec.describe CompletionKit::Checks::Registry do
     end
 
     it "keeps a single unquoted number as one member" do
-      expect(call("set_overlap", "123", { "value" => %w[123] }).score).to eq(1.0)
+      expect(call("list_overlap", "123", { "value" => %w[123] }).score).to eq(1.0)
     end
   end
 
@@ -433,15 +433,24 @@ RSpec.describe CompletionKit::Checks::Registry do
       expect(result.detail).to eq("1980 vs 2020, off by 40 (allowed 1)")
     end
 
-    it "scales the tolerance to the expected value in relative mode" do
-      config = { "value" => 24_995, "tolerance" => 0.02, "tolerance_mode" => "relative" }
+    it "reads a percentage tolerance as a share of the expected value" do
+      config = { "value" => 24_995, "tolerance" => "2%" }
       expect(call("numeric_equals", "25400", config).passed).to be(true)
       expect(call("numeric_equals", "26000", config).passed).to be(false)
     end
 
-    it "scales a relative tolerance off the magnitude of a negative expected value" do
-      config = { "value" => -100, "tolerance" => 0.1, "tolerance_mode" => "relative" }
-      expect(call("numeric_equals", "-105", config).passed).to be(true)
+    it "scales a percentage tolerance off the magnitude of a negative expected value" do
+      expect(call("numeric_equals", "-105", { "value" => -100, "tolerance" => "10%" }).passed).to be(true)
+    end
+
+    it "keeps a plain number tolerance as a fixed amount" do
+      expect(call("numeric_equals", "25400", { "value" => 24_995, "tolerance" => 0.02 }).passed).to be(false)
+      expect(call("numeric_equals", "24995.01", { "value" => 24_995, "tolerance" => 0.02 }).passed).to be(true)
+    end
+
+    it "treats an unreadable percentage as no tolerance at all rather than raising" do
+      expect(call("numeric_equals", "101", { "value" => 100, "tolerance" => "abc%" }).passed).to be(false)
+      expect(call("numeric_equals", "100", { "value" => 100, "tolerance" => "abc%" }).passed).to be(true)
     end
 
     it "fails rather than raises when either side is not a number" do

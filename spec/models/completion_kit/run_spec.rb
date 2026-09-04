@@ -1051,18 +1051,18 @@ RSpec.describe CompletionKit::Run, type: :model do
       [[0.5, false], [1.0, true], [0.75, false]].each_with_index do |(fraction, passed), i|
         resp = create(:completion_kit_response, run: run, status: "succeeded", row_index: i, response_text: "b#{i}")
         create(:completion_kit_review, :check, response: resp, metric: check, metric_name: "Option codes",
-               passed: passed, score_fraction: fraction)
+               passed: passed, check_score: fraction)
       end
 
       computed = CompletionKit::Run.find(run.id).metric_averages
       preloaded = CompletionKit::Run.preload_summaries([CompletionKit::Run.find(run.id)]).first.metric_averages
 
-      expect(computed.first[:avg_fraction]).to eq(0.75)
+      expect(computed.first[:avg_check_score]).to eq(0.75)
       expect(computed.first[:pass_rate]).to eq(0.33)
       expect(preloaded).to eq(computed)
     end
 
-    it "leaves avg_fraction off a check that scores nothing but pass or fail" do
+    it "leaves avg_check_score off a check that scores nothing but pass or fail" do
       check = create(:completion_kit_metric, :check)
       run = create(:completion_kit_run, prompt: sum_prompt, status: "completed")
       resp = create(:completion_kit_response, run: run, status: "succeeded", row_index: 0, response_text: "b")
@@ -1071,7 +1071,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       computed = CompletionKit::Run.find(run.id).metric_averages
       preloaded = CompletionKit::Run.preload_summaries([CompletionKit::Run.find(run.id)]).first.metric_averages
 
-      expect(computed.first).not_to have_key(:avg_fraction)
+      expect(computed.first).not_to have_key(:avg_check_score)
       expect(preloaded).to eq(computed)
     end
 

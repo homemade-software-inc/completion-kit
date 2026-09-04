@@ -153,37 +153,37 @@ RSpec.describe CompletionKit::Metric, type: :model do
       expect(build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_bounds", "target" => "response_text", "min" => 9, "max" => 2 })).not_to be_valid
     end
 
-    it "accepts set_overlap with a known measure and a threshold in range" do
-      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "set_overlap", "target" => "response_text", "value" => "a,b", "measure" => "f1", "min" => 0.8 })
+    it "accepts list_overlap with a known measure and a threshold in range" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => "a,b", "score_by" => "f1", "min" => 0.8 })
       expect(metric).to be_valid
     end
 
-    it "accepts set_overlap with no measure and no threshold" do
-      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "set_overlap", "target" => "response_text", "value" => "a,b" })
+    it "accepts list_overlap with no measure and no threshold" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => "a,b" })
       expect(metric).to be_valid
     end
 
-    it "rejects an unknown set_overlap measure" do
-      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "set_overlap", "target" => "response_text", "value" => "a", "measure" => "vibes" })
+    it "rejects an unknown list_overlap measure" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => "a", "score_by" => "vibes" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("measure must be one of")
+      expect(metric.errors[:check_config].join).to include("score_by must be one of")
     end
 
-    it "rejects a set_overlap threshold outside zero to one" do
+    it "rejects a list_overlap threshold outside zero to one" do
       %w[abc -0.5 1.5].each do |threshold|
-        metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "set_overlap", "target" => "response_text", "value" => "a", "min" => threshold })
+        metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => "a", "min" => threshold })
         expect(metric).not_to be_valid
         expect(metric.errors[:check_config].join).to include("between 0 and 1")
       end
     end
 
-    it "does not require value on set_overlap when it grades against the row's expected value" do
-      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "set_overlap", "target" => "response_text", "compare_to" => "expected" })
+    it "does not require value on list_overlap when it grades against the row's expected value" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text", "compare_to" => "expected" })
       expect(metric).to be_valid
     end
 
     it "accepts numeric_equals with a numeric value and tolerance" do
-      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_equals", "target" => "response_text", "value" => "2020", "tolerance" => 1, "tolerance_mode" => "relative" })
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_equals", "target" => "response_text", "value" => "2020", "tolerance" => 1 })
       expect(metric).to be_valid
     end
 
@@ -211,10 +211,15 @@ RSpec.describe CompletionKit::Metric, type: :model do
       end
     end
 
-    it "rejects an unknown tolerance_mode" do
-      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_equals", "target" => "response_text", "value" => 1, "tolerance_mode" => "vibes" })
+    it "accepts a percentage tolerance" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_equals", "target" => "response_text", "value" => 2020, "tolerance" => "2%" })
+      expect(metric).to be_valid
+    end
+
+    it "rejects a percentage tolerance that is not a number" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_equals", "target" => "response_text", "value" => 1, "tolerance" => "loads%" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("tolerance_mode must be absolute or relative")
+      expect(metric.errors[:check_config].join).to include("or a percentage like 2%")
     end
 
     it "lets json_path_equals grade against the row's expected value without a constant" do

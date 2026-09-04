@@ -25,7 +25,7 @@ module CompletionKit
         status: "succeeded",
         passed: result.passed,
         ai_score: nil,
-        score_fraction: result.score,
+        check_score: result.score,
         ai_feedback: result.detail,
         error_provider: nil, error_class: nil, error_status: nil, error_message: nil
       )

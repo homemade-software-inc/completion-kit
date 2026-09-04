@@ -9,7 +9,7 @@ module CompletionKit
         "valid_json" => ValidJson,
         "json_path_equals" => JsonPathEquals,
         "length_bounds" => LengthBounds,
-        "set_overlap" => SetOverlap,
+        "list_overlap" => ListOverlap,
         "numeric_bounds" => NumericBounds,
         "numeric_equals" => NumericEquals
       }.freeze
@@ -22,7 +22,7 @@ module CompletionKit
         "valid_json" => [],
         "json_path_equals" => %w[json_path expected],
         "length_bounds" => [],
-        "set_overlap" => %w[value],
+        "list_overlap" => %w[value],
         "numeric_bounds" => [],
         "numeric_equals" => %w[value]
       }.freeze
@@ -35,9 +35,9 @@ module CompletionKit
         "valid_json" => [],
         "json_path_equals" => %w[json_path expected],
         "length_bounds" => %w[min max],
-        "set_overlap" => %w[value measure min case_sensitive],
+        "list_overlap" => %w[value score_by min case_sensitive],
         "numeric_bounds" => %w[min max],
-        "numeric_equals" => %w[value tolerance tolerance_mode]
+        "numeric_equals" => %w[value tolerance]
       }.freeze
 
       SHARED_KEYS = %w[check_kind target target_path compare_to expected_path].freeze
@@ -47,14 +47,14 @@ module CompletionKit
         "not_contains" => "value",
         "equals" => "value",
         "json_path_equals" => "expected",
-        "set_overlap" => "value",
+        "list_overlap" => "value",
         "numeric_equals" => "value"
       }.freeze
 
-      RAW_TARGET_KINDS = %w[set_overlap numeric_bounds numeric_equals].freeze
-      RAW_EXPECTED_KINDS = %w[json_path_equals set_overlap numeric_equals].freeze
+      RAW_TARGET_KINDS = %w[list_overlap numeric_bounds numeric_equals].freeze
+      RAW_EXPECTED_KINDS = %w[json_path_equals list_overlap numeric_equals].freeze
       BOUNDED_KINDS = %w[length_bounds numeric_bounds].freeze
-      SCORING_KINDS = %w[set_overlap].freeze
+      SCORING_KINDS = %w[list_overlap].freeze
 
       KINDS = CHECKS.keys.freeze
 

@@ -234,14 +234,14 @@
         <input type="text" name="metric[check_config][expected_path]" id="metric_check_expected_path" class="ck-input" value="<%= check["expected_path"] %>">
       </div>
 
-      <div class="ck-field" data-ck-check-field="measure">
-        <p class="ck-label" id="metric_check_measure_label">How to score it</p>
+      <div class="ck-field" data-ck-check-field="score_by">
+        <p class="ck-label" id="metric_check_score_by_label">How to score it</p>
         <p class="ck-hint">Choose what matters most to you: what the model left out, what it added that should not be there, or a mix of the two.</p>
         <%= render "completion_kit/shared/branded_select",
-                   name: "metric[check_config][measure]",
-                   options: ck_check_measure_options,
-                   selected: check["measure"] || CompletionKit::Checks::SetOverlap::DEFAULT_MEASURE,
-                   labelledby: "metric_check_measure_label" %>
+                   name: "metric[check_config][score_by]",
+                   options: ck_check_score_by_options,
+                   selected: check["score_by"] || CompletionKit::Checks::ListOverlap::DEFAULT_MEASURE,
+                   labelledby: "metric_check_score_by_label" %>
       </div>
 
       <div class="ck-field-row">
@@ -259,17 +259,8 @@
 
       <div class="ck-field" data-ck-check-field="tolerance">
         <label class="ck-label" for="metric_check_tolerance">How far off is still right</label>
-        <p class="ck-hint">How far a number can be out and still count as correct. Leave blank to require an exact match.</p>
-        <input type="number" step="any" name="metric[check_config][tolerance]" id="metric_check_tolerance" class="ck-input" value="<%= check["tolerance"] %>">
-      </div>
-
-      <div class="ck-field" data-ck-check-field="tolerance_mode">
-        <p class="ck-label" id="metric_check_tolerance_mode_label">Measured as</p>
-        <%= render "completion_kit/shared/branded_select",
-                   name: "metric[check_config][tolerance_mode]",
-                   options: ck_check_tolerance_mode_options,
-                   selected: check["tolerance_mode"] || "absolute",
-                   labelledby: "metric_check_tolerance_mode_label" %>
+        <p class="ck-hint">How far a number can be out and still count as correct. Write a plain number for a fixed amount, or add a percent sign, like 2%, for a share of the expected number. Leave blank to require an exact match.</p>
+        <input type="text" inputmode="decimal" name="metric[check_config][tolerance]" id="metric_check_tolerance" class="ck-input" value="<%= check["tolerance"] %>">
       </div>
 
       <label class="ck-checkbox" data-ck-check-field="case_sensitive">

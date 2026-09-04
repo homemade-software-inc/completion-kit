@@ -97,14 +97,14 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(CompletionKit::Metric.find_by(name: "Loose regex").check_config["case_sensitive"]).to be(false)
     end
 
-    it "persists a set_overlap check with its measure and threshold" do
+    it "persists a list_overlap check with its measure and threshold" do
       post base_path, params: { metric: { name: "Option codes", metric_type: "check",
-                                          check_config: { check_kind: "set_overlap", target: "json_path",
+                                          check_config: { check_kind: "list_overlap", target: "json_path",
                                                           target_path: "optionCodes", compare_to: "expected",
-                                                          expected_path: "optionCodes", measure: "recall", min: "0.8" } } }
+                                                          expected_path: "optionCodes", score_by: "recall", min: "0.8" } } }
 
       config = CompletionKit::Metric.find_by(name: "Option codes").check_config
-      expect(config).to include("measure" => "recall", "min" => 0.8, "compare_to" => "expected")
+      expect(config).to include("score_by" => "recall", "min" => 0.8, "compare_to" => "expected")
       expect(config).not_to have_key("value")
     end
 
@@ -112,11 +112,10 @@ RSpec.describe "Check metric authoring", type: :request do
       post base_path, params: { metric: { name: "Mileage", metric_type: "check",
                                           check_config: { check_kind: "numeric_equals", target: "json_path",
                                                           target_path: "mileage", compare_to: "expected",
-                                                          expected_path: "mileage", tolerance: "0.02",
-                                                          tolerance_mode: "relative" } } }
+                                                          expected_path: "mileage", tolerance: "2%" } } }
 
       config = CompletionKit::Metric.find_by(name: "Mileage").check_config
-      expect(config).to include("tolerance" => 0.02, "tolerance_mode" => "relative")
+      expect(config).to include("tolerance" => "2%")
     end
 
     it "coerces a numeric json_path_equals expected so it can match numeric JSON" do
