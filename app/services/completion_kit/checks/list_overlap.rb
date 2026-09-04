@@ -1,6 +1,6 @@
 module CompletionKit
   module Checks
-    class SetOverlap
+    class ListOverlap
       MEASURES = %w[recall precision f1 jaccard].freeze
       DEFAULT_MEASURE = "recall".freeze
       DEFAULT_MIN = 1.0
@@ -10,7 +10,7 @@ module CompletionKit
       def call(target, config)
         actual = to_set(target, config)
         expected = to_set(config["value"], config)
-        measure = MEASURES.include?(config["measure"]) ? config["measure"] : DEFAULT_MEASURE
+        measure = MEASURES.include?(config["score_by"]) ? config["score_by"] : DEFAULT_MEASURE
         overlap = (actual & expected).length
         score = score_for(measure, overlap, actual.length, expected.length).round(4)
         threshold = NumericValue.parse(config["min"]) || DEFAULT_MIN

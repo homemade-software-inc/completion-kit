@@ -41,7 +41,7 @@
                   <% run.metrics.order(:name).each do |metric| %>
                     <% avg_for_metric = metric_lookup[metric.name.to_s.downcase] %>
                     <% if avg_for_metric && avg_for_metric[:kind] == "check" %>
-                      <% fraction = avg_for_metric[:avg_fraction] %>
+                      <% fraction = avg_for_metric[:avg_check_score] %>
                       <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(fraction || avg_for_metric[:pass_rate]) %>">
                         <span class="ck-metric-pip__bar"></span>
                         <span class="ck-metric-pip__label"><%= metric.name %> <strong><%= fraction ? fraction : "#{(avg_for_metric[:pass_rate] * 100).round}%" %></strong></span>

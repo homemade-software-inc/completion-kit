@@ -1,8 +1,7 @@
 module CompletionKit
   module Checks
     class NumericEquals
-      MODES = %w[absolute relative].freeze
-      RELATIVE = "relative".freeze
+      PERCENT = /\A(.*)%\z/
 
       def call(target, config)
         actual = NumericValue.parse(target)
@@ -12,7 +11,7 @@ module CompletionKit
         return Result.new(passed: false, detail: "expected #{config["value"].inspect} is not a number") if expected.nil?
 
         difference = (actual - expected).abs
-        allowed = allowance(config, expected)
+        allowed = self.class.allowance(config["tolerance"], expected)
         shown = "#{NumericValue.format(actual)} vs #{NumericValue.format(expected)}"
 
         if difference <= allowed
@@ -22,11 +21,16 @@ module CompletionKit
         end
       end
 
-      private
+      def self.allowance(raw, expected)
+        share = PERCENT.match(raw.to_s)
+        return (NumericValue.parse(share[1]) || 0.0) / 100.0 * expected.abs if share
 
-      def allowance(config, expected)
-        tolerance = NumericValue.parse(config["tolerance"]) || 0.0
-        config["tolerance_mode"] == RELATIVE ? tolerance * expected.abs : tolerance
+        NumericValue.parse(raw) || 0.0
+      end
+
+      def self.tolerance_value(raw)
+        share = PERCENT.match(raw.to_s)
+        NumericValue.parse(share ? share[1] : raw)
       end
     end
   end

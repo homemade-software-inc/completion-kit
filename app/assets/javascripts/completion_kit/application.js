@@ -222,9 +222,9 @@ var CK_CHECK_FIELDS = {
   valid_json: [],
   json_path_equals: ["json_path", "expected"],
   length_bounds: ["min", "max"],
-  set_overlap: ["value", "measure", "min", "case_sensitive"],
+  list_overlap: ["value", "score_by", "min", "case_sensitive"],
   numeric_bounds: ["min", "max"],
-  numeric_equals: ["value", "tolerance", "tolerance_mode"]
+  numeric_equals: ["value", "tolerance"]
 };
 
 var CK_EXPECTED_KEYS = {
@@ -232,7 +232,7 @@ var CK_EXPECTED_KEYS = {
   not_contains: "value",
   equals: "value",
   json_path_equals: "expected",
-  set_overlap: "value",
+  list_overlap: "value",
   numeric_equals: "value"
 };
 
@@ -241,14 +241,14 @@ var CK_CHECK_DEFAULT_LABELS = { min: "Minimum", max: "Maximum", value: "Text to 
 var CK_CHECK_LABELS = {
   length_bounds: { min: "Shortest allowed", max: "Longest allowed" },
   numeric_bounds: { min: "Lowest allowed", max: "Highest allowed" },
-  set_overlap: { min: "Lowest score that passes", value: "Expected list" },
+  list_overlap: { min: "Lowest score that passes", value: "Expected list" },
   numeric_equals: { value: "Expected number" }
 };
 
 var CK_CHECK_DEFAULT_HINTS = { min: "Leave blank for no minimum." };
 
 var CK_CHECK_HINTS = {
-  set_overlap: { min: "Leave blank to require an exact match." }
+  list_overlap: { min: "Leave blank to require an exact match." }
 };
 
 function ckApplyCheckLabels(scope, kind) {

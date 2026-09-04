@@ -177,8 +177,8 @@ module CompletionKit
       case kind
       when "regex"
         validate_check_pattern(config)
-      when "set_overlap"
-        validate_check_set_overlap(config)
+      when "list_overlap"
+        validate_check_list_overlap(config)
       when "numeric_equals"
         validate_check_numeric_equals(config)
       end
@@ -208,10 +208,10 @@ module CompletionKit
       end
     end
 
-    def validate_check_set_overlap(config)
-      measures = CompletionKit::Checks::SetOverlap::MEASURES
-      if config["measure"].present? && !measures.include?(config["measure"])
-        errors.add(:check_config, "measure must be one of #{measures.join(", ")}")
+    def validate_check_list_overlap(config)
+      measures = CompletionKit::Checks::ListOverlap::MEASURES
+      if config["score_by"].present? && !measures.include?(config["score_by"])
+        errors.add(:check_config, "score_by must be one of #{measures.join(", ")}")
       end
       return if config["min"].to_s.strip.empty?
 
@@ -222,10 +222,6 @@ module CompletionKit
     end
 
     def validate_check_numeric_equals(config)
-      modes = CompletionKit::Checks::NumericEquals::MODES
-      if config["tolerance_mode"].present? && !modes.include?(config["tolerance_mode"])
-        errors.add(:check_config, "tolerance_mode must be #{modes.join(" or ")}")
-      end
       validate_check_tolerance(config)
       return if config["compare_to"] == "expected" || config["value"].to_s.strip.empty?
 
@@ -235,8 +231,10 @@ module CompletionKit
     def validate_check_tolerance(config)
       return if config["tolerance"].to_s.strip.empty?
 
-      tolerance = CompletionKit::Checks::NumericValue.parse(config["tolerance"])
-      errors.add(:check_config, "tolerance must be a number that is not negative") if tolerance.nil? || tolerance.negative?
+      tolerance = CompletionKit::Checks::NumericEquals.tolerance_value(config["tolerance"])
+      if tolerance.nil? || tolerance.negative?
+        errors.add(:check_config, "tolerance must be a number that is not negative, or a percentage like 2%")
+      end
     end
 
     def set_defaults
