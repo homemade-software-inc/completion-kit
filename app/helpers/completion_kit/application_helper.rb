@@ -235,13 +235,25 @@ module CompletionKit
       "regex" => "Matches a pattern",
       "valid_json" => "Is valid JSON",
       "json_path_equals" => "A JSON field equals a value",
-      "length_bounds" => "Length is within a range"
+      "length_bounds" => "Length is within a range",
+      "list_overlap" => "How much of a list was found",
+      "numeric_bounds" => "A number is within a range",
+      "numeric_equals" => "A number is close enough"
     }.freeze
 
     CHECK_COMPARE_TO_LABELS = {
       "constant" => "A value you type",
       "expected" => "Each row's expected value"
     }.freeze
+
+    CHECK_SCORE_BY_LABELS = {
+      "recall" => "How much of the expected list was found",
+      "precision" => "How much of the answer belonged",
+      "f1" => "A balance of the two",
+      "jaccard" => "How much the two lists overlap"
+    }.freeze
+
+    CHECK_TRANSLATED_FIELDS = %w[compare_to score_by].freeze
 
     CHECK_TARGET_LABELS = {
       "response_text" => "The response text",
@@ -257,11 +269,20 @@ module CompletionKit
       "expected_path" => "Field in the answer key",
       "compare_to" => "Compare against",
       "target_path" => "Path into the JSON",
-      "min" => "Shortest allowed",
-      "max" => "Longest allowed",
+      "min" => "Minimum",
+      "max" => "Maximum",
+      "score_by" => "How to score it",
+      "tolerance" => "How far off is still right",
       "case_sensitive" => "Case sensitive",
       "multiline" => "Multiline",
       "trim" => "Trim whitespace"
+    }.freeze
+
+    CHECK_FIELD_LABELS_BY_KIND = {
+      "length_bounds" => { "min" => "Shortest allowed", "max" => "Longest allowed" },
+      "numeric_bounds" => { "min" => "Lowest allowed", "max" => "Highest allowed" },
+      "list_overlap" => { "min" => "Lowest score that passes", "value" => "Expected list" },
+      "numeric_equals" => { "value" => "Expected number" }
     }.freeze
 
     def ck_check_kind_label(kind)
@@ -272,14 +293,25 @@ module CompletionKit
       CHECK_TARGET_LABELS.fetch(target.to_s) { target.to_s.humanize }
     end
 
-    def ck_check_field_label(key)
-      CHECK_FIELD_LABELS.fetch(key.to_s) { key.to_s.humanize }
+    def ck_check_field_label(key, kind = nil)
+      CHECK_FIELD_LABELS_BY_KIND.dig(kind.to_s, key.to_s) ||
+        CHECK_FIELD_LABELS.fetch(key.to_s) { key.to_s.humanize }
     end
 
     def ck_check_field_value(key, value)
-      return CHECK_COMPARE_TO_LABELS.fetch(value.to_s, value) if key.to_s == "compare_to"
+      case key.to_s
+      when "compare_to" then CHECK_COMPARE_TO_LABELS.fetch(value.to_s, value)
+      when "score_by" then CHECK_SCORE_BY_LABELS.fetch(value.to_s, value)
+      else value
+      end
+    end
 
-      value
+    def ck_check_field_translated?(key)
+      CHECK_TRANSLATED_FIELDS.include?(key.to_s)
+    end
+
+    def ck_check_score_by_options
+      CompletionKit::Checks::ListOverlap::MEASURES.map { |measure| [measure, CHECK_SCORE_BY_LABELS.fetch(measure)] }
     end
 
     def ck_result_change_badge(change)

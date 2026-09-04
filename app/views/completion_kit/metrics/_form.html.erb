@@ -188,7 +188,7 @@
 
       <div class="ck-field" data-ck-check-field="target_path">
         <label class="ck-label" for="metric_check_target_path">Path into the JSON</label>
-        <p class="ck-hint">Where to look inside the response, like data.items.0.name.</p>
+        <p class="ck-hint">Where to look inside the response, like data.items.0.name. Use a number to pick an item out of a list.</p>
         <input type="text" name="metric[check_config][target_path]" id="metric_check_target_path" class="ck-input" value="<%= check["target_path"] %>">
       </div>
 
@@ -206,7 +206,7 @@
       </div>
 
       <div class="ck-field" data-ck-check-field="value">
-        <label class="ck-label" for="metric_check_value">Text to look for</label>
+        <label class="ck-label" for="metric_check_value"><span data-ck-check-label="value">Text to look for</span></label>
         <input type="text" name="metric[check_config][value]" id="metric_check_value" class="ck-input" value="<%= check["value"] %>">
       </div>
 
@@ -234,26 +234,47 @@
         <input type="text" name="metric[check_config][expected_path]" id="metric_check_expected_path" class="ck-input" value="<%= check["expected_path"] %>">
       </div>
 
+      <div class="ck-field" data-ck-check-field="score_by">
+        <p class="ck-label" id="metric_check_score_by_label">How to score it</p>
+        <p class="ck-hint">Choose what matters most to you: what the model left out, what it added that should not be there, or a mix of the two.</p>
+        <%= render "completion_kit/shared/branded_select",
+                   name: "metric[check_config][score_by]",
+                   options: ck_check_score_by_options,
+                   selected: check["score_by"] || CompletionKit::Checks::ListOverlap::DEFAULT_MEASURE,
+                   labelledby: "metric_check_score_by_label" %>
+      </div>
+
       <div class="ck-field-row">
         <div class="ck-field" data-ck-check-field="min">
-          <label class="ck-label" for="metric_check_min">Shortest allowed</label>
-          <input type="number" name="metric[check_config][min]" id="metric_check_min" class="ck-input" value="<%= check["min"] %>">
+          <label class="ck-label" for="metric_check_min"><span data-ck-check-label="min">Shortest allowed</span></label>
+          <p class="ck-hint" data-ck-check-hint="min">Leave blank for no minimum.</p>
+          <input type="number" step="any" name="metric[check_config][min]" id="metric_check_min" class="ck-input" value="<%= check["min"] %>">
         </div>
         <div class="ck-field" data-ck-check-field="max">
-          <label class="ck-label" for="metric_check_max">Longest allowed</label>
-          <input type="number" name="metric[check_config][max]" id="metric_check_max" class="ck-input" value="<%= check["max"] %>">
+          <label class="ck-label" for="metric_check_max"><span data-ck-check-label="max">Longest allowed</span></label>
+          <p class="ck-hint">Leave blank for no maximum.</p>
+          <input type="number" step="any" name="metric[check_config][max]" id="metric_check_max" class="ck-input" value="<%= check["max"] %>">
         </div>
       </div>
 
+      <div class="ck-field" data-ck-check-field="tolerance">
+        <label class="ck-label" for="metric_check_tolerance">How far off is still right</label>
+        <p class="ck-hint">How far a number can be out and still count as correct. Write a plain number for a fixed amount, or add a percent sign, like 2%, for a share of the expected number. Leave blank to require an exact match.</p>
+        <input type="text" inputmode="decimal" name="metric[check_config][tolerance]" id="metric_check_tolerance" class="ck-input" value="<%= check["tolerance"] %>">
+      </div>
+
       <label class="ck-checkbox" data-ck-check-field="case_sensitive">
+        <input type="hidden" name="metric[check_config][case_sensitive]" value="false">
         <input type="checkbox" name="metric[check_config][case_sensitive]" value="true"<%= " checked" if check["case_sensitive"] %>>
         <span>Case sensitive</span>
       </label>
       <label class="ck-checkbox" data-ck-check-field="multiline">
+        <input type="hidden" name="metric[check_config][multiline]" value="false">
         <input type="checkbox" name="metric[check_config][multiline]" value="true"<%= " checked" if check["multiline"] %>>
         <span>Multiline</span>
       </label>
       <label class="ck-checkbox" data-ck-check-field="trim">
+        <input type="hidden" name="metric[check_config][trim]" value="false">
         <input type="checkbox" name="metric[check_config][trim]" value="true"<%= " checked" if check["trim"] %>>
         <span>Trim whitespace</span>
       </label>

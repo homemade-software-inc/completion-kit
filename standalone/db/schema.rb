@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_05_024034) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_04_202417) do
   create_table "completion_kit_agreements", force: :cascade do |t|
     t.decimal "corrected_score", precision: 4, scale: 1
     t.datetime "created_at", null: false
@@ -187,6 +187,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_024034) do
     t.text "ai_feedback"
     t.decimal "ai_score", precision: 4, scale: 1
     t.integer "attempts", default: 0, null: false
+    t.decimal "check_score", precision: 5, scale: 4
     t.datetime "created_at", null: false
     t.string "error_class"
     t.text "error_message"

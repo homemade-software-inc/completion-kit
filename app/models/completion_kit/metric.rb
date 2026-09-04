@@ -147,7 +147,7 @@ module CompletionKit
         return
       end
       if config["compare_to"] == "expected" && !CompletionKit::Checks::Registry.compares_value?(kind)
-        errors.add(:check_config, "compare_to expected only applies to contains, not_contains, or equals")
+        errors.add(:check_config, "compare_to expected only applies to #{CompletionKit::Checks::Registry.comparable_kinds.join(", ")}")
       end
     end
 
@@ -163,7 +163,7 @@ module CompletionKit
 
     def validate_check_required_keys(config, kind)
       required = CompletionKit::Checks::Registry.required_keys.fetch(kind)
-      required -= %w[value] if config["compare_to"] == "expected" && CompletionKit::Checks::Registry.compares_value?(kind)
+      required -= [CompletionKit::Checks::Registry.expected_key(kind)] if config["compare_to"] == "expected" && CompletionKit::Checks::Registry.compares_value?(kind)
       required.each do |required_key|
         if required_key == "expected"
           errors.add(:check_config, "expected is required") unless config.key?("expected")
@@ -176,19 +176,64 @@ module CompletionKit
     def validate_check_kind_rules(config, kind)
       case kind
       when "regex"
-        begin
-          Regexp.new(config["pattern"].to_s)
-        rescue RegexpError
-          errors.add(:check_config, "pattern is not a valid regular expression")
-        end
-      when "length_bounds"
-        min = config["min"]
-        max = config["max"]
-        if min.nil? && max.nil?
-          errors.add(:check_config, "length_bounds requires at least one of min or max")
-        elsif min && max && min.to_i > max.to_i
-          errors.add(:check_config, "min must be less than or equal to max")
-        end
+        validate_check_pattern(config)
+      when "list_overlap"
+        validate_check_list_overlap(config)
+      when "numeric_equals"
+        validate_check_numeric_equals(config)
+      end
+      validate_check_bounds(config, kind) if CompletionKit::Checks::Registry.bounded?(kind)
+    end
+
+    def validate_check_pattern(config)
+      Regexp.new(config["pattern"].to_s)
+    rescue RegexpError
+      errors.add(:check_config, "pattern is not a valid regular expression")
+    end
+
+    def validate_check_bounds(config, kind)
+      min = config["min"].to_s.strip
+      max = config["max"].to_s.strip
+      if min.empty? && max.empty?
+        errors.add(:check_config, "#{kind} requires at least one of min or max")
+        return
+      end
+
+      min_value = CompletionKit::Checks::NumericValue.parse(min)
+      max_value = CompletionKit::Checks::NumericValue.parse(max)
+      if (!min.empty? && min_value.nil?) || (!max.empty? && max_value.nil?)
+        errors.add(:check_config, "min and max must be numbers")
+      elsif min_value && max_value && min_value > max_value
+        errors.add(:check_config, "min must be less than or equal to max")
+      end
+    end
+
+    def validate_check_list_overlap(config)
+      measures = CompletionKit::Checks::ListOverlap::MEASURES
+      if config["score_by"].present? && !measures.include?(config["score_by"])
+        errors.add(:check_config, "score_by must be one of #{measures.join(", ")}")
+      end
+      return if config["min"].to_s.strip.empty?
+
+      threshold = CompletionKit::Checks::NumericValue.parse(config["min"])
+      if threshold.nil? || threshold.negative? || threshold > 1
+        errors.add(:check_config, "min must be a number between 0 and 1")
+      end
+    end
+
+    def validate_check_numeric_equals(config)
+      validate_check_tolerance(config)
+      return if config["compare_to"] == "expected" || config["value"].to_s.strip.empty?
+
+      errors.add(:check_config, "value must be a number") if CompletionKit::Checks::NumericValue.parse(config["value"]).nil?
+    end
+
+    def validate_check_tolerance(config)
+      return if config["tolerance"].to_s.strip.empty?
+
+      tolerance = CompletionKit::Checks::NumericEquals.tolerance_value(config["tolerance"])
+      if tolerance.nil? || tolerance.negative?
+        errors.add(:check_config, "tolerance must be a number that is not negative, or a percentage like 2%")
       end
     end
 
