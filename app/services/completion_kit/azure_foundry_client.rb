@@ -4,7 +4,6 @@ module CompletionKit
     def generate_completion(prompt, options = {})
       @temperature_dropped = false
       return "Error: Azure provider is not fully configured" unless configured?
-      return "Error: API endpoint resolves to a private address" unless ProviderEndpoint.safe?(api_endpoint)
 
       model = options[:model]
       max_tokens = options[:max_tokens] || 1000
@@ -47,13 +46,14 @@ module CompletionKit
       raise
     rescue Faraday::Error
       raise
+    rescue ProviderEndpoint::UnsafeEndpoint => e
+      "Error: API endpoint #{e.message}"
     rescue => e
       "Error: #{e.message}"
     end
 
     def available_models
       return [] unless configured?
-      return [] unless ProviderEndpoint.safe?(api_endpoint)
 
       path = foundry_project? ? "#{azure_base_url}/deployments?api-version=v1" : models_path
       response = build_connection(azure_base_url).get(path) do |req|
@@ -87,6 +87,10 @@ module CompletionKit
     end
 
     private
+
+    def attach_adapter(builder, url)
+      ProviderEndpoint.pin(builder, url)
+    end
 
     def api_key
       @config[:api_key]

@@ -102,8 +102,12 @@ module CompletionKit
         f.options.timeout = timeout if timeout
         f.options.open_timeout = open_timeout if open_timeout
         f.request :retry, max: 2, interval: 0.5
-        f.adapter Faraday.default_adapter
+        attach_adapter(f, url)
       end
+    end
+
+    def attach_adapter(builder, _url)
+      builder.adapter Faraday.default_adapter
     end
   end
 end

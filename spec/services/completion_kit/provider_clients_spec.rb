@@ -3,6 +3,10 @@ require "faraday"
 require "json"
 
 RSpec.describe "CompletionKit provider clients", type: :service do
+  before do
+    allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
+  end
+
   def faraday_response(success:, body:, status: 200, headers: {})
     instance_double("Faraday::Response", success?: success, body: body, status: status, headers: headers)
   end
@@ -389,6 +393,22 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(client.available_models).to eq([])
   end
 
+  it "refuses to call Ollama when the endpoint host cannot be resolved" do
+    allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return([])
+    client = CompletionKit::OllamaClient.new(api_endpoint: "https://gone.example.test")
+    expect(client.generate_completion("prompt")).to eq("Error: API endpoint could not be resolved")
+    expect(client.available_models).to eq([])
+  end
+
+  it "pins Ollama requests to the checked address" do
+    client = CompletionKit::OllamaClient.new(api_endpoint: "https://ollama.example.test")
+    stub_faraday(faraday_response(success: true, body: { choices: [{ text: "ok" }] }.to_json))
+    allow(CompletionKit::ProviderEndpoint).to receive(:pin).and_call_original
+
+    expect(client.generate_completion("prompt")).to eq("ok")
+    expect(CompletionKit::ProviderEndpoint).to have_received(:pin).with(anything, "https://ollama.example.test")
+  end
+
   it "treats a blank endpoint as not configured when allow_loopback_endpoints is false" do
     original = CompletionKit.config.allow_loopback_endpoints
     CompletionKit.config.allow_loopback_endpoints = false
@@ -459,6 +479,31 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "http://10.0.0.5", api_version: "2024-10-21")
     expect(client.generate_completion("prompt", model: "d")).to eq("Error: API endpoint resolves to a private address")
     expect(client.available_models).to eq([])
+  end
+
+  it "refuses to call Azure when the endpoint host cannot be resolved" do
+    allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return([])
+    client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "https://gone.example.test", api_version: "2024-10-21")
+    expect(client.generate_completion("prompt", model: "d")).to eq("Error: API endpoint could not be resolved")
+    expect(client.available_models).to eq([])
+  end
+
+  it "pins Azure requests to the checked address" do
+    client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "https://azure.example.test", api_version: "2024-10-21")
+    stub_faraday(faraday_response(success: true, body: { choices: [{ message: { content: "ok" } }] }.to_json))
+    allow(CompletionKit::ProviderEndpoint).to receive(:pin).and_call_original
+
+    expect(client.generate_completion("prompt", model: "d")).to eq("ok")
+    expect(CompletionKit::ProviderEndpoint).to have_received(:pin).with(anything, "https://azure.example.test")
+  end
+
+  it "does not pin requests to the fixed hosted providers" do
+    client = CompletionKit::OpenAiClient.new(api_key: "k")
+    stub_faraday(faraday_response(success: true, body: { output: [{ type: "message", content: [{ text: "ok" }] }] }.to_json))
+    allow(CompletionKit::ProviderEndpoint).to receive(:pin)
+
+    client.generate_completion("prompt", model: "gpt-4.1-mini")
+    expect(CompletionKit::ProviderEndpoint).not_to have_received(:pin)
   end
 
   it "reports Azure configuration problems for each missing field, treating api-version as optional" do

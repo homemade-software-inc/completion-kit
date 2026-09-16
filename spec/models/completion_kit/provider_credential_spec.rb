@@ -358,12 +358,16 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     end
 
     it "rejects a hostname that resolves to a private address" do
-      allow(Resolv).to receive(:getaddresses).with("internal.example").and_return(["10.1.2.3"])
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).with("internal.example").and_return(["10.1.2.3"])
       expect(cred("http://internal.example")).not_to be_valid
     end
 
+    it "rejects a metadata address written as a hex number" do
+      expect(cred("http://0xA9FEA9FE")).not_to be_valid
+    end
+
     it "allows a hostname that resolves to a public address" do
-      allow(Resolv).to receive(:getaddresses).with("api.example").and_return(["93.184.216.34"])
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).with("api.example").and_return(["93.184.216.34"])
       expect(cred("http://api.example/v1")).to be_valid
     end
   end

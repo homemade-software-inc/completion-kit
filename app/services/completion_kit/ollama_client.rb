@@ -4,7 +4,6 @@ module CompletionKit
     def generate_completion(prompt, options = {})
       @temperature_dropped = false
       return "Error: API endpoint not configured" unless configured?
-      return "Error: API endpoint resolves to a private address" unless ProviderEndpoint.safe?(api_endpoint)
 
       model = options[:model]
       max_tokens = options[:max_tokens] || 1000
@@ -36,13 +35,14 @@ module CompletionKit
       raise
     rescue Faraday::Error
       raise
+    rescue ProviderEndpoint::UnsafeEndpoint => e
+      "Error: API endpoint #{e.message}"
     rescue => e
       "Error: #{e.message}"
     end
 
     def available_models
       return [] unless configured?
-      return [] unless ProviderEndpoint.safe?(api_endpoint)
 
       response = build_connection(api_endpoint).get("/v1/models") do |req|
         req.headers["Authorization"] = "Bearer #{api_key}" if api_key.present?
@@ -67,6 +67,10 @@ module CompletionKit
     end
 
     private
+
+    def attach_adapter(builder, url)
+      ProviderEndpoint.pin(builder, url)
+    end
 
     def api_key
       @config[:api_key] || ENV["OLLAMA_API_KEY"]

@@ -761,6 +761,28 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       faraday_response(success: true, body: { choices: [{ message: { content: "Score: 3\nFeedback: ok" } }] }.to_json)
     end
 
+    it "refuses to list models from an endpoint that resolves to an internal address" do
+      conn = faraday_connection_stub
+      allow(conn).to receive(:get)
+      service = described_class.new(config: { provider: "ollama", api_key: nil, api_endpoint: "http://0xA9FEA9FE" })
+
+      expect { service.refresh! }
+        .to raise_error(described_class::DiscoveryError, "The model endpoint resolves to a private address.")
+      expect(conn).not_to have_received(:get)
+    end
+
+    it "fails the probe when the endpoint turns internal between listing and probing" do
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"], ["10.0.0.5"])
+      stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+      stub_faraday_post(ollama_judge_response)
+
+      described_class.new(config: { provider: "ollama", api_key: nil, api_endpoint: "https://rebind.example.test/v1" }).refresh!
+
+      expect(faraday_connection_stub).not_to have_received(:post)
+      expect(CompletionKit::Model.where(provider: "ollama").pluck(:judging_error).uniq)
+        .to eq(["The model endpoint resolves to a private address."])
+    end
+
     it "discovers ollama models, marks supports_generation true and probes judging" do
       stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
       stub_faraday_post(ollama_judge_response)
@@ -863,6 +885,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
     end
 
     it "points Azure hosts at the Azure AI Foundry provider on a 404" do
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
       stub_faraday_get(faraday_response(success: false, status: 404, body: "Resource not found"))
 
       service = described_class.new(config: { provider: "ollama", api_key: "k",
@@ -880,11 +903,15 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       )
     end
 
-    it "falls back to the raw endpoint string in the message when the host cannot be parsed" do
-      stub_faraday_get(faraday_response(success: false, status: 404, body: ""))
+    it "refuses an endpoint that is not a URL before sending anything" do
+      conn = faraday_connection_stub
+      allow(conn).to receive(:get)
 
       service = described_class.new(config: { provider: "ollama", api_key: nil, api_endpoint: "not a url" })
-      expect { service.refresh! }.to raise_error(CompletionKit::ModelDiscoveryService::DiscoveryError, %r{not a url/v1/models})
+      expect { service.refresh! }.to raise_error(
+        CompletionKit::ModelDiscoveryService::DiscoveryError, "The model endpoint is not a valid http or https URL."
+      )
+      expect(conn).not_to have_received(:get)
     end
 
     it "reports a rate-limited custom endpoint clearly" do
@@ -932,6 +959,32 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
 
     let(:probe_response) do
       faraday_response(success: true, body: { choices: [{ message: { content: "PING-OK\nScore: 3\nFeedback: ok" } }] }.to_json)
+    end
+
+    before do
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
+    end
+
+    it "refuses to list deployments from an endpoint that resolves to an internal address" do
+      conn = faraday_connection_stub
+      allow(conn).to receive(:get)
+      service = described_class.new(config: config.merge(api_endpoint: "http://169.254.169.254"))
+
+      expect { service.refresh! }
+        .to raise_error(described_class::DiscoveryError, "The model endpoint resolves to a private address.")
+      expect(conn).not_to have_received(:get)
+    end
+
+    it "fails the probe when the endpoint turns internal between listing and probing" do
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"], ["10.0.0.5"])
+      stub_faraday_get(faraday_response(success: true, body: deployments_body))
+      stub_faraday_post(probe_response)
+
+      described_class.new(config: config).refresh!
+
+      expect(faraday_connection_stub).not_to have_received(:post)
+      expect(CompletionKit::Model.where(provider: "azure_foundry").pluck(:generation_error).uniq)
+        .to eq(["The model endpoint resolves to a private address."])
     end
 
     it "lists deployments at /openai/deployments with the api-version and api-key header" do

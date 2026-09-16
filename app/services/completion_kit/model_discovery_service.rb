@@ -40,12 +40,18 @@ module CompletionKit
       end
     end
 
-    def fetch_connection(base_url)
+    def fetch_connection(base_url, pinned: false)
       Faraday.new(url: base_url) do |f|
         f.options.timeout = 15
         f.options.open_timeout = 5
-        f.adapter Faraday.default_adapter
+        pinned ? pin_endpoint(f, base_url) : f.adapter(Faraday.default_adapter)
       end
+    end
+
+    def pin_endpoint(builder, url)
+      ProviderEndpoint.pin(builder, url)
+    rescue ProviderEndpoint::UnsafeEndpoint => e
+      raise DiscoveryError, "The model endpoint #{e.message}."
     end
 
     def raise_fetch_error!(response)
@@ -122,7 +128,7 @@ module CompletionKit
     def fetch_ollama_models
       raise DiscoveryError, "A model endpoint URL is required." if @api_endpoint.blank?
       base_url = ollama_root_url
-      response = fetch_connection(base_url).get("/v1/models") do |req|
+      response = fetch_connection(base_url, pinned: true).get("/v1/models") do |req|
         req.headers["Authorization"] = "Bearer #{@api_key}" if @api_key.present?
       end
       raise DiscoveryError, custom_endpoint_error_message(response) unless response.success?
@@ -154,7 +160,7 @@ module CompletionKit
     end
 
     def custom_endpoint_host
-      ProviderEndpoint.parse(@api_endpoint)&.host || @api_endpoint.to_s
+      ProviderEndpoint.parse(@api_endpoint).host
     end
 
     def azure_custom_host?
@@ -170,7 +176,7 @@ module CompletionKit
       raise DiscoveryError, "An Azure endpoint URL is required." if @api_endpoint.blank?
 
       path = azure_foundry_project? ? "#{azure_base_url}/deployments?api-version=v1" : azure_models_path
-      response = fetch_connection(azure_base_url).get(path) do |req|
+      response = fetch_connection(azure_base_url, pinned: true).get(path) do |req|
         req.headers["api-key"] = @api_key
       end
       raise DiscoveryError, azure_error_message(response) unless response.success?
@@ -185,7 +191,7 @@ module CompletionKit
     end
 
     def fetch_azure_catalog_count
-      response = fetch_connection(azure_base_url).get("/openai/v1/models") do |req|
+      response = fetch_connection(azure_base_url, pinned: true).get("/openai/v1/models") do |req|
         req.headers["api-key"] = @api_key
       end
       return nil unless response.success?
@@ -464,7 +470,7 @@ module CompletionKit
         f.options.timeout = 60
         f.options.open_timeout = 5
         f.request :retry, max: 1, interval: 0.5
-        f.adapter Faraday.default_adapter
+        pin_endpoint(f, ollama_root_url)
       end
       conn.post do |req|
         req.url "/v1/chat/completions"
@@ -479,7 +485,7 @@ module CompletionKit
         f.options.timeout = 60
         f.options.open_timeout = 5
         f.request :retry, max: 1, interval: 0.5
-        f.adapter Faraday.default_adapter
+        pin_endpoint(f, azure_base_url)
       end
       response = azure_probe_post(conn, model_id, input, max_tokens, max_completion: false)
       if response.status == 400 && azure_max_tokens_unsupported?(response.body)

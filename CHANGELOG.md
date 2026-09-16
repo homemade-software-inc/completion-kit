@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.43] - 2026-09-16
+
+### Security
+- **Custom provider endpoints are checked the way the connection will see them.** The check behind the Ollama and Azure AI Foundry endpoints, and behind `datasets_create_from_url`, resolved hostnames with a different resolver from the one the request used, and let through any host it could not resolve. A host the check could not read could still reach an internal address when the request went out. Hosts are now resolved with the system resolver, a host that cannot be resolved is refused, and the 100.64.0.0/10 shared address range is refused alongside the private ranges. Each request is also pinned to the address that passed the check, so a hostname cannot resolve to a public address for the check and a private one for the connection. Model discovery and its probes now apply the check too, where before they relied on the endpoint having been checked when it was saved.
+
 ## [0.28.42] - 2026-08-11
 
 ### Changed

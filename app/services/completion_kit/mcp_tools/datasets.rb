@@ -90,10 +90,7 @@ module CompletionKit
       end
 
       def self.create_from_url(args)
-        issues = ProviderEndpoint.validate(args["url"])
-        return error_result("URL is not allowed (#{issues.join(", ")}).") if issues.any?
-
-        response = csv_connection.get(args["url"])
+        response = csv_connection(args["url"]).get(args["url"])
         return error_result("Could not download CSV (HTTP #{response.status}).") unless response.success?
 
         body = response.body.to_s
@@ -106,15 +103,17 @@ module CompletionKit
         else
           error_result(dataset.errors.full_messages.join(", "))
         end
+      rescue ProviderEndpoint::UnsafeEndpoint => e
+        error_result("URL is not allowed: it #{e.message}.")
       rescue Faraday::Error => e
         error_result("Could not download CSV: #{e.message}")
       end
 
-      def self.csv_connection
+      def self.csv_connection(url)
         Faraday.new do |f|
           f.options.timeout = 30
           f.options.open_timeout = 5
-          f.adapter Faraday.default_adapter
+          ProviderEndpoint.pin(f, url)
         end
       end
     end

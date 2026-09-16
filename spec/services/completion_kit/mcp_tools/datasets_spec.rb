@@ -70,6 +70,10 @@ RSpec.describe CompletionKit::McpTools::Datasets do
   end
 
   describe "datasets_create_from_url" do
+    before do
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
+    end
+
     def stub_fetch(body: "", success: true, status: 200, raises: nil)
       options = Struct.new(:timeout, :open_timeout).new
       conn = instance_double("Faraday::Connection")
@@ -86,7 +90,6 @@ RSpec.describe CompletionKit::McpTools::Datasets do
     end
 
     it "downloads the CSV and creates a dataset, with tags" do
-      allow(CompletionKit::ProviderEndpoint).to receive(:validate).and_return([])
       stub_fetch(body: "content,expected_output\nhi,hello\n")
 
       result = described_class.call("datasets_create_from_url",
@@ -100,17 +103,35 @@ RSpec.describe CompletionKit::McpTools::Datasets do
     end
 
     it "rejects an SSRF-unsafe url without fetching" do
-      allow(CompletionKit::ProviderEndpoint).to receive(:validate).and_return([:unsafe_host])
+      stub_fetch(body: "secret")
 
       expect do
         @result = described_class.call("datasets_create_from_url",
           {"name" => "x", "url" => "http://169.254.169.254/latest/meta-data"})
       end.not_to change(CompletionKit::Dataset, :count)
       expect(@result[:isError]).to be(true)
+      expect(@result[:content].first[:text]).to eq("URL is not allowed: it resolves to a private address.")
+    end
+
+    it "rejects a url whose host cannot be resolved" do
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return([])
+
+      result = described_class.call("datasets_create_from_url",
+        {"name" => "x", "url" => "https://gone.example.test/data.csv"})
+      expect(result[:isError]).to be(true)
+      expect(result[:content].first[:text]).to eq("URL is not allowed: it could not be resolved.")
+    end
+
+    it "pins the download to the checked address" do
+      stub_fetch(body: "content\nhi\n")
+      allow(CompletionKit::ProviderEndpoint).to receive(:pin).and_call_original
+
+      described_class.call("datasets_create_from_url",
+        {"name" => "Pinned", "url" => "https://example.com/data.csv"})
+      expect(CompletionKit::ProviderEndpoint).to have_received(:pin).with(anything, "https://example.com/data.csv")
     end
 
     it "returns isError when the download fails" do
-      allow(CompletionKit::ProviderEndpoint).to receive(:validate).and_return([])
       stub_fetch(success: false, status: 404)
 
       result = described_class.call("datasets_create_from_url",
@@ -119,7 +140,6 @@ RSpec.describe CompletionKit::McpTools::Datasets do
     end
 
     it "rejects a CSV larger than the size limit" do
-      allow(CompletionKit::ProviderEndpoint).to receive(:validate).and_return([])
       stub_fetch(body: "a" * (described_class::MAX_CSV_BYTES + 1))
 
       result = described_class.call("datasets_create_from_url",
@@ -128,7 +148,6 @@ RSpec.describe CompletionKit::McpTools::Datasets do
     end
 
     it "returns isError when the dataset fails to save" do
-      allow(CompletionKit::ProviderEndpoint).to receive(:validate).and_return([])
       stub_fetch(body: "col\nval")
 
       result = described_class.call("datasets_create_from_url",
@@ -137,7 +156,6 @@ RSpec.describe CompletionKit::McpTools::Datasets do
     end
 
     it "returns isError when the fetch raises a Faraday error" do
-      allow(CompletionKit::ProviderEndpoint).to receive(:validate).and_return([])
       stub_fetch(raises: Faraday::ConnectionFailed.new("boom"))
 
       result = described_class.call("datasets_create_from_url",
