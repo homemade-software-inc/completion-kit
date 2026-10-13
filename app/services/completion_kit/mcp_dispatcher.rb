@@ -3,7 +3,7 @@ module CompletionKit
     class MethodNotFound < StandardError; end
     class InvalidParams < StandardError; end
 
-    PROTOCOL_VERSION = "2025-03-26"
+    PROTOCOL_VERSION = "2025-06-18"
 
     def self.initialize_session
       {

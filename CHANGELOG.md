@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.44] - 2026-10-13
+
+### Fixed
+- **The MCP endpoint answers a batch request with an error instead of a 500.** A body that parsed to anything other than a single JSON object, such as a JSON-RPC batch array, `42`, `"x"` or `null`, raised a `TypeError` and came back as a 500. These bodies now get a `400` with a JSON-RPC `-32600 Invalid Request` error, before any authentication or tool call runs. `initialize` now advertises protocol `2025-06-18`, the version of the MCP spec that dropped batching, so clients know not to send batches.
+
 ## [0.28.43] - 2026-09-16
 
 ### Security

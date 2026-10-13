@@ -51,7 +51,7 @@ RSpec.describe "MCP endpoint", type: :request do
       body = JSON.parse(response.body)
       expect(body["jsonrpc"]).to eq("2.0")
       expect(body["id"]).to eq(1)
-      expect(body["result"]["protocolVersion"]).to eq("2025-03-26")
+      expect(body["result"]["protocolVersion"]).to eq("2025-06-18")
       expect(body["result"]["serverInfo"]["name"]).to eq("CompletionKit")
       expect(body["result"]["capabilities"]["tools"]).to be_present
       expect(response.headers["Mcp-Session-Id"]).to be_present
@@ -144,6 +144,37 @@ RSpec.describe "MCP endpoint", type: :request do
       expect(response).to have_http_status(:bad_request)
       body = JSON.parse(response.body)
       expect(body["error"]["code"]).to eq(-32700)
+    end
+
+    it "rejects a JSON-RPC batch with Invalid Request instead of a 500" do
+      batch = [
+        {jsonrpc: "2.0", id: 1, method: "tools/list"},
+        {jsonrpc: "2.0", id: 2, method: "tools/call", params: {name: "prompts_list", arguments: {}}}
+      ]
+      post mcp_path, params: batch.to_json, headers: session_headers
+      expect(response).to have_http_status(:bad_request)
+      body = JSON.parse(response.body)
+      expect(body["error"]["code"]).to eq(-32600)
+      expect(body["id"]).to be_nil
+    end
+
+    it "rejects an unauthenticated batch that pairs a public method with a protected call" do
+      batch = [
+        {jsonrpc: "2.0", id: 1, method: "initialize"},
+        {jsonrpc: "2.0", id: 2, method: "tools/call", params: {name: "prompts_list", arguments: {}}}
+      ]
+      expect(CompletionKit::McpDispatcher).not_to receive(:dispatch)
+      post mcp_path, params: batch.to_json, headers: {"Content-Type" => "application/json"}
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)["error"]["code"]).to eq(-32600)
+    end
+
+    ["42", "\"x\"", "null", "[]"].each do |raw|
+      it "rejects the non-object body #{raw} with Invalid Request" do
+        post mcp_path, params: raw, headers: session_headers
+        expect(response).to have_http_status(:bad_request)
+        expect(JSON.parse(response.body)["error"]["code"]).to eq(-32600)
+      end
     end
 
     it "returns JSON-RPC error for invalid params" do

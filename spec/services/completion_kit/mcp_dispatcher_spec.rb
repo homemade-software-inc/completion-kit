@@ -4,7 +4,7 @@ RSpec.describe CompletionKit::McpDispatcher do
   describe ".initialize_session" do
     it "returns protocol version and server info" do
       result = described_class.initialize_session
-      expect(result[:protocolVersion]).to eq("2025-03-26")
+      expect(result[:protocolVersion]).to eq("2025-06-18")
       expect(result[:serverInfo][:name]).to eq("CompletionKit")
       expect(result[:capabilities][:tools]).to eq({listChanged: false})
     end

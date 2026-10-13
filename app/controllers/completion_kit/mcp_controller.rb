@@ -11,6 +11,10 @@ module CompletionKit
 
     def handle
       request_body = JSON.parse(request.body.read)
+      unless request_body.is_a?(Hash)
+        render json: jsonrpc_error(nil, -32600, "Invalid Request"), status: :bad_request
+        return
+      end
       return unless authorize_mcp_method(request_body["method"])
 
       if request_body["method"] == "initialize"
