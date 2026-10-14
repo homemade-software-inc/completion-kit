@@ -614,6 +614,45 @@ RSpec.describe "CompletionKit runs", type: :request do
     end
   end
 
+  describe "the judge model select" do
+    let(:dataset) { create(:completion_kit_dataset) }
+
+    def judge_select
+      Nokogiri::HTML5(response.body).at_css("select#run_judge_model")
+    end
+
+    def selected_judge
+      option = judge_select.at_css("option[selected]")
+      [option.text, option["value"]]
+    end
+
+    def judge_error
+      Nokogiri::HTML5(response.body).at_css("#run_judge_model_error")
+    end
+
+    it "keeps a rejected judge selected, marked not served, with the error beside the select on create" do
+      post base_path, params: { run: { prompt_id: prompt.id, dataset_id: dataset.id, judge_model: "ollama/llama3" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(selected_judge).to eq(["ollama/llama3 (not served)", "ollama/llama3"])
+      expect(judge_error.text).to eq(%("ollama/llama3" is not served by any configured provider))
+      expect(judge_select["aria-invalid"]).to eq("true")
+      expect(judge_select["aria-describedby"]).to eq("run_judge_model_error")
+    end
+
+    it "keeps a rejected judge selected with the error beside the select when forking a run with results" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1-mini")
+      run.responses.create!(response_text: "Some output")
+
+      patch "#{base_path}/#{run.id}", params: { run: { judge_model: "ollama/llama3" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(selected_judge).to eq(["ollama/llama3 (not served)", "ollama/llama3"])
+      expect(judge_error).to be_present
+      expect(run.reload.judge_model).to eq("gpt-4.1-mini")
+    end
+  end
+
   describe "metric choices on a failed save" do
     let!(:saved_metric) { create(:completion_kit_metric, name: "Saved") }
     let!(:chosen_metric) { create(:completion_kit_metric, name: "Chosen") }

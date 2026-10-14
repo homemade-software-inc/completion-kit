@@ -128,6 +128,33 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(result).not_to include("retired")
     end
 
+    it "keeps a rejected model selected as its id marked not served" do
+      models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
+      options = Nokogiri::HTML5.fragment(helper.ck_grouped_models(models, "ollama/llama3", rejected: true)).css("option")
+
+      expect(options.map { |o| [o.text, o["value"], o.key?("selected")] }).to eq([
+        ["ollama/llama3 (not served)", "ollama/llama3", true],
+        ["GPT-4", "gpt-4", false]
+      ])
+    end
+
+    it "marks a rejected model not served even when a retired row names it" do
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-old", display_name: "GPT Old", status: "retired")
+      models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
+      result = helper.ck_grouped_models(models, "gpt-old", rejected: true)
+
+      expect(result).to include("gpt-old (not served)")
+      expect(result).not_to include("retired")
+    end
+
+    it "adds nothing for a rejected model that is already in the list" do
+      models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
+      result = helper.ck_grouped_models(models, "gpt-4", rejected: true)
+
+      expect(result).not_to include("not served")
+      expect(Nokogiri::HTML5.fragment(result).css("option").size).to eq(1)
+    end
+
     it "marks judge options that are not yet confirmed with (?)" do
       models = [
         { id: "openai/confirmed", name: "Confirmed", provider: "openrouter", judging_confirmed: true },

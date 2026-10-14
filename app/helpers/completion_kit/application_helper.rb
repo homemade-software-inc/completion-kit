@@ -151,18 +151,22 @@ module CompletionKit
       model[:name]
     end
 
-    def ck_grouped_models(models, selected = nil)
+    def ck_grouped_models(models, selected = nil, rejected: false)
+      kept = nil
       if selected.present? && models.none? { |m| m[:id] == selected }
-        retired = CompletionKit::Model.find_by(model_id: selected)
+        retired = CompletionKit::Model.find_by(model_id: selected) unless rejected
         if retired
           models = models + [{ id: retired.model_id, name: "#{retired.display_name || retired.model_id} (retired)", provider: retired.provider }]
+        elsif rejected
+          kept = [["#{selected} (not served)", selected]]
         end
       end
 
       groups = models.group_by { |m| ck_model_optgroup_label(m) }
       ordered_keys = groups.keys.sort_by { |label| ck_model_optgroup_sort_key(label) }
       grouped = ordered_keys.map { |label| [label, groups[label].map { |m| [ck_model_option_label(m), m[:id]] }] }
-      grouped_options_for_select(grouped, selected)
+      options = grouped_options_for_select(grouped, selected)
+      kept ? options_for_select(kept, selected) + options : options
     end
 
     # Optgroup label for the model select — mirrors the provider models table:

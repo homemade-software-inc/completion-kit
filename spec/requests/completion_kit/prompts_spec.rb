@@ -522,4 +522,40 @@ RSpec.describe "CompletionKit prompts", type: :request do
       expect(response.body).not_to include("in the last 7 days")
     end
   end
+
+  describe "the generation model select" do
+    before do
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1-mini", supports_generation: true)
+    end
+
+    def model_select
+      Nokogiri::HTML5(response.body).at_css("select#prompt_llm_model")
+    end
+
+    def selected_option
+      model_select.at_css("option[selected]")
+    end
+
+    it "keeps a rejected model selected, marked not served, with the error beside the select" do
+      post base_path, params: { prompt: valid_params[:prompt].merge(llm_model: "ollama/llama3") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect([selected_option.text, selected_option["value"]]).to eq(["ollama/llama3 (not served)", "ollama/llama3"])
+      error = Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error")
+      expect(error.text).to eq(%("ollama/llama3" is not served by any configured provider))
+      expect(model_select["aria-invalid"]).to eq("true")
+      expect(model_select["aria-describedby"]).to eq("prompt_llm_model_error")
+    end
+
+    it "keeps a model rejected on re-version selected, with the error beside the select" do
+      prompt = create(:completion_kit_prompt)
+      create(:completion_kit_run, prompt: prompt)
+
+      patch "#{base_path}/#{prompt.id}", params: { prompt: { template: "Updated {{content}}", llm_model: "ollama/llama3" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(selected_option.text).to eq("ollama/llama3 (not served)")
+      expect(Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error")).to be_present
+    end
+  end
 end
