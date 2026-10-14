@@ -52,12 +52,42 @@ RSpec.describe CompletionKit::McpTools::ProviderCredentials do
       expect(content["api_version"]).to eq("2024-10-21")
     end
 
-    it "updates a credential" do
+    it "updates a credential's endpoint when the key is supplied with it" do
       result = described_class.call("provider_credentials_update", {
-        "id" => credential.id, "api_endpoint" => "https://custom.api"
+        "id" => credential.id, "api_endpoint" => "https://custom.api", "api_key" => "sk-for-custom"
       })
       content = JSON.parse(result[:content].first[:text])
       expect(content["api_endpoint"]).to eq("https://custom.api")
+      expect(credential.reload.api_key).to eq("sk-for-custom")
+    end
+
+    it "refuses a new endpoint without the key and queues no discovery" do
+      expect(CompletionKit::ModelDiscoveryJob).not_to receive(:perform_later)
+
+      result = described_class.call("provider_credentials_update", {
+        "id" => credential.id, "api_endpoint" => "https://elsewhere.example.test"
+      })
+
+      expect(result[:isError]).to be true
+      expect(result[:content].first[:text]).to match(/api key/i)
+      credential.reload
+      expect(credential.api_endpoint).to be_nil
+      expect(credential.api_key).to eq("test-key")
+    end
+
+    it "refuses a provider switch without the key" do
+      result = described_class.call("provider_credentials_update", {
+        "id" => credential.id, "provider" => "ollama", "api_endpoint" => "https://elsewhere.example.test"
+      })
+
+      expect(result[:isError]).to be true
+      expect(credential.reload.provider).to eq("openai")
+    end
+
+    it "tells callers in the update schema that a new provider or endpoint needs the key" do
+      definition = described_class.definitions.find { |d| d[:name] == "provider_credentials_update" }
+      expect(definition[:description]).to match(/api_key/)
+      expect(definition[:inputSchema][:properties][:api_key][:description]).to match(/provider or api_endpoint/)
     end
 
     it "returns error on invalid create" do

@@ -218,4 +218,146 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     get "#{base_path}/#{credential.id}/edit"
     expect(response.body).to include(%(data-ck-statuses-url="#{base_path}/statuses"))
   end
+
+  describe "the stored API key on the edit form" do
+    let(:stored_key) { "sk-live-STOREDSECRET-1a2b" }
+    let!(:credential) do
+      create(:completion_kit_provider_credential, provider: "ollama", api_key: stored_key,
+        api_endpoint: "https://ollama.example.test")
+    end
+    let(:form_params) do
+      { provider: "ollama", api_key: "", api_endpoint: "https://ollama.example.test", api_version: "" }
+    end
+
+    it "never renders the stored key, showing only its last four characters" do
+      get "#{base_path}/#{credential.id}/edit"
+
+      expect(response.body).not_to include(stored_key)
+      doc = Nokogiri::HTML5(response.body)
+      expect(doc.at_css("textarea[name='provider_credential[api_key]']").text.strip).to eq("")
+      expect(response.body).to include("ending in <code>1a2b</code>")
+      box = doc.at_css("input[type='checkbox'][name='provider_credential[remove_api_key]']")
+      expect(box).to be_present
+      expect(box.key?("checked")).to be(false)
+    end
+
+    it "offers no ending hint or remove option when no key is stored" do
+      keyless = create(:completion_kit_provider_credential, provider: "openrouter", api_key: nil)
+
+      get "#{base_path}/#{keyless.id}/edit"
+
+      expect(response.body).not_to include("ending in")
+      expect(response.body).not_to include("provider_credential[remove_api_key]")
+    end
+
+    it "keeps the stored key when the field is left blank and nothing else moves" do
+      patch "#{base_path}/#{credential.id}", params: { provider_credential: form_params }
+
+      expect(response).to redirect_to(base_path)
+      expect(credential.reload.api_key).to eq(stored_key)
+    end
+
+    it "replaces the stored key with a new one" do
+      patch "#{base_path}/#{credential.id}", params: { provider_credential: form_params.merge(api_key: "sk-replacement") }
+
+      expect(response).to redirect_to(base_path)
+      expect(credential.reload.api_key).to eq("sk-replacement")
+    end
+
+    it "clears the key when the remove option is ticked" do
+      patch "#{base_path}/#{credential.id}", params: { provider_credential: form_params.merge(remove_api_key: "1") }
+
+      expect(response).to redirect_to(base_path)
+      expect(credential.reload.api_key).to be_nil
+    end
+
+    context "when the host app raises on unpermitted parameters" do
+      around do |example|
+        original = ActionController::Parameters.action_on_unpermitted_parameters
+        ActionController::Parameters.action_on_unpermitted_parameters = :raise
+        example.run
+      ensure
+        ActionController::Parameters.action_on_unpermitted_parameters = original
+      end
+
+      it "clears the key when the remove option is ticked" do
+        patch "#{base_path}/#{credential.id}", params: { provider_credential: form_params.merge(remove_api_key: "1") }
+
+        expect(response).to redirect_to(base_path)
+        expect(credential.reload.api_key).to be_nil
+      end
+
+      it "keeps the stored key when the remove option is left unticked" do
+        patch "#{base_path}/#{credential.id}", params: { provider_credential: form_params.merge(remove_api_key: "0") }
+
+        expect(response).to redirect_to(base_path)
+        expect(credential.reload.api_key).to eq(stored_key)
+      end
+    end
+
+    it "saves a typed key over the ticked remove option" do
+      patch "#{base_path}/#{credential.id}",
+        params: { provider_credential: form_params.merge(api_key: "sk-replacement", remove_api_key: "1") }
+
+      expect(response).to redirect_to(base_path)
+      expect(credential.reload.api_key).to eq("sk-replacement")
+    end
+
+    it "keeps the remove option ticked when the save fails" do
+      patch "#{base_path}/#{credential.id}",
+        params: { provider_credential: form_params.merge(provider: "azure_foundry", api_endpoint: "", remove_api_key: "1") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      box = Nokogiri::HTML5(response.body).at_css("input[type='checkbox'][name='provider_credential[remove_api_key]']")
+      expect(box.key?("checked")).to be(true)
+      expect(credential.reload.api_key).to eq(stored_key)
+    end
+
+    it "leaves the remove option unticked when the save fails without it" do
+      patch "#{base_path}/#{credential.id}",
+        params: { provider_credential: form_params.merge(provider: "azure_foundry", api_endpoint: "") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      box = Nokogiri::HTML5(response.body).at_css("input[type='checkbox'][name='provider_credential[remove_api_key]']")
+      expect(box.key?("checked")).to be(false)
+    end
+
+    it "rejects a new endpoint with a blank key, keeping the stored key and queueing no discovery" do
+      expect(CompletionKit::ModelDiscoveryJob).not_to receive(:perform_later)
+
+      patch "#{base_path}/#{credential.id}",
+        params: { provider_credential: form_params.merge(api_endpoint: "https://elsewhere.example.test") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      field = Nokogiri::HTML5(response.body).at_css("textarea[name='provider_credential[api_key]']")
+      expect(field["aria-invalid"]).to eq("true")
+      expect(field.text.strip).to eq("")
+      expect(response.body).not_to include(stored_key)
+      credential.reload
+      expect(credential.api_key).to eq(stored_key)
+      expect(credential.api_endpoint).to eq("https://ollama.example.test")
+    end
+
+    it "rejects a new provider with a blank key" do
+      expect(CompletionKit::ModelDiscoveryJob).not_to receive(:perform_later)
+
+      patch "#{base_path}/#{credential.id}",
+        params: { provider_credential: form_params.merge(provider: "azure_foundry") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(Nokogiri::HTML5(response.body).at_css("textarea[name='provider_credential[api_key]']")["aria-invalid"]).to eq("true")
+      expect(credential.reload.provider).to eq("ollama")
+      expect(credential.api_key).to eq(stored_key)
+    end
+
+    it "accepts a new endpoint when a key is entered with it" do
+      patch "#{base_path}/#{credential.id}",
+        params: { provider_credential: form_params.merge(api_endpoint: "https://elsewhere.example.test", api_key: "sk-for-elsewhere") }
+
+      expect(response).to redirect_to(base_path)
+      credential.reload
+      expect(credential.api_endpoint).to eq("https://elsewhere.example.test")
+      expect(credential.api_key).to eq("sk-for-elsewhere")
+    end
+  end
 end

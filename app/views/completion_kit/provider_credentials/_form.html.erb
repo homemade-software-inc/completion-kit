@@ -22,9 +22,25 @@
 
     <div class="ck-field">
       <%= form.label :api_key, "API key", class: "ck-label" %>
-      <%= form.text_area :api_key, rows: 3, class: "ck-input ck-input--area ck-input--code", placeholder: "Paste the provider API key", **ck_field_aria(form, :api_key) %>
+      <%= form.text_area :api_key, value: "", rows: 3, class: "ck-input ck-input--area ck-input--code", placeholder: "Paste the provider API key", **ck_field_aria(form, :api_key) %>
       <%= ck_field_error(form, :api_key) %>
+      <% if provider_credential.api_key_ending %>
+        <p class="ck-field-hint">Leave blank to keep the current key ending in <code><%= provider_credential.api_key_ending %></code>. Enter it again if you change the provider or endpoint.</p>
+      <% end %>
     </div>
+
+    <% if provider_credential.api_key_ending %>
+      <div class="ck-field">
+        <label class="ck-checkbox-label">
+          <%= check_box_tag "provider_credential[remove_api_key]", "1", local_assigns[:remove_api_key], id: "provider_credential_remove_api_key", class: "ck-checkbox" %>
+          <span class="ck-checkbox-label__box" aria-hidden="true"></span>
+          <span class="ck-checkbox-label__body">
+            <span class="ck-checkbox-label__text">Remove the stored key</span>
+            <span class="ck-checkbox-label__hint">For endpoints that run without a key, such as a local Ollama server.</span>
+          </span>
+        </label>
+      </div>
+    <% end %>
 
     <div class="ck-field">
       <%= form.label :api_endpoint, "API endpoint", class: "ck-label" %>

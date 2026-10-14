@@ -54,6 +54,7 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     expect(html).to include("required when <code>provider</code> is <code>azure_foundry</code>")
     expect(html).to include("/api/v1/provider_credentials")
     expect(html).to include("my-resource.openai.azure.com")
+    expect(html).to include("Changing <code>provider</code> or <code>api_endpoint</code> on a credential with a stored key requires <code>api_key</code> in the same request")
   end
 
   it "documents run temperature, the compare response shape, and agreement created_by as optional" do
