@@ -109,7 +109,7 @@ RSpec.describe CompletionKit::Dataset, type: :model do
     end
 
     it "is false when the file holds only a header row" do
-      ["name\n", "name", "name\r\n", "name\r", "\n", ""].each do |csv|
+      ["name\n", "name", "name\r\n", "name\r", "\n", "", nil].each do |csv|
         expect(build(:completion_kit_dataset, csv_data: csv).any_rows?).to be(false), "for #{csv.inspect}"
       end
     end

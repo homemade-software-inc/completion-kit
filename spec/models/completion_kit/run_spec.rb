@@ -809,6 +809,19 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(sizes).to be_empty
     end
 
+    it "starts a run over a whitespace-led dataset at the upload limit without blank? or a regex over the whole file" do
+      dataset = build(:completion_kit_dataset, csv_data: whitespace_led_csv(CompletionKit.config.max_upload_bytes))
+      dataset.save!(validate: false)
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      scans = track_string_scans(dataset.csv_data)
+      expect_any_instance_of(CompletionKit::Dataset).not_to receive(:row_count)
+
+      expect(run.dataset).to be(dataset)
+      expect(run.start!).to be(true)
+      expect(run.reload.status).to eq("running")
+      expect(scans).to be_empty
+    end
+
     it "leaves a malformed dataset to StartRunJob, which fails the run with the same summary" do
       dataset = create(:completion_kit_dataset, csv_data: "input\n\"unclosed\n")
       run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
@@ -1197,6 +1210,24 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(run).not_to be_valid
       expect(run.errors[:dataset_id].join).to include("name").and include("topic")
       expect(sizes).to be_empty
+    end
+
+    it "never runs blank? or a regex over a whitespace-led dataset at the upload limit while validating a run" do
+      dataset = build(:completion_kit_dataset, csv_data: whitespace_led_csv(CompletionKit.config.max_upload_bytes))
+      dataset.save!(validate: false)
+      scans = track_string_scans(dataset.csv_data)
+      sizes = track_csv_reads
+      with_prompt = build(:completion_kit_run, prompt: prompt_with_vars, dataset: dataset, expected_column: "expected")
+      scoring_only = build(:completion_kit_run, prompt: nil, dataset: dataset, expected_column: "expected")
+
+      expect(dataset.csv_data.bytesize).to eq(CompletionKit.config.max_upload_bytes)
+      expect(with_prompt).not_to be_valid
+      expect(with_prompt.errors[:dataset_id].join).to include("name").and include("topic")
+      expect(with_prompt.errors[:expected_column].join).to include('"expected" is not a column')
+      expect(scoring_only).not_to be_valid
+      expect(scoring_only.errors[:output_column].join).to include('"actual_output" is not a column')
+      expect(scans).to be_empty
+      expect(sizes).to all(eq(0))
     end
   end
 

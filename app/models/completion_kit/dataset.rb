@@ -50,7 +50,7 @@ module CompletionKit
     end
 
     def any_rows?
-      stop = csv_data.present? && header_row_end
+      stop = header_row_end
       return false unless stop
 
       stop += 1 if csv_data.byteslice(stop, 2) == "\r\n"
@@ -60,7 +60,7 @@ module CompletionKit
     private
 
     def header_row
-      return if csv_data.blank?
+      return if csv_data.nil? || csv_data.empty?
 
       stop = header_row_end
       return csv_data.byteslice(0, stop) if stop
@@ -69,7 +69,7 @@ module CompletionKit
     end
 
     def header_row_end
-      head = csv_data.byteslice(0, HEADER_ROW_LIMIT + 1)
+      head = csv_data.to_s.byteslice(0, HEADER_ROW_LIMIT + 1)
       [head.byteindex("\n"), head.byteindex("\r")].compact.min
     end
 
