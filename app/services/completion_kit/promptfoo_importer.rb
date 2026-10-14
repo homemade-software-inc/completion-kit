@@ -149,17 +149,17 @@ module CompletionKit
     def check_mapping(type, text)
       case type
       when "contains"
-        [{ "check_kind" => "contains", "target" => "response_text", "value" => text }, "Contains #{text.truncate(30).inspect}"]
+        [{ "check_kind" => "contains", "target" => "response_text", "value" => text, "case_sensitive" => true }, "Contains #{text.truncate(30).inspect}"]
       when "icontains"
         [{ "check_kind" => "contains", "target" => "response_text", "value" => text, "case_sensitive" => false }, "Contains #{text.truncate(30).inspect}"]
       when "not-contains"
-        [{ "check_kind" => "not_contains", "target" => "response_text", "value" => text }, "Does not contain #{text.truncate(30).inspect}"]
+        [{ "check_kind" => "not_contains", "target" => "response_text", "value" => text, "case_sensitive" => true }, "Does not contain #{text.truncate(30).inspect}"]
       when "not-icontains"
         [{ "check_kind" => "not_contains", "target" => "response_text", "value" => text, "case_sensitive" => false }, "Does not contain #{text.truncate(30).inspect}"]
       when "equals"
-        [{ "check_kind" => "equals", "target" => "response_text", "value" => text }, "Equals #{text.truncate(30).inspect}"]
+        [{ "check_kind" => "equals", "target" => "response_text", "value" => text, "case_sensitive" => true }, "Equals #{text.truncate(30).inspect}"]
       when "regex"
-        [{ "check_kind" => "regex", "target" => "response_text", "pattern" => text }, "Matches /#{text.truncate(30)}/"]
+        [{ "check_kind" => "regex", "target" => "response_text", "pattern" => text, "case_sensitive" => true }, "Matches /#{text.truncate(30)}/"]
       when "is-json"
         [{ "check_kind" => "valid_json", "target" => "response_text" }, "Valid JSON"]
       end

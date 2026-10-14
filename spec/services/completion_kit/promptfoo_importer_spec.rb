@@ -114,6 +114,30 @@ RSpec.describe CompletionKit::PromptfooImporter do
     expect(not_contains.check_config["value"]).to eq("error")
   end
 
+  {
+    "regex" => ["regex", "pattern", true],
+    "contains" => ["contains", "value", true],
+    "not-contains" => ["not_contains", "value", true],
+    "equals" => ["equals", "value", true],
+    "icontains" => ["contains", "value", false],
+    "not-icontains" => ["not_contains", "value", false]
+  }.each do |assert_type, (kind, key, sensitive)|
+    it "saves case_sensitive #{sensitive} on an imported #{assert_type} assert, matching promptfoo" do
+      import("defaultTest:\n  assert:\n    - type: #{assert_type}\n      value: \"Ok\"\n")
+
+      config = CompletionKit::Metric.find_by!(metric_type: "check").check_config
+      expect(config).to include("check_kind" => kind, key => "Ok", "case_sensitive" => sensitive)
+    end
+  end
+
+  it "keeps an imported regex assert case-sensitive when it grades" do
+    import("defaultTest:\n  assert:\n    - type: regex\n      value: \"^Ok\"\n")
+
+    config = CompletionKit::Metric.find_by!(metric_type: "check").check_config
+    expect(CompletionKit::Checks::Regex.new.call("ok then", config).passed).to be(false)
+    expect(CompletionKit::Checks::Regex.new.call("Ok then", config).passed).to be(true)
+  end
+
   it "returns a failure result for unparseable YAML" do
     result = import("this: : : not valid")
     expect(result.ok).to be(false)
