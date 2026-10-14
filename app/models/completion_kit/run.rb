@@ -336,7 +336,7 @@ module CompletionKit
         return fail_with_summary!("Cannot start a run in state \"#{status}\". Use rerun to create a fresh copy, or retry_failures / regrade to work with the existing responses.")
       end
 
-      return fail_with_summary!("Dataset has no rows") if dataset && dataset.row_count.zero?
+      return fail_with_summary!("Dataset has no rows") if dataset && !dataset.any_rows?
 
       if judge_only?
         column = output_column.presence || "actual_output"

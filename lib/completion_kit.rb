@@ -5,6 +5,8 @@ require "completion_kit/concurrency_check"
 
 module CompletionKit
   class Configuration
+    MIN_REGEX_TIMEOUT = 0.001
+
     attr_accessor :openai_api_key, :anthropic_api_key, :ollama_api_key, :ollama_api_endpoint
     attr_accessor :judge_model, :high_quality_threshold, :medium_quality_threshold
     attr_accessor :username, :password, :auth_strategy, :api_token, :current_reviewer
@@ -12,6 +14,8 @@ module CompletionKit
     attr_accessor :api_reference_authentication_partial
     attr_accessor :runs_display_scope, :runs_display_footer_partial
     attr_accessor :api_rate_limit, :web_rate_limit, :max_upload_bytes
+    attr_accessor :max_template_bytes
+    attr_reader :regex_timeout
     attr_accessor :allow_loopback_endpoints
     attr_accessor :judge_agreement_enabled
     attr_accessor :judge_examples_from_reviews
@@ -31,6 +35,8 @@ module CompletionKit
       @api_rate_limit = 120
       @web_rate_limit = 300
       @max_upload_bytes = 25 * 1024 * 1024
+      @max_template_bytes = 1024 * 1024
+      @regex_timeout = 1.0
 
       @allow_loopback_endpoints = true
       @judge_agreement_enabled = true
@@ -41,6 +47,14 @@ module CompletionKit
 
     def tenant_scope_columns
       @tenant_scope_columns ||= []
+    end
+
+    def regex_timeout=(seconds)
+      unless seconds.nil? || (seconds.is_a?(Numeric) && seconds.real? && seconds.finite? && seconds >= MIN_REGEX_TIMEOUT)
+        raise ArgumentError, "regex_timeout must be a finite number of seconds of at least #{MIN_REGEX_TIMEOUT}, or nil, got #{seconds.inspect}"
+      end
+
+      @regex_timeout = seconds
     end
   end
 

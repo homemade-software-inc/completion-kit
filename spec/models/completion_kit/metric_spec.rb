@@ -114,6 +114,14 @@ RSpec.describe CompletionKit::Metric, type: :model do
       expect(metric.errors[:check_config].join).to include('needs "Pattern" to be a valid regular expression')
     end
 
+    it "compiles a regex pattern at save the same way the check runs it, timeout and flags included" do
+      config = { "check_kind" => "regex", "target" => "response_text", "pattern" => "a+", "multiline" => true }
+      allow(CompletionKit::Checks::Regex).to receive(:build).and_call_original
+
+      expect(build(:completion_kit_metric, :check, check_config: config)).to be_valid
+      expect(CompletionKit::Checks::Regex).to have_received(:build).with(hash_including("pattern" => "a+", "multiline" => true))
+    end
+
     it "requires at least one bound for length_bounds" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "length_bounds", "target" => "response_text" })
       expect(metric).not_to be_valid

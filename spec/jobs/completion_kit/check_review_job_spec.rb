@@ -40,6 +40,23 @@ RSpec.describe CompletionKit::CheckReviewJob, type: :job do
     expect(review.ai_feedback).to eq("could not resolve target")
   end
 
+  it "records a failed check that names the timeout when a regex pattern backtracks past its limit" do
+    original = CompletionKit.config.regex_timeout
+    CompletionKit.config.regex_timeout = 0.05
+    metric.update!(check_config: { "check_kind" => "regex", "target" => "response_text", "pattern" => '^(a|a)*\1$' })
+    response.update!(response_text: "#{"a" * 40}b")
+
+    expect { described_class.perform_now(response.id, metric.id, run.id) }.not_to raise_error
+
+    review = response.reviews.find_by(metric_id: metric.id)
+    expect(review.status).to eq("succeeded")
+    expect(review.passed).to be(false)
+    expect(review.ai_feedback).to eq('timed out after 0.05s matching /^(a|a)*\1$/')
+    expect(CompletionKit::RunCompletionCheckJob).to have_received(:perform_later).with(run.id)
+  ensure
+    CompletionKit.config.regex_timeout = original
+  end
+
   context "with a comparison check graded against the row's answer key (compare_to: expected)" do
     let(:metric) do
       create(:completion_kit_metric, :check,

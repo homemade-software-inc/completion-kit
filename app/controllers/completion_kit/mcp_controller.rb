@@ -3,6 +3,7 @@ module CompletionKit
     PUBLIC_METHODS = %w[initialize notifications/initialized tools/list].freeze
 
     FOREIGN_KEY_MESSAGE = "This change references a record that does not exist or is still in use.".freeze
+    TIMEOUT_MESSAGE = "The input was too large or too complex to process.".freeze
 
     skip_before_action :authenticate_api!, only: [:stream, :handle], raise: false
 
@@ -47,6 +48,9 @@ module CompletionKit
     rescue ActiveRecord::InvalidForeignKey => e
       Rails.error.report(e, handled: true, context: { controller: "CompletionKit::McpController" })
       render json: jsonrpc_error(request_body.dig("id"), -32602, FOREIGN_KEY_MESSAGE), status: :ok
+    rescue Regexp::TimeoutError => e
+      Rails.error.report(e, handled: true, context: { controller: "CompletionKit::McpController" })
+      render json: jsonrpc_error(request_body.dig("id"), -32602, TIMEOUT_MESSAGE), status: :ok
     rescue StandardError => e
       Rails.error.report(e, handled: true, context: { controller: "CompletionKit::McpController" })
       render json: jsonrpc_error(request_body.dig("id"), -32603, "Internal error"), status: :ok

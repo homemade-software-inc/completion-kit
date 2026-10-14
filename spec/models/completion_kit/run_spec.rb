@@ -797,6 +797,40 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(run.reload.failure_summary).to include("Dataset has no rows")
     end
 
+    it "refuses a header-only dataset before claiming the run, without counting or parsing its rows" do
+      dataset = create(:completion_kit_dataset, csv_data: "header\n")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      sizes = track_csv_reads
+      expect_any_instance_of(CompletionKit::Dataset).not_to receive(:row_count)
+
+      expect(run.start!).to be(false)
+      expect(run.reload.status).to eq("failed")
+      expect(run.failure_summary).to eq("Dataset has no rows")
+      expect(sizes).to be_empty
+    end
+
+    it "starts a run over a whitespace-led dataset at the upload limit without blank? or a regex over the whole file" do
+      dataset = build(:completion_kit_dataset, csv_data: whitespace_led_csv(CompletionKit.config.max_upload_bytes))
+      dataset.save!(validate: false)
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      scans = track_string_scans(dataset.csv_data)
+      expect_any_instance_of(CompletionKit::Dataset).not_to receive(:row_count)
+
+      expect(run.dataset).to be(dataset)
+      expect(run.start!).to be(true)
+      expect(run.reload.status).to eq("running")
+      expect(scans).to be_empty
+    end
+
+    it "leaves a malformed dataset to StartRunJob, which fails the run with the same summary" do
+      dataset = create(:completion_kit_dataset, csv_data: "input\n\"unclosed\n")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+
+      expect(start_run!(run)).to be(true)
+      expect(run.reload.status).to eq("failed")
+      expect(run.failure_summary).to eq("Dataset has no rows")
+    end
+
     it "returns false and sets failure_summary when LLM client is not configured" do
       bad_client = instance_double(CompletionKit::LlmClient, configured?: false, configuration_errors: ["API key missing"])
       allow(CompletionKit::LlmClient).to receive(:for_model).and_return(bad_client)
@@ -1146,6 +1180,54 @@ RSpec.describe CompletionKit::Run, type: :model do
     it "accepts a run with no dataset when prompt has no variables" do
       run = build(:completion_kit_run, prompt: prompt_without_vars, dataset: nil)
       expect(run).to be_valid
+    end
+
+    it "reads only the header row of a dataset at the upload limit, for prompt and scoring-only runs alike" do
+      limit = CompletionKit.config.max_upload_bytes
+      header = "name,topic,actual_output,expected_output\n"
+      body = header + ("a,b,c,d\n" * ((limit - header.bytesize) / 8))
+      dataset = create(:completion_kit_dataset, csv_data: body + ("e" * (limit - body.bytesize)))
+      sizes = track_csv_reads
+      splits = 0
+      allow(dataset.csv_data).to receive(:lines).and_wrap_original do |original, *args|
+        splits += 1
+        original.call(*args)
+      end
+
+      expect(dataset.csv_data.bytesize).to eq(limit)
+      expect(build(:completion_kit_run, prompt: prompt_with_vars, dataset: dataset, expected_column: "expected_output")).to be_valid
+      expect(build(:completion_kit_run, prompt: nil, dataset: dataset, expected_column: "expected_output")).to be_valid
+      expect(splits).to eq(0)
+      expect(sizes).not_to be_empty
+      expect(sizes.max).to eq(header.chomp.bytesize)
+    end
+
+    it "never parses a single-line dataset at the upload limit while validating a run" do
+      dataset = build(:completion_kit_dataset, csv_data: "name,topic," + ("a," * ((CompletionKit.config.max_upload_bytes - 11) / 2)))
+      sizes = track_csv_reads
+      run = build(:completion_kit_run, prompt: prompt_with_vars, dataset: dataset, expected_column: "topic")
+
+      expect(run).not_to be_valid
+      expect(run.errors[:dataset_id].join).to include("name").and include("topic")
+      expect(sizes).to be_empty
+    end
+
+    it "never runs blank? or a regex over a whitespace-led dataset at the upload limit while validating a run" do
+      dataset = build(:completion_kit_dataset, csv_data: whitespace_led_csv(CompletionKit.config.max_upload_bytes))
+      dataset.save!(validate: false)
+      scans = track_string_scans(dataset.csv_data)
+      sizes = track_csv_reads
+      with_prompt = build(:completion_kit_run, prompt: prompt_with_vars, dataset: dataset, expected_column: "expected")
+      scoring_only = build(:completion_kit_run, prompt: nil, dataset: dataset, expected_column: "expected")
+
+      expect(dataset.csv_data.bytesize).to eq(CompletionKit.config.max_upload_bytes)
+      expect(with_prompt).not_to be_valid
+      expect(with_prompt.errors[:dataset_id].join).to include("name").and include("topic")
+      expect(with_prompt.errors[:expected_column].join).to include('"expected" is not a column')
+      expect(scoring_only).not_to be_valid
+      expect(scoring_only.errors[:output_column].join).to include('"actual_output" is not a column')
+      expect(scans).to be_empty
+      expect(sizes).to all(eq(0))
     end
   end
 

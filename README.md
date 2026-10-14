@@ -169,6 +169,26 @@ end
 
 Limiting uses `Rails.cache`. A shared cache store (Solid Cache, Redis) throttles accurately across multiple app instances; a per-process store still throttles each instance independently.
 
+## Input limits
+
+Uploads, prompt templates, and regex check patterns have limits, so one large or hostile input cannot tie up a worker. Tune them in the initializer:
+
+```ruby
+CompletionKit.configure do |c|
+  c.max_upload_bytes = 25 * 1024 * 1024  # largest dataset CSV or import file (default 25 MB)
+  c.max_template_bytes = 1024 * 1024     # largest prompt template (default 1 MB)
+  c.regex_timeout = 1.0                  # seconds a regex check may spend matching one row (default 1.0)
+end
+```
+
+A prompt whose template is over `max_template_bytes` fails validation when its template is saved. Prompts saved before a lower limit keep working until their template changes.
+
+The first line of a dataset's CSV is its header row. A dataset fails validation when its CSV is saved with a header row that is blank or longer than 64 KB. The 64 KB limit is fixed, not a setting.
+
+A dataset also fails validation when its CSV is saved with bytes that are not valid UTF-8, so export spreadsheets as UTF-8 CSV.
+
+A regex check that runs past its time limit fails that row and says it timed out. The limit is `regex_timeout`, or your app's `Regexp.timeout` when that is shorter, so the engine never loosens a stricter limit your app set. The engine sets the limit on each pattern and never changes the process-wide `Regexp.timeout`. Set `regex_timeout` to a finite number of seconds of at least `0.001`, or to `nil` to use only `Regexp.timeout`. Any other value, such as `0` or `Float::INFINITY`, raises an `ArgumentError` when the initializer runs.
+
 ## How it works
 
 <p align="center">

@@ -205,7 +205,7 @@ module CompletionKit
     end
 
     def validate_check_pattern(config)
-      Regexp.new(config["pattern"].to_s)
+      CompletionKit::Checks::Regex.build(config)
     rescue RegexpError
       add_check_error("needs #{check_label("pattern")} to be a valid regular expression", "pattern")
     end
