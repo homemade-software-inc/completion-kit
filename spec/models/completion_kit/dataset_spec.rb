@@ -166,6 +166,15 @@ RSpec.describe CompletionKit::Dataset, type: :model do
       end
     end
 
+    it "refuses csv_data that is not valid UTF-8 instead of raising" do
+      ["name\n\xff\n", "\xff\nname\n", " \xff", "\n\xff"].each do |bytes|
+        dataset = build(:completion_kit_dataset, csv_data: bytes.dup.force_encoding("UTF-8"))
+
+        expect(dataset).not_to be_valid, "for #{bytes.inspect}"
+        expect(dataset.errors[:csv_data]).to eq(["is not valid UTF-8"]), "for #{bytes.inspect}"
+      end
+    end
+
     it "refuses a whitespace-led upload at the size limit without blank? or a regex over the whole file" do
       dataset = build(:completion_kit_dataset, csv_data: whitespace_led_csv(CompletionKit.config.max_upload_bytes))
       scans = track_string_scans(dataset.csv_data)

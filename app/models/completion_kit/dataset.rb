@@ -64,7 +64,7 @@ module CompletionKit
     end
 
     def csv_data_blank?
-      csv_data.to_s.empty? || (header_row.blank? && csv_data.lstrip.empty?)
+      csv_data.to_s.empty? || (csv_data.valid_encoding? && header_row.blank? && csv_data.lstrip.empty?)
     end
 
     def header_row
@@ -85,7 +85,9 @@ module CompletionKit
       return if csv_data_blank?
 
       row = header_row
-      if row.nil?
+      if !csv_data.valid_encoding?
+        errors.add(:csv_data, "is not valid UTF-8")
+      elsif row.nil?
         errors.add(:csv_data, "has a header row longer than #{HEADER_ROW_LIMIT / 1024} KB")
       elsif row.blank?
         errors.add(:csv_data, "has a blank header row")
