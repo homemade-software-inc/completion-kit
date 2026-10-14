@@ -5,7 +5,11 @@ module CompletionKit
         options = 0
         options |= Regexp::IGNORECASE unless Flag.on?(config, "case_sensitive")
         options |= Regexp::MULTILINE if Flag.on?(config, "multiline")
-        Regexp.new(config["pattern"].to_s, options, timeout: CompletionKit.config.regex_timeout)
+        Regexp.new(config["pattern"].to_s, options, timeout: timeout)
+      end
+
+      def self.timeout
+        [CompletionKit.config.regex_timeout, Regexp.timeout].compact.min
       end
 
       def call(target, config)

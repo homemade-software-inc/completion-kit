@@ -324,6 +324,51 @@ RSpec.describe CompletionKit::Checks::Registry do
         expect(result.detail).to eq("timed out after 0.05s matching /#{pattern}/")
         expect(elapsed).to be < 2
       end
+
+      it "keeps a host's stricter global timeout rather than loosening it to the per-pattern one" do
+        CompletionKit.config.regex_timeout = 1.0
+        Regexp.timeout = 0.05
+
+        result, elapsed = timed { call("regex", target, { "pattern" => pattern }) }
+
+        expect(result.detail).to eq("timed out after 0.05s matching /#{pattern}/")
+        expect(elapsed).to be < 1
+      end
+    end
+
+    describe "the timeout a pattern compiles with" do
+      around do |example|
+        original_global = Regexp.timeout
+        original_config = CompletionKit.config.regex_timeout
+        example.run
+      ensure
+        Regexp.timeout = original_global
+        CompletionKit.config.regex_timeout = original_config
+      end
+
+      def timeout_with(config:, global:)
+        CompletionKit.config.regex_timeout = config
+        Regexp.timeout = global
+        CompletionKit::Checks::Regex.build({ "pattern" => "a" }).timeout
+      end
+
+      it "takes the smaller of regex_timeout and the host's global Regexp.timeout" do
+        expect(timeout_with(config: 1.0, global: 0.1)).to eq(0.1)
+        expect(timeout_with(config: 0.1, global: 1.0)).to eq(0.1)
+        expect(timeout_with(config: Rational(1, 4), global: 0.5)).to eq(0.25)
+      end
+
+      it "uses regex_timeout when the host sets no global Regexp.timeout" do
+        expect(timeout_with(config: 0.25, global: nil)).to eq(0.25)
+      end
+
+      it "uses the host's global Regexp.timeout when regex_timeout is nil" do
+        expect(timeout_with(config: nil, global: 0.1)).to eq(0.1)
+      end
+
+      it "sets no limit when neither is set" do
+        expect(timeout_with(config: nil, global: nil)).to be_nil
+      end
     end
 
     it "compiles with the configured per-pattern timeout and leaves the global one alone" do
