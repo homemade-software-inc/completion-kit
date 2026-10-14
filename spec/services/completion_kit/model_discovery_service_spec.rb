@@ -802,20 +802,34 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(models.find_by(model_id: "llama3.3:70b").display_name).to eq("llama3.3:70b")
     end
 
-    TransportErrors.samples.merge("a reply that is not JSON" => nil).each do |label, error|
+    TransportErrors.samples.each do |label, (error, message)|
       it "stores one fixed judging probe error for #{label}" do
         allow(Rails.logger).to receive(:warn)
         stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
-        if error
-          allow(faraday_connection_stub).to receive(:post).and_raise(error)
-        else
-          stub_faraday_post(faraday_response(success: true, body: "<html><title>Internal admin</title></html>"))
-        end
+        allow(faraday_connection_stub).to receive(:post).and_raise(error)
 
         described_class.new(config: config).refresh!
 
         errors = CompletionKit::Model.where(provider: "ollama").pluck(:judging_error).uniq
-        expect(errors).to eq([error ? "Could not connect to the endpoint." : "The endpoint did not return JSON."])
+        expect(errors).to eq([message])
+        expect(Rails.logger).to have_received(:warn).at_least(:once)
+      end
+    end
+
+    {
+      "a reply that is not JSON" => "<html><title>Internal admin</title></html>",
+      "a reply that is a JSON string" => '"PING-OK Score: 4"',
+      "a reply that is a JSON array" => '["PING-OK Score: 4"]'
+    }.each do |label, body|
+      it "stores one fixed judging probe error for #{label}" do
+        allow(Rails.logger).to receive(:warn)
+        stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+        stub_faraday_post(faraday_response(success: true, body: body))
+
+        described_class.new(config: config).refresh!
+
+        errors = CompletionKit::Model.where(provider: "ollama").pluck(:judging_error).uniq
+        expect(errors).to eq(["The endpoint did not return JSON."])
         expect(Rails.logger).to have_received(:warn).at_least(:once)
       end
     end
@@ -1168,6 +1182,54 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       model = CompletionKit::Model.find_by(model_id: "my-chat-deployment")
       expect(model.supports_generation).to eq(true)
       expect(model.supports_judging).to eq(true)
+    end
+  end
+
+  describe "#refresh! when a model list is JSON but not an object" do
+    before do
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
+    end
+
+    {
+      "openai" => { provider: "openai", api_key: "k" },
+      "anthropic" => { provider: "anthropic", api_key: "k" },
+      "openrouter" => { provider: "openrouter", api_key: "k" },
+      "ollama" => { provider: "ollama", api_key: nil, api_endpoint: "https://ollama.example.test/v1" },
+      "azure_foundry" => { provider: "azure_foundry", api_key: "k", api_endpoint: "https://res.example.test", api_version: "2024-10-21" },
+      "an azure_foundry project" => { provider: "azure_foundry", api_key: "k", api_endpoint: "https://res.example.test/api/projects/notes" }
+    }.each do |label, provider_config|
+      ['"gpt-4o"', '["gpt-4o"]'].each do |body|
+        it "treats a #{label} model list of #{body} as a reply that is not JSON" do
+          stub_faraday_get(faraday_response(success: true, body: body))
+
+          expect { described_class.new(config: provider_config).refresh! }.to raise_error(JSON::ParserError)
+          expect(CompletionKit::Model.count).to eq(0)
+        end
+      end
+    end
+
+    it "leaves the Azure catalog count nil when the catalog is a JSON array" do
+      allow(faraday_connection_stub).to receive(:get) do |url, &blk|
+        blk&.call(Struct.new(:headers).new({}))
+        if url.include?("/deployments")
+          faraday_response(success: true, body: { value: [{ name: "my-chat-deployment" }] }.to_json)
+        else
+          faraday_response(success: true, body: "[1, 2, 3]")
+        end
+      end
+      stub_faraday_post(faraday_response(success: true, body: { choices: [{ message: { content: "PING-OK Score: 3" } }] }.to_json))
+      service = described_class.new(config: { provider: "azure_foundry", api_key: "k", api_endpoint: "https://res.example.test/api/projects/notes" })
+
+      service.refresh!
+
+      expect(service.catalog_model_count).to be_nil
+    end
+
+    it "falls back to the raw text when an error body is a JSON array" do
+      stub_faraday_get(faraday_response(success: false, status: 401, body: '["key revoked"]'))
+
+      expect { described_class.new(config: { provider: "openai", api_key: "test-key-123" }).refresh! }
+        .to raise_error(described_class::DiscoveryError, 'Invalid API key for openai: ["key revoked"]')
     end
   end
 

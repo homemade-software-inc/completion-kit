@@ -417,6 +417,32 @@ RSpec.describe "CompletionKit provider clients", type: :service do
     expect(client.generate_completion("prompt", model: "d")).to eq("Error: The endpoint did not return JSON.")
   end
 
+  ['"internal admin"', '["internal admin"]'].each do |body|
+    it "answers a 200 of #{body} from Azure as a reply that is not JSON" do
+      allow(Rails.logger).to receive(:warn)
+      client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "https://azure.example.test", api_version: "2024-10-21")
+      stub_faraday(faraday_response(success: true, body: body))
+
+      expect(client.generate_completion("prompt", model: "d")).to eq("Error: The endpoint did not return JSON.")
+      expect(Rails.logger).to have_received(:warn).with(/JSON::ParserError/)
+    end
+
+    it "answers a 200 of #{body} from Ollama as a reply that is not JSON" do
+      allow(Rails.logger).to receive(:warn)
+      client = CompletionKit::OllamaClient.new(api_endpoint: "https://ollama.example.test")
+      stub_faraday(faraday_response(success: true, body: body))
+
+      expect(client.generate_completion("prompt")).to eq("Error: The endpoint did not return JSON.")
+    end
+
+    it "lists no Azure deployments when the list is #{body}" do
+      client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "https://azure.example.test", api_version: "2024-10-21")
+      stub_faraday_get(faraday_response(success: true, body: body))
+
+      expect(client.available_models).to eq([])
+    end
+  end
+
   it "pins Ollama requests to the checked address" do
     client = CompletionKit::OllamaClient.new(api_endpoint: "https://ollama.example.test")
     stub_faraday(faraday_response(success: true, body: { choices: [{ text: "ok" }] }.to_json))

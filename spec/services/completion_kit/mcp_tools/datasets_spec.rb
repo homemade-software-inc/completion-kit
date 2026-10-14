@@ -175,16 +175,18 @@ RSpec.describe CompletionKit::McpTools::Datasets do
       expect(result[:isError]).to be(true)
     end
 
-    it "answers every transport failure with one fixed message and logs the detail" do
+    it "answers every transport failure with a fixed message and logs the detail" do
       allow(Rails.logger).to receive(:warn)
-      texts = TransportErrors.samples.values.map do |error|
+      texts = TransportErrors.samples.values.map do |error, _message|
         stub_fetch(raises: error)
         described_class.call("datasets_create_from_url",
           {"name" => "x", "url" => "https://example.com/data.csv"})[:content].first[:text]
       end
 
-      expect(texts.uniq).to eq(["Could not download CSV. Could not connect to the endpoint."])
+      expect(texts).to eq(TransportErrors.samples.values.map { |_error, message| "Could not download CSV. #{message}" })
+      expect(texts.none? { |text| TransportErrors.leaks?(text) }).to be(true)
       expect(Rails.logger).to have_received(:warn).with(/Connection refused/)
+      expect(Rails.logger).to have_received(:warn).with(/ReadTimeout/)
     end
 
     context "against real sockets" do

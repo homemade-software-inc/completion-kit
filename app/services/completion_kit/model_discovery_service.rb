@@ -67,7 +67,7 @@ module CompletionKit
 
     def extract_provider_error_message(body)
       return nil if body.blank?
-      data = JSON.parse(body)
+      data = JsonObject.parse(body)
       err = data["error"]
       message = (err.is_a?(Hash) && err["message"]) || data["message"] || (err.is_a?(String) && err) || nil
       redact_secrets(message)
@@ -89,7 +89,7 @@ module CompletionKit
         req.headers["Authorization"] = "Bearer #{@api_key}"
       end
       raise_fetch_error!(response) unless response.success?
-      JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: nil } }
+      JsonObject.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: nil } }
     end
 
     def fetch_anthropic_models
@@ -98,7 +98,7 @@ module CompletionKit
         req.headers["anthropic-version"] = "2023-06-01"
       end
       raise_fetch_error!(response) unless response.success?
-      JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["display_name"] } }
+      JsonObject.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["display_name"] } }
     end
 
     def fetch_openrouter_models
@@ -108,7 +108,7 @@ module CompletionKit
         req.headers["X-Title"] = "CompletionKit"
       end
       raise_fetch_error!(response) unless response.success?
-      JSON.parse(response.body).fetch("data", []).filter_map do |entry|
+      JsonObject.parse(response.body).fetch("data", []).filter_map do |entry|
         next nil if entry["deprecated"] == true
         context_length = entry["context_length"].to_i
         next nil if context_length < 8192
@@ -132,7 +132,7 @@ module CompletionKit
         req.headers["Authorization"] = "Bearer #{@api_key}" if @api_key.present?
       end
       raise DiscoveryError, custom_endpoint_error_message(response) unless response.success?
-      JSON.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
+      JsonObject.parse(response.body).fetch("data", []).map { |e| { id: e["id"], display_name: e["id"] } }
     end
 
     def custom_endpoint_error_message(response)
@@ -181,7 +181,7 @@ module CompletionKit
       end
       raise DiscoveryError, azure_error_message(response) unless response.success?
 
-      body = JSON.parse(response.body)
+      body = JsonObject.parse(response.body)
       if azure_foundry_project?
         @catalog_model_count = fetch_azure_catalog_count
         body.fetch("value", []).map { |d| { id: d["name"], display_name: d["name"] } }
@@ -196,7 +196,7 @@ module CompletionKit
       end
       return nil unless response.success?
 
-      JSON.parse(response.body).fetch("data", []).length
+      JsonObject.parse(response.body).fetch("data", []).length
     rescue StandardError
       nil
     end
@@ -405,7 +405,7 @@ module CompletionKit
     end
 
     def extract_text(response)
-      data = JSON.parse(response.body)
+      data = JsonObject.parse(response.body)
       case @provider
       when "openai"
         message = Array(data["output"]).find { |o| o["type"] == "message" }

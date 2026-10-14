@@ -1,6 +1,8 @@
 require "faraday"
 
 module TransportErrors
+  CONNECT = "Could not connect to the endpoint."
+  TIMEOUT = "The endpoint did not respond in time."
   LEAKED_TEXT = [
     "Connection refused",
     "execution expired",
@@ -14,11 +16,12 @@ module TransportErrors
 
   def self.samples
     {
-      "a refused port" => Faraday::ConnectionFailed.new(%(Failed to open TCP connection to 10.9.8.7:22 (Connection refused - connect(2) for "10.9.8.7" port 22))),
-      "a connect timeout" => Faraday::TimeoutError.new("Failed to open TCP connection to 10.9.8.7:81 (execution expired)"),
-      "a read timeout" => Faraday::TimeoutError.new("Net::ReadTimeout with #<TCPSocket:(closed)>"),
-      "a service that is not HTTP" => Faraday::ConnectionFailed.new(%(wrong status line: "SSH-2.0-OpenSSH_9.6 test")),
-      "a TLS failure" => Faraday::SSLError.new("SSL_connect returned=1 errno=0 peeraddr=10.9.8.7:443 state=error: certificate verify failed")
+      "a refused port" => [Faraday::ConnectionFailed.new(%(Failed to open TCP connection to 10.9.8.7:22 (Connection refused - connect(2) for "10.9.8.7" port 22))), CONNECT],
+      "a connect timeout" => [Faraday::ConnectionFailed.new("Failed to open TCP connection to 10.9.8.7:81 (execution expired)"), CONNECT],
+      "a read timeout" => [Faraday::TimeoutError.new("Net::ReadTimeout with #<TCPSocket:(closed)> 10.9.8.7:443"), TIMEOUT],
+      "a request timeout" => [Faraday::TimeoutError.new("execution expired"), TIMEOUT],
+      "a service that is not HTTP" => [Faraday::ConnectionFailed.new(%(wrong status line: "SSH-2.0-OpenSSH_9.6 test")), CONNECT],
+      "a TLS failure" => [Faraday::SSLError.new("SSL_connect returned=1 errno=0 peeraddr=10.9.8.7:443 state=error: certificate verify failed"), CONNECT]
     }
   end
 

@@ -116,7 +116,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
     expect(review.error_class).to eq("CompletionKit::EndpointError")
   end
 
-  TransportErrors.samples.each do |label, error|
+  TransportErrors.samples.each do |label, (error, message)|
     it "stores one fixed message for #{label}" do
       allow(Rails.error).to receive(:report)
       allow(Rails.logger).to receive(:warn)
@@ -131,7 +131,7 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
 
       review = response.reviews.find_by(metric_id: metric.id)
       expect(review.status).to eq("failed")
-      expect(review.error_message).to eq("Could not connect to the endpoint.")
+      expect(review.error_message).to eq(message)
       expect(review.error_class).to eq("CompletionKit::EndpointError")
       expect(TransportErrors.leaks?(review.as_json.to_s)).to be(false)
       expect(Rails.logger).to have_received(:warn).with(include(error.message))

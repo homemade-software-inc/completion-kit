@@ -96,7 +96,8 @@ RSpec.describe CompletionKit::ModelDiscoveryJob, type: :job do
     expect(credential.reload.discovery_error).to be_nil
   end
 
-  it "records a rate limit once its retries are exhausted" do
+  it "records a rate limit once its retries are exhausted and reports it" do
+    allow(Rails.error).to receive(:report)
     allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(CompletionKit::RateLimitError, "slow down")
     job = described_class.new(credential.id)
     job.exception_executions = { "[CompletionKit::RateLimitError]" => 4 }
@@ -106,10 +107,21 @@ RSpec.describe CompletionKit::ModelDiscoveryJob, type: :job do
     credential.reload
     expect(credential.discovery_status).to eq("failed")
     expect(credential.discovery_error).to eq("slow down")
+    expect(Rails.error).to have_received(:report)
+      .with(an_instance_of(CompletionKit::RateLimitError), handled: true, context: { job: described_class.name, provider_credential_id: credential.id })
   end
 
-  TransportErrors.samples.each do |label, error|
-    it "records one fixed message for #{label} once retries are exhausted" do
+  it "does not report a connection failure while it still has retries left" do
+    allow(Rails.error).to receive(:report)
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(Faraday::ConnectionFailed, "Connection refused")
+
+    described_class.perform_now(credential.id)
+
+    expect(Rails.error).not_to have_received(:report)
+  end
+
+  TransportErrors.samples.each do |label, (error, message)|
+    it "records one fixed message for #{label} once retries are exhausted and reports it" do
       allow(Rails.error).to receive(:report)
       allow(Rails.logger).to receive(:warn)
       allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(error)
@@ -120,8 +132,10 @@ RSpec.describe CompletionKit::ModelDiscoveryJob, type: :job do
 
       credential.reload
       expect(credential.discovery_status).to eq("failed")
-      expect(credential.discovery_error).to eq("Could not connect to the endpoint.")
+      expect(credential.discovery_error).to eq(message)
       expect(Rails.logger).to have_received(:warn).with(include(error.message))
+      expect(Rails.error).to have_received(:report)
+        .with(error, handled: true, context: { job: described_class.name, provider_credential_id: credential.id })
     end
   end
 

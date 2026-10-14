@@ -8,10 +8,12 @@ module CompletionKit
 
   class EndpointError < Error
     CONNECTION_MESSAGE = "Could not connect to the endpoint."
+    TIMEOUT_MESSAGE = "The endpoint did not respond in time."
     NOT_JSON_MESSAGE = "The endpoint did not return JSON."
 
     def self.from(error)
       message = case error
+                when Faraday::TimeoutError then TIMEOUT_MESSAGE
                 when Faraday::Error then CONNECTION_MESSAGE
                 when JSON::ParserError then NOT_JSON_MESSAGE
                 end

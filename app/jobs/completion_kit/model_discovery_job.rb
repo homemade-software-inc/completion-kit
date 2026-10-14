@@ -9,21 +9,18 @@ module CompletionKit
     end
 
     rescue_from(StandardError) do |error|
-      unless error.is_a?(CompletionKit::ModelDiscoveryService::DiscoveryError)
-        Rails.error.report(error, handled: true, context: { job: self.class.name, provider_credential_id: arguments.first })
-      end
-      record_failure!(error)
+      report_and_record_failure!(error)
     end
 
     retry_on Faraday::TimeoutError,
              Faraday::ConnectionFailed,
              wait: :polynomially_longer, attempts: 5 do |job, error|
-      job.send(:record_failure!, error)
+      job.send(:report_and_record_failure!, error)
     end
 
     retry_on CompletionKit::RateLimitError,
              wait: ->(executions) { rate_limit_wait(executions) }, attempts: 5 do |job, error|
-      job.send(:record_failure!, error)
+      job.send(:report_and_record_failure!, error)
     end
 
     discard_on ActiveJob::DeserializationError
@@ -59,6 +56,13 @@ module CompletionKit
     end
 
     private
+
+    def report_and_record_failure!(error)
+      unless error.is_a?(CompletionKit::ModelDiscoveryService::DiscoveryError)
+        Rails.error.report(error, handled: true, context: { job: self.class.name, provider_credential_id: arguments.first })
+      end
+      record_failure!(error)
+    end
 
     def record_failure!(error)
       credential = ProviderCredential.find_by(id: arguments.first)

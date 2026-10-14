@@ -26,7 +26,7 @@ module CompletionKit
       end
 
       if response.success?
-        data = JSON.parse(response.body)
+        data = JsonObject.parse(response.body)
         data["choices"][0]["text"].strip
       else
         "Error: #{response.status} - #{response.body}"
@@ -52,7 +52,7 @@ module CompletionKit
 
       return [] unless response.success?
 
-      models = JSON.parse(response.body).fetch("data", []).map { |entry| entry["id"] }.sort
+      models = JsonObject.parse(response.body).fetch("data", []).map { |entry| entry["id"] }.sort
       models.map { |id| { id: id, name: id } }
     rescue StandardError
       []

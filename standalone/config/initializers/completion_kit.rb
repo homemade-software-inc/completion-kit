@@ -23,6 +23,8 @@ Rails.application.config.after_initialize do
     cred.api_key = key
     cred.api_endpoint = ENV["OLLAMA_API_ENDPOINT"] if provider == "ollama"
     cred.save! if cred.changed?
+  rescue ActiveRecord::RecordInvalid => e
+    Rails.logger.warn("[CompletionKit] skipped the #{provider} credential from the environment: #{e.record.errors.full_messages.to_sentence}")
   end
 rescue ActiveRecord::StatementInvalid
 end

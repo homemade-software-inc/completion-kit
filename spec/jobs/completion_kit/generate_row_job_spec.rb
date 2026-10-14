@@ -145,7 +145,7 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     expect(response.error_class).to eq("CompletionKit::EndpointError")
   end
 
-  TransportErrors.samples.each do |label, error|
+  TransportErrors.samples.each do |label, (error, message)|
     it "stores one fixed message for #{label}" do
       allow(Rails.error).to receive(:report)
       allow(Rails.logger).to receive(:warn)
@@ -159,7 +159,7 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
 
       response.reload
       expect(response.status).to eq("failed")
-      expect(response.error_message).to eq("Could not connect to the endpoint.")
+      expect(response.error_message).to eq(message)
       expect(response.error_class).to eq("CompletionKit::EndpointError")
       expect(TransportErrors.leaks?(response.as_json.to_s)).to be(false)
       expect(Rails.logger).to have_received(:warn).with(include(error.message))
