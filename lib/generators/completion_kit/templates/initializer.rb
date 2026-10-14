@@ -45,6 +45,15 @@ CompletionKit.configure do |config|
   # config.username = "admin"
   # config.password = ENV['COMPLETION_KIT_PASSWORD']
 
+  # Reviewer name for verdicts recorded in the web UI. The callable receives the
+  # controller. Each reviewer keeps one verdict per response and metric, so return
+  # a String unique to the signed-in person. Blank or nil falls back to username,
+  # then "operator". Any other return type raises CompletionKit::ConfigurationError.
+  # config.current_reviewer = ->(controller) { controller.current_user&.email }
+  # Behind a proxy that sets X-Remote-User. Only use this when a trusted proxy
+  # always overwrites the header, or any client can claim any name:
+  # config.current_reviewer = ->(controller) { controller.request.headers["X-Remote-User"] }
+
   # Rate limiting (requests per minute, per IP)
   # The REST API and MCP endpoint share api_rate_limit; the web UI uses
   # web_rate_limit. Both are enforced through Rails.cache.

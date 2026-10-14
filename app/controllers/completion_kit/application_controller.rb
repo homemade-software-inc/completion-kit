@@ -8,8 +8,21 @@ module CompletionKit
     rate_limit to: CompletionKit.config.web_rate_limit, within: 1.minute,
                with: -> { render plain: "Rate limit exceeded. Please slow down.", status: :too_many_requests }
     before_action :authenticate_completion_kit!
+    helper_method :ck_current_reviewer
 
     private
+
+    def ck_current_reviewer
+      @ck_current_reviewer ||= begin
+        cfg = CompletionKit.config
+        name = cfg.current_reviewer&.call(self)
+        unless name.nil? || name.is_a?(String)
+          raise CompletionKit::ConfigurationError,
+            "current_reviewer must return a String or nil, got #{name.class}. Return a name such as current_user.email."
+        end
+        name.presence || cfg.username.presence || "operator"
+      end
+    end
 
     def workspace_ready?
       CompletionKit::Onboarding::Checklist.new.complete? ||

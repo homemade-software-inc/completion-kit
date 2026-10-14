@@ -313,6 +313,7 @@ RSpec.configure do |config|
   config.before { CompletionKit.config.judge_agreement_enabled = true }
   config.before { CompletionKit.config.on_run_created = nil }
   config.before { CompletionKit.config.on_run_started = nil }
+  config.before { CompletionKit.config.current_reviewer = nil }
   config.before do
     allow(ActiveJob).to receive(:perform_all_later) do |*jobs|
       jobs.flatten.each { |job| job.class.perform_later(*job.arguments) }

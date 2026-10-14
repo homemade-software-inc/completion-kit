@@ -5,7 +5,7 @@ module CompletionKit
     before_action :reject_check_metric, only: [:create]
 
     def create
-      created_by = agreement_creator
+      created_by = ck_current_reviewer
       existing = Agreement.find_by(
         run_id: @run.id, response_id: @response.id, metric_id: @metric.id, created_by: created_by
       )
@@ -73,10 +73,6 @@ module CompletionKit
 
     def review_for_metric
       @response.reviews.find_by(metric_id: @metric.id)
-    end
-
-    def agreement_creator
-      request.env["HTTP_X_REMOTE_USER"].presence || CompletionKit.config.username.presence || "operator"
     end
   end
 end

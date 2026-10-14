@@ -139,7 +139,7 @@
           <% if CompletionKit.config.judge_agreement_enabled && review.metric && review.ai_score && review.metric_version&.llm_judge? %>
             <% existing = CompletionKit::Agreement.find_by(
                  response_id: @response.id, metric_id: review.metric_id,
-                 created_by: CompletionKit.config.username.presence || "operator"
+                 created_by: ck_current_reviewer
                ) %>
             <%= render "completion_kit/agreements/buttons",
                   review: review, agreement: existing, run: @run,
