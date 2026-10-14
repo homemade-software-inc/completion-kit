@@ -63,6 +63,8 @@ CompletionKit.configure do |config|
   # Input limits
   # Largest dataset CSV or import file, in bytes.
   # config.max_upload_bytes = 25 * 1024 * 1024
+  # Largest prompt template, in bytes.
+  # config.max_template_bytes = 1024 * 1024
   # Seconds one regex check pattern may spend matching one row. A row that runs
   # past it fails and says it timed out. The limit is set on each pattern, so
   # the process-wide Regexp.timeout is never changed. Set nil to fall back to

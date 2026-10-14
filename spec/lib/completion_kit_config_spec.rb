@@ -12,4 +12,8 @@ RSpec.describe CompletionKit::Configuration do
   it "gives each regex check pattern a one second match timeout by default" do
     expect(described_class.new.regex_timeout).to eq(1.0)
   end
+
+  it "caps a prompt template at 1 MB by default" do
+    expect(described_class.new.max_template_bytes).to eq(1024 * 1024)
+  end
 end

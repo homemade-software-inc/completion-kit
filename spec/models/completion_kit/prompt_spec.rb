@@ -1,6 +1,43 @@
 require "rails_helper"
 
 RSpec.describe CompletionKit::Prompt, type: :model do
+  describe "template size limit" do
+    around do |example|
+      original = CompletionKit.config.max_template_bytes
+      CompletionKit.config.max_template_bytes = 512 * 1024
+      example.run
+    ensure
+      CompletionKit.config.max_template_bytes = original
+    end
+
+    it "rejects a template larger than the configured limit" do
+      prompt = build(:completion_kit_prompt, template: "x" * ((512 * 1024) + 1))
+
+      expect(prompt).not_to be_valid
+      expect(prompt.errors[:template]).to eq(["is too large (limit 512 KB)"])
+    end
+
+    it "counts bytes, so a multibyte template under the limit in characters can still exceed it" do
+      prompt = build(:completion_kit_prompt, template: "é" * ((256 * 1024) + 1))
+
+      expect(prompt).not_to be_valid
+      expect(prompt.errors[:template]).to eq(["is too large (limit 512 KB)"])
+    end
+
+    it "accepts a template at the limit" do
+      expect(build(:completion_kit_prompt, template: "x" * (512 * 1024))).to be_valid
+    end
+
+    it "keeps an existing prompt saveable when the limit drops below its unchanged template" do
+      prompt = create(:completion_kit_prompt, template: "x" * 100)
+      CompletionKit.config.max_template_bytes = 32
+
+      expect(prompt.update(name: "Renamed")).to be(true)
+      expect(prompt.update(template: "y" * 100)).to be(false)
+      expect(prompt.errors[:template]).to eq(["is too large (limit 32 Bytes)"])
+    end
+  end
+
   describe "destroy cascade" do
     it "destroys runs, responses, and reviews; other versions of the family are untouched" do
       v1 = create(:completion_kit_prompt, name: "Family", family_key: "fam-cascade", version_number: 1, template: "Static prompt without variables")

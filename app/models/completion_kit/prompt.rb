@@ -9,6 +9,7 @@ module CompletionKit
 
     validates :name, presence: true
     validates :template, presence: true
+    validate :template_within_size_limit, if: :will_save_change_to_template?
     validates :llm_model, presence: true
     validate :llm_model_usable_for_generation, if: :llm_model_newly_selected?
     validates :family_key, presence: true
@@ -96,6 +97,13 @@ module CompletionKit
     end
 
     private
+
+    def template_within_size_limit
+      limit = CompletionKit.config.max_template_bytes
+      return if template.to_s.bytesize <= limit
+
+      errors.add(:template, "is too large (limit #{ActiveSupport::NumberHelper.number_to_human_size(limit)})")
+    end
 
     def llm_model_newly_selected?
       return false if llm_model.blank?
