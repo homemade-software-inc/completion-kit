@@ -80,7 +80,7 @@ Without the JavaScript include, in-page behaviours silently fail: clickable tabl
 
 Use a nonce that lasts the whole session, not a fresh random one per request. Turbo Drive re-creates the scripts in each new page body with the nonce from the `csp-nonce` meta tag, but the browser keeps enforcing the policy header of the first page it loaded, so a per-request nonce blocks nonce scripts after the first Drive visit.
 
-You have two choices. The Rails default, `->(request) { request.session.id.to_s }`, which the example below uses, gives a brand-new visitor's very first response an empty nonce, so a policy that admits scripts only by nonce blocks that first page's engine scripts until the session exists. That is fine when the engine pages sit behind a sign-in. A random nonce kept in the session, `->(request) { request.session[:csp_nonce] ||= SecureRandom.base64(16) }`, works on the first request but writes a session on every response, including cookie-less API and MCP calls. The standalone app uses the second, guarded with `if request.accepts.include?(Mime[:html])` so it writes a session only for requests that accept HTML.
+Keep a random nonce in the session, and skip it for API controllers so cookie-less API and MCP calls get no session cookie, as the example below does. The Rails default, `->(request) { request.session.id.to_s }`, also lasts the session, but it is empty on a brand-new visitor's first response, so a policy that admits scripts only by nonce blocks that first page's scripts until the session exists.
 
 ```ruby
 Rails.application.configure do
@@ -90,7 +90,11 @@ Rails.application.configure do
     policy.style_src   :self, :unsafe_inline
   end
 
-  config.content_security_policy_nonce_generator = ->(request) { request.session.id.to_s }
+  config.content_security_policy_nonce_generator = lambda do |request|
+    next if request.controller_instance.is_a?(ActionController::API)
+
+    request.session[:csp_nonce] ||= SecureRandom.base64(16)
+  end
   config.content_security_policy_nonce_directives = %w(script-src)
 end
 ```
