@@ -28,6 +28,11 @@ RSpec.describe "CompletionKit model select error styling", type: :request do
     expect(rule_for('.ck-input[aria-invalid="true"]:focus')).to eq(rule_for(".ck-input--error:focus"))
   end
 
+  it "gives a refused branded select the same red border as an invalid field" do
+    expect(rule_for('.ck-select__trigger[aria-invalid="true"]')).to eq(rule_for(".ck-input--error"))
+    expect(rule_for('.ck-select__trigger[aria-invalid="true"]:focus-visible')).to eq(rule_for(".ck-input--error:focus"))
+  end
+
   it "tints an invalid select without dropping its arrow" do
     expect(rule_for(".ck-input--error")).to match(/background-color:/)
     expect(rule_for(".ck-input--error")).not_to match(/(^|[\s;])background:/)
