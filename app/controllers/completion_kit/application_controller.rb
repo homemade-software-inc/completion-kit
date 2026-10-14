@@ -8,8 +8,16 @@ module CompletionKit
     rate_limit to: CompletionKit.config.web_rate_limit, within: 1.minute,
                with: -> { render plain: "Rate limit exceeded. Please slow down.", status: :too_many_requests }
     before_action :authenticate_completion_kit!
+    helper_method :ck_current_reviewer
 
     private
+
+    def ck_current_reviewer
+      @ck_current_reviewer ||= begin
+        cfg = CompletionKit.config
+        cfg.current_reviewer&.call(self).to_s.presence || cfg.username.presence || "operator"
+      end
+    end
 
     def workspace_ready?
       CompletionKit::Onboarding::Checklist.new.complete? ||

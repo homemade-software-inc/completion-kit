@@ -3,7 +3,7 @@
   <% pending_verdict = local_assigns[:pending_verdict] %>
   <% active_verdict = pending_verdict || current_verdict %>
   <% error = local_assigns[:error] %>
-  <% me = CompletionKit.config.username.presence || "operator" %>
+  <% me = ck_current_reviewer %>
   <% other_agreements = CompletionKit::Agreement
         .where(response_id: response_row.id, metric_id: metric.id)
         .where.not(created_by: me)

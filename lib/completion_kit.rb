@@ -7,7 +7,7 @@ module CompletionKit
   class Configuration
     attr_accessor :openai_api_key, :anthropic_api_key, :ollama_api_key, :ollama_api_endpoint
     attr_accessor :judge_model, :high_quality_threshold, :medium_quality_threshold
-    attr_accessor :username, :password, :auth_strategy, :api_token
+    attr_accessor :username, :password, :auth_strategy, :api_token, :current_reviewer
     attr_accessor :tenant_scope, :tenant_scope_columns
     attr_accessor :api_reference_authentication_partial
     attr_accessor :runs_display_scope, :runs_display_footer_partial

@@ -40,6 +40,23 @@ RSpec.describe "CompletionKit metrics (agreement surfaces)", type: :request do
       expect(response.body).not_to include("responses/#{stale_resp.id}#helpfulness")
     end
 
+    it "points the review link past responses the current reviewer has already reviewed" do
+      version = CompletionKit::MetricVersion.ensure_current_for(metric)
+      older = create(:completion_kit_response, run: run, created_at: 2.hours.ago)
+      create(:completion_kit_review, response: older, metric: metric, metric_name: metric.name, metric_version_id: version.id, ai_score: 4.0, ai_feedback: "older")
+      newer = create(:completion_kit_response, run: run, created_at: 1.hour.ago)
+      create(:completion_kit_review, response: newer, metric: metric, metric_name: metric.name, metric_version_id: version.id, ai_score: 4.0, ai_feedback: "newer")
+      create(:completion_kit_agreement, run: run, response: newer, metric: metric,
+             metric_version: version, verdict: "agree", created_by: "alice")
+      CompletionKit.config.current_reviewer = ->(_controller) { "alice" }
+
+      get "/completion_kit/metrics/#{metric.id}"
+
+      expect(response.body).to include("Review another score")
+      expect(response.body).to include("responses/#{older.id}#helpfulness")
+      expect(response.body).not_to include("responses/#{newer.id}#helpfulness")
+    end
+
     it "names the current version in the not-measured hint and notes earlier-version reviews below it" do
       v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
       r = create(:completion_kit_response, run: run)

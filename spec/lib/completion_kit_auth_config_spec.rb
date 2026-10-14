@@ -24,6 +24,20 @@ RSpec.describe "CompletionKit auth configuration" do
     expect(CompletionKit.config.auth_strategy).to eq(strategy)
   end
 
+  it "defaults current_reviewer to nil" do
+    expect(CompletionKit.config.current_reviewer).to be_nil
+  end
+
+  it "exposes current_reviewer" do
+    reviewer = ->(controller) { controller.request.headers["X-Remote-User"] }
+
+    CompletionKit.configure do |c|
+      c.current_reviewer = reviewer
+    end
+
+    expect(CompletionKit.config.current_reviewer).to eq(reviewer)
+  end
+
   it "exposes api_token" do
     CompletionKit.configure do |c|
       c.api_token = "test-token-123"

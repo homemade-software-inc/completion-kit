@@ -133,6 +133,27 @@ end
 
 Only one mode can be active.
 
+### Reviewer name
+
+When someone records a verdict on a judge's score in the web UI, CompletionKit saves it under a reviewer name. Each reviewer keeps one verdict per response and metric, so give every person their own name. Otherwise their verdicts overwrite each other. Set `current_reviewer` to a callable that receives the controller and returns the signed-in person's name:
+
+```ruby
+CompletionKit.configure do |c|
+  c.auth_strategy = ->(controller) { controller.authenticate_user! }
+  c.current_reviewer = ->(controller) { controller.current_user&.email }
+end
+```
+
+If `current_reviewer` is unset or returns a blank value, verdicts are saved under `username`, or `"operator"` when no username is set. The web UI does not read the `X-Remote-User` header on its own. If a proxy in front of your app sets that header, pass it through:
+
+```ruby
+CompletionKit.configure do |c|
+  c.current_reviewer = ->(controller) { controller.request.headers["X-Remote-User"] }
+end
+```
+
+The REST API and the MCP server take the reviewer name from their own `created_by` parameter.
+
 ## Rate limiting
 
 The REST API, the MCP endpoint, and the web UI are rate limited per IP, per minute. The defaults are generous; tune them in the initializer:
