@@ -297,6 +297,12 @@ module CompletionKit
       value.is_a?(Array) || value.is_a?(Hash) ? value.to_json : value
     end
 
+    def ck_check_expected_input_value(value)
+      return value if value.nil? || (value.is_a?(String) && CompletionKit::Checks::Registry.parse_json(value) == value)
+
+      value.to_json
+    end
+
     def ck_check_spec_fields(config)
       shown = config.except("check_kind", "target").reject do |key, _value|
         CompletionKit::Checks::Registry::FLAG_KEYS.include?(key) && !CompletionKit::Checks::Flag.on?(config, key)

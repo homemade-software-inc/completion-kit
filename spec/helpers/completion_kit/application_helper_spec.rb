@@ -448,6 +448,16 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_check_input_value("A, B")).to eq("A, B")
       expect(helper.ck_check_input_value(82_000)).to eq(82_000)
     end
+
+    it "writes an answer key into the form so that reading it back gives exactly what was stored" do
+      expect(helper.ck_check_expected_input_value("200")).to eq('"200"')
+      expect(helper.ck_check_expected_input_value("true")).to eq('"true"')
+      expect(helper.ck_check_expected_input_value("active")).to eq("active")
+      expect(helper.ck_check_expected_input_value(200)).to eq("200")
+      expect(helper.ck_check_expected_input_value(false)).to eq("false")
+      expect(helper.ck_check_expected_input_value({ "a" => 1 })).to eq('{"a":1}')
+      expect(helper.ck_check_expected_input_value(nil)).to be_nil
+    end
   end
 
   describe "#ck_result_change_badge" do

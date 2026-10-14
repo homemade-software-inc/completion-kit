@@ -144,9 +144,11 @@ RSpec.describe CompletionKit::Checks::Registry do
       expect(canonical({ "check_kind" => "numeric_equals", "value" => "1", "tolerance" => "2%" })["tolerance"]).to eq("2%")
     end
 
-    it "reads an answer key written as JSON text the same as the value it encodes, and keeps a false one" do
+    it "tells a text answer key from the JSON value it spells, since the check compares them strictly, and keeps a false one" do
       expect(canonical({ "check_kind" => "json_path_equals", "json_path" => "code", "expected" => "200" }))
-        .to eq(canonical({ "check_kind" => "json_path_equals", "json_path" => "code", "expected" => 200 }))
+        .not_to eq(canonical({ "check_kind" => "json_path_equals", "json_path" => "code", "expected" => 200 }))
+      expect(canonical({ "check_kind" => "json_path_equals", "json_path" => "ok", "expected" => "true" }))
+        .not_to eq(canonical({ "check_kind" => "json_path_equals", "json_path" => "ok", "expected" => true }))
       expect(canonical({ "check_kind" => "json_path_equals", "json_path" => "state", "expected" => "active" })["expected"]).to eq("active")
       expect(canonical({ "check_kind" => "json_path_equals", "json_path" => "ok", "expected" => false })["expected"]).to be(false)
     end

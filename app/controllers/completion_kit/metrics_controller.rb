@@ -258,7 +258,7 @@ module CompletionKit
       hash = config.to_unsafe_h.stringify_keys
       %w[min max tolerance].each { |key| hash[key] = coerce_number(hash[key]) if hash[key].present? }
       %w[case_sensitive multiline trim].each { |key| hash[key] = ActiveModel::Type::Boolean.new.cast(hash[key]) if hash.key?(key) }
-      hash["expected"] = coerce_scalar(hash["expected"]) if hash["expected"].present?
+      hash["expected"] = CompletionKit::Checks::Registry.parse_json(hash["expected"]) if hash["expected"].present?
       prune_check_config(hash.except(*CompletionKit::Checks::Registry.unused_keys(hash)))
     end
 
@@ -273,12 +273,6 @@ module CompletionKit
       return value if number.nil?
 
       number == number.to_i ? number.to_i : number
-    end
-
-    def coerce_scalar(value)
-      JSON.parse(value)
-    rescue JSON::ParserError
-      value
     end
 
     def normalize_rubric_bands_for_update(bands)

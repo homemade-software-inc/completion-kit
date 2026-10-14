@@ -431,6 +431,38 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(CompletionKit::MetricVersion.drafts.find_by(metric_id: metric.id).check_config).to include("value" => "OTHER")
     end
 
+    it "drafts an answer key changed between text and the number it spells" do
+      text = review!(rest_check("Status text", { check_kind: "json_path_equals", target: "response_text",
+                                                 json_path: "code", expected: "200" }))
+      number = review!(create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "json_path_equals", "target" => "response_text", "json_path" => "code", "expected" => 200 }))
+
+      expect { resubmit_edit_form(text, "metric[check_config][expected]" => "200") }
+        .to change(CompletionKit::MetricVersion.drafts, :count).by(1)
+      expect(response).to redirect_to("#{base_path}/#{text.id}/edit")
+      expect { resubmit_edit_form(number, "metric[check_config][expected]" => '"200"') }
+        .to change(CompletionKit::MetricVersion.drafts, :count).by(1)
+
+      expect(CompletionKit::MetricVersion.drafts.find_by(metric_id: text.id).check_config["expected"]).to eq(200)
+      expect(CompletionKit::MetricVersion.drafts.find_by(metric_id: number.id).check_config["expected"]).to eq("200")
+      expect(text.reload.check_config["expected"]).to eq("200")
+      expect(number.reload.check_config["expected"]).to eq(200)
+    end
+
+    it "shows a REST answer key that spells a number in quotes, so saving the form unchanged keeps it as text" do
+      metric = review!(rest_check("Status", { check_kind: "json_path_equals", target: "response_text",
+                                              json_path: "code", expected: "200" }))
+
+      get "#{base_path}/#{metric.id}/edit"
+      page = Nokogiri::HTML5(response.body)
+      expect(page.at_css('input[name="metric[check_config][expected]"]')["value"]).to eq('"200"')
+      expect(page.at_css('[data-ck-check-field="expected"] .ck-hint').text).to include('in quotes, like "200", to match it as text')
+
+      expect { resubmit_edit_form(metric, {}) }.not_to change(CompletionKit::MetricVersion.drafts, :count)
+      expect(response).to redirect_to("#{base_path}/#{metric.id}")
+      expect(metric.reload.check_config["expected"]).to eq("200")
+    end
+
     it "writes a list value into the form as JSON and leaves an unticked string flag unticked" do
       list = rest_check("Codes", { check_kind: "list_overlap", target: "response_text", value: ["A", "B \"quoted\""] })
       loose = rest_check("Loose", { check_kind: "regex", target: "response_text", pattern: "ok", case_sensitive: "false" })

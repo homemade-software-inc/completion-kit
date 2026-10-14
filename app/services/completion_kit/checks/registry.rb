@@ -122,7 +122,6 @@ module CompletionKit
         when *FLAG_KEYS then Flag.cast(value)
         when *NUMBER_KEYS then NumericValue.parse(value) || value
         when "value" then canonical_operand(value)
-        when "expected" then value.is_a?(String) ? parse_json(value) : value
         else value
         end
       end
