@@ -7,7 +7,7 @@ module CompletionKit
 
     def self.initialize_session
       {
-        session_id: McpSession.start!,
+        session_id: SecureRandom.uuid,
         protocolVersion: PROTOCOL_VERSION,
         serverInfo: {name: "CompletionKit", version: CompletionKit::VERSION},
         capabilities: {tools: {listChanged: false}}

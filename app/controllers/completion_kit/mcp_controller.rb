@@ -2,10 +2,12 @@ module CompletionKit
   class McpController < Api::V1::BaseController
     PUBLIC_METHODS = %w[initialize notifications/initialized tools/list].freeze
 
-    skip_before_action :authenticate_api!, only: [:stream, :handle], raise: false
+    FOREIGN_KEY_MESSAGE = "This change references a record that does not exist or is still in use.".freeze
+
+    skip_before_action :authenticate_api!, only: [:stream, :handle, :destroy], raise: false
 
     def stream
-      response.set_header("Allow", "POST, DELETE")
+      response.set_header("Allow", "POST")
       head :method_not_allowed
     end
 
@@ -39,18 +41,19 @@ module CompletionKit
     rescue McpDispatcher::InvalidParams => e
       render json: jsonrpc_error(request_body.dig("id"), -32602, e.message), status: :ok
     rescue ActiveRecord::RecordNotFound => e
+      render json: jsonrpc_error(request_body.dig("id"), -32602, not_found_message(e)), status: :ok
+    rescue ActiveRecord::RecordInvalid => e
       render json: jsonrpc_error(request_body.dig("id"), -32602, e.message), status: :ok
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::InvalidForeignKey => e
-      render json: jsonrpc_error(request_body.dig("id"), -32602, e.message), status: :ok
+    rescue ActiveRecord::InvalidForeignKey => e
+      Rails.error.report(e, handled: true, context: { controller: "CompletionKit::McpController" })
+      render json: jsonrpc_error(request_body.dig("id"), -32602, FOREIGN_KEY_MESSAGE), status: :ok
     rescue StandardError => e
       Rails.error.report(e, handled: true, context: { controller: "CompletionKit::McpController" })
       render json: jsonrpc_error(request_body.dig("id"), -32603, "Internal error"), status: :ok
     end
 
     def destroy
-      session_id = request.headers["Mcp-Session-Id"]
-      McpSession.destroy_session(session_id) if session_id
-      head :ok
+      stream
     end
 
     private
@@ -59,6 +62,11 @@ module CompletionKit
       return true if PUBLIC_METHODS.include?(method)
       authenticate_api!
       !performed?
+    end
+
+    def not_found_message(error)
+      return "Record not found" unless error.model.present? && error.id.present?
+      "#{error.model.demodulize.titleize} #{Array(error.id).join(", ")} not found"
     end
 
     def jsonrpc_response(id, result)
