@@ -11,6 +11,48 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
     it "returns an empty array when the prompt is nil" do
       expect(described_class.extract_variables(nil)).to eq([])
     end
+
+    def variables_in(template)
+      described_class.extract_variables(build(:completion_kit_prompt, template: template))
+    end
+
+    it "reads the same placeholders the {{name}} pattern always matched, edge cases included" do
+      {
+        "{{{a}}" => ["{a"],
+        "{{{{a}}" => ["{{a"],
+        "{{a}b}}" => [],
+        "{{}}" => [],
+        "{{a" => [],
+        "no braces" => [],
+        "{{a\n}}" => ["a"],
+        "{{ a }} {{a}}" => ["a"],
+        "{{a}}}{{b}}" => %w[a b],
+        "{{a}{{b}}" => ["b"],
+        "é {{ naïve }} ü {{x}}" => %w[naïve x]
+      }.each do |template, expected|
+        expect(variables_in(template)).to eq(expected), "for #{template.inspect}"
+      end
+    end
+
+    it "agrees with the {{name}} pattern on every template in a seeded random sample" do
+      random = Random.new(20_261_014)
+      alphabet = ["{", "}", "a", "b", " ", "\n", "é"]
+      2_000.times do
+        template = Array.new(random.rand(1..24)) { alphabet[random.rand(alphabet.length)] }.join
+        expected = template.scan(/\{\{([^}]+)\}\}/).flatten.map(&:strip).uniq
+        expect(variables_in(template)).to eq(expected), "for #{template.inspect}"
+      end
+    end
+
+    it "finds placeholders without the regex engine, so a huge template cannot trip a regex timeout" do
+      prompt = build(:completion_kit_prompt, template: "{{ name }}#{"{" * 4_000_000}")
+      original = Regexp.timeout
+      Regexp.timeout = 0.001
+
+      expect(described_class.extract_variables(prompt)).to eq(["name"])
+    ensure
+      Regexp.timeout = original
+    end
   end
 
   describe ".process" do

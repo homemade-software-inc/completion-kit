@@ -37,7 +37,18 @@ module CompletionKit
     def self.extract_variables(prompt)
       return [] if prompt.nil? || prompt.template.blank?
 
-      prompt.template.scan(/\{\{([^}]+)\}\}/).flatten.map(&:strip).uniq
+      template = prompt.template
+      names = []
+      cursor = 0
+      while (open = template.byteindex("{{", cursor)) && (close = template.byteindex("}", open + 2))
+        if close > open + 2 && template.byteslice(close + 1, 1) == "}"
+          names << template.byteslice(open + 2, close - open - 2)
+          cursor = close + 2
+        else
+          cursor = close + 1
+        end
+      end
+      names.map(&:strip).uniq
     end
 
     def self.validate_variables(run, headers)
