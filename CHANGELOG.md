@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Editing a check saved through REST or MCP no longer creates a draft you did not ask for.** The edit form wrote a list `value` back as Ruby text, ticked a box whose flag was saved as the string `"false"`, and sent numbers back as text, so renaming such a check with reviews saved a draft, and the ticked box changed what the check did. The form now writes a list as JSON and ticks a box only when its flag is on, and a save compares what the check does rather than how its config is written.
 
+- **Editing a check validates the new values before saving them.** A check with reviews saved any change as a draft without validating it, and a check with none showed an error page on an invalid value and lost what you typed. Both now name the problem in the form and keep your values. A rename is saved in the same step as the config it repairs, so a check whose saved config no longer passes validation can be fixed from the form.
+
 - **A promptfoo import keeps promptfoo's case handling.** promptfoo's `contains`, `not-contains`, `equals` and `regex` asserts are case-sensitive, but they were imported with no `case_sensitive`, so the text checks matched case-insensitively. They now import with `case_sensitive: true`, and `icontains` and `not-icontains` with `false`. Regex checks imported before this release have no `case_sensitive`, so the regex change above applies to them.
 
 ### Changed

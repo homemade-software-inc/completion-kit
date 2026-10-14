@@ -244,6 +244,99 @@ RSpec.describe "Check metric authoring", type: :request do
     end
   end
 
+  describe "validating edits to a check" do
+    let(:list_config) { { "check_kind" => "list_overlap", "target" => "response_text", "value" => "A, B", "min" => 0.6 } }
+
+    def reviewed_check(config)
+      metric = create(:completion_kit_metric, :check, name: "Codes", check_config: config)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: metric,
+             metric_version: CompletionKit::MetricVersion.ensure_current_for(metric))
+      metric
+    end
+
+    def save_list(metric, min, name: metric.name)
+      patch "#{base_path}/#{metric.id}", params: { metric: { name: name, check_config: list_config.merge("min" => min) } }
+    end
+
+    def page
+      Nokogiri::HTML5(response.body)
+    end
+
+    def errors
+      page.css(".ck-error-list li").map(&:text)
+    end
+
+    it "refuses an invalid change to a check with reviews instead of saving it as a draft" do
+      metric = reviewed_check(list_config)
+
+      expect { save_list(metric, "1.5", name: "Renamed") }.not_to change(CompletionKit::MetricVersion.drafts, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(errors).to include('Check needs "Lowest score that passes" to be a number between 0 and 1')
+      expect(page.at_css('input[name="metric[check_config][min]"]')["value"]).to eq("1.5")
+      expect(metric.reload.name).to eq("Codes")
+      expect(metric.check_config["min"]).to eq(0.6)
+    end
+
+    it "saves the name and drafts the repair when a check with reviews has a bad saved config" do
+      metric = reviewed_check(list_config)
+      metric.update_column(:check_config, list_config.merge("min" => 1.5))
+
+      expect { save_list(metric, "0.6", name: "Fixed codes") }.to change(CompletionKit::MetricVersion.drafts, :count).by(1)
+
+      expect(response).to redirect_to("#{base_path}/#{metric.id}/edit")
+      expect(metric.reload.name).to eq("Fixed codes")
+      expect(metric.check_config["min"]).to eq(1.5)
+      expect(CompletionKit::MetricVersion.drafts.find_by(metric_id: metric.id).check_config["min"]).to eq(0.6)
+    end
+
+    it "repairs a bad saved config in place when the check has no reviews" do
+      metric = create(:completion_kit_metric, :check, check_config: list_config)
+      metric.update_column(:check_config, list_config.merge("min" => 1.5))
+
+      save_list(metric, "0.6", name: "Fixed codes")
+
+      expect(response).to redirect_to("#{base_path}/#{metric.id}")
+      expect(metric.reload).to have_attributes(name: "Fixed codes", valid?: true)
+      expect(metric.check_config["min"]).to eq(0.6)
+    end
+
+    it "names the problem when a rename leaves a bad saved config in place" do
+      metric = reviewed_check(list_config)
+      metric.update_column(:check_config, list_config.merge("min" => 1.5))
+
+      patch "#{base_path}/#{metric.id}", params: { metric: { name: "Renamed" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(errors).to include('Check needs "Lowest score that passes" to be a number between 0 and 1')
+      expect(metric.reload.name).to eq("Codes")
+    end
+
+    it "shows the errors and keeps what was typed when a check with no reviews is saved with bad values" do
+      metric = create(:completion_kit_metric, :check)
+
+      patch "#{base_path}/#{metric.id}", params: { metric: { check_config: { check_kind: "numeric_equals", target: "response_text",
+                                                                             value: "abc", tolerance: "lots" } } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(errors).to include('Check needs "Expected number" to be a number',
+                                'Check needs "How far off is still right" to be a number that is not negative, or a percentage like 2%')
+      expect(page.at_css('input[name="metric[check_config][value]"]')["value"]).to eq("abc")
+      expect(page.at_css('input[name="metric[check_config][tolerance]"]')["value"]).to eq("lots")
+      expect(metric.reload.check_config).to eq({ "check_kind" => "valid_json", "target" => "response_text" })
+    end
+
+    it "shows the error when a list threshold above 1 is saved on a check with no reviews" do
+      metric = create(:completion_kit_metric, :check, check_config: list_config)
+
+      save_list(metric, "1.5")
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(errors).to include('Check needs "Lowest score that passes" to be a number between 0 and 1')
+      expect(metric.reload.check_config["min"]).to eq(0.6)
+    end
+  end
+
   describe "resaving an in-use check through the edit form" do
     let(:token) { "edit-form-token" }
 

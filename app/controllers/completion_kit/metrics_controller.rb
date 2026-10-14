@@ -78,17 +78,12 @@ module CompletionKit
     end
 
     def update
-      meta_attrs = metric_params.except(:instruction, :rubric_bands, :check_config)
+      attrs = metric_params
+      @metric.assign_attributes(attrs.except(:instruction, :rubric_bands, :check_config))
+      return update_check_definition(attrs.to_unsafe_h[:check_config]) if @metric.check?
+      return render(:edit, status: :unprocessable_entity) unless @metric.save
 
-      unless @metric.update(meta_attrs)
-        return render(:edit, status: :unprocessable_entity)
-      end
-
-      if @metric.check?
-        update_check_definition
-      else
-        update_judge_definition
-      end
+      update_judge_definition
     end
 
     def destroy
@@ -207,27 +202,28 @@ module CompletionKit
       end
     end
 
-    def update_check_definition
-      proposed = metric_params.to_unsafe_h[:check_config]
+    def update_check_definition(proposed)
+      live = @metric.check_config
+      changed = !proposed.nil? && CompletionKit::Checks::Registry.canonical(proposed) != CompletionKit::Checks::Registry.canonical(live)
+      @metric.check_config = proposed if changed
+      return render(:edit, status: :unprocessable_entity) unless @metric.valid?
+      return save_check_draft(live, proposed) if changed && @metric.reviews.exists?
 
-      unless !proposed.nil? && CompletionKit::Checks::Registry.canonical(proposed) != CompletionKit::Checks::Registry.canonical(@metric.check_config)
-        return redirect_to(metric_path(@metric), notice: "Metric was successfully updated.")
-      end
+      @metric.save!
+      MetricVersion.published.find_by(metric_id: @metric.id, current: true)&.update!(metric_type: "check", check_config: proposed) if changed
+      redirect_to metric_path(@metric), notice: "Metric was successfully updated."
+    end
 
-      if @metric.reviews.exists?
-        MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").destroy_all
-        draft = MetricVersion.create!(
-          metric: @metric, metric_type: "check", check_config: proposed,
-          state: "draft", source: "edit", current: false
-        )
-        redirect_to edit_metric_path(@metric),
-                    notice: "Saved as draft #{draft.version_label}. Publish to make these changes the metric's live version."
-      else
-        @metric.update!(check_config: proposed)
-        current_pub = MetricVersion.published.where(metric_id: @metric.id, current: true).first
-        current_pub&.update!(metric_type: "check", check_config: proposed)
-        redirect_to metric_path(@metric), notice: "Metric was successfully updated."
-      end
+    def save_check_draft(live, proposed)
+      @metric.check_config = live
+      @metric.save!(validate: false)
+      MetricVersion.drafts.where(metric_id: @metric.id, source: "edit").destroy_all
+      draft = MetricVersion.create!(
+        metric: @metric, metric_type: "check", check_config: proposed,
+        state: "draft", source: "edit", current: false
+      )
+      redirect_to edit_metric_path(@metric),
+                  notice: "Saved as draft #{draft.version_label}. Publish to make these changes the metric's live version."
     end
 
     def set_metric
