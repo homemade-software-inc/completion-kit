@@ -379,10 +379,11 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_check_field_value("value", "made_up")).to eq("made_up")
     end
 
-    it "knows which config fields need translating on the metric page" do
-      expect(helper.ck_check_field_translated?("score_by")).to be(true)
-      expect(helper.ck_check_field_translated?("compare_to")).to be(true)
-      expect(helper.ck_check_field_translated?("value")).to be(false)
+    it "shows a ticked box as Yes, a worded field in words and anything else as code on the metric page" do
+      expect(helper.ck_check_spec_value("trim", true)).to eq("Yes")
+      expect(helper.ck_check_spec_value("score_by", "recall")).to eq(CompletionKit::Checks::Labels.value("score_by", "recall"))
+      expect(helper.ck_check_spec_value("expected", false)).to eq('<code class="ck-check-spec__code">false</code>')
+      expect(helper.ck_check_spec_value("value", %w[A B])).to eq('<code class="ck-check-spec__code">[&quot;A&quot;,&quot;B&quot;]</code>')
     end
 
     it "offers the plain-language options the form renders" do
@@ -396,6 +397,7 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
                  "expected" => false, "case_sensitive" => false, "multiline" => "false", "trim" => true }
 
       expect(helper.ck_check_spec_fields(config)).to eq("json_path" => "ok", "expected" => false, "trim" => true)
+      expect(helper.ck_check_spec_fields(config.merge("pattern" => "x")).keys).to eq(%w[pattern json_path expected trim])
     end
 
     it "labels the new numeric and list fields without engineering jargon" do

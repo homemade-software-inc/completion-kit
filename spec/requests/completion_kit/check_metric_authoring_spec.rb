@@ -634,6 +634,31 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(spec.text).not_to include("Case sensitive")
     end
 
+    it "lists a check's fields in the order the form lays them out, with a ticked box as Yes" do
+      metric = create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "contains", "target" => "json_path", "trim" => true,
+                        "case_sensitive" => true, "value" => "TOKEN", "target_path" => "data.field" })
+
+      get "#{base_path}/#{metric.id}"
+
+      spec = Nokogiri::HTML5(response.body).at_css(".ck-check-spec")
+      expect(spec.css(".ck-check-spec__term").map(&:text))
+        .to eq(["Rule", "What to check", "Path into the JSON", "Text to look for", "Case sensitive", "Trim whitespace"])
+      flags = spec.css(".ck-check-spec__row").select { |row| row.at_css(".ck-check-spec__term").text.in?(["Case sensitive", "Trim whitespace"]) }
+      expect(flags.map { |row| row.at_css(".ck-check-spec__val").text.squish }).to eq(%w[Yes Yes])
+      expect(flags.flat_map { |row| row.css(".ck-check-spec__code") }).to be_empty
+      expect(spec.css(".ck-check-spec__code").map(&:text)).to eq(["data.field", "TOKEN"])
+    end
+
+    it "shows a list value on the metric page as the JSON the form takes" do
+      metric = create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => %w[A B] })
+
+      get "#{base_path}/#{metric.id}"
+
+      expect(Nokogiri::HTML5(response.body).at_css(".ck-check-spec .ck-check-spec__code").text).to eq('["A","B"]')
+    end
+
     it "shows a list check's measure and threshold in the words the form uses" do
       metric = create(:completion_kit_metric, :check,
         check_config: { "check_kind" => "list_overlap", "target" => "response_text",

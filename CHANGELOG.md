@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Saving a check no longer keeps the fields belonging to a kind you moved away from.** The form submits every field it has, visible or not, so switching from a JSON check to a regex check left the old `json_path` and `expected` in the saved config, where the metric page then listed them as though the check read them. A saved check now keeps only the keys its own kind uses, plus the shared ones. A hidden "Each row's expected value" choice is dropped the same way, so switching to a rule that cannot use the answer key no longer fails to save.
 
+- **The metric page lists a check's fields the way the form does.** It now shows them in the form's order and under the form's labels, shows a ticked box as "Yes" rather than a `true` chip, shows a list as JSON, and keeps each label on one line.
+
 - **Check validation errors name fields the way the form does.** They used the stored keys, as in "Check config pattern is not a valid regular expression", and now read like "Check needs "Pattern" to be a valid regular expression" or "Check needs "How far off is still right" to be a number that is not negative, or a percentage like 2%".
 
 ## [0.28.46] - 2026-10-14

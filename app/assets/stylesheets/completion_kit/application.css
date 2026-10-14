@@ -2060,30 +2060,40 @@ label.ck-checkbox[hidden] {
 }
 
 .ck-check-spec {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 1rem;
+  row-gap: 0.4rem;
   margin: 0.5rem 0 0;
 }
 
 .ck-check-spec__row {
-  display: flex;
-  gap: 0.75rem;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: baseline;
 }
 
 .ck-check-spec__term {
-  flex: 0 0 7rem;
   margin: 0;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  white-space: nowrap;
   color: var(--ck-muted);
 }
 
 .ck-check-spec__val {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--ck-text);
+}
+
+@media (max-width: 640px) {
+  .ck-check-spec { grid-template-columns: minmax(0, 1fr); row-gap: 0.6rem; }
+  .ck-check-spec__row { grid-template-columns: minmax(0, 1fr); row-gap: 0.15rem; }
+  .ck-check-spec__term { white-space: normal; }
 }
 
 .ck-check-spec__code {

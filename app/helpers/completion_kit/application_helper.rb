@@ -258,13 +258,17 @@ module CompletionKit
     end
 
     def ck_check_spec_fields(config)
-      config.except("check_kind", "target").reject do |key, _value|
+      shown = config.except("check_kind", "target").reject do |key, _value|
         CompletionKit::Checks::Registry::FLAG_KEYS.include?(key) && !CompletionKit::Checks::Flag.on?(config, key)
       end
+      CompletionKit::Checks::Labels.in_form_order(shown)
     end
 
-    def ck_check_field_translated?(key)
-      CompletionKit::Checks::Labels.worded?(key)
+    def ck_check_spec_value(key, value)
+      return "Yes" if CompletionKit::Checks::Registry::FLAG_KEYS.include?(key.to_s)
+      return ck_check_field_value(key, value) if CompletionKit::Checks::Labels.worded?(key)
+
+      content_tag(:code, ck_check_input_value(value).to_s, class: "ck-check-spec__code")
     end
 
     def ck_check_score_by_options
