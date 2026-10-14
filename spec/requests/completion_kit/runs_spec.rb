@@ -670,6 +670,55 @@ RSpec.describe "CompletionKit runs", type: :request do
     end
   end
 
+  describe "saving the edit form exactly as the browser submits it" do
+    let(:dataset) { create(:completion_kit_dataset) }
+
+    def submitted_pairs(html)
+      form = Nokogiri::HTML5(html).at_css("form[action^='#{base_path}/']")
+      form.css("input, select, textarea").filter_map do |field|
+        name = field["name"]
+        next if name.blank? || %w[submit button].include?(field["type"])
+        next if %w[checkbox radio].include?(field["type"]) && !field.key?("checked")
+
+        value = case field.name
+                when "select" then (field.at_css("option[selected]") || field.at_css("option"))["value"].to_s
+                when "textarea" then field.text
+                else field["value"].to_s
+                end
+        [name, value]
+      end
+    end
+
+    def resubmit_edit_form(run, changes)
+      get "#{base_path}/#{run.id}/edit"
+      pairs = submitted_pairs(response.body).map { |name, value| [name, changes.fetch(name, value)] }
+      post "#{base_path}/#{run.id}", params: URI.encode_www_form(pairs), headers: { "CONTENT_TYPE" => "application/x-www-form-urlencoded" }
+    end
+
+    it "renames a run with results in place, keeping a judge that has no model row" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, name: "Legacy judge")
+      run.update_columns(judge_model: "legacy-judge", output_column: nil)
+      run.responses.create!(response_text: "Some output")
+
+      expect { resubmit_edit_form(run, "run[name]" => "Renamed") }.not_to change(CompletionKit::Run, :count)
+
+      expect(response).to redirect_to("#{base_path}/#{run.id}")
+      expect(run.reload.name).to eq("Renamed")
+      expect(run.judge_model).to eq("legacy-judge")
+    end
+
+    it "still forks a run with results when a scoring-only run's output column changes" do
+      scoring = create(:completion_kit_dataset, csv_data: "input,actual_output,other_output\nhi,hello,hey\n")
+      run = create(:completion_kit_run, prompt: nil, dataset: scoring, output_column: "actual_output", name: "Scored")
+      run.responses.create!(response_text: "hello")
+
+      expect { resubmit_edit_form(run, "run[output_column]" => "other_output") }.to change(CompletionKit::Run, :count).by(1)
+
+      expect(CompletionKit::Run.order(:id).last.output_column).to eq("other_output")
+      expect(run.reload.output_column).to eq("actual_output")
+    end
+  end
+
   describe "metric choices on a failed save" do
     let!(:saved_metric) { create(:completion_kit_metric, name: "Saved") }
     let!(:chosen_metric) { create(:completion_kit_metric, name: "Chosen") }

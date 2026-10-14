@@ -255,6 +255,7 @@ module CompletionKit
 
     def normalize_run_field(field, value)
       s = value.to_s.strip
+      return s.presence || "actual_output" if field == :output_column
       return nil if s.empty?
       case field
       when :temperature, :judge_temperature then s.to_f
