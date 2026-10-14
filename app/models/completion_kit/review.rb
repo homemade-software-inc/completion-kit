@@ -37,7 +37,7 @@ module CompletionKit
         id: id, response_id: response_id, metric_id: metric_id,
         metric_version_id: metric_version_id,
         metric_name: metric_name, ai_score: ai_score, passed: passed,
-        check_score: check_score,
+        check_score: check_score&.to_f,
         ai_feedback: ai_feedback, status: status, attempts: attempts,
         error: error_payload
       }

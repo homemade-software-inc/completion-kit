@@ -95,6 +95,12 @@ RSpec.describe "JSON serialization" do
       json = review.as_json
       expect(json.keys).to match_array(%i[id response_id metric_id metric_version_id metric_name ai_score passed check_score ai_feedback status attempts error])
     end
+
+    it "writes check_score as a number, the way metric_averages writes avg_check_score" do
+      review.update!(check_score: 0.6667)
+      expect(JSON.parse(review.to_json)["check_score"]).to eq(0.6667)
+      expect(JSON.parse(create(:completion_kit_review).to_json)["check_score"]).to be_nil
+    end
   end
 end
 
