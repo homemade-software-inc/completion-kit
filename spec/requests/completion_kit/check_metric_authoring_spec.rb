@@ -376,6 +376,57 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(JSON.parse(response.body)["check_config"]).to include("value" => "ok")
     end
 
+    def create_check(name, config)
+      post "/completion_kit/api/v1/metrics", params: { name: name, metric_type: "check", check_config: config }.to_json, headers: headers
+      expect(response).to have_http_status(:created), response.body
+      JSON.parse(response.body)["check_config"]
+    end
+
+    it "creates a list_overlap check from a JSON list, keeping score_by and min" do
+      config = create_check("Codes", { check_kind: "list_overlap", target: "json_path", target_path: "$.optionCodes",
+                                       value: %w[A B C], score_by: "f1", min: 0.5 })
+
+      expect(config).to include("value" => %w[A B C], "score_by" => "f1", "min" => 0.5, "target_path" => "$.optionCodes")
+    end
+
+    it "creates a list_overlap check graded against each row's answer key" do
+      config = create_check("Codes vs key", { check_kind: "list_overlap", target: "json_path", target_path: "optionCodes",
+                                              compare_to: "expected", expected_path: "optionCodes", score_by: "jaccard" })
+
+      expect(config).to include("compare_to" => "expected", "expected_path" => "optionCodes", "score_by" => "jaccard")
+    end
+
+    it "creates a numeric_bounds check" do
+      config = create_check("Confidence", { check_kind: "numeric_bounds", target: "json_path", target_path: "vin.confidence", min: 0.8, max: 1 })
+
+      expect(config).to include("check_kind" => "numeric_bounds", "min" => 0.8, "max" => 1)
+    end
+
+    it "creates a numeric_equals check, keeping a percentage or a plain number tolerance" do
+      expect(create_check("Price", { check_kind: "numeric_equals", target: "response_text", value: "24995", tolerance: "2%" }))
+        .to include("value" => "24995", "tolerance" => "2%")
+      expect(create_check("Mileage", { check_kind: "numeric_equals", target: "json_path", target_path: "mileage",
+                                       compare_to: "expected", expected_path: "mileage", tolerance: 500 }))
+        .to include("tolerance" => 500, "compare_to" => "expected")
+    end
+
+    it "creates a json_path_equals check graded against each row's answer key" do
+      config = create_check("VIN field", { check_kind: "json_path_equals", target: "response_text", json_path: "vin",
+                                           compare_to: "expected", expected_path: "vin" })
+
+      expect(config).to include("check_kind" => "json_path_equals", "compare_to" => "expected", "expected_path" => "vin")
+    end
+
+    it "updates a list_overlap value to a JSON list" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => "A" })
+
+      patch "/completion_kit/api/v1/metrics/#{metric.id}", params: { check_config: { check_kind: "list_overlap", target: "response_text", value: %w[A B] } }.to_json,
+                                                          headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(metric.reload.check_config["value"]).to eq(%w[A B])
+    end
+
     it "creates a comparison check graded against each row's expected value" do
       post "/completion_kit/api/v1/metrics",
            params: { name: "VIN match", metric_type: "check",

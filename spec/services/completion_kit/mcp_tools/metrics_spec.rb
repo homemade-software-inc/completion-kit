@@ -86,6 +86,44 @@ RSpec.describe CompletionKit::McpTools::Metrics do
       expect(content["check_config"]).to include("check_kind" => "equals", "compare_to" => "expected", "expected_path" => "vin")
     end
 
+    def create_check(name, config)
+      result = described_class.call("metrics_create", {"name" => name, "metric_type" => "check", "check_config" => config})
+      expect(result[:isError]).to be_falsey, result[:content].first[:text]
+      JSON.parse(result[:content].first[:text])["check_config"]
+    end
+
+    it "creates a list_overlap check from a list value with score_by and min" do
+      config = create_check("Codes", {"check_kind" => "list_overlap", "target" => "json_path", "target_path" => "optionCodes",
+                                      "value" => %w[A B], "score_by" => "precision", "min" => 0.5})
+
+      expect(config).to include("value" => %w[A B], "score_by" => "precision", "min" => 0.5)
+    end
+
+    it "creates a numeric_bounds check" do
+      config = create_check("Confidence", {"check_kind" => "numeric_bounds", "target" => "json_path", "target_path" => "$.vin.confidence", "min" => 0.8})
+
+      expect(config).to include("check_kind" => "numeric_bounds", "min" => 0.8)
+    end
+
+    it "creates a numeric_equals check with a numeric value and a tolerance" do
+      config = create_check("Mileage", {"check_kind" => "numeric_equals", "target" => "response_text", "value" => 82_000, "tolerance" => "2%"})
+
+      expect(config).to include("value" => 82_000, "tolerance" => "2%")
+    end
+
+    it "creates a json_path_equals check graded against each row's answer key" do
+      config = create_check("Trim", {"check_kind" => "json_path_equals", "target" => "response_text", "json_path" => "trim",
+                                     "compare_to" => "expected", "expected_path" => "trim"})
+
+      expect(config).to include("compare_to" => "expected", "expected_path" => "trim")
+    end
+
+    it "advertises a value that may be text, a number or a list" do
+      value = described_class::CHECK_CONFIG_SCHEMA[:properties][:value]
+      expect(value[:type]).to match_array(%w[string number array])
+      expect(value[:items][:type]).to match_array(%w[string number])
+    end
+
     it "updates a metric" do
       result = described_class.call("metrics_update", {"id" => metric.id, "name" => "Precision"})
       content = JSON.parse(result[:content].first[:text])
