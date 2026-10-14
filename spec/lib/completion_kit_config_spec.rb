@@ -16,4 +16,23 @@ RSpec.describe CompletionKit::Configuration do
   it "caps a prompt template at 1 MB by default" do
     expect(described_class.new.max_template_bytes).to eq(1024 * 1024)
   end
+
+  it "takes a positive number of seconds or nil for regex_timeout" do
+    config = described_class.new
+
+    [2, 0.25, Rational(1, 2), nil].each do |seconds|
+      config.regex_timeout = seconds
+      expect(config.regex_timeout).to eq(seconds)
+    end
+  end
+
+  it "refuses a regex_timeout Ruby cannot use, so a bad value fails at boot instead of on every regex check" do
+    config = described_class.new
+
+    [0, -1, Float::NAN, "1", true].each do |seconds|
+      expect { config.regex_timeout = seconds }
+        .to raise_error(ArgumentError, "regex_timeout must be a positive number of seconds or nil, got #{seconds.inspect}")
+    end
+    expect(config.regex_timeout).to eq(1.0)
+  end
 end

@@ -12,7 +12,8 @@ module CompletionKit
     attr_accessor :api_reference_authentication_partial
     attr_accessor :runs_display_scope, :runs_display_footer_partial
     attr_accessor :api_rate_limit, :web_rate_limit, :max_upload_bytes
-    attr_accessor :max_template_bytes, :regex_timeout
+    attr_accessor :max_template_bytes
+    attr_reader :regex_timeout
     attr_accessor :allow_loopback_endpoints
     attr_accessor :judge_agreement_enabled
     attr_accessor :judge_examples_from_reviews
@@ -44,6 +45,14 @@ module CompletionKit
 
     def tenant_scope_columns
       @tenant_scope_columns ||= []
+    end
+
+    def regex_timeout=(seconds)
+      unless seconds.nil? || (seconds.is_a?(Numeric) && seconds.positive?)
+        raise ArgumentError, "regex_timeout must be a positive number of seconds or nil, got #{seconds.inspect}"
+      end
+
+      @regex_timeout = seconds
     end
   end
 

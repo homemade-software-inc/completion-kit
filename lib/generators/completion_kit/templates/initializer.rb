@@ -67,7 +67,8 @@ CompletionKit.configure do |config|
   # config.max_template_bytes = 1024 * 1024
   # Seconds one regex check pattern may spend matching one row. A row that runs
   # past it fails and says it timed out. The limit is set on each pattern, so
-  # the process-wide Regexp.timeout is never changed. Set nil to fall back to
-  # Regexp.timeout.
+  # the process-wide Regexp.timeout is never changed. Use a positive number of
+  # seconds, or nil to fall back to Regexp.timeout. Any other value, such as 0,
+  # raises an ArgumentError at boot.
   # config.regex_timeout = 1.0
 end
