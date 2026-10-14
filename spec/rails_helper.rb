@@ -222,6 +222,14 @@ ActiveRecord::Schema.define do
             unique: true,
             name: "idx_taggings_unique"
 
+  create_table :completion_kit_mcp_sessions, force: true do |t|
+    t.string :session_id, null: false
+    t.datetime :expires_at, null: false
+    t.timestamps
+  end
+  add_index :completion_kit_mcp_sessions, :session_id, unique: true
+  add_index :completion_kit_mcp_sessions, :expires_at
+
   create_table :completion_kit_dashboard_dismissals, force: true do |t|
     t.string :dismissable_type, null: false
     t.bigint :dismissable_id, null: false

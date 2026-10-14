@@ -4,10 +4,10 @@ module CompletionKit
 
     FOREIGN_KEY_MESSAGE = "This change references a record that does not exist or is still in use.".freeze
 
-    skip_before_action :authenticate_api!, only: [:stream, :handle, :destroy], raise: false
+    skip_before_action :authenticate_api!, only: [:stream, :handle], raise: false
 
     def stream
-      response.set_header("Allow", "POST")
+      response.set_header("Allow", "POST, DELETE")
       head :method_not_allowed
     end
 
@@ -53,7 +53,7 @@ module CompletionKit
     end
 
     def destroy
-      stream
+      head :ok
     end
 
     private

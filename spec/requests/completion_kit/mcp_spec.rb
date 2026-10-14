@@ -8,6 +8,17 @@ RSpec.describe "MCP endpoint", type: :request do
   before { CompletionKit.config.api_token = token }
   after { CompletionKit.instance_variable_set(:@config, nil) }
 
+  def sql_writes_during
+    writes = []
+    subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+      writes << payload[:sql] if payload[:sql].match?(/\A\s*(INSERT|UPDATE|DELETE)\b/i)
+    end
+    yield
+    writes
+  ensure
+    ActiveSupport::Notifications.unsubscribe(subscriber)
+  end
+
   describe "authentication" do
     let(:no_auth) { {"Content-Type" => "application/json"} }
 
@@ -18,14 +29,10 @@ RSpec.describe "MCP endpoint", type: :request do
     end
 
     it "writes nothing to the database for an unauthenticated initialize" do
-      writes = []
-      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
-        writes << payload[:sql] if payload[:sql].match?(/\A\s*(INSERT|UPDATE|DELETE)\b/i)
+      writes = sql_writes_during do
+        post mcp_path, params: {jsonrpc: "2.0", method: "initialize", id: 1}.to_json, headers: no_auth
       end
 
-      post mcp_path, params: {jsonrpc: "2.0", method: "initialize", id: 1}.to_json, headers: no_auth
-
-      ActiveSupport::Notifications.unsubscribe(subscriber)
       expect(response).to have_http_status(:ok)
       expect(response.headers["Mcp-Session-Id"]).to match(/\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/)
       expect(writes).to be_empty
@@ -53,7 +60,7 @@ RSpec.describe "MCP endpoint", type: :request do
     it "returns 405 with an Allow header rather than 404, without requiring a token" do
       get mcp_path
       expect(response).to have_http_status(:method_not_allowed)
-      expect(response.headers["Allow"]).to eq("POST")
+      expect(response.headers["Allow"]).to eq("POST, DELETE")
       expect(response.body).to be_blank
     end
   end
@@ -112,17 +119,24 @@ RSpec.describe "MCP endpoint", type: :request do
   end
 
   describe "DELETE /mcp" do
-    it "answers 405 with an Allow header because the server keeps no sessions to end" do
-      delete mcp_path, headers: auth_headers.merge("Mcp-Session-Id" => SecureRandom.uuid)
-      expect(response).to have_http_status(:method_not_allowed)
-      expect(response.headers["Allow"]).to eq("POST")
-      expect(response.body).to be_blank
+    it "handles delete without session header" do
+      delete mcp_path, headers: auth_headers
+      expect(response).to have_http_status(:ok)
     end
 
-    it "answers 405 without a token" do
+    it "answers 200 for a session id without touching the database" do
+      writes = sql_writes_during do
+        delete mcp_path, headers: auth_headers.merge("Mcp-Session-Id" => SecureRandom.uuid)
+      end
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to be_blank
+      expect(writes).to be_empty
+    end
+
+    it "still requires a token" do
       delete mcp_path
-      expect(response).to have_http_status(:method_not_allowed)
-      expect(response.headers["Allow"]).to eq("POST")
+      expect(response).to have_http_status(:unauthorized)
     end
   end
 
