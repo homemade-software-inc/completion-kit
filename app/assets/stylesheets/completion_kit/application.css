@@ -286,6 +286,11 @@ form.button_to {
   margin-top: 0.45rem;
 }
 
+.ck-kicker + .ck-empty,
+.ck-split + .ck-empty {
+  margin-top: 0.5rem;
+}
+
 .ck-pagination {
   display: flex;
   align-items: center;
