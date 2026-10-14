@@ -233,46 +233,24 @@ module CompletionKit
       {heading: heading, judge_model: judge ? judge_model.presence : nil}
     end
 
-    CHECK_COMPARE_TO_LABELS = {
-      "constant" => "A value you type",
-      "expected" => "Each row's expected value"
-    }.freeze
-
-    CHECK_SCORE_BY_LABELS = {
-      "recall" => "How much of the expected list was found",
-      "precision" => "How much of the answer belonged",
-      "f1" => "A balance of the two",
-      "jaccard" => "How much the two lists overlap"
-    }.freeze
-
-    CHECK_TRANSLATED_FIELDS = %w[compare_to score_by].freeze
-
-    CHECK_FLAG_FIELDS = %w[case_sensitive multiline trim].freeze
-
-    CHECK_TARGET_LABELS = {
-      "response_text" => "The response text",
-      "input_data" => "The input row",
-      "json_path" => "A value from the response JSON"
-    }.freeze
-
     def ck_check_kind_label(kind)
       CompletionKit::Checks::Labels.kind(kind)
     end
 
     def ck_check_target_label(target)
-      CHECK_TARGET_LABELS.fetch(target.to_s) { target.to_s.humanize }
+      CompletionKit::Checks::Labels.target(target)
     end
 
     def ck_check_field_label(key, kind = nil)
       CompletionKit::Checks::Labels.field(key, kind)
     end
 
+    def ck_check_field_hint(key, kind = nil)
+      CompletionKit::Checks::Labels.hint(key, kind)
+    end
+
     def ck_check_field_value(key, value)
-      case key.to_s
-      when "compare_to" then CHECK_COMPARE_TO_LABELS.fetch(value.to_s, value)
-      when "score_by" then CHECK_SCORE_BY_LABELS.fetch(value.to_s, value)
-      else value
-      end
+      CompletionKit::Checks::Labels.value(key, value)
     end
 
     def ck_check_input_value(value)
@@ -281,16 +259,26 @@ module CompletionKit
 
     def ck_check_spec_fields(config)
       config.except("check_kind", "target").reject do |key, _value|
-        CHECK_FLAG_FIELDS.include?(key) && !CompletionKit::Checks::Flag.on?(config, key)
+        CompletionKit::Checks::Registry::FLAG_KEYS.include?(key) && !CompletionKit::Checks::Flag.on?(config, key)
       end
     end
 
     def ck_check_field_translated?(key)
-      CHECK_TRANSLATED_FIELDS.include?(key.to_s)
+      CompletionKit::Checks::Labels.worded?(key)
     end
 
     def ck_check_score_by_options
-      CompletionKit::Checks::ListOverlap::MEASURES.map { |measure| [measure, CHECK_SCORE_BY_LABELS.fetch(measure)] }
+      CompletionKit::Checks::Labels::SCORE_BY.to_a
+    end
+
+    def ck_check_form_data
+      labels = CompletionKit::Checks::Labels
+      {
+        fields: CompletionKit::Checks::Registry::CONFIG_KEYS,
+        expected: CompletionKit::Checks::Registry::EXPECTED_KEYS,
+        labels: labels::FIELDS_BY_KIND, defaultLabels: labels::FIELDS,
+        hints: labels::HINTS_BY_KIND, defaultHints: labels::HINTS
+      }
     end
 
     def ck_result_change_badge(change)

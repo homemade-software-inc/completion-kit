@@ -214,76 +214,56 @@ document.addEventListener("click", function(e) {
   });
 });
 
-var CK_CHECK_FIELDS = {
-  contains: ["value", "case_sensitive", "trim"],
-  not_contains: ["value", "case_sensitive", "trim"],
-  equals: ["value", "case_sensitive", "trim"],
-  regex: ["pattern", "case_sensitive", "multiline"],
-  valid_json: [],
-  json_path_equals: ["json_path", "expected"],
-  length_bounds: ["min", "max"],
-  list_overlap: ["value", "score_by", "min", "case_sensitive"],
-  numeric_bounds: ["min", "max"],
-  numeric_equals: ["value", "tolerance"]
-};
+function ckCheckEditor(scope) {
+  if (!scope) return null;
+  if (scope.matches && scope.matches("[data-ck-check-form]")) return scope;
+  return scope.querySelector ? scope.querySelector("[data-ck-check-form]") : null;
+}
 
-var CK_EXPECTED_KEYS = {
-  contains: "value",
-  not_contains: "value",
-  equals: "value",
-  json_path_equals: "expected",
-  list_overlap: "value",
-  numeric_equals: "value"
-};
+function ckCheckForm(editor) {
+  try {
+    return JSON.parse(editor.getAttribute("data-ck-check-form"));
+  } catch (e) {
+    return null;
+  }
+}
 
-var CK_CHECK_DEFAULT_LABELS = { min: "Minimum", max: "Maximum", value: "Text to look for" };
-
-var CK_CHECK_LABELS = {
-  length_bounds: { min: "Shortest allowed", max: "Longest allowed" },
-  numeric_bounds: { min: "Lowest allowed", max: "Highest allowed" },
-  list_overlap: { min: "Lowest score that passes", value: "Expected list" },
-  numeric_equals: { value: "Expected number" }
-};
-
-var CK_CHECK_DEFAULT_HINTS = { min: "Leave blank for no minimum." };
-
-var CK_CHECK_HINTS = {
-  list_overlap: { min: "Leave blank to require a perfect score." }
-};
-
-function ckApplyCheckLabels(scope, kind) {
-  var labels = CK_CHECK_LABELS[kind] || {};
-  var hints = CK_CHECK_HINTS[kind] || {};
-  scope.querySelectorAll("[data-ck-check-label]").forEach(function(node) {
+function ckApplyCheckLabels(editor, form, kind) {
+  var labels = form.labels[kind] || {};
+  var hints = form.hints[kind] || {};
+  editor.querySelectorAll("[data-ck-check-label]").forEach(function(node) {
     var key = node.getAttribute("data-ck-check-label");
-    node.textContent = labels[key] || CK_CHECK_DEFAULT_LABELS[key];
+    node.textContent = labels[key] || form.defaultLabels[key] || "";
   });
-  scope.querySelectorAll("[data-ck-check-hint]").forEach(function(node) {
+  editor.querySelectorAll("[data-ck-check-hint]").forEach(function(node) {
     var key = node.getAttribute("data-ck-check-hint");
-    node.textContent = hints[key] || CK_CHECK_DEFAULT_HINTS[key];
+    node.textContent = hints[key] || form.defaultHints[key] || "";
   });
 }
 
 function ckApplyCheckFields(scope) {
-  if (!scope) return;
-  var kindSelect = scope.querySelector('[name="metric[check_config][check_kind]"]');
+  var editor = ckCheckEditor(scope);
+  if (!editor) return;
+  var form = ckCheckForm(editor);
+  if (!form) return;
+  var kindSelect = editor.querySelector('[name="metric[check_config][check_kind]"]');
   if (!kindSelect) return;
   var kind = kindSelect.value;
-  var visible = (CK_CHECK_FIELDS[kind] || []).slice();
-  var targetSelect = scope.querySelector('[name="metric[check_config][target]"]');
+  var visible = (form.fields[kind] || []).slice();
+  var targetSelect = editor.querySelector('[name="metric[check_config][target]"]');
   var targetIsJsonPath = !!(targetSelect && targetSelect.value === "json_path");
-  var expectedKey = CK_EXPECTED_KEYS[kind];
+  var expectedKey = form.expected[kind];
 
   if (expectedKey) {
     visible.push("compare_to");
-    var comparison = scope.querySelector('[name="metric[check_config][compare_to]"]:checked');
+    var comparison = editor.querySelector('[name="metric[check_config][compare_to]"]:checked');
     if (comparison && comparison.value === "expected") {
       visible = visible.filter(function(key) { return key !== expectedKey; });
       visible.push("expected_path");
     }
   }
 
-  scope.querySelectorAll("[data-ck-check-field]").forEach(function(field) {
+  editor.querySelectorAll("[data-ck-check-field]").forEach(function(field) {
     var key = field.getAttribute("data-ck-check-field");
     var show;
     if (key === "target_path") {
@@ -294,7 +274,7 @@ function ckApplyCheckFields(scope) {
     field.hidden = !show;
   });
 
-  ckApplyCheckLabels(scope, kind);
+  ckApplyCheckLabels(editor, form, kind);
 }
 
 function ckApplyMetricType(group) {

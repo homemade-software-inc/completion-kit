@@ -478,7 +478,7 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(response.body).to include("The response text")
       expect(response.body).to include('data-ck-check-field="compare_to"')
       expect(response.body).to include('name="metric[check_config][compare_to]"')
-      expect(response.body).to include("Each row's expected value")
+      expect(Nokogiri::HTML5(response.body).at_css('[data-ck-check-field="compare_to"]').text).to include("Each row's expected value")
       expect(response.body).to include('data-ck-check-field="expected_path"')
       expect(response.body).to include('name="metric[check_config][expected_path]"')
       expect(response.body).not_to include(">not_contains<")
@@ -546,6 +546,41 @@ RSpec.describe "Check metric authoring", type: :request do
       %w[case_sensitive multiline trim].each do |flag|
         expect(page.at_css("input[type=hidden][name='metric[check_config][#{flag}]'][value=false]")).to be_present
       end
+    end
+
+    it "takes every check label, hint and field map from the labels module and the registry" do
+      get "#{base_path}/new"
+
+      page = Nokogiri::HTML5(response.body)
+      editor = page.at_css('[data-ck-metric-editor="check"]')
+      labels = CompletionKit::Checks::Labels
+      expect(JSON.parse(editor["data-ck-check-form"])).to eq(
+        "fields" => CompletionKit::Checks::Registry::CONFIG_KEYS,
+        "expected" => CompletionKit::Checks::Registry::EXPECTED_KEYS,
+        "labels" => labels::FIELDS_BY_KIND, "defaultLabels" => labels::FIELDS,
+        "hints" => labels::HINTS_BY_KIND, "defaultHints" => labels::HINTS
+      )
+      editor.css("[data-ck-check-field]").each do |field|
+        key = field["data-ck-check-field"]
+        expect((field.at_css(".ck-label") || field.css("span").last).text.squish).to eq(labels.field(key, "contains"))
+      end
+      expect(editor.css("[data-ck-check-field]").map { |field| field["data-ck-check-field"] })
+        .to eq(labels::FIELDS.keys - %w[check_kind target])
+      expect(editor.at_css('[data-ck-check-field="compare_to"]').text).to include(labels.value("compare_to", "constant"))
+
+      script = File.read(CompletionKit::Engine.root.join("app/assets/javascripts/completion_kit/application.js"))
+      expect(script).not_to include("Shortest allowed", "Text to look for", "Leave blank", "json_path_equals")
+    end
+
+    it "renders a failed list check save with the list check's own labels and hints" do
+      post base_path, params: { metric: { name: "Codes", metric_type: "check",
+                                          check_config: { check_kind: "list_overlap", target: "response_text", value: "A, B", min: "5" } } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      page = Nokogiri::HTML5(response.body)
+      expect(page.at_css('[data-ck-check-label="value"]').text).to eq("Expected list")
+      expect(page.at_css('[data-ck-check-label="min"]').text).to eq("Lowest score that passes")
+      expect(page.at_css('[data-ck-check-hint="min"]').text).to eq("Leave blank to require a perfect score.")
     end
 
     it "prefills a list check's measure and a number check's tolerance when editing" do
