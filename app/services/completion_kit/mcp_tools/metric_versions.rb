@@ -27,7 +27,7 @@ module CompletionKit
           handler: :publish
         },
         "metric_versions_dismiss" => {
-          description: "Destroy a draft MetricVersion (use for either source: 'edit' or source: 'suggestion'). Published versions are refused — to demote a published version, publish a different one as current instead.",
+          description: "Destroy a draft MetricVersion (use for either source: 'edit' or source: 'suggestion'). Published versions are refused. To demote a published version, publish a different one as current instead.",
           inputSchema: {
             type: "object",
             properties: {

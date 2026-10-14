@@ -72,6 +72,56 @@ RSpec.describe "CompletionKit metric groups", type: :request do
     end
   end
 
+  describe "the error summary on a failed save" do
+    def summary
+      Nokogiri::HTML5(response.body).at_css("form .ck-flash--alert[role='alert']")
+    end
+
+    it "lists every problem above the metric list when create fails" do
+      create(:completion_kit_metric, name: "Helpfulness")
+
+      post base_path, params: { metric_group: { name: "" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(summary.at_css(".ck-flash__title").text).to eq("1 problem prevented this metric group from being saved.")
+      expect(summary.css(".ck-error-list li").map(&:text)).to eq(["Name can't be blank"])
+      expect(response.body.index("ck-flash--alert")).to be < response.body.index("data-metric-checkboxes")
+    end
+
+    it "lists the problem when an update fails" do
+      group = create(:completion_kit_metric_group)
+
+      patch "#{base_path}/#{group.id}", params: { metric_group: { name: "" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(summary.css(".ck-error-list li").map(&:text)).to eq(["Name can't be blank"])
+    end
+
+    it "keeps the saved name in the breadcrumb when an update blanks it" do
+      group = create(:completion_kit_metric_group, name: "Support pack")
+
+      patch "#{base_path}/#{group.id}", params: { metric_group: { name: "" } }
+
+      crumbs = Nokogiri::HTML5(response.body).css(".ck-breadcrumb li").map { |li| li.text.strip }
+      expect(crumbs).to eq(["Metrics", "Support pack", "Edit"])
+    end
+
+    it "names the saved group in the delete confirmation when an update blanks the name" do
+      group = create(:completion_kit_metric_group, name: "Support pack")
+
+      patch "#{base_path}/#{group.id}", params: { metric_group: { name: "" } }
+
+      confirm = Nokogiri::HTML5(response.body).at_css("[data-turbo-confirm]")["data-turbo-confirm"]
+      expect(confirm).to start_with("Delete \"Support pack\"?")
+    end
+
+    it "shows no summary on a fresh form" do
+      get "#{base_path}/new"
+
+      expect(summary).to be_nil
+    end
+  end
+
   describe "with metrics from another tenant" do
     let(:own_metric) { create(:completion_kit_metric, name: "Own") }
     let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }

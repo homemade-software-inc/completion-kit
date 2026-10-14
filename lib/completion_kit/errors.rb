@@ -9,9 +9,9 @@ module CompletionKit
   class UnknownModelError < ConfigurationError
     attr_reader :model_name
 
-    def initialize(model_name = nil)
+    def initialize(model_name = nil, message = nil)
       @model_name = model_name
-      super(%(No configured provider serves model "#{model_name}"))
+      super(message || %(No configured provider serves model "#{model_name}"))
     end
   end
 

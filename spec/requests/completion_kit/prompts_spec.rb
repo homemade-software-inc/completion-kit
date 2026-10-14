@@ -522,4 +522,66 @@ RSpec.describe "CompletionKit prompts", type: :request do
       expect(response.body).not_to include("in the last 7 days")
     end
   end
+
+  describe "the generation model select" do
+    before do
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1-mini", supports_generation: true)
+    end
+
+    def model_select
+      Nokogiri::HTML5(response.body).at_css("select#prompt_llm_model")
+    end
+
+    def selected_option
+      model_select.at_css("option[selected]")
+    end
+
+    it "keeps a rejected model selected, marked unavailable, with the error beside the select" do
+      post base_path, params: { prompt: valid_params[:prompt].merge(llm_model: "ollama/llama3") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect([selected_option.text, selected_option["value"]]).to eq(["ollama/llama3 (unavailable)", "ollama/llama3"])
+      error = Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error")
+      expect(error.text).to eq(%("ollama/llama3" is not served by any configured provider))
+      expect(model_select["aria-invalid"]).to eq("true")
+      expect(model_select["aria-describedby"]).to eq("prompt_llm_model_error")
+    end
+
+    it "keeps a model rejected as unfit for generation selected, with a label that agrees with its error" do
+      create(:completion_kit_model, provider: "openai", model_id: "text-embed", display_name: "Text Embed", supports_generation: false)
+
+      post base_path, params: { prompt: valid_params[:prompt].merge(llm_model: "text-embed") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect([selected_option.text, selected_option["value"]]).to eq(["text-embed (unavailable)", "text-embed"])
+      expect(Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error").text).to eq("is not available for generating responses")
+    end
+
+    it "keeps a model rejected on re-version selected, with the error beside the select" do
+      prompt = create(:completion_kit_prompt)
+      create(:completion_kit_run, prompt: prompt)
+
+      patch "#{base_path}/#{prompt.id}", params: { prompt: { template: "Updated {{content}}", llm_model: "ollama/llama3" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(selected_option.text).to eq("ollama/llama3 (unavailable)")
+      expect(Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error")).to be_present
+    end
+
+    it "shows the current model as unavailable when it has no model row, and a save keeps it" do
+      prompt = create(:completion_kit_prompt)
+      prompt.update_columns(llm_model: "legacy-model")
+
+      get "#{base_path}/#{prompt.id}/edit"
+
+      expect([selected_option.text, selected_option["value"]]).to eq(["legacy-model (unavailable)", "legacy-model"])
+      expect(Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error")).to be_nil
+      expect(model_select.key?("aria-invalid")).to be(false)
+
+      patch "#{base_path}/#{prompt.id}", params: { prompt: { name: "Renamed", llm_model: selected_option["value"] } }
+
+      expect(response).to redirect_to("#{base_path}/#{prompt.id}")
+      expect(prompt.reload.llm_model).to eq("legacy-model")
+    end
+  end
 end

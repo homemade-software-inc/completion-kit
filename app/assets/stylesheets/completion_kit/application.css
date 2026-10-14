@@ -2311,6 +2311,15 @@ label.ck-checkbox[hidden] {
   flex: 1;
 }
 
+.ck-select-with-action > .field_with_errors {
+  flex: 1;
+  min-width: 0;
+}
+
+.ck-select-with-action > .field_with_errors > .ck-input {
+  width: 100%;
+}
+
 .ck-icon-btn:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: var(--ck-line-strong);
@@ -5175,11 +5184,13 @@ a.tag-mark {
 }
 
 
-.ck-input--error {
+.ck-input--error,
+.ck-input[aria-invalid="true"] {
   border-color: var(--ck-danger);
-  background: rgba(248, 113, 113, 0.05);
+  background-color: rgba(248, 113, 113, 0.05);
 }
-.ck-input--error:focus {
+.ck-input--error:focus,
+.ck-input[aria-invalid="true"]:focus {
   box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
   border-color: var(--ck-danger);
 }

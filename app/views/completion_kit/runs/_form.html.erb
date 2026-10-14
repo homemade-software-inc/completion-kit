@@ -19,7 +19,7 @@
 
     <div class="ck-field">
       <label class="ck-checkbox-label">
-        <%= check_box_tag "run[judge_only]", "1", run.persisted? && run.judge_only?, id: "run_judge_only", class: "ck-checkbox" %>
+        <%= check_box_tag "run[judge_only]", "1", local_assigns[:judge_only] || (run.persisted? && run.judge_only?), id: "run_judge_only", class: "ck-checkbox" %>
         <span class="ck-checkbox-label__box" aria-hidden="true"></span>
         <span class="ck-checkbox-label__body">
           <span class="ck-checkbox-label__text">Score existing outputs</span>
@@ -98,10 +98,11 @@
       <% available = CompletionKit::ApiConfig.available_models(scope: :judging) %>
       <% if available.any? %>
         <div class="ck-select-with-action">
-          <%= form.select :judge_model, ck_grouped_models(available, run.judge_model), { include_blank: "None" }, { class: "ck-input", id: "run_judge_model" } %>
+          <%= form.select :judge_model, ck_grouped_models(available, run.judge_model, rejected: run.errors[:judge_model].any?), { include_blank: "None" }, { class: "ck-input", id: "run_judge_model", **ck_field_aria(form, :judge_model) } %>
           <% ck_refreshing = CompletionKit::ProviderCredential.discovery_in_progress? %>
           <button type="button" class="ck-icon-btn<%= ' ck-icon-btn--spinning' if ck_refreshing %>" title="Refresh models" <%= 'disabled' if ck_refreshing %> onclick="ckRefreshModels()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M13.836 2.477a.75.75 0 0 1 .75.75v3.182a.75.75 0 0 1-.75.75h-3.182a.75.75 0 0 1 0-1.5h1.37l-.84-.841a4.5 4.5 0 0 0-7.08.681.75.75 0 0 1-1.264-.808 6 6 0 0 1 9.44-.908l.84.84V3.227a.75.75 0 0 1 .75-.75Zm-.911 7.5A.75.75 0 0 1 13.199 11a6 6 0 0 1-9.44.908l-.84-.84v1.68a.75.75 0 0 1-1.5 0V9.567a.75.75 0 0 1 .75-.75h3.182a.75.75 0 0 1 0 1.5h-1.37l.84.841a4.5 4.5 0 0 0 7.08-.681.75.75 0 0 1 1.024-.274Z" clip-rule="evenodd"/></svg></button>
         </div>
+        <%= ck_field_error(form, :judge_model) %>
         <p class="ck-field-hint" id="judge-hint"></p>
         <div hidden data-refresh-progress-carriers data-ck-refresh-url="<%= refresh_models_path %>" data-ck-statuses-url="<%= statuses_provider_credentials_path %>">
           <% CompletionKit::ProviderCredential.find_each do |pc| %>
@@ -112,7 +113,7 @@
         <p class="ck-field-hint" id="refresh-status" role="status" aria-live="polite" style="min-height: 1.2em; margin-top: -0.25rem; font-size: 0.75rem;">&nbsp;</p>
       <% else %>
         <p class="ck-field-hint" style="color: var(--ck-warning);">No judge models available.&ensp;<%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %></p>
-        <%= form.hidden_field :judge_model, value: nil, id: "run_judge_model" %>
+        <%= form.hidden_field :judge_model, id: "run_judge_model" %>
       <% end %>
     </div>
 
@@ -157,6 +158,7 @@
           </div>
         <% end %>
 
+        <%= hidden_field_tag "run[metric_ids][]", "", id: nil %>
         <div class="ck-metric-checkboxes" data-metric-checkboxes role="group" aria-labelledby="run_metrics_label">
           <% @all_metrics.each do |metric| %>
             <label class="ck-checkbox-label" data-metric-tags="<%= metric.tag_names.join(",") %>" data-compare-expected="<%= metric.check? && metric.check_config.to_h["compare_to"] == "expected" ? "1" : "0" %>">
@@ -194,6 +196,7 @@ function updateRunForm() {
 
   var prompt = promptEl ? promptEl.value : '';
   var judge = judgeEl ? judgeEl.value : '';
+  var judgeListed = !!judgeEl && judgeEl.type !== 'hidden';
   var metrics = document.querySelectorAll('input[name="run[metric_ids][]"]:checked');
   var judgeField = document.getElementById('judge-field');
   var metricsField = document.getElementById('metrics-field');
@@ -206,13 +209,15 @@ function updateRunForm() {
   if (judgeHint) judgeHint.textContent = '';
   if (metricsHint) metricsHint.textContent = '';
 
-  if (judge && metrics.length > 0) {
-    if (judgeHint) judgeHint.textContent = 'Responses will be generated then judged automatically.';
-  } else if (judge && metrics.length === 0) {
+  var judgeUnpaired = judgeListed && !!judge && metrics.length === 0;
+  var metricsUnpaired = judgeListed && !judge && metrics.length > 0;
+  if (judgeListed && judge && metrics.length > 0) {
+    if (judgeHint) judgeHint.textContent = judgeOnly ? 'Existing outputs will be judged automatically.' : 'Responses will be generated then judged automatically.';
+  } else if (judgeUnpaired) {
     if (judgeField) judgeField.className = 'ck-field ck-field--info';
     if (metricsField) metricsField.className = 'ck-field ck-field--info';
     if (metricsHint) metricsHint.textContent = 'Select at least one metric or group to enable judging.';
-  } else if (!judge && metrics.length > 0) {
+  } else if (metricsUnpaired) {
     if (judgeField) judgeField.className = 'ck-field ck-field--info';
     if (judgeHint) judgeHint.textContent = 'Select a judge model to enable judging.';
   }
@@ -286,7 +291,7 @@ function updateRunForm() {
       if (col === '' || headersJudge.indexOf(col) === -1) {
         valid = false;
         if (datasetField) datasetField.className = 'ck-field ck-field--error';
-        if (datasetHint) datasetHint.textContent = "Dataset has no \"" + col + "\" column — pick a different output column or dataset.";
+        if (datasetHint) datasetHint.textContent = "Dataset has no \"" + col + "\" column. Pick a different output column or dataset.";
       }
     } else if (!dataset) {
       if (datasetField) datasetField.className = 'ck-field ck-field--info';
@@ -297,8 +302,7 @@ function updateRunForm() {
     if (hasVars && !dataset) valid = false;
     if (missingVars.length > 0) valid = false;
   }
-  if (judge && metrics.length === 0) valid = false;
-  if (!judge && metrics.length > 0) valid = false;
+  if (judgeUnpaired || metricsUnpaired) valid = false;
   if (submitBtn) submitBtn.disabled = !valid;
 
   ckUpdateMetricGroupsState();

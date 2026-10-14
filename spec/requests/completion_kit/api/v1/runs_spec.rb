@@ -296,6 +296,7 @@ RSpec.describe "API V1 Runs", type: :request do
 
     it "answers a rerun of a run carrying another tenant's metric with 422" do
       reset_tenant_scope
+      create(:completion_kit_provider_credential)
       legacy = create(:completion_kit_run, prompt: prompt)
       legacy.replace_metrics!([foreign_metric.id])
       hide_outside_tenant(foreign_metric)
@@ -401,6 +402,7 @@ RSpec.describe "API V1 Runs", type: :request do
 
   describe "POST /api/v1/runs/:id/rerun" do
     it "creates a new run with the same configuration and returns 202" do
+      create(:completion_kit_provider_credential)
       prompt = create(:completion_kit_prompt, template: "Static")
       dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
       run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1")
@@ -410,6 +412,7 @@ RSpec.describe "API V1 Runs", type: :request do
     end
 
     it "returns 422 when the new run cannot start" do
+      create(:completion_kit_provider_credential)
       prompt = create(:completion_kit_prompt, template: "Static")
       dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
       run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1")

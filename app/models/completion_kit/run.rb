@@ -333,13 +333,10 @@ module CompletionKit
         unless judge_only_input_data_checks? || (dataset && dataset.headers.include?(column))
           return fail_with_summary!("Dataset has no \"#{column}\" column")
         end
-      else
-        generation_error = generation_client_error
-        return fail_with_summary!(generation_error) if generation_error
       end
 
-      judge_error = judge_model_error
-      return fail_with_summary!(judge_error) if judge_error
+      model_error = model_start_error
+      return fail_with_summary!(model_error) if model_error
 
       begin
         transaction do
@@ -490,7 +487,8 @@ module CompletionKit
     end
 
     def rerun!
-      ensure_models_resolve!
+      ensure_models_ready!
+
       Run.create!(
         prompt_id: prompt_id,
         dataset_id: dataset_id,
@@ -712,11 +710,20 @@ module CompletionKit
       %(No configured provider serves judge model "#{judge_model}")
     end
 
-    def ensure_models_resolve!
-      raise UnknownModelError, prompt.llm_model unless judge_only? || ApiConfig.provider_for_model(prompt.llm_model)
+    def model_start_error
+      (generation_client_error unless judge_only?) || judge_model_error
+    end
+
+    def ensure_models_ready!
+      unless judge_only?
+        raise UnknownModelError, prompt.llm_model unless ApiConfig.provider_for_model(prompt.llm_model)
+
+        client_error = generation_client_error
+        raise ConfigurationError, client_error if client_error
+      end
 
       judge_error = judge_model_error
-      raise ConfigurationError, judge_error if judge_error
+      raise UnknownModelError.new(judge_model, judge_error) if judge_error
     end
 
     def judge_model_newly_selected?
@@ -775,7 +782,7 @@ module CompletionKit
 
       if prompt.present?
         count = Run.where(prompt_id: prompt_id).count + 1
-        self.name = "#{prompt.name} — v#{prompt.version_number} ##{count}"
+        self.name = "#{prompt.name} · v#{prompt.version_number} ##{count}"
       elsif dataset.present?
         count = Run.where(prompt_id: nil, dataset_id: dataset.id).count + 1
         self.name = "#{dataset.name} scoring ##{count}"

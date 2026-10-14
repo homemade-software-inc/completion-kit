@@ -121,7 +121,7 @@ RSpec.describe "CompletionKit onboarding", type: :request do
 
       expect(response).to redirect_to("/completion_kit/onboarding")
       follow_redirect!
-      expect(response.body).to include("Loaded a sample dataset and prompt")
+      expect(response.body).to include("Loaded a sample dataset and prompt. Edit or delete them whenever.")
       expect(response.body).to include("2 of 4 done")
       expect(response.body).not_to include("Load sample data")
     end

@@ -4,6 +4,40 @@ RSpec.describe "CompletionKit runs", type: :request do
   let!(:prompt) { create(:completion_kit_prompt, name: "Prompt A", template: "Static prompt without variables") }
   let(:base_path) { "/completion_kit/runs" }
 
+  def submitted_pairs(html)
+    form = Nokogiri::HTML5(html).at_css("form[action^='#{base_path}/']")
+    form.css("input, select, textarea").filter_map do |field|
+      name = field["name"]
+      next if name.blank? || %w[submit button].include?(field["type"])
+      next if %w[checkbox radio].include?(field["type"]) && !field.key?("checked")
+
+      value = case field.name
+              when "select" then (field.at_css("option[selected]") || field.at_css("option"))["value"].to_s
+              when "textarea" then field.text
+              else field["value"].to_s
+              end
+      [name, value]
+    end
+  end
+
+  def resubmit_edit_form(run, changes)
+    get "#{base_path}/#{run.id}/edit"
+    pairs = submitted_pairs(response.body).map { |name, value| [name, changes.fetch(name, value)] }
+    post "#{base_path}/#{run.id}", params: URI.encode_www_form(pairs), headers: { "CONTENT_TYPE" => "application/x-www-form-urlencoded" }
+  end
+
+  it "clears a run's metrics when every metric box is unticked on the edit form" do
+    metric = create(:completion_kit_metric)
+    run = create(:completion_kit_run, prompt: prompt)
+    run.replace_metrics!([metric.id])
+
+    get "#{base_path}/#{run.id}/edit"
+    pairs = submitted_pairs(response.body).reject { |name, value| name == "run[metric_ids][]" && value.present? }
+    post "#{base_path}/#{run.id}", params: URI.encode_www_form(pairs), headers: { "CONTENT_TYPE" => "application/x-www-form-urlencoded" }
+
+    expect(run.reload.metrics).to be_empty
+  end
+
   it "renders index, show, new, and edit pages" do
     run = create(:completion_kit_run, prompt: prompt, name: "Run A")
 
@@ -541,6 +575,233 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("prevented this run from being saved")
   end
 
+  describe "the Score existing outputs option" do
+    let(:scoring_dataset) { create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n") }
+
+    def judge_only_box
+      Nokogiri::HTML5(response.body).at_css("input[type='checkbox'][name='run[judge_only]']")
+    end
+
+    it "drops a submitted prompt when ticked, so the run scores the dataset column" do
+      post base_path, params: { run: { name: "Scored", judge_only: "1", prompt_id: prompt.id, dataset_id: scoring_dataset.id, output_column: "actual_output" } }
+
+      run = CompletionKit::Run.order(:id).last
+      expect(response).to redirect_to("#{base_path}/#{run.id}")
+      expect(run.prompt_id).to be_nil
+      expect(run).to be_judge_only
+    end
+
+    it "forks a run with results into a scoring-only run when ticked on edit" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: scoring_dataset, output_column: "actual_output", name: "Generated")
+      run.responses.create!(response_text: "Some output")
+
+      expect do
+        patch "#{base_path}/#{run.id}", params: { run: { name: "Generated", judge_only: "1", prompt_id: prompt.id, dataset_id: scoring_dataset.id, output_column: "actual_output" } }
+      end.to change(CompletionKit::Run, :count).by(1)
+
+      fork = CompletionKit::Run.order(:id).last
+      expect(fork.prompt_id).to be_nil
+      expect(run.reload.prompt_id).to eq(prompt.id)
+    end
+
+    it "keeps the box ticked when a ticked create fails" do
+      bare_dataset = create(:completion_kit_dataset, csv_data: "input,response\nhi,hello\n")
+
+      post base_path, params: { run: { name: "Bad column", judge_only: "1", prompt_id: "", dataset_id: bare_dataset.id, output_column: "actual_output" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(judge_only_box.key?("checked")).to be(true)
+    end
+
+    it "leaves the box unticked when an unticked create fails" do
+      post base_path, params: { run: { prompt_id: "" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(judge_only_box.key?("checked")).to be(false)
+    end
+
+    it "carries a judge hint for scoring existing outputs beside the one for generating" do
+      get "#{base_path}/new"
+
+      script = Nokogiri::HTML5(response.body).css("form script").map(&:text).join
+      expect(script).to include("judgeOnly ? 'Existing outputs will be judged automatically.' : 'Responses will be generated then judged automatically.'")
+    end
+
+    context "when the host app raises on unpermitted parameters" do
+      around do |example|
+        original = ActionController::Parameters.action_on_unpermitted_parameters
+        ActionController::Parameters.action_on_unpermitted_parameters = :raise
+        example.run
+      ensure
+        ActionController::Parameters.action_on_unpermitted_parameters = original
+      end
+
+      it "creates a scoring-only run when ticked" do
+        post base_path, params: { run: { name: "Scored", judge_only: "1", prompt_id: "", dataset_id: scoring_dataset.id, output_column: "actual_output", expected_column: "", max_tokens: "", judge_model: "", tag_names: [""] } }
+
+        run = CompletionKit::Run.order(:id).last
+        expect(response).to redirect_to("#{base_path}/#{run.id}")
+        expect(run).to be_judge_only
+      end
+
+      it "saves an edit of a scoring-only run with the box still ticked" do
+        run = create(:completion_kit_run, prompt: nil, dataset: scoring_dataset, output_column: "actual_output", name: "Scored")
+
+        patch "#{base_path}/#{run.id}", params: { run: { name: "Renamed", judge_only: "1", prompt_id: "", dataset_id: scoring_dataset.id, output_column: "actual_output" } }
+
+        expect(response).to redirect_to("#{base_path}/#{run.id}")
+        expect(run.reload.name).to eq("Renamed")
+      end
+
+      it "saves the edit form of a scoring-only run exactly as the browser submits it" do
+        run = create(:completion_kit_run, prompt: nil, dataset: scoring_dataset, output_column: "actual_output", name: "Scored")
+        run.replace_metrics!([create(:completion_kit_metric).id])
+
+        resubmit_edit_form(run, "run[name]" => "Renamed")
+
+        expect(response).to redirect_to("#{base_path}/#{run.id}")
+        expect(run.reload.name).to eq("Renamed")
+        expect(run).to be_judge_only
+      end
+    end
+  end
+
+  describe "the judge model select" do
+    let(:dataset) { create(:completion_kit_dataset) }
+
+    def judge_select
+      Nokogiri::HTML5(response.body).at_css("select#run_judge_model")
+    end
+
+    def selected_judge
+      option = judge_select.at_css("option[selected]")
+      [option.text, option["value"]]
+    end
+
+    def judge_error
+      Nokogiri::HTML5(response.body).at_css("#run_judge_model_error")
+    end
+
+    it "keeps a rejected judge selected, marked unavailable, with the error beside the select on create" do
+      post base_path, params: { run: { prompt_id: prompt.id, dataset_id: dataset.id, judge_model: "ollama/llama3" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(selected_judge).to eq(["ollama/llama3 (unavailable)", "ollama/llama3"])
+      expect(judge_error.text).to eq(%("ollama/llama3" is not served by any configured provider))
+      expect(judge_select["aria-invalid"]).to eq("true")
+      expect(judge_select["aria-describedby"]).to eq("run_judge_model_error")
+    end
+
+    it "keeps a rejected judge selected with the error beside the select when forking a run with results" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1-mini")
+      run.responses.create!(response_text: "Some output")
+
+      patch "#{base_path}/#{run.id}", params: { run: { judge_model: "ollama/llama3" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(selected_judge).to eq(["ollama/llama3 (unavailable)", "ollama/llama3"])
+      expect(judge_error).to be_present
+      expect(run.reload.judge_model).to eq("gpt-4.1-mini")
+    end
+
+    it "shows the current judge as unavailable when it has no model row, and a save keeps it" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, name: "Legacy judge")
+      run.update_columns(judge_model: "legacy-judge")
+
+      get "#{base_path}/#{run.id}/edit"
+
+      expect(selected_judge).to eq(["legacy-judge (unavailable)", "legacy-judge"])
+      expect(judge_error).to be_nil
+      expect(judge_select.key?("aria-invalid")).to be(false)
+
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Renamed", prompt_id: prompt.id, dataset_id: dataset.id, judge_model: "legacy-judge" } }
+
+      expect(response).to redirect_to("#{base_path}/#{run.id}")
+      expect(run.reload.judge_model).to eq("legacy-judge")
+      expect(run.name).to eq("Renamed")
+    end
+  end
+
+  describe "saving the edit form exactly as the browser submits it" do
+    let(:dataset) { create(:completion_kit_dataset) }
+
+    it "renames a run with results in place, keeping a judge that has no model row" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, name: "Legacy judge")
+      run.update_columns(judge_model: "legacy-judge", output_column: nil)
+      run.responses.create!(response_text: "Some output")
+
+      expect { resubmit_edit_form(run, "run[name]" => "Renamed") }.not_to change(CompletionKit::Run, :count)
+
+      expect(response).to redirect_to("#{base_path}/#{run.id}")
+      expect(run.reload.name).to eq("Renamed")
+      expect(run.judge_model).to eq("legacy-judge")
+    end
+
+    it "still forks a run with results when a scoring-only run's output column changes" do
+      scoring = create(:completion_kit_dataset, csv_data: "input,actual_output,other_output\nhi,hello,hey\n")
+      run = create(:completion_kit_run, prompt: nil, dataset: scoring, output_column: "actual_output", name: "Scored")
+      run.responses.create!(response_text: "hello")
+
+      expect { resubmit_edit_form(run, "run[output_column]" => "other_output") }.to change(CompletionKit::Run, :count).by(1)
+
+      expect(CompletionKit::Run.order(:id).last.output_column).to eq("other_output")
+      expect(run.reload.output_column).to eq("actual_output")
+    end
+
+    it "keeps the judge when no judge models are listed" do
+      metric = create(:completion_kit_metric)
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1-mini", name: "Hidden judge", selected_metric_ids: [metric.id])
+      CompletionKit::Model.update_all(supports_judging: false)
+
+      resubmit_edit_form(run, "run[name]" => "Renamed")
+
+      expect(response).to redirect_to("#{base_path}/#{run.id}")
+      expect(run.reload.name).to eq("Renamed")
+      expect(run.judge_model).to eq("gpt-4.1-mini")
+      expect(run.metric_ids).to eq([metric.id])
+    end
+
+    it "keeps a hidden judge on a run with no metrics" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1-mini", name: "Hidden judge")
+      CompletionKit::Model.update_all(supports_judging: false)
+
+      get "#{base_path}/#{run.id}/edit"
+      judge = Nokogiri::HTML5(response.body).at_css("input[type='hidden']#run_judge_model")
+      expect(judge["value"]).to eq("gpt-4.1-mini")
+
+      resubmit_edit_form(run, "run[name]" => "Renamed")
+
+      expect(response).to redirect_to("#{base_path}/#{run.id}")
+      expect(run.reload.name).to eq("Renamed")
+      expect(run.judge_model).to eq("gpt-4.1-mini")
+      expect(run.metric_ids).to be_empty
+    end
+
+    it "submits no judge from the new run form when no judge models are listed" do
+      CompletionKit::Model.update_all(supports_judging: false)
+
+      get "#{base_path}/new"
+
+      judge = Nokogiri::HTML5(response.body).at_css("input[type='hidden']#run_judge_model")
+      expect(judge["name"]).to eq("run[judge_model]")
+      expect(judge["value"].to_s).to eq("")
+    end
+
+    it "forks a run with results onto another dataset, keeping a judge that has no model row" do
+      other = create(:completion_kit_dataset, name: "Other")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, name: "Legacy judge")
+      run.update_columns(judge_model: "legacy-judge")
+      run.responses.create!(response_text: "Some output")
+
+      expect { resubmit_edit_form(run, "run[dataset_id]" => other.id.to_s) }.to change(CompletionKit::Run, :count).by(1)
+
+      fork = CompletionKit::Run.order(:id).last
+      expect(response).to redirect_to("#{base_path}/#{fork.id}")
+      expect([fork.dataset_id, fork.judge_model]).to eq([other.id, "legacy-judge"])
+      expect(run.reload.dataset_id).to eq(dataset.id)
+    end
+  end
+
   describe "metric choices on a failed save" do
     let!(:saved_metric) { create(:completion_kit_metric, name: "Saved") }
     let!(:chosen_metric) { create(:completion_kit_metric, name: "Chosen") }
@@ -688,6 +949,7 @@ RSpec.describe "CompletionKit runs", type: :request do
 
     it "sends a rerun of a run carrying another tenant's metric back with an alert" do
       reset_tenant_scope
+      create(:completion_kit_provider_credential)
       legacy = create(:completion_kit_run, prompt: prompt, status: "completed")
       legacy.replace_metrics!([foreign_metric.id])
       hide_outside_tenant(foreign_metric)
@@ -975,6 +1237,7 @@ RSpec.describe "CompletionKit runs", type: :request do
   end
 
   it "rerun creates a new run with the same configuration and starts it" do
+    create(:completion_kit_provider_credential)
     metric = create(:completion_kit_metric)
     dataset = create(:completion_kit_dataset)
     source_run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1", temperature: 0.3, max_tokens: 2048, judge_temperature: 0.2, status: "completed")
@@ -1075,6 +1338,7 @@ RSpec.describe "CompletionKit runs", type: :request do
   end
 
   it "rerun redirects with an alert when start! fails on the new run" do
+    create(:completion_kit_provider_credential)
     source_run = create(:completion_kit_run, prompt: prompt, status: "completed")
     allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
     allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("config gone")

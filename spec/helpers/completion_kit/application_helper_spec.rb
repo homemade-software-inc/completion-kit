@@ -122,10 +122,41 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(result).not_to include("retired")
     end
 
-    it "handles selected model not found in registry" do
+    it "keeps a current model with no registry row selected, marked unavailable" do
       models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
-      result = helper.ck_grouped_models(models, "nonexistent")
+      options = Nokogiri::HTML5.fragment(helper.ck_grouped_models(models, "nonexistent")).css("option")
+
+      expect(options.map { |o| [o.text, o["value"], o.key?("selected")] }).to eq([
+        ["nonexistent (unavailable)", "nonexistent", true],
+        ["GPT-4", "gpt-4", false]
+      ])
+    end
+
+    it "keeps a rejected model selected as its id marked unavailable" do
+      models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
+      options = Nokogiri::HTML5.fragment(helper.ck_grouped_models(models, "ollama/llama3", rejected: true)).css("option")
+
+      expect(options.map { |o| [o.text, o["value"], o.key?("selected")] }).to eq([
+        ["ollama/llama3 (unavailable)", "ollama/llama3", true],
+        ["GPT-4", "gpt-4", false]
+      ])
+    end
+
+    it "marks a rejected model unavailable, not retired, even when a retired row names it" do
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-old", display_name: "GPT Old", status: "retired")
+      models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
+      result = helper.ck_grouped_models(models, "gpt-old", rejected: true)
+
+      expect(result).to include("gpt-old (unavailable)")
       expect(result).not_to include("retired")
+    end
+
+    it "adds nothing for a rejected model that is already in the list" do
+      models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
+      result = helper.ck_grouped_models(models, "gpt-4", rejected: true)
+
+      expect(result).not_to include("unavailable")
+      expect(Nokogiri::HTML5.fragment(result).css("option").size).to eq(1)
     end
 
     it "marks judge options that are not yet confirmed with (?)" do
@@ -151,10 +182,11 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
         { id: "meta-llama/llama-3.3-70b", name: "Llama 3.3 70B", provider: "openrouter" }
       ]
       html = helper.ck_grouped_models(models)
-      expect(html).to include('label="OpenAI — GPT-4"')
-      expect(html).to include('label="OpenRouter — openai"')
-      expect(html).to include('label="OpenRouter — anthropic"') # ~anthropic merged in
-      expect(html).to include('label="OpenRouter — meta-llama"')
+      expect(html).to include('label="OpenAI · GPT-4"')
+      expect(html).to include('label="OpenRouter · openai"')
+      expect(html).to include('label="OpenRouter · anthropic"') # ~anthropic merged in
+      expect(html).to include('label="OpenRouter · meta-llama"')
+      expect(html).not_to include("\u2014")
     end
 
     it "groups openai models by family in a sensible order, ahead of other direct providers" do
@@ -166,7 +198,7 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       ]
       html = helper.ck_grouped_models(models)
       labels = html.scan(/label="([^"]+)"/).flatten
-      expect(labels).to eq(["OpenAI — GPT-5", "OpenAI — GPT-4", "OpenAI — o-series", "Anthropic"])
+      expect(labels).to eq(["OpenAI · GPT-5", "OpenAI · GPT-4", "OpenAI · o-series", "Anthropic"])
     end
 
     it "groups other direct providers as a single optgroup" do

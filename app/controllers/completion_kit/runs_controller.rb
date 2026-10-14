@@ -40,6 +40,7 @@ module CompletionKit
     end
 
     def create
+      @judge_only = judge_only_chosen?
       @run = Run.new(run_attributes)
       if @run.save
         redirect_to run_path(@run), notice: "Run was successfully created."
@@ -50,10 +51,11 @@ module CompletionKit
     end
 
     def update
+      @judge_only = judge_only_chosen?
       if @run.responses.any? && run_generation_changed?
         attrs = run_attributes.to_h
         attrs.delete("name") if attrs["name"].to_s == @run.name.to_s
-        new_run = Run.new(attrs.merge(status: "pending"))
+        new_run = Run.new(attrs.merge(status: "pending", cloned_from_judge_model: @run.judge_model))
         if new_run.save
           redirect_to run_path(new_run), notice: "Saved as a new run. The previous run and its results are preserved."
         else
@@ -224,11 +226,16 @@ module CompletionKit
     end
 
     def run_params
-      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :max_tokens, :judge_temperature, :output_column, :expected_column, metric_ids: [], tag_names: [])
+      params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :max_tokens, :judge_temperature, :output_column, :expected_column, :judge_only, metric_ids: [], tag_names: [])
     end
 
     def run_attributes
-      run_params.except(:metric_ids).merge(selected_metric_ids: run_params[:metric_ids])
+      attributes = run_params.except(:metric_ids, :judge_only).merge(selected_metric_ids: run_params[:metric_ids])
+      judge_only_chosen? ? attributes.merge(prompt_id: nil) : attributes
+    end
+
+    def judge_only_chosen?
+      run_params[:judge_only] == "1"
     end
 
     # Editing a run that already has results forks a new run — but only when a
@@ -237,9 +244,10 @@ module CompletionKit
     GENERATION_RUN_FIELDS = %i[prompt_id dataset_id judge_model temperature max_tokens judge_temperature output_column expected_column].freeze
 
     def run_generation_changed?
+      attributes = run_attributes
       GENERATION_RUN_FIELDS.each do |field|
-        next unless run_params.key?(field)
-        return true if normalize_run_field(field, run_params[field]) != normalize_run_field(field, @run.public_send(field))
+        next unless attributes.key?(field)
+        return true if normalize_run_field(field, attributes[field]) != normalize_run_field(field, @run.public_send(field))
       end
       return false unless params[:run].key?(:metric_ids)
       Array(params[:run][:metric_ids]).map(&:to_i).reject(&:zero?).sort != @run.metric_ids.sort
@@ -247,6 +255,7 @@ module CompletionKit
 
     def normalize_run_field(field, value)
       s = value.to_s.strip
+      return s.presence || "actual_output" if field == :output_column
       return nil if s.empty?
       case field
       when :temperature, :judge_temperature then s.to_f
