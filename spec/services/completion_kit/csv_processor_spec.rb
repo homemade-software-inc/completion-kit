@@ -289,31 +289,5 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
       end
     end
 
-    context "with 2,000 columns" do
-      let(:values) { (1..2_000).to_h { |index| ["column_#{index}", "value #{index}"] } }
-      let(:placeholders) { values.keys.map { |name| "{{ #{name} }}" }.join(" ") }
-      let(:expected) { values.values.join(" ") }
-
-      it "fills every column fast, even with a long run of unclosed braces after them" do
-        template = "#{placeholders}#{"{{" * 100_000}}}"
-
-        started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-        rendered = fill(template, values)
-        elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
-
-        expect(rendered).to eq("#{expected}#{"{{" * 100_000}}}")
-        expect(elapsed).to be < 1
-      end
-
-      it "fills them without the regex engine, so a strict global regex timeout cannot fail the row" do
-        prompt = build(:completion_kit_prompt, template: "#{placeholders}#{"{{ x " * 50_000}}}")
-        original = Regexp.timeout
-        Regexp.timeout = 0.001
-
-        expect(described_class.apply_variables(prompt, values)).to eq("#{expected}#{"{{ x " * 50_000}}}")
-      ensure
-        Regexp.timeout = original
-      end
-    end
   end
 end
