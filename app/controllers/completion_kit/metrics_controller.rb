@@ -258,7 +258,7 @@ module CompletionKit
       %w[min max tolerance].each { |key| hash[key] = coerce_number(hash[key]) if hash[key].present? }
       %w[case_sensitive multiline trim].each { |key| hash[key] = ActiveModel::Type::Boolean.new.cast(hash[key]) if hash.key?(key) }
       hash["expected"] = coerce_scalar(hash["expected"]) if hash["expected"].present?
-      if hash["compare_to"] == "expected"
+      if hash["compare_to"] == "expected" && CompletionKit::Checks::Registry.compares_value?(hash["check_kind"])
         hash.delete(CompletionKit::Checks::Registry.expected_key(hash["check_kind"]))
       else
         hash.delete("compare_to")

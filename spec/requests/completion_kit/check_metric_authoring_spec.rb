@@ -89,6 +89,16 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(config.keys).not_to include("value", "json_path", "min", "trim")
     end
 
+    it "drops a hidden compare_to and expected_path left over from a kind that compares against the answer key" do
+      post base_path, params: { metric: { name: "Switched to bounds", metric_type: "check",
+                                          check_config: { check_kind: "numeric_bounds", target: "json_path", target_path: "score",
+                                                          compare_to: "expected", expected_path: "score", min: "0.5" } } }
+
+      config = CompletionKit::Metric.find_by(name: "Switched to bounds").check_config
+      expect(config).to include("check_kind" => "numeric_bounds", "min" => 0.5)
+      expect(config.keys).not_to include("compare_to", "expected_path")
+    end
+
     it "stores an explicitly unchecked case_sensitive so a regex can be made case-insensitive" do
       post base_path, params: { metric: { name: "Loose regex", metric_type: "check",
                                           check_config: { check_kind: "regex", target: "response_text",
