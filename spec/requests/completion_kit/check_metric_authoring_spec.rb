@@ -324,6 +324,35 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(response.body.scan("checked").size).to be >= 3
     end
 
+    it "offers the list and number fields, and sends false for an unticked box" do
+      get "#{base_path}/new"
+
+      page = Nokogiri::HTML5(response.body)
+      expect(page.at_css('[data-ck-check-field="score_by"] .ck-label').text).to eq("How to score it")
+      expect(response.body).to include('name="metric[check_config][score_by]" value="recall"')
+      expect(response.body).to include("How much of the expected list was found", "A balance of the two")
+      expect(page.at_css('[data-ck-check-field="tolerance"] input[name="metric[check_config][tolerance]"]')).to be_present
+      expect(page.at_css('input[name="metric[check_config][min]"]')["step"]).to eq("any")
+      %w[min max value].each { |key| expect(page.at_css("[data-ck-check-label=#{key}]")).to be_present }
+      %w[case_sensitive multiline trim].each do |flag|
+        expect(page.at_css("input[type=hidden][name='metric[check_config][#{flag}]'][value=false]")).to be_present
+      end
+    end
+
+    it "prefills a list check's measure and a number check's tolerance when editing" do
+      list = create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => "A, B", "score_by" => "f1", "min" => 0.5 })
+      number = create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "numeric_equals", "target" => "response_text", "value" => 82_000, "tolerance" => "2%" })
+
+      get "#{base_path}/#{list.id}/edit"
+      expect(response.body).to include('name="metric[check_config][score_by]" value="f1"')
+      expect(Nokogiri::HTML5(response.body).at_css('input[name="metric[check_config][min]"]')["value"]).to eq("0.5")
+
+      get "#{base_path}/#{number.id}/edit"
+      expect(Nokogiri::HTML5(response.body).at_css('input[name="metric[check_config][tolerance]"]')["value"]).to eq("2%")
+    end
+
     it "shows the check spec instead of rubric stars on a check's show page" do
       metric = create(:completion_kit_metric, :check,
         check_config: { "check_kind" => "contains", "target" => "response_text",

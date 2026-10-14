@@ -335,7 +335,7 @@ RSpec.describe CompletionKit::Checks::Registry do
       end
     end
 
-    it "requires an exact match by default and honors a min threshold" do
+    it "requires a perfect score by default and honors a min threshold" do
       expect(overlap(%w[a b c]).passed).to be(false)
       expect(overlap(%w[a b c], { "min" => 0.7 }).passed).to be(true)
       expect(overlap(%w[a b c d]).passed).to be(true)

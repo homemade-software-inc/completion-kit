@@ -248,7 +248,7 @@ var CK_CHECK_LABELS = {
 var CK_CHECK_DEFAULT_HINTS = { min: "Leave blank for no minimum." };
 
 var CK_CHECK_HINTS = {
-  list_overlap: { min: "Leave blank to require an exact match." }
+  list_overlap: { min: "Leave blank to require a perfect score." }
 };
 
 function ckApplyCheckLabels(scope, kind) {
