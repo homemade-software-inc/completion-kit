@@ -391,6 +391,8 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
   end
 
   describe "re-entering the key when the provider or endpoint changes" do
+    before { allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"]) }
+
     let(:credential) do
       create(:completion_kit_provider_credential, provider: "ollama", api_key: "stored-secret-key",
         api_endpoint: "https://ollama.example.test")

@@ -69,6 +69,8 @@ RSpec.describe "API V1 Provider Credentials", type: :request do
   end
 
   describe "PATCH /api/v1/provider_credentials/:id moving a stored key" do
+    before { allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"]) }
+
     let!(:cred) do
       create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-stored-secret")
     end
