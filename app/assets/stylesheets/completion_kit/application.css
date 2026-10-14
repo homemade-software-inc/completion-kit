@@ -3293,6 +3293,7 @@ select.ck-input {
 }
 
 .ck-cmp-score__pair { display: inline-flex; align-items: center; gap: 0.45rem; }
+.ck-cmp-score__pair .ck-badge { white-space: nowrap; }
 .ck-cmp-score__arrow { color: var(--ck-dim); font-size: 0.78rem; }
 .ck-cmp-score__link { display: inline-flex; text-decoration: none; border-radius: 7px; transition: box-shadow 0.12s ease; }
 .ck-cmp-score__link:hover { box-shadow: 0 0 0 1px var(--ck-accent); }
