@@ -258,7 +258,7 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
       get base_path
 
       expect(card_key(credential)).to eq("No key")
-      expect(Nokogiri::HTML5(response.body).at_css(".ck-provider-list").text).not_to include("—")
+      expect(Nokogiri::HTML5(response.body).at_css(".ck-provider-list").text).not_to include("\u2014")
     end
   end
 
