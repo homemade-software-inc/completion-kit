@@ -363,6 +363,22 @@ RSpec.describe "MCP endpoint", type: :request do
       expect(body["error"]["message"]).not_to include("constraint")
     end
 
+    it "says the input was too large or too complex when a tool hits a regex timeout" do
+      error = Regexp::TimeoutError.new("regexp match timeout")
+      allow(CompletionKit::McpDispatcher).to receive(:dispatch).and_raise(error)
+      expect(Rails.error).to receive(:report).with(error, hash_including(handled: true))
+
+      post mcp_path, params: {jsonrpc: "2.0", id: 15, method: "tools/call", params: {
+        name: "runs_create", arguments: {}
+      }}.to_json, headers: session_headers
+
+      body = JSON.parse(response.body)
+      expect(response).to have_http_status(:ok)
+      expect(body["id"]).to eq(15)
+      expect(body["error"]["code"]).to eq(-32602)
+      expect(body["error"]["message"]).to eq("The input was too large or too complex to process.")
+    end
+
     it "returns a generic JSON-RPC error for an unexpected StandardError" do
       allow(CompletionKit::McpDispatcher).to receive(:dispatch)
         .and_raise(StandardError, "something broke")
