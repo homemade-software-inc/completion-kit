@@ -15,9 +15,8 @@ module CompletionKit
         end
 
         def create
-          metric_group = MetricGroup.new(metric_group_params.except(:metric_ids))
+          metric_group = MetricGroup.new(metric_group_params.except(:metric_ids).merge(selected_metric_ids: params[:metric_ids]))
           if metric_group.save
-            metric_group.replace_metrics!(params[:metric_ids]) if params.key?(:metric_ids)
             render json: metric_group.reload, status: :created
           else
             render_validation_errors(metric_group)
@@ -25,8 +24,7 @@ module CompletionKit
         end
 
         def update
-          if @metric_group.update(metric_group_params.except(:metric_ids))
-            @metric_group.replace_metrics!(params[:metric_ids]) if params.key?(:metric_ids)
+          if @metric_group.update(metric_group_params.except(:metric_ids).merge(selected_metric_ids: params[:metric_ids]))
             render json: @metric_group.reload
           else
             render_validation_errors(@metric_group)

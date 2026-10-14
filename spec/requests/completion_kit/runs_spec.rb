@@ -541,6 +541,125 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("prevented this run from being saved")
   end
 
+  describe "with prompts and datasets from another tenant" do
+    let!(:foreign_prompt) { create(:completion_kit_prompt, template: "Static prompt") }
+    let!(:foreign_dataset) { create(:completion_kit_dataset) }
+
+    before { hide_outside_tenant(foreign_prompt, foreign_dataset) }
+
+    it "refuses to create a run on another tenant's prompt" do
+      scoring = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+
+      expect do
+        post base_path, params: { run: { name: "Cross", prompt_id: foreign_prompt.id, dataset_id: scoring.id } }
+      end.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Prompt not found")
+    end
+
+    it "refuses to create a run on another tenant's dataset" do
+      expect do
+        post base_path, params: { run: { name: "Cross", prompt_id: prompt.id, dataset_id: foreign_dataset.id } }
+      end.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Dataset not found")
+    end
+
+    it "refuses to move a run onto another tenant's dataset in place" do
+      run = create(:completion_kit_run, prompt: prompt, name: "Mine")
+      original_dataset_id = run.dataset_id
+
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Mine", prompt_id: prompt.id, dataset_id: foreign_dataset.id } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Dataset not found")
+      expect(run.reload.dataset_id).to eq(original_dataset_id)
+    end
+
+    it "refuses to fork a run with results onto another tenant's prompt" do
+      scoring = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+      run = create(:completion_kit_run, prompt: prompt, dataset: scoring, name: "Mine")
+      run.responses.create!(response_text: "Some output")
+
+      expect do
+        patch "#{base_path}/#{run.id}", params: { run: { name: "Mine", prompt_id: foreign_prompt.id, dataset_id: run.dataset_id } }
+      end.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Prompt not found")
+    end
+
+    it "sends a rerun of a run on another tenant's prompt back with an alert" do
+      scoring = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+      reset_tenant_scope
+      legacy = create(:completion_kit_run, prompt: foreign_prompt, dataset: scoring, status: "completed")
+      hide_outside_tenant(foreign_prompt, foreign_dataset)
+
+      expect do
+        post "#{base_path}/#{legacy.id}/rerun"
+      end.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to redirect_to("/completion_kit/runs/#{legacy.id}")
+      expect(flash[:alert]).to eq("Prompt not found")
+    end
+  end
+
+  describe "with metrics from another tenant" do
+    let(:own_metric) { create(:completion_kit_metric, name: "Own") }
+    let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }
+
+    before { hide_outside_tenant(foreign_metric) }
+
+    it "refuses to create a run on another tenant's metric and writes nothing" do
+      expect do
+        post base_path, params: { run: { name: "Cross", prompt_id: prompt.id, metric_ids: [own_metric.id, foreign_metric.id] } }
+      end.not_to change { [CompletionKit::Run.unscoped.count, CompletionKit::RunMetric.unscoped.count] }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Metric ids not found")
+    end
+
+    it "refuses to swap a run's metrics for another tenant's in place" do
+      run = create(:completion_kit_run, prompt: prompt, name: "Mine")
+      run.replace_metrics!([own_metric.id])
+
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Mine", metric_ids: [foreign_metric.id] } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Metric ids not found")
+      expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
+    end
+
+    it "refuses to fork a run with results onto another tenant's metric" do
+      run = create(:completion_kit_run, prompt: prompt, name: "Mine", judge_model: "gpt-4.1")
+      run.replace_metrics!([own_metric.id])
+      run.responses.create!(response_text: "Some output")
+
+      expect do
+        patch "#{base_path}/#{run.id}", params: { run: { name: "Mine", judge_model: "gpt-4.1-mini", metric_ids: [foreign_metric.id] } }
+      end.not_to change { [CompletionKit::Run.unscoped.count, CompletionKit::RunMetric.unscoped.count] }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Metric ids not found")
+    end
+
+    it "sends a rerun of a run carrying another tenant's metric back with an alert" do
+      reset_tenant_scope
+      legacy = create(:completion_kit_run, prompt: prompt, status: "completed")
+      legacy.replace_metrics!([foreign_metric.id])
+      hide_outside_tenant(foreign_metric)
+
+      expect do
+        post "#{base_path}/#{legacy.id}/rerun"
+      end.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to redirect_to("/completion_kit/runs/#{legacy.id}")
+      expect(flash[:alert]).to eq("Metric ids not found")
+    end
+  end
+
   it "updates a run with valid params" do
     run = create(:completion_kit_run, prompt: prompt, name: "Old Run")
     dataset = create(:completion_kit_dataset)

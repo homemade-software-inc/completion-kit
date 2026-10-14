@@ -61,6 +61,9 @@
           </label>
         <% end %>
       </div>
+      <% if metric_group.errors[:metric_ids].any? %>
+        <p class="ck-field-error" id="<%= ck_field_error_id(form, :metric_ids) %>"><%= metric_group.errors.full_messages_for(:metric_ids).to_sentence %></p>
+      <% end %>
       <%= hidden_field_tag "metric_group[metric_ids][]", "" %>
     </div>
 

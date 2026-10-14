@@ -56,10 +56,9 @@ module CompletionKit
       end
 
       def self.create(args)
-        metric_group = CompletionKit::MetricGroup.new(args.slice("name", "description"))
+        metric_group = CompletionKit::MetricGroup.new(args.slice("name", "description").merge("selected_metric_ids" => args["metric_ids"]))
         metric_group.tag_names = args["tag_names"] if args.key?("tag_names")
         if metric_group.save
-          metric_group.replace_metrics!(args["metric_ids"])
           text_result(metric_group.reload.as_json)
         else
           error_result(metric_group.errors.full_messages.join(", "))
@@ -68,8 +67,7 @@ module CompletionKit
 
       def self.update(args)
         metric_group = CompletionKit::MetricGroup.find(args["id"])
-        if metric_group.update(args.except("id", "metric_ids").slice("name", "description"))
-          metric_group.replace_metrics!(args["metric_ids"]) if args.key?("metric_ids")
+        if metric_group.update(args.slice("name", "description").merge("selected_metric_ids" => args["metric_ids"]))
           metric_group.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(metric_group.reload.as_json)
         else

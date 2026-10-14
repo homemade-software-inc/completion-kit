@@ -2,6 +2,7 @@ module CompletionKit
   class Run < ApplicationRecord
     include Turbo::Broadcastable
     include CompletionKit::Taggable
+    include CompletionKit::MetricSelection
 
     STATUSES = %w[pending running completed failed].freeze
     INSERT_BATCH_SIZE = 1000
@@ -27,8 +28,9 @@ module CompletionKit
     validates :status, inclusion: { in: STATUSES }
     validates :max_tokens, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :judge_temperature, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 1 }, allow_nil: true
-    validate :dataset_supplies_prompt_variables
-    validate :judge_only_run_supplies_output_column
+    validate :references_in_scope
+    validate :dataset_supplies_prompt_variables, unless: :reference_out_of_scope?
+    validate :judge_only_run_supplies_output_column, unless: :reference_out_of_scope?
     validate :dataset_supplies_expected_column
     validate :judge_model_servable, if: :judge_model_newly_selected?
 
@@ -223,7 +225,6 @@ module CompletionKit
     end
 
     def replace_metrics!(metric_ids)
-      return unless metric_ids
       run_metrics.delete_all
       Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
         run_metrics.create!(metric_id: metric_id, position: index + 1)
@@ -487,7 +488,7 @@ module CompletionKit
     end
 
     def rerun!
-      new_run = Run.create!(
+      Run.create!(
         prompt_id: prompt_id,
         dataset_id: dataset_id,
         judge_model: judge_model,
@@ -498,10 +499,9 @@ module CompletionKit
         expected_column: expected_column,
         tag_names: tag_names,
         status: "pending",
-        cloned_from_judge_model: judge_model
+        cloned_from_judge_model: judge_model,
+        selected_metric_ids: run_metrics.pluck(:metric_id)
       )
-      new_run.replace_metrics!(metric_ids)
-      new_run
     end
 
     def retry_failures!(only: nil)
@@ -770,6 +770,24 @@ module CompletionKit
         count = Run.where(prompt_id: nil, dataset_id: dataset.id).count + 1
         self.name = "#{dataset.name} scoring ##{count}"
       end
+    end
+
+    def prompt_out_of_scope?
+      will_save_change_to_prompt_id? && prompt_id.present? && prompt.nil?
+    end
+
+    def dataset_out_of_scope?
+      will_save_change_to_dataset_id? && dataset_id.present? && dataset.nil?
+    end
+
+    def reference_out_of_scope?
+      prompt_out_of_scope? || dataset_out_of_scope?
+    end
+
+    def references_in_scope
+      errors.add(:prompt_id, "not found") if prompt_out_of_scope?
+      errors.add(:dataset_id, "not found") if dataset_out_of_scope?
+      errors.add(:metric_ids, "not found") if selected_metrics_out_of_scope?
     end
 
     def dataset_supplies_prompt_variables

@@ -52,6 +52,39 @@ RSpec.describe CompletionKit::McpTools::MetricGroups do
       expect(content["metric_ids"]).to eq([metric.id])
     end
 
+    describe "with metrics from another tenant" do
+      let(:own_metric) { create(:completion_kit_metric, name: "Own") }
+      let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }
+
+      before { hide_outside_tenant(foreign_metric) }
+
+      it "refuses to create a group on another tenant's metric and writes nothing" do
+        expect {
+          result = described_class.call("metric_groups_create", {"name" => "Cross", "metric_ids" => [own_metric.id, foreign_metric.id]})
+          expect(result[:isError]).to be(true)
+          expect(result[:content].first[:text]).to eq("Metric ids not found")
+        }.not_to change { [CompletionKit::MetricGroup.unscoped.count, CompletionKit::MetricGroupMembership.unscoped.count] }
+      end
+
+      it "refuses to swap a group's metrics for another tenant's and keeps the old ones" do
+        metric_group.replace_metrics!([own_metric.id])
+
+        result = described_class.call("metric_groups_update", {"id" => metric_group.id, "metric_ids" => [foreign_metric.id]})
+
+        expect(result[:isError]).to be(true)
+        expect(result[:content].first[:text]).to eq("Metric ids not found")
+        expect(metric_group.metric_group_memberships.pluck(:metric_id)).to eq([own_metric.id])
+      end
+
+      it "leaves a group's metrics alone when an update names none" do
+        metric_group.replace_metrics!([own_metric.id])
+
+        described_class.call("metric_groups_update", {"id" => metric_group.id, "name" => "Renamed"})
+
+        expect(metric_group.metric_group_memberships.pluck(:metric_id)).to eq([own_metric.id])
+      end
+    end
+
     it "returns error on invalid create" do
       result = described_class.call("metric_groups_create", {"name" => ""})
       expect(result[:isError]).to be true

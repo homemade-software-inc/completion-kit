@@ -3,7 +3,7 @@ module CompletionKit
     self.table_name = "completion_kit_metric_group_memberships"
 
     belongs_to :metric_group, class_name: "CompletionKit::MetricGroup", foreign_key: "metric_group_id"
-    belongs_to :metric
+    belongs_to :metric, optional: false
 
     validates :metric_id, uniqueness: { scope: :metric_group_id }
 

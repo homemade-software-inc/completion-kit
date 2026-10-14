@@ -18,9 +18,8 @@ module CompletionKit
         end
 
         def create
-          run = Run.new(run_params.except(:metric_ids))
+          run = Run.new(run_params.except(:metric_ids).merge(selected_metric_ids: params[:metric_ids]))
           if run.save
-            run.replace_metrics!(params[:metric_ids])
             render json: run.reload, status: :created
           else
             render_validation_errors(run)
@@ -28,8 +27,7 @@ module CompletionKit
         end
 
         def update
-          if @run.update(run_params.except(:metric_ids))
-            @run.replace_metrics!(params[:metric_ids]) if params.key?(:metric_ids)
+          if @run.update(run_params.except(:metric_ids).merge(selected_metric_ids: params[:metric_ids]))
             render json: @run.reload
           else
             render_validation_errors(@run)
@@ -65,6 +63,8 @@ module CompletionKit
           else
             render_error(new_run.failure_summary || "Could not start the new run.", status: :unprocessable_entity)
           end
+        rescue ActiveRecord::RecordInvalid => e
+          render_validation_errors(e.record)
         end
 
         def regrade

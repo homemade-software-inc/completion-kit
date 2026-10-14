@@ -43,6 +43,13 @@ module TenantScopingHelpers
     CompletionKit.config.tenant_scope_columns = [:organization_id]
   end
 
+  def hide_outside_tenant(*records)
+    hidden = records.group_by(&:class).transform_values { |group| group.map(&:id) }
+    CompletionKit.config.tenant_scope = -> {
+      hidden.key?(klass) ? where("#{klass.table_name}.id NOT IN (?)", hidden[klass]) : all
+    }
+  end
+
   def reset_tenant_scope
     CompletionKit.config.tenant_scope = nil
     CompletionKit.config.tenant_scope_columns = []

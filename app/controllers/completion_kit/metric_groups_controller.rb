@@ -20,11 +20,10 @@ module CompletionKit
     end
 
     def create
-      @metric_group = MetricGroup.new(metric_group_params.except(:metric_ids))
+      @metric_group = MetricGroup.new(metric_group_params.except(:metric_ids).merge(selected_metric_ids: metric_group_params[:metric_ids]))
       @metrics = Metric.includes(:tags).order(:name)
 
       if @metric_group.save
-        @metric_group.replace_metrics!(metric_group_params[:metric_ids])
         redirect_to metric_group_path(@metric_group), notice: "Metric group was successfully created."
       else
         render :new, status: :unprocessable_entity
@@ -34,8 +33,7 @@ module CompletionKit
     def update
       @metrics = Metric.includes(:tags).order(:name)
 
-      if @metric_group.update(metric_group_params.except(:metric_ids))
-        @metric_group.replace_metrics!(metric_group_params[:metric_ids])
+      if @metric_group.update(metric_group_params.except(:metric_ids).merge(selected_metric_ids: metric_group_params[:metric_ids]))
         redirect_to metric_group_path(@metric_group), notice: "Metric group was successfully updated."
       else
         render :edit, status: :unprocessable_entity
