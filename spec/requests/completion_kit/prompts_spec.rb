@@ -392,6 +392,52 @@ RSpec.describe "CompletionKit prompts", type: :request do
     CompletionKit.config.runs_display_scope = nil
   end
 
+  it "keeps the Runs section with a neutral empty state when the display scope excludes every run of the prompt family" do
+    prompt = create(:completion_kit_prompt, name: "Prompt A")
+    create(:completion_kit_run, prompt: prompt, name: "Old Prompt Run", created_at: 90.days.ago)
+    next_version = prompt.build_next_version
+    next_version.save!
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+    get "/completion_kit/prompts/#{next_version.id}"
+
+    expect(response.body).to include('<p class="ck-kicker">Runs</p>')
+    expect(response.body).to include("No runs to show")
+    expect(response.body).not_to include("Old Prompt Run")
+  ensure
+    CompletionKit.config.runs_display_scope = nil
+  end
+
+  it "renders the host footer partial beneath the neutral empty state on the prompt page" do
+    prompt = create(:completion_kit_prompt, name: "Prompt A")
+    create(:completion_kit_run, prompt: prompt, created_at: 90.days.ago)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+    CompletionKit.config.runs_display_footer_partial = "spec_host/runs_footer"
+
+    get "/completion_kit/prompts/#{prompt.id}"
+
+    body = response.body
+    expect(body).to include("spec-host-runs-footer: 0 runs in view")
+    expect(body.index("No runs to show")).to be < body.index("spec-host-runs-footer")
+  ensure
+    CompletionKit.config.runs_display_footer_partial = nil
+    CompletionKit.config.runs_display_scope = nil
+  end
+
+  it "renders no Runs section for a prompt that never ran, even when other prompts have excluded runs" do
+    prompt = create(:completion_kit_prompt, name: "Prompt A")
+    other = create(:completion_kit_prompt, name: "Prompt B")
+    create(:completion_kit_run, prompt: other, created_at: 90.days.ago)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+    get "/completion_kit/prompts/#{prompt.id}"
+
+    expect(response.body).not_to include('<p class="ck-kicker">Runs</p>')
+    expect(response.body).not_to include("No runs to show")
+  ensure
+    CompletionKit.config.runs_display_scope = nil
+  end
+
   it "scopes the prompt family run count cell to display-scoped runs" do
     prompt = create(:completion_kit_prompt, name: "Counted Prompt")
     create(:completion_kit_run, prompt: prompt)

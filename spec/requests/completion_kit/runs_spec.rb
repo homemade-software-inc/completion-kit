@@ -22,14 +22,14 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("Run A")
   end
 
-  it "shows a hidden-runs message, not the new-user CTA, when every run is hidden by the display scope" do
+  it "shows a neutral empty state, not the new-user CTA, when the display scope returns nothing" do
     create(:completion_kit_run, prompt: prompt, name: "Old Run", created_at: 90.days.ago)
     CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
 
     get base_path
 
     expect(response.body).not_to include("Create your first run")
-    expect(response.body).to include("Your older runs are hidden")
+    expect(response.body).to include("No runs to show")
   ensure
     CompletionKit.config.runs_display_scope = nil
   end

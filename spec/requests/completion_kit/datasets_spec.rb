@@ -194,6 +194,50 @@ RSpec.describe "CompletionKit datasets", type: :request do
     CompletionKit.config.runs_display_scope = nil
   end
 
+  it "keeps the Runs section with a neutral empty state when the display scope excludes every run of the dataset" do
+    dataset = create(:completion_kit_dataset)
+    create(:completion_kit_run, dataset: dataset, name: "Old DS Run", created_at: 90.days.ago)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+    get "/completion_kit/datasets/#{dataset.id}"
+
+    expect(response.body).to include('<p class="ck-kicker">Runs</p>')
+    expect(response.body).to include("No runs to show")
+    expect(response.body).not_to include("Old DS Run")
+  ensure
+    CompletionKit.config.runs_display_scope = nil
+  end
+
+  it "renders the host footer partial beneath the neutral empty state on the dataset page" do
+    dataset = create(:completion_kit_dataset)
+    create(:completion_kit_run, dataset: dataset, created_at: 90.days.ago)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+    CompletionKit.config.runs_display_footer_partial = "spec_host/runs_footer"
+
+    get "/completion_kit/datasets/#{dataset.id}"
+
+    body = response.body
+    expect(body).to include("spec-host-runs-footer: 0 runs in view")
+    expect(body.index("No runs to show")).to be < body.index("spec-host-runs-footer")
+  ensure
+    CompletionKit.config.runs_display_footer_partial = nil
+    CompletionKit.config.runs_display_scope = nil
+  end
+
+  it "renders no Runs section for a dataset that was never run, even when other datasets have excluded runs" do
+    dataset = create(:completion_kit_dataset)
+    other = create(:completion_kit_dataset)
+    create(:completion_kit_run, dataset: other, created_at: 90.days.ago)
+    CompletionKit.config.runs_display_scope = -> { where(created_at: 30.days.ago..) }
+
+    get "/completion_kit/datasets/#{dataset.id}"
+
+    expect(response.body).not_to include('<p class="ck-kicker">Runs</p>')
+    expect(response.body).not_to include("No runs to show")
+  ensure
+    CompletionKit.config.runs_display_scope = nil
+  end
+
   it "scopes the dataset used-in run count cell to display-scoped runs" do
     dataset = create(:completion_kit_dataset)
     create(:completion_kit_run, dataset: dataset)

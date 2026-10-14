@@ -269,22 +269,22 @@ CompletionKit.configure do |config|
 end
 ```
 
-`tenant_scope` runs as each engine model's `default_scope` (use `unscoped` to bypass). `tenant_scope_columns` is appended to every engine uniqueness validation. Adding the tenant columns and composite unique indexes lives in your host migrations. Both defaults (`nil`, `[]`) are no-ops.
+`tenant_scope` runs as each engine model's `default_scope` (use `unscoped` to bypass). `tenant_scope_columns` is appended to every engine uniqueness validation. Adding the tenant columns and composite unique indexes lives in your host migrations. Both defaults (`nil`, `[]`) are no-ops. The `completion_kit:mark_interrupted_runs_failed` rake task bypasses `tenant_scope` and marks in-flight runs in every tenant, so a host that also enforces tenancy in the database, for example with row-level security, must run it as a database role that can see every tenant's rows.
 
-One hook lets a host apply run-history retention everywhere the engine lists, counts, or traverses runs, without overriding controllers or views:
+One hook lets a host apply its own display rule everywhere the engine lists, counts, or traverses runs, without overriding controllers or views:
 
 ```ruby
 CompletionKit.configure do |config|
   config.runs_display_scope = -> { where(created_at: 90.days.ago..) }
-  config.runs_display_footer_partial = "runs/retention_notice"
+  config.runs_display_footer_partial = "runs/display_notice"
 end
 ```
 
-`runs_display_scope` is a callable evaluated against a `Run` relation, in the same bare-`where` style as `tenant_scope` (it runs via `instance_exec`, so write it zero-arg with the relation as `self`, like a Rails `scope` lambda). It must return a relation: a callable that returns `nil` or anything non-chainable raises when a list renders. The engine applies it through `Run.display_scoped` at every run list and count it owns (the runs index, prompt and dataset show pages, the compare picker, new-run tag defaults, the v1 API index and its `X-Total-Count`, the MCP `runs_list` tool, the dashboard and API reference recent-runs panels, the dashboard "Runs" stat-card count, and provider-credential usage stats) and through `Run.visible_run_ids` for child records that traverse runs (the metric trust-panel sample and the agreement examples shown on a metric page). Use it for list-only retention rather than a global `default_scope`, which would null `Run` associations everywhere they are traversed.
+`runs_display_scope` is a callable evaluated against a `Run` relation, in the same bare-`where` style as `tenant_scope` (it runs via `instance_exec`, so write it zero-arg with the relation as `self`, like a Rails `scope` lambda). It must return a relation: a callable that returns `nil` or anything non-chainable raises when a list renders. The engine applies it through `Run.display_scoped` at every run list and count it owns (the runs index, prompt and dataset show pages, the compare picker, new-run tag defaults, the v1 API index and its `X-Total-Count`, the MCP `runs_list` tool, the dashboard and API reference recent-runs panels, the dashboard "Runs" stat-card count, and provider-credential usage stats) and through `Run.visible_run_ids` for child records that traverse runs (the metric trust-panel sample and the agreement examples shown on a metric page). Use it for a list-only display rule rather than a global `default_scope`, which would null `Run` associations everywhere they are traversed.
 
-Deliberately exempt, because they must still see every run: id-addressed single-run lookups (`runs#show`, the MCP `runs_get` tool, the v1 API show), delete-confirmation cascade counts, the auto-generated run-name counter, the dashboard's stat-card gate (it keys off the unscoped run total so a long-tenured workspace whose runs have all aged past retention still sees its activity cards rather than a blank dashboard), and the judge few-shot seeding that learns from corrected examples even on hidden runs.
+Deliberately exempt, because they must still see every run: id-addressed single-run lookups (`runs#show`, the MCP `runs_get` tool, the v1 API show), delete-confirmation cascade counts, the auto-generated run-name counter, the dashboard's stat-card gate (it keys off the unscoped run total so a workspace whose runs the display scope excludes entirely still sees its activity cards rather than a blank dashboard), and the judge few-shot seeding that learns from corrected examples even on runs the display scope excludes.
 
-`runs_display_footer_partial` names a partial rendered below the runs list on the dashboard, the index, and the prompt and dataset show pages; it receives the shown runs as a `runs` local. Use it for a notice like "older runs are hidden, upgrade to see them" — your host owns the retention rule in `runs_display_scope`, so it computes the hidden count itself. Both default to `nil` (no-ops), leaving standalone behaviour unchanged.
+`runs_display_footer_partial` names a partial rendered below the runs list on the dashboard, the index, and the prompt and dataset show pages; it receives the shown runs as a `runs` local. When the display scope excludes every run one of those surfaces would list, the surface says "No runs to show." and the footer partial renders beneath it. The engine cannot know why your scope excludes runs, so use the partial to explain your display rule: your host owns that rule in `runs_display_scope` and is the only side that can describe or count what it left out. Both default to `nil` (no-ops), leaving standalone behaviour unchanged.
 
 ## Contributing
 
