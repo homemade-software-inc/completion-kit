@@ -688,6 +688,7 @@ RSpec.describe "CompletionKit runs", type: :request do
 
     it "sends a rerun of a run carrying another tenant's metric back with an alert" do
       reset_tenant_scope
+      create(:completion_kit_provider_credential)
       legacy = create(:completion_kit_run, prompt: prompt, status: "completed")
       legacy.replace_metrics!([foreign_metric.id])
       hide_outside_tenant(foreign_metric)
@@ -975,6 +976,7 @@ RSpec.describe "CompletionKit runs", type: :request do
   end
 
   it "rerun creates a new run with the same configuration and starts it" do
+    create(:completion_kit_provider_credential)
     metric = create(:completion_kit_metric)
     dataset = create(:completion_kit_dataset)
     source_run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1", temperature: 0.3, max_tokens: 2048, judge_temperature: 0.2, status: "completed")
@@ -1075,6 +1077,7 @@ RSpec.describe "CompletionKit runs", type: :request do
   end
 
   it "rerun redirects with an alert when start! fails on the new run" do
+    create(:completion_kit_provider_credential)
     source_run = create(:completion_kit_run, prompt: prompt, status: "completed")
     allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
     allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("config gone")

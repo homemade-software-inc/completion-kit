@@ -370,6 +370,7 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
 
     it "carries the metrics over in order on rerun" do
+      create(:completion_kit_provider_credential)
       run = create(:completion_kit_run)
       run.replace_metrics!([second_metric.id, own_metric.id])
 
@@ -378,6 +379,7 @@ RSpec.describe CompletionKit::Run, type: :model do
 
     it "refuses to rerun a run that carries another tenant's metric" do
       reset_tenant_scope
+      create(:completion_kit_provider_credential)
       legacy = create(:completion_kit_run)
       legacy.replace_metrics!([own_metric.id, foreign_metric.id])
       hide_outside_tenant(foreign_metric)
@@ -1398,8 +1400,29 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = create(:completion_kit_run)
       run.prompt.update_columns(llm_model: "llama3")
 
-      expect { run.rerun! }.to raise_error(CompletionKit::UnknownModelError, %(No configured provider serves model "llama3"))
+      expect { run.rerun! }.to raise_error(CompletionKit::ConfigurationError, %(No configured provider serves model "llama3"))
       expect(described_class.count).to eq(1)
+    end
+
+    it "refuses to rerun a run whose generation client is not configured, with the reason start! gives, before creating the copy" do
+      unconfigured = instance_double(CompletionKit::LlmClient, configured?: false, configuration_errors: ["OpenAI API key is not configured"])
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(unconfigured)
+      run = create(:completion_kit_run)
+
+      expect { run.rerun! }.to raise_error(CompletionKit::ConfigurationError, "LLM API not configured: OpenAI API key is not configured")
+      expect(described_class.count).to eq(1)
+
+      expect(run.start!).to be(false)
+      expect(run.failure_summary).to eq("LLM API not configured: OpenAI API key is not configured")
+    end
+
+    it "reruns a scoring-only run without asking for a generation client" do
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_call_original
+      scoring = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+      run = create(:completion_kit_run, prompt: nil, dataset: scoring)
+
+      expect(run.rerun!).to be_persisted
+      expect(CompletionKit::LlmClient).not_to have_received(:for_model)
     end
 
     it "reruns a check-only run whose unused judge does not resolve" do

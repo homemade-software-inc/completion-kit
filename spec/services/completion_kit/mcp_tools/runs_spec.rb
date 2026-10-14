@@ -189,6 +189,7 @@ RSpec.describe CompletionKit::McpTools::Runs do
 
       it "answers a rerun of a run carrying another tenant's metric with an error and writes nothing" do
         reset_tenant_scope
+        create(:completion_kit_provider_credential)
         run.replace_metrics!([own_metric.id, foreign_metric.id])
         hide_outside_tenant(foreign_metric)
 
@@ -371,6 +372,7 @@ RSpec.describe CompletionKit::McpTools::Runs do
     end
 
     it "reruns a run as a fresh started copy" do
+      create(:completion_kit_provider_credential)
       allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(true)
       expect do
         described_class.call("runs_rerun", {"id" => run.id})
@@ -378,6 +380,7 @@ RSpec.describe CompletionKit::McpTools::Runs do
     end
 
     it "reports an error when the rerun copy cannot start" do
+      create(:completion_kit_provider_credential)
       allow_any_instance_of(CompletionKit::Run).to receive(:start!).and_return(false)
       allow_any_instance_of(CompletionKit::Run).to receive(:failure_summary).and_return("Dataset has no rows")
       result = described_class.call("runs_rerun", {"id" => run.id})
