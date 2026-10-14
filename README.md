@@ -185,6 +185,8 @@ A prompt whose template is over `max_template_bytes` fails validation when its t
 
 The first line of a dataset's CSV is its header row. A dataset fails validation when its CSV is saved with a header row that is blank or longer than 64 KB. The 64 KB limit is fixed, not a setting.
 
+A dataset also fails validation when its CSV is saved with bytes that are not valid UTF-8, so export spreadsheets as UTF-8 CSV.
+
 A regex check that runs past its time limit fails that row and says it timed out. The limit is `regex_timeout`, or your app's `Regexp.timeout` when that is shorter, so the engine never loosens a stricter limit your app set. The engine sets the limit on each pattern and never changes the process-wide `Regexp.timeout`. Set `regex_timeout` to a finite number of seconds of at least `0.001`, or to `nil` to use only `Regexp.timeout`. Any other value, such as `0` or `Float::INFINITY`, raises an `ArgumentError` when the initializer runs.
 
 ## How it works
