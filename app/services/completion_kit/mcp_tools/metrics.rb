@@ -30,8 +30,9 @@ module CompletionKit
 
       CHECK_CONFIG_HINT = "For a deterministic check set metric_type:\"check\" and check_config. Per-kind required keys: " \
         "value (contains/not_contains/equals/list_overlap/numeric_equals), pattern (regex), json_path+expected (json_path_equals), " \
-        "min and/or max (length_bounds/numeric_bounds); valid_json takes no extra keys. target_path is required when target is json_path, " \
-        "and it walks array indices, as in items.0.name; any path may start at the root with $., as in $.items.0.name. " \
+        "min and/or max (length_bounds/numeric_bounds); valid_json takes no extra keys. target_path is required when target is json_path; " \
+        "a target_path sent with no target sets target to json_path, and one sent with any other target is refused. " \
+        "target_path walks array indices, as in items.0.name; any path may start at the root with $., as in $.items.0.name. " \
         "list_overlap grades a list-valued field and stores a fraction rather than a verdict: score_by is recall, precision, f1 or jaccard (recall by default), " \
         "and min is the fraction that counts as a pass (1, a perfect score, by default). " \
         "numeric_bounds and numeric_equals read a number, ignoring the commas and currency symbol a figure is written with; " \

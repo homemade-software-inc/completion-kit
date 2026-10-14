@@ -127,6 +127,22 @@ RSpec.describe CompletionKit::McpTools::Metrics do
       expect(config).to include("compare_to" => "expected", "expected_path" => "trim")
     end
 
+    it "reads a target_path sent with no target as a path into the response JSON (issue #170)" do
+      config = create_check("Confidence", {"check_kind" => "numeric_bounds", "target_path" => "$.vin.confidence", "min" => 0.8})
+
+      expect(config).to include("target" => "json_path", "target_path" => "$.vin.confidence")
+    end
+
+    it "refuses a target_path when the target says to check something else" do
+      check = create(:completion_kit_metric, :check)
+      result = described_class.call("metrics_update", {"id" => check.id,
+                                                       "check_config" => {"check_kind" => "numeric_bounds", "target" => "response_text",
+                                                                          "target_path" => "$.vin.confidence", "min" => 0.8}})
+
+      expect(result[:isError]).to be true
+      expect(result[:content].first[:text]).to eq('Check needs "What to check" to be "A value from the response JSON" when "Path into the JSON" is filled in')
+    end
+
     it "refuses a list value on a rule that compares one value" do
       result = described_class.call("metrics_create", {"name" => "Contains list", "metric_type" => "check",
                                                        "check_config" => {"check_kind" => "contains", "target" => "response_text", "value" => %w[foo bar]}})

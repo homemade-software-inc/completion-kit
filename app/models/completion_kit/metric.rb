@@ -30,6 +30,7 @@ module CompletionKit
     validate :metric_type_immutable_once_in_use, on: :update
 
     before_validation :generate_key
+    before_validation :default_check_target, if: :check?
     before_validation :normalize_rubric_bands, if: :llm_judge?
     before_validation :set_defaults, if: :llm_judge?
 
@@ -161,12 +162,21 @@ module CompletionKit
 
     def validate_check_target(config)
       target = config["target"].presence || "response_text"
-      unless CompletionKit::Checks::TargetResolver::TARGETS.include?(target)
+      path_given = config["target_path"].present?
+      if !CompletionKit::Checks::TargetResolver::TARGETS.include?(target)
         errors.add(:check_config, "needs #{check_label("target")} to be one of #{CompletionKit::Checks::TargetResolver::TARGETS.join(", ")}")
-      end
-      if target == "json_path" && config["target_path"].to_s.strip.empty?
+      elsif target == "json_path" && !path_given
         errors.add(:check_config, "needs #{check_label("target_path")} filled in to check a value from the response JSON")
+      elsif target != "json_path" && path_given && will_save_change_to_check_config?
+        errors.add(:check_config, "needs #{check_label("target")} to be \"#{CompletionKit::Checks::Labels.target("json_path")}\" when #{check_label("target_path")} is filled in")
       end
+    end
+
+    def default_check_target
+      config = check_config
+      return unless config.is_a?(Hash) && config["target"].blank? && config["target_path"].present? && will_save_change_to_check_config?
+
+      self.check_config = config.merge("target" => "json_path")
     end
 
     def validate_check_required_keys(config, kind)

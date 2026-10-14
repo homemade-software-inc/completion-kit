@@ -263,6 +263,15 @@ RSpec.describe CompletionKit::CheckReviewJob, type: :job do
       expect(review.check_score).to be_nil
     end
 
+    it "grades the issue's own example, a path with no target, against the path" do
+      metric.update!(check_config: { "check_kind" => "numeric_bounds", "target_path" => "$.vin.confidence", "min" => 0.8 })
+      response.update!(response_text: '{"vin":{"value":"X1","confidence":0.92}}')
+
+      described_class.perform_now(response.id, metric.id, run.id)
+
+      expect(response.reviews.find_by(metric_id: metric.id)).to have_attributes(passed: true, ai_feedback: "0.92 is within bounds")
+    end
+
     it "leaves a pass-or-fail check with no fraction, so it never enters a score average" do
       metric.update!(check_config: { "check_kind" => "numeric_bounds", "target" => "json_path",
                                      "target_path" => "nope", "min" => 0.8 })

@@ -284,6 +284,35 @@ RSpec.describe CompletionKit::Metric, type: :model do
       expect(metric).to be_valid
     end
 
+    it "reads a target_path sent with no target as a path into the response JSON" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_bounds", "target_path" => "$.vin.confidence", "min" => 0.8 })
+      expect(metric.reload.check_config).to include("target" => "json_path", "target_path" => "$.vin.confidence")
+
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "", "target_path" => "data" })
+      expect(metric.reload.check_config["target"]).to eq("json_path")
+    end
+
+    it "leaves the target alone when no target_path is given" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target_path" => "  " })
+      expect(metric.reload.check_config).not_to have_key("target")
+    end
+
+    it "refuses a target_path when the target says to check something else" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_bounds", "target" => "response_text", "target_path" => "$.vin.confidence", "min" => 0.8 })
+      expect(metric).not_to be_valid
+      expect(metric.errors.full_messages).to eq(['Check needs "What to check" to be "A value from the response JSON" when "Path into the JSON" is filled in'])
+    end
+
+    it "leaves a saved target_path alone until the check itself changes" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "foo" })
+      metric.update_column(:check_config, metric.check_config.merge("target_path" => "stale"))
+      expect(metric.reload.update(name: "Renamed")).to be(true)
+
+      metric.update_column(:check_config, metric.check_config.except("target"))
+      expect(metric.reload.update(name: "Renamed again")).to be(true)
+      expect(metric.reload.check_config).not_to have_key("target")
+    end
+
     it "leaves a saved list value alone until the check itself changes" do
       metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "foo" })
       metric.update_column(:check_config, metric.check_config.merge("value" => %w[foo bar]))

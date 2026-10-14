@@ -818,6 +818,23 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(JSON.parse(response.body)["check_config"]).to include("check_kind" => "equals", "compare_to" => "expected", "expected_path" => "vin")
     end
 
+    it "reads a target_path sent with no target as a path into the response JSON (issue #170)" do
+      config = create_check("Confidence", { check_kind: "numeric_bounds", target_path: "$.vin.confidence", min: 0.8 })
+
+      expect(config).to include("target" => "json_path", "target_path" => "$.vin.confidence")
+    end
+
+    it "refuses a target_path when the target says to check something else" do
+      post "/completion_kit/api/v1/metrics",
+           params: { name: "Confidence", metric_type: "check",
+                     check_config: { check_kind: "numeric_bounds", target: "input_data", target_path: "$.vin.confidence", min: 0.8 } }.to_json,
+           headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]["check_config"])
+        .to eq(['needs "What to check" to be "A value from the response JSON" when "Path into the JSON" is filled in'])
+    end
+
     it "refuses a list value on a rule that compares one value, as 0.28.46 did" do
       post "/completion_kit/api/v1/metrics",
            params: { name: "Contains list", metric_type: "check", check_config: { check_kind: "contains", target: "response_text", value: %w[foo bar] } }.to_json,
