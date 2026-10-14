@@ -53,13 +53,11 @@ module CompletionKit
     end
 
     def self.apply_variables(prompt, variables)
-      result = prompt.template.dup
+      values = variables.to_h.transform_keys(&:to_s)
+      return prompt.template.dup if values.empty?
 
-      variables.each do |name, value|
-        result.gsub!(/\{\{\s*#{Regexp.escape(name.to_s)}\s*\}\}/, value.to_s)
-      end
-
-      result
+      names = values.keys.map { |name| Regexp.escape(name) }.join("|")
+      prompt.template.gsub(/\{\{\s*(#{names})\s*\}\}/) { values[Regexp.last_match(1)].to_s }
     end
   end
 end

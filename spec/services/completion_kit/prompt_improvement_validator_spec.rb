@@ -120,6 +120,21 @@ RSpec.describe CompletionKit::PromptImprovementValidator do
       expect(summary["improved"]).to eq(1)
     end
 
+    it "renders each held-out cell into the candidate exactly as written" do
+      scored_response(ai: 3.0, input: { content: "(?<x>a)\\k<x> and {{tone}}", tone: "angry" }.to_json)
+      client = instance_double(CompletionKit::OpenAiClient, configured?: true)
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(client)
+      expect(client).to receive(:generate_completion)
+        .with("Summarize (?<x>a)\\k<x> and {{tone}} concisely", anything)
+        .and_return("Brand new output")
+      judge = instance_double(CompletionKit::JudgeService, evaluate: { score: 5.0, feedback: "great" })
+      allow(CompletionKit::JudgeService).to receive(:new).and_return(judge)
+
+      summary = described_class.new(run, "Summarize {{content}} concisely").call
+
+      expect(summary["tested"]).to eq(1)
+    end
+
     it "skips rows when the generation model is not configured" do
       scored_response(ai: 3.0)
       client = instance_double(CompletionKit::OpenAiClient, configured?: false, configuration_errors: ["no key"])
