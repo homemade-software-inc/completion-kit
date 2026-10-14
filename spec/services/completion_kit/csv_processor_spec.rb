@@ -156,6 +156,16 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
   end
 
   describe ".apply_variables" do
+    it "stops a hostile template at the regex timeout instead of running on" do
+      allow(CompletionKit::Checks::Regex).to receive(:timeout).and_return(0.01)
+      names = (1..2000).to_h { |i| ["column_#{i}", "v"] }
+      prompt = build(:completion_kit_prompt, template: "{{ " * 100_000)
+
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      expect { described_class.apply_variables(prompt, names) }.to raise_error(Regexp::TimeoutError)
+      expect(Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).to be < 1
+    end
+
     it "replaces variables even when the template contains spaces" do
       prompt = build(:completion_kit_prompt, template: "Hi {{ name }} for {{ audience }}")
 

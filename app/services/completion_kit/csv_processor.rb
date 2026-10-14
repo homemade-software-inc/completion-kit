@@ -68,7 +68,8 @@ module CompletionKit
       return prompt.template.dup if values.empty?
 
       names = values.keys.map { |name| Regexp.escape(name) }.join("|")
-      prompt.template.gsub(/\{\{\s*(#{names})\s*\}\}/) { values[Regexp.last_match(1)].to_s }
+      pattern = Regexp.new("\\{\\{\\s*(#{names})\\s*\\}\\}", timeout: Checks::Regex.timeout)
+      prompt.template.gsub(pattern) { values[Regexp.last_match(1)].to_s }
     end
   end
 end
