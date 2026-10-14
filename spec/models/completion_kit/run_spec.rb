@@ -233,6 +233,84 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
+  describe "metric ids outside the tenant scope" do
+    let(:static_prompt) { create(:completion_kit_prompt, template: "Static prompt") }
+    let(:own_metric) { create(:completion_kit_metric, name: "Own") }
+    let(:second_metric) { create(:completion_kit_metric, name: "Second") }
+    let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }
+
+    before { hide_outside_tenant(foreign_metric) }
+
+    it "rejects a metric the tenant cannot see before writing the run" do
+      run = described_class.new(name: "Cross", prompt: static_prompt, selected_metric_ids: [own_metric.id, foreign_metric.id])
+
+      expect(run.save).to be(false)
+      expect(run.errors.full_messages).to eq(["Metric ids not found"])
+      expect(described_class.unscoped.count).to eq(0)
+      expect(CompletionKit::RunMetric.unscoped.count).to eq(0)
+    end
+
+    it "rejects a metric id that exists in no tenant" do
+      missing = CompletionKit::Metric.unscoped.maximum(:id) + 100
+      run = described_class.new(name: "Cross", prompt: static_prompt, selected_metric_ids: [missing.to_s])
+
+      expect(run).not_to be_valid
+      expect(run.errors.full_messages).to eq(["Metric ids not found"])
+    end
+
+    it "keeps the existing metrics when an update points at another tenant's metric" do
+      run = create(:completion_kit_run)
+      run.replace_metrics!([own_metric.id])
+
+      expect(run.update(name: "Renamed", selected_metric_ids: [foreign_metric.id])).to be(false)
+      expect(run.errors.full_messages).to eq(["Metric ids not found"])
+      expect(run.reload.name).not_to eq("Renamed")
+      expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
+    end
+
+    it "attaches the selected metrics in order once the run saves" do
+      run = described_class.create!(name: "Mine", prompt: static_prompt, selected_metric_ids: ["", second_metric.id.to_s, own_metric.id.to_s])
+
+      expect(run.run_metrics.pluck(:metric_id, :position)).to eq([[second_metric.id, 1], [own_metric.id, 2]])
+    end
+
+    it "replaces the metrics on update and only once" do
+      run = create(:completion_kit_run)
+      run.replace_metrics!([own_metric.id])
+
+      run.update!(selected_metric_ids: [second_metric.id])
+      run.run_metrics.update_all(position: 7)
+      run.update!(name: "Renamed")
+
+      expect(run.run_metrics.pluck(:metric_id, :position)).to eq([[second_metric.id, 7]])
+    end
+
+    it "leaves the metrics alone when no selection is given" do
+      run = create(:completion_kit_run)
+      run.replace_metrics!([own_metric.id])
+
+      expect(run.update(name: "Renamed", selected_metric_ids: nil)).to be(true)
+      expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
+    end
+
+    it "carries the metrics over in order on rerun" do
+      run = create(:completion_kit_run)
+      run.replace_metrics!([second_metric.id, own_metric.id])
+
+      expect(run.rerun!.run_metrics.pluck(:metric_id)).to eq([second_metric.id, own_metric.id])
+    end
+
+    it "refuses to rerun a run that carries another tenant's metric" do
+      reset_tenant_scope
+      legacy = create(:completion_kit_run)
+      legacy.replace_metrics!([own_metric.id, foreign_metric.id])
+      hide_outside_tenant(foreign_metric)
+
+      expect { legacy.reload.rerun! }.to raise_error(ActiveRecord::RecordInvalid, /Metric ids not found/)
+      expect(described_class.unscoped.count).to eq(1)
+    end
+  end
+
   describe "RunMetric metric outside the tenant scope" do
     it "rejects a metric the tenant cannot see" do
       run = create(:completion_kit_run)

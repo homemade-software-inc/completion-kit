@@ -231,6 +231,62 @@ RSpec.describe "API V1 Runs", type: :request do
       expect(JSON.parse(response.body)["details"]).to eq("dataset_id" => ["not found"])
       expect(run.reload.dataset_id).to eq(original_dataset_id)
     end
+
+    it "answers a rerun of a run on another tenant's prompt with 422 and writes no row" do
+      scoring = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+      reset_tenant_scope
+      legacy = create(:completion_kit_run, prompt: foreign_prompt, dataset: scoring)
+      hide_outside_tenant(foreign_prompt, foreign_dataset)
+
+      expect {
+        post "/completion_kit/api/v1/runs/#{legacy.id}/rerun", headers: headers
+      }.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]).to eq("prompt_id" => ["not found"])
+    end
+  end
+
+  describe "metric ids from another tenant" do
+    let(:prompt) { create(:completion_kit_prompt, template: "Static prompt") }
+    let(:own_metric) { create(:completion_kit_metric, name: "Own") }
+    let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }
+
+    before { hide_outside_tenant(foreign_metric) }
+
+    it "refuses to create a run on another tenant's metric and writes nothing" do
+      expect {
+        post "/completion_kit/api/v1/runs", params: {name: "Cross", prompt_id: prompt.id, metric_ids: [own_metric.id, foreign_metric.id]}.to_json, headers: headers
+      }.not_to change { [CompletionKit::Run.unscoped.count, CompletionKit::RunMetric.unscoped.count] }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]).to eq("metric_ids" => ["not found"])
+    end
+
+    it "refuses to swap a run's metrics for another tenant's and keeps the old ones" do
+      run = create(:completion_kit_run, prompt: prompt)
+      run.replace_metrics!([own_metric.id])
+
+      patch "/completion_kit/api/v1/runs/#{run.id}", params: {metric_ids: [foreign_metric.id]}.to_json, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]).to eq("metric_ids" => ["not found"])
+      expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
+    end
+
+    it "answers a rerun of a run carrying another tenant's metric with 422" do
+      reset_tenant_scope
+      legacy = create(:completion_kit_run, prompt: prompt)
+      legacy.replace_metrics!([foreign_metric.id])
+      hide_outside_tenant(foreign_metric)
+
+      expect {
+        post "/completion_kit/api/v1/runs/#{legacy.id}/rerun", headers: headers
+      }.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]).to eq("metric_ids" => ["not found"])
+    end
   end
 
   describe "DELETE /api/v1/runs/:id" do

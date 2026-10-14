@@ -109,9 +109,8 @@ module CompletionKit
       end
 
       def self.create(args)
-        run = Run.new(args.slice("name", "prompt_id", "dataset_id", "judge_model", "output_column", "expected_column", *GENERATION_FIELDS))
+        run = Run.new(args.slice("name", "prompt_id", "dataset_id", "judge_model", "output_column", "expected_column", *GENERATION_FIELDS).merge("selected_metric_ids" => resolve_metric_ids(args)))
         if run.save
-          run.replace_metrics!(resolve_metric_ids(args))
           run.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(run_payload(run.reload))
         else
@@ -121,8 +120,7 @@ module CompletionKit
 
       def self.update(args)
         run = Run.find(args["id"])
-        if run.update(args.except("id", "metric_ids", "metric_group_id", "tag_names").slice("name", "dataset_id", "judge_model", "output_column", "expected_column", *GENERATION_FIELDS))
-          run.replace_metrics!(resolve_metric_ids(args)) if args.key?("metric_ids") || args["metric_group_id"].present?
+        if run.update(args.slice("name", "dataset_id", "judge_model", "output_column", "expected_column", *GENERATION_FIELDS).merge("selected_metric_ids" => resolve_metric_ids(args)))
           run.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(run_payload(run.reload))
         else

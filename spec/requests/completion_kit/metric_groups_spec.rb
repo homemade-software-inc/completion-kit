@@ -45,6 +45,33 @@ RSpec.describe "CompletionKit metric groups", type: :request do
     expect(response).to redirect_to("/completion_kit/metric_groups")
   end
 
+  describe "with metrics from another tenant" do
+    let(:own_metric) { create(:completion_kit_metric, name: "Own") }
+    let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }
+
+    before { hide_outside_tenant(foreign_metric) }
+
+    it "refuses to create a group on another tenant's metric and writes nothing" do
+      expect do
+        post base_path, params: { metric_group: { name: "Cross", metric_ids: [own_metric.id, foreign_metric.id] } }
+      end.not_to change { [CompletionKit::MetricGroup.unscoped.count, CompletionKit::MetricGroupMembership.unscoped.count] }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(Nokogiri::HTML5(response.body).at_css("#metric_group_metric_ids_error").text).to eq("Metric ids not found")
+    end
+
+    it "refuses to swap a group's metrics for another tenant's and keeps the old ones" do
+      group = create(:completion_kit_metric_group)
+      group.replace_metrics!([own_metric.id])
+
+      patch "#{base_path}/#{group.id}", params: { metric_group: { name: group.name, metric_ids: [foreign_metric.id] } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Metric ids not found")
+      expect(group.metric_group_memberships.pluck(:metric_id)).to eq([own_metric.id])
+    end
+  end
+
   it "renders the delete control as its own top-level form so it issues DELETE, not a Turbo-swallowed PATCH" do
     record = create(:completion_kit_metric_group)
 

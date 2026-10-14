@@ -155,6 +155,39 @@ RSpec.describe CompletionKit::McpTools::Runs do
       end
     end
 
+    describe "with metrics from another tenant" do
+      let(:own_metric) { create(:completion_kit_metric, name: "Own") }
+      let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }
+
+      before { hide_outside_tenant(foreign_metric) }
+
+      it "refuses to create a run on another tenant's metric and writes nothing" do
+        expect {
+          result = described_class.call("runs_create", {"name" => "Cross", "prompt_id" => prompt.id, "metric_ids" => [own_metric.id, foreign_metric.id]})
+          expect(result[:isError]).to be(true)
+          expect(result[:content].first[:text]).to eq("Metric ids not found")
+        }.not_to change { [CompletionKit::Run.unscoped.count, CompletionKit::RunMetric.unscoped.count] }
+      end
+
+      it "refuses to swap a run's metrics for another tenant's and keeps the old ones" do
+        run.replace_metrics!([own_metric.id])
+
+        result = described_class.call("runs_update", {"id" => run.id, "metric_ids" => [foreign_metric.id]})
+
+        expect(result[:isError]).to be(true)
+        expect(result[:content].first[:text]).to eq("Metric ids not found")
+        expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
+      end
+
+      it "leaves a run's metrics alone when an update names none" do
+        run.replace_metrics!([own_metric.id])
+
+        described_class.call("runs_update", {"id" => run.id, "name" => "Renamed"})
+
+        expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
+      end
+    end
+
     it "creates a run with metric_ids" do
       metric = create(:completion_kit_metric)
       result = described_class.call("runs_create", {"name" => "Run M", "prompt_id" => prompt.id, "metric_ids" => [metric.id]})

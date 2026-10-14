@@ -89,6 +89,33 @@ RSpec.describe "API V1 Metric Groups", type: :request do
     end
   end
 
+  describe "metric ids from another tenant" do
+    let(:own_metric) { create(:completion_kit_metric, name: "Own") }
+    let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }
+
+    before { hide_outside_tenant(foreign_metric) }
+
+    it "refuses to create a group on another tenant's metric and writes nothing" do
+      expect {
+        post "/completion_kit/api/v1/metric_groups", params: {name: "Cross", metric_ids: [own_metric.id, foreign_metric.id]}.to_json, headers: headers
+      }.not_to change { [CompletionKit::MetricGroup.unscoped.count, CompletionKit::MetricGroupMembership.unscoped.count] }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]).to eq("metric_ids" => ["not found"])
+    end
+
+    it "refuses to swap a group's metrics for another tenant's and keeps the old ones" do
+      group = create(:completion_kit_metric_group)
+      group.replace_metrics!([own_metric.id])
+
+      patch "/completion_kit/api/v1/metric_groups/#{group.id}", params: {metric_ids: [foreign_metric.id]}.to_json, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]).to eq("metric_ids" => ["not found"])
+      expect(group.metric_group_memberships.pluck(:metric_id)).to eq([own_metric.id])
+    end
+  end
+
   describe "DELETE /api/v1/metric_groups/:id" do
     it "deletes a metric group" do
       metric_group = create(:completion_kit_metric_group)

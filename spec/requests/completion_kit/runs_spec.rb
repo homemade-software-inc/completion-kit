@@ -590,6 +590,74 @@ RSpec.describe "CompletionKit runs", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include("Prompt not found")
     end
+
+    it "sends a rerun of a run on another tenant's prompt back with an alert" do
+      scoring = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+      reset_tenant_scope
+      legacy = create(:completion_kit_run, prompt: foreign_prompt, dataset: scoring, status: "completed")
+      hide_outside_tenant(foreign_prompt, foreign_dataset)
+
+      expect do
+        post "#{base_path}/#{legacy.id}/rerun"
+      end.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to redirect_to("/completion_kit/runs/#{legacy.id}")
+      expect(flash[:alert]).to eq("Prompt not found")
+    end
+  end
+
+  describe "with metrics from another tenant" do
+    let(:own_metric) { create(:completion_kit_metric, name: "Own") }
+    let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }
+
+    before { hide_outside_tenant(foreign_metric) }
+
+    it "refuses to create a run on another tenant's metric and writes nothing" do
+      expect do
+        post base_path, params: { run: { name: "Cross", prompt_id: prompt.id, metric_ids: [own_metric.id, foreign_metric.id] } }
+      end.not_to change { [CompletionKit::Run.unscoped.count, CompletionKit::RunMetric.unscoped.count] }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Metric ids not found")
+    end
+
+    it "refuses to swap a run's metrics for another tenant's in place" do
+      run = create(:completion_kit_run, prompt: prompt, name: "Mine")
+      run.replace_metrics!([own_metric.id])
+
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Mine", metric_ids: [foreign_metric.id] } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Metric ids not found")
+      expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
+    end
+
+    it "refuses to fork a run with results onto another tenant's metric" do
+      run = create(:completion_kit_run, prompt: prompt, name: "Mine", judge_model: "gpt-4.1")
+      run.replace_metrics!([own_metric.id])
+      run.responses.create!(response_text: "Some output")
+
+      expect do
+        patch "#{base_path}/#{run.id}", params: { run: { name: "Mine", judge_model: "gpt-4.1-mini", metric_ids: [foreign_metric.id] } }
+      end.not_to change { [CompletionKit::Run.unscoped.count, CompletionKit::RunMetric.unscoped.count] }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Metric ids not found")
+    end
+
+    it "sends a rerun of a run carrying another tenant's metric back with an alert" do
+      reset_tenant_scope
+      legacy = create(:completion_kit_run, prompt: prompt, status: "completed")
+      legacy.replace_metrics!([foreign_metric.id])
+      hide_outside_tenant(foreign_metric)
+
+      expect do
+        post "#{base_path}/#{legacy.id}/rerun"
+      end.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to redirect_to("/completion_kit/runs/#{legacy.id}")
+      expect(flash[:alert]).to eq("Metric ids not found")
+    end
   end
 
   it "updates a run with valid params" do

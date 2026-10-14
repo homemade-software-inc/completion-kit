@@ -2,6 +2,7 @@ module CompletionKit
   class Run < ApplicationRecord
     include Turbo::Broadcastable
     include CompletionKit::Taggable
+    include CompletionKit::MetricSelection
 
     STATUSES = %w[pending running completed failed].freeze
     INSERT_BATCH_SIZE = 1000
@@ -222,7 +223,6 @@ module CompletionKit
     end
 
     def replace_metrics!(metric_ids)
-      return unless metric_ids
       run_metrics.delete_all
       Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
         run_metrics.create!(metric_id: metric_id, position: index + 1)
@@ -480,7 +480,7 @@ module CompletionKit
     end
 
     def rerun!
-      new_run = Run.create!(
+      Run.create!(
         prompt_id: prompt_id,
         dataset_id: dataset_id,
         judge_model: judge_model,
@@ -490,10 +490,9 @@ module CompletionKit
         output_column: output_column,
         expected_column: expected_column,
         tag_names: tag_names,
-        status: "pending"
+        status: "pending",
+        selected_metric_ids: run_metrics.pluck(:metric_id)
       )
-      new_run.replace_metrics!(metric_ids)
-      new_run
     end
 
     def retry_failures!(only: nil)
@@ -752,6 +751,7 @@ module CompletionKit
     def references_in_scope
       errors.add(:prompt_id, "not found") if prompt_out_of_scope?
       errors.add(:dataset_id, "not found") if dataset_out_of_scope?
+      errors.add(:metric_ids, "not found") if selected_metrics_out_of_scope?
     end
 
     def dataset_supplies_prompt_variables
