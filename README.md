@@ -90,7 +90,7 @@ CompletionKit discovers available models from each provider's API automatically.
 
 Set these as environment variables or configure them in the generated initializer. You can also add provider credentials through the web UI under Settings.
 
-The Ollama key from `OLLAMA_API_KEY` or `config.ollama_api_key` goes only to the Ollama endpoint from `OLLAMA_API_ENDPOINT` or `config.ollama_api_endpoint`, or to `http://localhost:11434/v1` when neither is set. A provider credential with no key of its own gets that key only while it points at that same endpoint. Point it anywhere else and CompletionKit sends no key, so store the key on the credential itself. A key stored on a credential always goes to that credential's endpoint. Two endpoints match when their scheme, host, port and path match. The case of the scheme and host, a default port written out, and a trailing slash make no difference.
+The Ollama key from `OLLAMA_API_KEY` or `config.ollama_api_key` goes only to the Ollama endpoint from `OLLAMA_API_ENDPOINT` or `config.ollama_api_endpoint`, or to `http://localhost:11434/v1` when neither is set and `config.allow_loopback_endpoints` is on, which is the default. A provider credential with no key of its own gets that key only while it points at that same endpoint. Point it anywhere else and CompletionKit sends no key, so store the key on the credential itself. A key stored on a credential always goes to that credential's endpoint. Two endpoints match when their scheme, host, port and path match. The case of the scheme and host, a default port written out, a trailing slash and a trailing `/v1` make no difference. A blank stored key counts as no key.
 
 ### Encryption
 

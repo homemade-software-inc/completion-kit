@@ -82,6 +82,14 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
         .to eq(provider: "ollama", api_key: "ollama-key", api_endpoint: "HTTPS://Ollama.Example.test/v1/")
     end
 
+    it "treats a blank stored key as no key on the configured endpoint" do
+      credential = create(:completion_kit_provider_credential, provider: "ollama", api_key: nil,
+        api_endpoint: "https://ollama.example.test/v1")
+      credential.update_column(:api_key, "")
+
+      expect(described_class.for_provider("ollama")[:api_key]).to eq("ollama-key")
+    end
+
     it "drops the configured key when a keyless credential sets an endpoint of its own" do
       create(:completion_kit_provider_credential, provider: "ollama", api_key: nil,
         api_endpoint: "https://attacker.example.test/v1")

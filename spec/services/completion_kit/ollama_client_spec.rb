@@ -119,6 +119,19 @@ RSpec.describe CompletionKit::OllamaClient, type: :service do
       end
     end
 
+    it "treats an endpoint with or without its /v1 suffix as the same destination" do
+      stub_env("OLLAMA_API_KEY" => "env-key", "OLLAMA_API_ENDPOINT" => "https://ollama.example.test")
+
+      expect(authorization_sent_by(described_class.new(api_endpoint: "https://ollama.example.test/v1"))).to eq(["Bearer env-key"])
+      expect(described_class.fallback_api_key("https://ollama.example.test/v1/")).to eq("env-key")
+    end
+
+    it "treats a blank stored key as no key" do
+      stub_env("OLLAMA_API_KEY" => "env-key", "OLLAMA_API_ENDPOINT" => "https://ollama.example.test/v1")
+
+      expect(authorization_sent_by(described_class.new(api_endpoint: "https://ollama.example.test/v1", api_key: ""))).to eq(["Bearer env-key"])
+    end
+
     it "sends no fallback key to the built-in default once an endpoint is configured elsewhere" do
       stub_env("OLLAMA_API_KEY" => "env-key")
       CompletionKit.config.ollama_api_endpoint = "https://ollama.example.test/v1"

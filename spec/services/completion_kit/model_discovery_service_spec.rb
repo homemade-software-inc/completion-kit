@@ -1005,6 +1005,13 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
           .to eq([[:list, "Bearer configured-key"], [:probe, "Bearer configured-key"]])
       end
 
+      it "lists and probes with the configured key when the stored key is blank" do
+        config = { provider: "ollama", api_key: "", api_endpoint: "https://ollama.example.test/v1" }
+
+        expect(authorization_sent_during_discovery(config))
+          .to eq([[:list, "Bearer configured-key"], [:probe, "Bearer configured-key"]])
+      end
+
       it "lists and probes with no key when a keyless credential points somewhere else" do
         config = { provider: "ollama", api_key: nil, api_endpoint: "https://attacker.example.test/v1" }
 

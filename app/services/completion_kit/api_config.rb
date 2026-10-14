@@ -10,6 +10,7 @@ module CompletionKit
     def self.for_provider(provider_name)
       provider = provider_name.to_s
       stored = ProviderCredential.find_by(provider: provider)&.config_hash || {}
+      stored = stored.except(:api_key) if provider == "ollama" && stored[:api_key].blank?
 
       defaults = if CompletionKit.config.tenant_scope
                    PROVIDERS.include?(provider) ? { provider: provider } : {}

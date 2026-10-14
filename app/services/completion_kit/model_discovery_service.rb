@@ -14,7 +14,7 @@ module CompletionKit
       @provider = config[:provider]
       @api_endpoint = config[:api_endpoint]
       @api_key = config[:api_key]
-      @api_key ||= OllamaClient.fallback_api_key(@api_endpoint) if @provider == "ollama"
+      @api_key = @api_key.presence || OllamaClient.fallback_api_key(@api_endpoint) if @provider == "ollama"
       @api_version = config[:api_version]
       @catalog_model_count = nil
     end

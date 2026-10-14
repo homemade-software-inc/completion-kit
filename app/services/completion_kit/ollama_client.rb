@@ -8,10 +8,14 @@ module CompletionKit
     end
 
     def self.fallback_api_key(endpoint)
-      return unless ProviderEndpoint.same_destination?(endpoint, configured_endpoint)
+      return unless ProviderEndpoint.same_destination?(root_url(endpoint), root_url(configured_endpoint))
 
       env_key = ENV["OLLAMA_API_KEY"]
       CompletionKit.config.tenant_scope ? env_key : CompletionKit.config.ollama_api_key || env_key
+    end
+
+    def self.root_url(endpoint)
+      endpoint.to_s.strip.delete_suffix("/").delete_suffix("/v1")
     end
 
     def generate_completion(prompt, options = {})
@@ -88,7 +92,7 @@ module CompletionKit
     end
 
     def api_key
-      @config[:api_key] || self.class.fallback_api_key(api_endpoint)
+      @config[:api_key].presence || self.class.fallback_api_key(api_endpoint)
     end
 
     def api_endpoint
