@@ -334,6 +334,27 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
         expect(elapsed).to be < 1
       end
 
+      it "fills them fast when every name ends in a brace" do
+        braced = values.transform_keys { |name| "#{name}}" }
+        braces = "#{"{" * 100_000}}}"
+        template = "#{braced.keys.map { |name| "{{ #{name} }}" }.join(" ")}#{braces}"
+
+        rendered, elapsed = timed { fill(template, braced) }
+
+        expect(rendered).to eq("#{expected}#{braces}")
+        expect(elapsed).to be < 1
+      end
+
+      it "fills them fast when every name is blank" do
+        blank = (1..2_000).to_h { |index| ["\t" * index, "value #{index}"] }
+        spaces = "{{#{" " * 100_000}}}"
+
+        rendered, elapsed = timed { fill("{{\t}} {{\t\t\t}} #{spaces}", blank) }
+
+        expect(rendered).to eq("value 1 value 1 #{spaces}")
+        expect(elapsed).to be < 1
+      end
+
       it "fills them without the regex engine, so a strict global regex timeout cannot fail the row" do
         prompt = build(:completion_kit_prompt, template: "#{placeholders}#{"{{ x " * 50_000}}}")
         original = Regexp.timeout
