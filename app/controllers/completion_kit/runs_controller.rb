@@ -57,7 +57,7 @@ module CompletionKit
         if new_run.save
           redirect_to run_path(new_run), notice: "Saved as a new run. The previous run and its results are preserved."
         else
-          @run.assign_attributes(run_params.except(:metric_ids))
+          @run.assign_attributes(run_params.except(:metric_ids).merge(selected_metric_ids: params[:run][:metric_ids]))
           new_run.errors.each { |error| @run.errors.add(error.attribute, error.message) }
           load_form_collections
           render :edit, status: :unprocessable_entity

@@ -9,7 +9,6 @@ module CompletionKit
     has_many :metrics, through: :metric_group_memberships
 
     validates :name, presence: true
-    validate :metrics_in_scope
 
     def ordered_metrics
       metric_group_memberships.includes(:metric).map(&:metric).compact
@@ -31,12 +30,6 @@ module CompletionKit
         metric_ids: metric_ids,
         tags: tags.as_json
       }
-    end
-
-    private
-
-    def metrics_in_scope
-      errors.add(:metric_ids, "not found") if selected_metrics_out_of_scope?
     end
   end
 end

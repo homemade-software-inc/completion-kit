@@ -541,6 +541,47 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("prevented this run from being saved")
   end
 
+  describe "metric choices on a failed save" do
+    let!(:saved_metric) { create(:completion_kit_metric, name: "Saved") }
+    let!(:chosen_metric) { create(:completion_kit_metric, name: "Chosen") }
+
+    def ticked_metric_ids
+      Nokogiri::HTML5(response.body).css("input[name='run[metric_ids][]'][checked]").map { |box| box["value"].to_i }
+    end
+
+    it "keeps the chosen metrics ticked when create fails" do
+      post base_path, params: { run: { prompt_id: prompt.id, judge_temperature: 5, metric_ids: [chosen_metric.id] } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(ticked_metric_ids).to eq([chosen_metric.id])
+    end
+
+    it "keeps the chosen metrics ticked when an in-place update fails" do
+      run = create(:completion_kit_run, prompt: prompt)
+      run.replace_metrics!([saved_metric.id])
+
+      patch "#{base_path}/#{run.id}", params: { run: { prompt_id: prompt.id, judge_temperature: 5, metric_ids: [chosen_metric.id] } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(ticked_metric_ids).to eq([chosen_metric.id])
+      expect(run.reload.metric_ids).to eq([saved_metric.id])
+    end
+
+    it "keeps the chosen metrics ticked when forking a run with results fails" do
+      run = create(:completion_kit_run, prompt: prompt)
+      run.replace_metrics!([saved_metric.id])
+      run.responses.create!(response_text: "Some output")
+
+      expect do
+        patch "#{base_path}/#{run.id}", params: { run: { prompt_id: prompt.id, judge_temperature: 5, metric_ids: [chosen_metric.id] } }
+      end.not_to change(CompletionKit::Run, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(ticked_metric_ids).to eq([chosen_metric.id])
+      expect(run.reload.metric_ids).to eq([saved_metric.id])
+    end
+  end
+
   describe "with prompts and datasets from another tenant" do
     let!(:foreign_prompt) { create(:completion_kit_prompt, template: "Static prompt") }
     let!(:foreign_dataset) { create(:completion_kit_dataset) }

@@ -160,7 +160,7 @@
         <div class="ck-metric-checkboxes" data-metric-checkboxes role="group" aria-labelledby="run_metrics_label">
           <% @all_metrics.each do |metric| %>
             <label class="ck-checkbox-label" data-metric-tags="<%= metric.tag_names.join(",") %>" data-compare-expected="<%= metric.check? && metric.check_config.to_h["compare_to"] == "expected" ? "1" : "0" %>">
-              <%= check_box_tag "run[metric_ids][]", metric.id, run.metric_ids.include?(metric.id), class: "ck-checkbox", id: "run_metric_#{metric.id}" %>
+              <%= check_box_tag "run[metric_ids][]", metric.id, run.selected_metric_ids.include?(metric.id), class: "ck-checkbox", id: "run_metric_#{metric.id}" %>
               <span class="ck-checkbox-label__box" aria-hidden="true"></span>
               <span class="ck-checkbox-label__body">
                 <span class="ck-checkbox-label__text"><%= metric.name %></span>

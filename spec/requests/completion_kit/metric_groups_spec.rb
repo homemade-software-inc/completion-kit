@@ -45,6 +45,33 @@ RSpec.describe "CompletionKit metric groups", type: :request do
     expect(response).to redirect_to("/completion_kit/metric_groups")
   end
 
+  describe "metric choices on a failed save" do
+    let!(:saved_metric) { create(:completion_kit_metric, name: "Saved") }
+    let!(:chosen_metric) { create(:completion_kit_metric, name: "Chosen") }
+
+    def ticked_metric_ids
+      Nokogiri::HTML5(response.body).css("input[type='checkbox'][name='metric_group[metric_ids][]'][checked]").map { |box| box["value"].to_i }
+    end
+
+    it "keeps the chosen metrics ticked when create fails" do
+      post base_path, params: { metric_group: { name: "", metric_ids: ["", chosen_metric.id] } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(ticked_metric_ids).to eq([chosen_metric.id])
+    end
+
+    it "keeps the chosen metrics ticked when an update fails" do
+      group = create(:completion_kit_metric_group)
+      group.replace_metrics!([saved_metric.id])
+
+      patch "#{base_path}/#{group.id}", params: { metric_group: { name: "", metric_ids: ["", chosen_metric.id] } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(ticked_metric_ids).to eq([chosen_metric.id])
+      expect(group.reload.metric_ids).to eq([saved_metric.id])
+    end
+  end
+
   describe "with metrics from another tenant" do
     let(:own_metric) { create(:completion_kit_metric, name: "Own") }
     let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }

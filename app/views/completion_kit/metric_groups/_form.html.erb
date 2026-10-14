@@ -45,7 +45,7 @@
       <div class="ck-metric-checkboxes" data-metric-checkboxes role="group" aria-labelledby="mg_metrics_label">
         <% @metrics.each do |metric| %>
           <label class="ck-checkbox-label" data-metric-tags="<%= metric.tag_names.join(",") %>">
-            <%= check_box_tag "metric_group[metric_ids][]", metric.id, metric_group.metrics.exists?(metric.id), class: "ck-checkbox", id: "metric_group_metric_#{metric.id}" %>
+            <%= check_box_tag "metric_group[metric_ids][]", metric.id, metric_group.selected_metric_ids.include?(metric.id), class: "ck-checkbox", id: "metric_group_metric_#{metric.id}" %>
             <span class="ck-checkbox-label__box" aria-hidden="true"></span>
             <span class="ck-checkbox-label__body">
               <span class="ck-checkbox-label__text"><%= metric.name %></span>

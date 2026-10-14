@@ -52,6 +52,25 @@ RSpec.describe CompletionKit::MetricGroup, type: :model do
     end
   end
 
+  describe "#selected_metric_ids" do
+    let(:metric) { create(:completion_kit_metric) }
+    let(:other) { create(:completion_kit_metric) }
+    let(:group) { create(:completion_kit_metric_group) }
+
+    before { group.replace_metrics!([metric.id]) }
+
+    it "reads the saved members when no selection is assigned" do
+      expect(group.selected_metric_ids).to eq([metric.id])
+    end
+
+    it "keeps the pending selection after a failed save" do
+      expect(group.update(name: "", selected_metric_ids: ["", other.id.to_s])).to be(false)
+
+      expect(group.selected_metric_ids).to eq([other.id])
+      expect(group.metric_group_memberships.pluck(:metric_id)).to eq([metric.id])
+    end
+  end
+
   describe "metric ids outside the tenant scope" do
     let(:own_metric) { create(:completion_kit_metric, name: "Own") }
     let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }

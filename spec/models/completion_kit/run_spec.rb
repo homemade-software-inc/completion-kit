@@ -260,6 +260,55 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
+  describe "#selected_metric_ids" do
+    let(:metric) { create(:completion_kit_metric) }
+    let(:other) { create(:completion_kit_metric) }
+    let(:run) { create(:completion_kit_run) }
+
+    before { run.replace_metrics!([metric.id]) }
+
+    it "reads the saved metrics when no selection is assigned" do
+      expect(run.selected_metric_ids).to eq([metric.id])
+    end
+
+    it "reads a pending selection as unique integers" do
+      run.selected_metric_ids = ["", other.id.to_s, other.id.to_s]
+
+      expect(run.selected_metric_ids).to eq([other.id])
+    end
+
+    it "keeps the pending selection after a failed save" do
+      expect(run.update(judge_temperature: 5, selected_metric_ids: [other.id.to_s])).to be(false)
+
+      expect(run.selected_metric_ids).to eq([other.id])
+      expect(run.run_metrics.pluck(:metric_id)).to eq([metric.id])
+    end
+
+    it "reads the saved metrics once the selection is attached" do
+      run.update!(selected_metric_ids: [other.id.to_s])
+
+      expect(run.selected_metric_ids).to eq([other.id])
+      expect(run.run_metrics.pluck(:metric_id)).to eq([other.id])
+    end
+
+    it "still attaches the selection on the next save when attaching it raised" do
+      calls = 0
+      allow(run).to receive(:replace_metrics!).and_wrap_original do |original, ids|
+        calls += 1
+        raise ActiveRecord::Rollback if calls == 1
+
+        original.call(ids)
+      end
+
+      run.selected_metric_ids = [other.id]
+      expect(run.save).to be_falsey
+      expect(run.run_metrics.pluck(:metric_id)).to eq([metric.id])
+
+      expect(run.save).to be(true)
+      expect(run.run_metrics.pluck(:metric_id)).to eq([other.id])
+    end
+  end
+
   describe "metric ids outside the tenant scope" do
     let(:static_prompt) { create(:completion_kit_prompt, template: "Static prompt") }
     let(:own_metric) { create(:completion_kit_metric, name: "Own") }

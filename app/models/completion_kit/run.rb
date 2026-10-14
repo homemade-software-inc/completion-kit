@@ -789,7 +789,6 @@ module CompletionKit
     def references_in_scope
       errors.add(:prompt_id, "not found") if prompt_out_of_scope?
       errors.add(:dataset_id, "not found") if dataset_out_of_scope?
-      errors.add(:metric_ids, "not found") if selected_metrics_out_of_scope?
     end
 
     def dataset_supplies_prompt_variables

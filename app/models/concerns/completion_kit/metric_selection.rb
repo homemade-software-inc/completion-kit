@@ -3,6 +3,7 @@ module CompletionKit
     extend ActiveSupport::Concern
 
     included do
+      validate :selected_metrics_in_scope, if: -> { @metric_selection_assigned }
       after_save :attach_selected_metrics, if: -> { @metric_selection_assigned }
     end
 
@@ -11,22 +12,24 @@ module CompletionKit
       @selected_metric_ids = ids
     end
 
+    def selected_metric_ids
+      @metric_selection_assigned ? normalize_metric_ids(@selected_metric_ids) : metric_ids
+    end
+
     private
 
     def normalize_metric_ids(ids)
       Array(ids).reject(&:blank?).map(&:to_i).uniq
     end
 
-    def selected_metrics_out_of_scope?
-      return false unless @metric_selection_assigned
-
-      wanted = normalize_metric_ids(@selected_metric_ids)
-      CompletionKit::Metric.where(id: wanted).count < wanted.size
+    def selected_metrics_in_scope
+      wanted = selected_metric_ids
+      errors.add(:metric_ids, "not found") if CompletionKit::Metric.where(id: wanted).count < wanted.size
     end
 
     def attach_selected_metrics
-      @metric_selection_assigned = false
       replace_metrics!(@selected_metric_ids)
+      @metric_selection_assigned = false
     end
   end
 end
