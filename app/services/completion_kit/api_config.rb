@@ -39,14 +39,14 @@ module CompletionKit
       available_match = available_models.find { |model| model[:id] == model_name.to_s }
       return available_match[:provider] if available_match
 
-      guess = case model_name.to_s
-              when /\Agpt-/ then "openai"
-              when /\Aclaude-/ then "anthropic"
-              end
-      configured = ProviderCredential.distinct.pluck(:provider)
-      return guess if configured.empty?
+      guessed_provider(model_name)
+    end
 
-      guess if guess && configured.include?(guess)
+    def self.servable_model?(model_name)
+      return true unless Model.for_generation.exists?
+      return true if Model.active.exists?(model_id: model_name.to_s)
+
+      guessed_provider(model_name).present?
     end
 
     def self.default_judge_model
@@ -58,11 +58,15 @@ module CompletionKit
     def self.valid_for_model?(model_name)
       client = LlmClient.for_model(model_name, for_model(model_name))
       client.configured?
+    rescue UnknownModelError
+      false
     end
 
     def self.errors_for_model(model_name)
       client = LlmClient.for_model(model_name, for_model(model_name))
       client.configuration_errors
+    rescue UnknownModelError => e
+      [e.message]
     end
 
     def self.available_models(provider: nil, scope: :generation)
@@ -90,5 +94,17 @@ module CompletionKit
         []
       end.uniq { |model| model[:id] }
     end
+
+    def self.guessed_provider(model_name)
+      guess = case model_name.to_s
+              when /\Agpt-/ then "openai"
+              when /\Aclaude-/ then "anthropic"
+              end
+      configured = ProviderCredential.distinct.pluck(:provider)
+      return guess if configured.empty?
+
+      guess if guess && configured.include?(guess)
+    end
+    private_class_method :guessed_provider
   end
 end

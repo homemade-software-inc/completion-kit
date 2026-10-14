@@ -132,14 +132,45 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
   it "enqueues a JudgeReviewJob per metric on success" do
     metric = create(:completion_kit_metric)
     CompletionKit::RunMetric.create!(run: run, metric: metric, position: 1)
+    run.update_columns(judge_model: "gpt-4.1-mini")
 
     fake_client = double("client", generate_completion: "ok", configured?: true)
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
-    allow_any_instance_of(CompletionKit::Run).to receive(:llm_judge_configured?).and_return(true)
 
     expect(CompletionKit::JudgeReviewJob).to receive(:perform_later).with(response.id, metric.id, run.id)
 
     described_class.perform_now(run.id, response.id)
+  end
+
+  context "when the prompt model resolves but the judge model does not" do
+    let(:metric) { create(:completion_kit_metric) }
+
+    before do
+      allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
+      create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+      create(:completion_kit_model, provider: "ollama", model_id: "llama3", status: "retired")
+      run.replace_metrics!([metric.id])
+      run.update_columns(judge_model: "llama3", status: "running", progress_total: 1)
+
+      generation_client = double("client", generate_completion: "the answer", configured?: true)
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_call_original
+      allow(CompletionKit::LlmClient).to receive(:for_model).with(run.prompt.llm_model, anything).and_return(generation_client)
+      allow(CompletionKit::JudgeReviewJob).to receive(:perform_later) { |*args| CompletionKit::JudgeReviewJob.perform_now(*args) }
+      allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later) { |id| CompletionKit::RunCompletionCheckJob.perform_now(id) }
+    end
+
+    it "keeps the generated row succeeded, fails the review with the reason, and finishes the run" do
+      expect { described_class.perform_now(run.id, response.id) }.not_to raise_error
+
+      response.reload
+      expect(response.status).to eq("succeeded")
+      expect(response.response_text).to eq("the answer")
+      review = response.reviews.find_by(metric_id: metric.id)
+      expect(review.status).to eq("failed")
+      expect(review.error_class).to eq("CompletionKit::UnknownModelError")
+      expect(review.error_message).to eq(%(No configured provider serves model "llama3"))
+      expect(run.reload.status).to eq("completed")
+    end
   end
 
   it "enqueues a CheckReviewJob for each check metric regardless of judge config" do

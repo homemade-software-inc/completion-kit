@@ -106,7 +106,7 @@ module CompletionKit
       if @run.regrade!
         redirect_to run_path(@run), notice: "Re-grading existing responses against the current metrics."
       else
-        redirect_to run_path(@run), alert: "Nothing to re-grade. The run has no succeeded responses or no metrics attached."
+        redirect_to run_path(@run), alert: @run.errors.full_messages.to_sentence.presence || "Nothing to re-grade. The run has no succeeded responses or no metrics attached."
       end
     end
 

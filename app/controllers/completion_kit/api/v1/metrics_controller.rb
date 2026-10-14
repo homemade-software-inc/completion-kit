@@ -48,9 +48,9 @@ module CompletionKit
             return
           end
 
-          MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").destroy_all
           generator = MetricVariantGenerator.new(@metric, count: params[:count].to_i, model: params[:model])
           variants = generator.call
+          MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").destroy_all
           if variants.empty?
             render_error("The model returned no usable variants. Try again with a different model.", status: :unprocessable_entity)
             return

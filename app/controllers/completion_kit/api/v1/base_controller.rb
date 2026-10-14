@@ -5,8 +5,13 @@ module CompletionKit
         rate_limit to: CompletionKit.config.api_rate_limit, within: 1.minute,
                    with: -> { render_error("Rate limit exceeded", status: :too_many_requests) }
         before_action :authenticate_api!
+        rescue_from ConfigurationError, with: :render_configuration_error
 
         private
+
+        def render_configuration_error(error)
+          render_error(error.message, status: :unprocessable_entity)
+        end
 
         def render_error(message, status:, details: nil)
           payload = { error: message }

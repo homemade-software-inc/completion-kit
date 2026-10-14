@@ -1086,4 +1086,97 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
+  describe "a model id no configured provider serves" do
+    let(:llm_metric) { create(:completion_kit_metric) }
+    let(:check_metric) { create(:completion_kit_metric, :check) }
+
+    before do
+      allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
+      allow(CompletionKit::JudgeReviewJob).to receive(:perform_later)
+      allow(CompletionKit::CheckReviewJob).to receive(:perform_later)
+      allow(CompletionKit::RunCompletionCheckJob).to receive(:perform_later)
+      allow(CompletionKit::StartRunJob).to receive(:perform_later)
+      create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1-mini")
+      create(:completion_kit_model, provider: "ollama", model_id: "llama3", status: "retired")
+    end
+
+    def run_with_judge(judge_model, metrics)
+      run = create(:completion_kit_run, judge_model: "gpt-4.1-mini")
+      run.update_columns(judge_model: judge_model)
+      run.replace_metrics!(metrics.map(&:id))
+      run
+    end
+
+    it "rejects a newly chosen judge_model on create and on update" do
+      run = build(:completion_kit_run, judge_model: "llama3")
+      expect(run).not_to be_valid
+      expect(run.errors.full_messages).to include(%(Judge model "llama3" is not served by any configured provider))
+
+      saved = create(:completion_kit_run, judge_model: "gpt-4.1-mini")
+      expect(saved.update(judge_model: "ollama/llama3")).to be(false)
+      expect(saved.errors.full_messages).to include(%(Judge model "ollama/llama3" is not served by any configured provider))
+    end
+
+    it "keeps a run editable when its judge was retired after it was saved" do
+      run = run_with_judge("llama3", [llm_metric])
+
+      expect(run.update(name: "Renamed")).to be(true)
+    end
+
+    it "copies an unservable judge onto a rerun, which then fails to start instead of staying pending" do
+      run = run_with_judge("llama3", [llm_metric])
+
+      copy = run.rerun!
+
+      expect(copy).to be_persisted
+      expect(copy.judge_model).to eq("llama3")
+      expect(copy.start!).to be(false)
+      expect(copy.reload.status).to eq("failed")
+      expect(copy.failure_summary).to eq(%(No configured provider serves judge model "llama3"))
+    end
+
+    it "fails to start, naming the model, when the prompt model does not resolve" do
+      run = create(:completion_kit_run)
+      run.prompt.update_columns(llm_model: "llama3")
+
+      expect(run.start!).to be(false)
+      expect(run.reload.status).to eq("failed")
+      expect(run.failure_summary).to eq(%(No configured provider serves model "llama3"))
+      expect(CompletionKit::StartRunJob).not_to have_received(:perform_later)
+    end
+
+    it "starts a check-only run whose unused judge does not resolve" do
+      run = run_with_judge("llama3", [check_metric])
+
+      expect(run.start!).to be(true)
+      expect(run.reload.status).to eq("running")
+    end
+
+    it "reports the judge as unconfigured instead of raising" do
+      run = run_with_judge("llama3", [llm_metric, check_metric])
+
+      expect(run.judge_configured?).to be(false)
+      expect(run.llm_judge_configured?).to be(false)
+      expect(run.gradable?).to be(true)
+    end
+
+    it "refuses to regrade, naming the judge, instead of raising" do
+      run = run_with_judge("llama3", [llm_metric])
+      create(:completion_kit_response, run: run)
+
+      expect(run.regrade!).to be(false)
+      expect(run.errors.full_messages).to include(%(No configured provider serves judge model "llama3"))
+      expect(run.reload.status).to eq("pending")
+    end
+
+    it "still enqueues judge reviews on regrade when the judge resolves but lacks credentials, so the run can finish" do
+      allow(CompletionKit::ApiConfig).to receive(:valid_for_model?).and_return(false)
+      run = run_with_judge("gpt-4.1-mini", [llm_metric, check_metric])
+      response_row = create(:completion_kit_response, run: run)
+
+      expect(run.regrade!).to be(true)
+      expect(CompletionKit::JudgeReviewJob).to have_received(:perform_later).with(response_row.id, llm_metric.id, run.id)
+    end
+  end
 end

@@ -20,6 +20,8 @@ module CompletionKit
       def call(name, arguments)
         tool = self::TOOLS.fetch(name)
         send(tool[:handler], arguments)
+      rescue ConfigurationError => e
+        error_result(e.message)
       end
 
       def text_result(data)

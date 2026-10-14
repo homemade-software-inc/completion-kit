@@ -140,7 +140,7 @@ module CompletionKit
         if run.start!
           text_result(run_payload(run.reload))
         else
-          text_result(run.failure_summary || run.errors.full_messages.to_sentence)
+          error_result(run.failure_summary || run.errors.full_messages.to_sentence)
         end
       end
 
@@ -149,7 +149,7 @@ module CompletionKit
         if run.regrade!
           text_result(run_payload(run.reload))
         else
-          error_result("Nothing to re-grade. The run has no succeeded responses or no metrics attached.")
+          error_result(run.errors.full_messages.to_sentence.presence || "Nothing to re-grade. The run has no succeeded responses or no metrics attached.")
         end
       end
 

@@ -71,7 +71,7 @@ module CompletionKit
           if @run.regrade!
             render json: @run.reload, status: :accepted
           else
-            render_error("Nothing to re-grade. The run has no succeeded responses or no metrics attached.", status: :unprocessable_entity)
+            render_error(@run.errors.full_messages.to_sentence.presence || "Nothing to re-grade. The run has no succeeded responses or no metrics attached.", status: :unprocessable_entity)
           end
         end
 

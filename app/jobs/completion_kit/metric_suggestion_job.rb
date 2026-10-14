@@ -17,10 +17,9 @@ module CompletionKit
       return unless @metric
       return if @metric.check?
 
-      MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").destroy_all
-
       generator = MetricVariantGenerator.new(@metric, count: 1)
       variants = generator.call
+      MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").destroy_all
       if variants.empty?
         broadcast_status(@metric, partial: "completion_kit/metrics/suggestion_failed", locals: { metric: @metric })
         return

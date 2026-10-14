@@ -12,7 +12,17 @@ RSpec.describe CompletionKit::LlmClient, type: :service do
     allow(CompletionKit::ApiConfig).to receive(:provider_for_model).with("gpt-4.1").and_return("openai")
     expect(described_class.for_model("gpt-4.1")).to be_a(CompletionKit::OpenAiClient)
     allow(CompletionKit::ApiConfig).to receive(:provider_for_model).with("mystery").and_return(nil)
-    expect { described_class.for_model("mystery") }.to raise_error(ArgumentError, /Unsupported model/)
+    expect { described_class.for_model("mystery") }.to raise_error(CompletionKit::UnknownModelError, /mystery/)
+  end
+
+  it "raises a configuration error that names a model no configured provider serves" do
+    allow(CompletionKit::ApiConfig).to receive(:provider_for_model).with("llama3").and_return(nil)
+
+    expect { described_class.for_model("llama3") }.to raise_error(CompletionKit::UnknownModelError) { |error|
+      expect(error).to be_a(CompletionKit::ConfigurationError)
+      expect(error.model_name).to eq("llama3")
+      expect(error.message).to eq(%(No configured provider serves model "llama3"))
+    }
   end
 
   it "raises for unimplemented instance methods on the base client" do

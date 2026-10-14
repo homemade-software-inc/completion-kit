@@ -148,6 +148,42 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
     expect(described_class.provider_for_model("claude-unknown")).to eq("anthropic")
   end
 
+  describe "a model id no configured provider serves" do
+    before do
+      allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
+      create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+      create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1-mini")
+      create(:completion_kit_model, provider: "ollama", model_id: "llama3", status: "retired")
+    end
+
+    %w[llama3 ollama/llama3].each do |model_id|
+      it "reports #{model_id.inspect} as invalid instead of raising" do
+        expect(described_class.valid_for_model?(model_id)).to be(false)
+        expect(described_class.errors_for_model(model_id)).to eq([%(No configured provider serves model "#{model_id}")])
+      end
+
+      it "does not count #{model_id.inspect} as servable" do
+        expect(described_class.servable_model?(model_id)).to be(false)
+      end
+    end
+
+    it "counts an active row and a prefix the configured provider claims as servable" do
+      create(:completion_kit_model, provider: "openai", model_id: "custom-active", supports_generation: nil, supports_judging: nil)
+
+      expect(described_class.servable_model?("gpt-4.1-mini")).to be(true)
+      expect(described_class.servable_model?("custom-active")).to be(true)
+      expect(described_class.servable_model?("gpt-undiscovered")).to be(true)
+      expect(described_class.servable_model?("claude-undiscovered")).to be(false)
+    end
+
+    it "accepts anything while no generation model has been discovered, without listing models live" do
+      CompletionKit::Model.update_all(status: "retired")
+      expect(CompletionKit::LlmClient).not_to receive(:for_provider)
+
+      expect(described_class.servable_model?("llama3")).to be(true)
+    end
+  end
+
   describe ".default_judge_model" do
     after { CompletionKit.config.judge_model = nil }
 

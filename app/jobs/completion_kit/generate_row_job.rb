@@ -76,7 +76,7 @@ module CompletionKit
         error_provider: nil, error_class: nil, error_status: nil, error_message: nil
       )
 
-      if run.llm_judge_configured?
+      if run.judge_model.present?
         run.llm_metrics.each do |metric|
           JudgeReviewJob.perform_later(response.id, metric.id, run.id)
         end

@@ -3,6 +3,15 @@ module CompletionKit
 
   class ConfigurationError < Error; end
 
+  class UnknownModelError < ConfigurationError
+    attr_reader :model_name
+
+    def initialize(model_name = nil)
+      @model_name = model_name
+      super(%(No configured provider serves model "#{model_name}"))
+    end
+  end
+
   class RateLimitError < Error
     attr_reader :provider, :status, :retry_after
 
