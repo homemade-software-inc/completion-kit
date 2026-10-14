@@ -5,6 +5,8 @@ require "completion_kit/concurrency_check"
 
 module CompletionKit
   class Configuration
+    MIN_REGEX_TIMEOUT = 0.001
+
     attr_accessor :openai_api_key, :anthropic_api_key, :ollama_api_key, :ollama_api_endpoint
     attr_accessor :judge_model, :high_quality_threshold, :medium_quality_threshold
     attr_accessor :username, :password, :auth_strategy, :api_token, :current_reviewer
@@ -48,8 +50,8 @@ module CompletionKit
     end
 
     def regex_timeout=(seconds)
-      unless seconds.nil? || (seconds.is_a?(Numeric) && seconds.positive?)
-        raise ArgumentError, "regex_timeout must be a positive number of seconds or nil, got #{seconds.inspect}"
+      unless seconds.nil? || (seconds.is_a?(Numeric) && seconds.real? && seconds.finite? && seconds >= MIN_REGEX_TIMEOUT)
+        raise ArgumentError, "regex_timeout must be a finite number of seconds of at least #{MIN_REGEX_TIMEOUT}, or nil, got #{seconds.inspect}"
       end
 
       @regex_timeout = seconds

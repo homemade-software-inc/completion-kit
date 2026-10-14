@@ -68,8 +68,8 @@ CompletionKit.configure do |config|
   # Seconds one regex check pattern may spend matching one row. A row that runs
   # past it fails and says it timed out. If your app sets a shorter
   # Regexp.timeout, that one applies instead. The limit is set on each pattern,
-  # so the process-wide Regexp.timeout is never changed. Use a positive number
-  # of seconds, or nil to use only Regexp.timeout. Any other value, such as 0,
-  # raises an ArgumentError at boot.
+  # so the process-wide Regexp.timeout is never changed. Use a finite number of
+  # seconds of at least 0.001, or nil to use only Regexp.timeout. Any other
+  # value, such as 0, raises an ArgumentError at boot.
   # config.regex_timeout = 1.0
 end
