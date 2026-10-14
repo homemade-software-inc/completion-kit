@@ -2,11 +2,14 @@ module CompletionKit
   class Dataset < ApplicationRecord
     include CompletionKit::Taggable
 
+    HEADER_ROW_LIMIT = 64 * 1024
+
     has_many :runs, dependent: :destroy
 
     validates :name, presence: true
     validates :csv_data, presence: true
     validate :csv_data_within_size_limit
+    validate :header_row_within_limit, if: :will_save_change_to_csv_data?
 
     def csv_data_within_size_limit
       return if csv_data.blank?
@@ -37,12 +40,35 @@ module CompletionKit
     end
 
     def headers
-      return [] if csv_data.blank?
+      row = header_row
+      return [] if row.nil?
 
       require "csv"
-      ::CSV.parse(csv_data.lines.first.to_s).first.to_a.map(&:to_s).map(&:strip)
+      ::CSV.parse(row).first.to_a.map(&:to_s).map(&:strip)
     rescue ::CSV::MalformedCSVError
       []
+    end
+
+    private
+
+    def header_row
+      return if csv_data.blank?
+
+      stop = header_row_end
+      return csv_data.byteslice(0, stop) if stop
+
+      csv_data if csv_data.bytesize <= HEADER_ROW_LIMIT
+    end
+
+    def header_row_end
+      head = csv_data.byteslice(0, HEADER_ROW_LIMIT + 1)
+      [head.byteindex("\n"), head.byteindex("\r")].compact.min
+    end
+
+    def header_row_within_limit
+      return if csv_data.blank? || header_row
+
+      errors.add(:csv_data, "has a header row longer than #{HEADER_ROW_LIMIT / 1024} KB")
     end
   end
 end
