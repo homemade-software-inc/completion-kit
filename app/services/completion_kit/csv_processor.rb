@@ -40,12 +40,12 @@ module CompletionKit
       template = prompt.template
       names = []
       cursor = 0
-      while (open = template.byteindex("{{", cursor)) && (close = template.byteindex("}", open + 2))
-        if close > open + 2 && template.byteslice(close + 1, 1) == "}"
-          names << template.byteslice(open + 2, close - open - 2)
-          cursor = close + 2
+      while (opener = template.byteindex("{{", cursor)) && (closer = template.byteindex("}", opener + 2))
+        if closer > opener + 2 && template.byteslice(closer + 1, 1) == "}"
+          names << template.byteslice(opener + 2, closer - opener - 2)
+          cursor = closer + 2
         else
-          cursor = close + 1
+          cursor = closer + 1
         end
       end
       names.map(&:strip).uniq
