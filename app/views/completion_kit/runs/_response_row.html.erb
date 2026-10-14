@@ -20,16 +20,11 @@
               <span class="ck-metric-pip__bar"></span>
               <span class="ck-metric-pip__label" aria-hidden="true"><%= r.metric_name %> <strong><%= r.ai_score %></strong></span>
             </span>
-          <% elsif r.check_score.present? %>
-            <% fraction = r.check_score.to_f.round(2) %>
-            <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(fraction) %>" role="img" aria-label="<%= r.metric_name %> score <%= fraction %>">
-              <span class="ck-metric-pip__bar"></span>
-              <span class="ck-metric-pip__label" aria-hidden="true"><%= r.metric_name %> <strong><%= fraction %></strong></span>
-            </span>
           <% else %>
-            <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(r.passed ? 1.0 : 0.0) %>" role="img" aria-label="<%= r.metric_name %> <%= r.passed ? "Pass" : "Fail" %>">
+            <% verdict = ck_check_verdict(r.passed, r.check_score) %>
+            <span class="ck-metric-pip ck-metric-pip--<%= ck_pass_rate_kind(r.passed ? 1.0 : 0.0) %>" role="img" aria-label="<%= r.metric_name %> <%= verdict %>">
               <span class="ck-metric-pip__bar"></span>
-              <span class="ck-metric-pip__label" aria-hidden="true"><%= r.metric_name %> <strong><%= r.passed ? "Pass" : "Fail" %></strong></span>
+              <span class="ck-metric-pip__label" aria-hidden="true"><%= r.metric_name %> <strong><%= verdict %></strong></span>
             </span>
           <% end %>
         <% end %>

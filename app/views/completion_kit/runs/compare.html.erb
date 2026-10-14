@@ -62,12 +62,16 @@
               </span>
             </td>
             <td class="ck-num ck-cmp-delta" data-label="Δ">
-              <% d = pm[:delta] || pm[:check_score_delta] %>
-              <% if d.nil? && pm[:kind] == "check" %>
-                <%= ck_result_change_badge(pm[:result_change]) || content_tag(:span, "—", class: "ck-cmp-score__none") %>
-              <% elsif d %>
-                <% dcls = d > 0 ? "ck-delta--positive" : d < 0 ? "ck-delta--negative" : "ck-delta--zero" %>
-                <span class="ck-delta <%= dcls %>"><span class="ck-delta__arrow" aria-hidden="true"><%= d > 0 ? "▲" : d < 0 ? "▼" : "=" %></span><%= d > 0 ? "+#{d}" : d.to_s %></span>
+              <% if pm[:kind] == "check" %>
+                <% points = ck_check_score_change(pm[:left_check_score], pm[:right_check_score]) %>
+                <% badge = ck_result_change_badge(pm[:result_change]) unless points && pm[:result_change] == "same" %>
+                <% if badge || points %>
+                  <span class="ck-cmp-delta__pair"><%= badge %><%= ck_delta_chip(points, "%") if points %></span>
+                <% else %>
+                  <span class="ck-cmp-score__none">—</span>
+                <% end %>
+              <% elsif pm[:delta] %>
+                <%= ck_delta_chip(pm[:delta]) %>
               <% else %>
                 <span class="ck-cmp-score__none">—</span>
               <% end %>

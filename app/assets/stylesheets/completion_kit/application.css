@@ -3282,13 +3282,13 @@ select.ck-input {
 
 .ck-run-compare-table td { vertical-align: top; }
 
-.ck-table-scroll { overflow-x: auto; }
+.ck-table-scroll { position: relative; overflow-x: auto; }
 
 .ck-run-compare-table th { white-space: nowrap; }
 .ck-run-compare-table th:nth-child(1) { width: 7rem; }
-.ck-run-compare-table th:nth-child(2) { width: 15rem; }
-.ck-run-compare-table th:nth-child(3) { width: 12rem; }
-.ck-run-compare-table th:nth-child(4) { width: 8rem; }
+.ck-run-compare-table th:nth-child(2) { width: 12rem; }
+.ck-run-compare-table th:nth-child(3) { width: 16rem; text-align: center; }
+.ck-run-compare-table th:nth-child(4) { width: 9rem; }
 .ck-run-compare-table th:nth-child(5) { width: auto; }
 
 .ck-run-compare-table th.ck-num,
@@ -3303,14 +3303,26 @@ select.ck-input {
   font-weight: 500;
 }
 
-.ck-cmp-score__pair { display: inline-flex; align-items: center; gap: 0.45rem; }
+.ck-cmp-score__pair {
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+}
+.ck-cmp-score__pair > :first-child { justify-self: end; }
+.ck-cmp-score__pair > :last-child { justify-self: start; }
+@media (max-width: 640px) {
+  .ck-cmp-score__pair { display: inline-grid; width: auto; }
+}
 .ck-cmp-score__pair .ck-badge { white-space: nowrap; }
 .ck-cmp-score__arrow { color: var(--ck-dim); font-size: 0.78rem; }
 .ck-cmp-score__link { display: inline-flex; text-decoration: none; border-radius: 7px; transition: box-shadow 0.12s ease; }
 .ck-cmp-score__link:hover { box-shadow: 0 0 0 1px var(--ck-accent); }
 .ck-cmp-score__none { color: var(--ck-dim); }
 
-.ck-cmp-delta .ck-delta { display: inline-flex; align-items: baseline; gap: 0.2rem; }
+.ck-cmp-delta .ck-delta { display: inline-flex; align-items: baseline; gap: 0.2rem; white-space: nowrap; }
+.ck-cmp-delta__pair { display: inline-flex; align-items: baseline; justify-content: flex-end; gap: 0.35rem; }
 .ck-delta__arrow { font-size: 0.72rem; }
 
 .ck-cmp-ver__one, .ck-cmp-ver__pair {

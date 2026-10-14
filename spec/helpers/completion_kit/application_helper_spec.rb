@@ -301,9 +301,44 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(html).to include("ck-badge--low")
     end
 
-    it "adds a list check's fraction to the verdict" do
-      expect(helper.ck_check_badge(false, BigDecimal("0.8333"))).to include(">Fail 0.83<")
-      expect(helper.ck_check_badge(true, 1)).to include(">Pass 1.0<")
+    it "adds a list check's score to the verdict as a whole percentage" do
+      expect(helper.ck_check_badge(false, BigDecimal("0.8333"))).to include(">Fail 83%<")
+      expect(helper.ck_check_badge(true, 1)).to include(">Pass 100%<")
+    end
+  end
+
+  describe "list check scores" do
+    it "rounds a score to a whole percentage, half up, whatever type it arrives as" do
+      expect(helper.ck_percent(0.575)).to eq("58%")
+      expect(helper.ck_percent(BigDecimal("0.505"))).to eq("51%")
+      expect(helper.ck_percent(0)).to eq("0%")
+    end
+
+    it "names a verdict with its score when there is one" do
+      expect(helper.ck_check_verdict(true, 0.8)).to eq("Pass 80%")
+      expect(helper.ck_check_verdict(false)).to eq("Fail")
+    end
+
+    it "summarises a check across a run by its average score when it has one, and its pass rate otherwise" do
+      list = { avg_check_score: 0.575, pass_rate: 0.5 }
+      plain = { pass_rate: 0.25 }
+
+      expect(helper.ck_check_average(list)).to eq("58%")
+      expect(helper.ck_check_average(plain)).to eq("25%")
+      expect(helper.ck_check_average_label("Codes", list)).to eq("Codes average score 58%, 50% pass rate")
+      expect(helper.ck_check_average_label("Shape", plain)).to eq("Shape 25% pass rate")
+    end
+
+    it "works a score change out from the percentages shown, and gives none when a side is missing" do
+      expect(helper.ck_check_score_change(0.505, 0.835)).to eq(33)
+      expect(helper.ck_check_score_change(nil, 0.5)).to be_nil
+      expect(helper.ck_check_score_change(0.5, nil)).to be_nil
+    end
+
+    it "draws a rise, a fall and no change with an arrow and a unit" do
+      expect(helper.ck_delta_chip(33, "%")).to eq('<span class="ck-delta ck-delta--positive"><span class="ck-delta__arrow" aria-hidden="true">▲</span>+33%</span>')
+      expect(helper.ck_delta_chip(-0.5)).to include("ck-delta--negative", "▼", "-0.5")
+      expect(helper.ck_delta_chip(0.0)).to include("ck-delta--zero", "=", "0.0")
     end
 
     it "renders a neutral pending badge when the result is unknown" do

@@ -204,8 +204,48 @@ module CompletionKit
       :low
     end
 
+    def ck_percent_points(fraction)
+      (BigDecimal(fraction.to_s) * 100).round
+    end
+
+    def ck_percent(fraction)
+      "#{ck_percent_points(fraction)}%"
+    end
+
+    def ck_check_verdict(passed, score = nil)
+      verdict = passed ? "Pass" : "Fail"
+      score.nil? ? verdict : "#{verdict} #{ck_percent(score)}"
+    end
+
+    def ck_check_average(summary)
+      ck_percent(summary[:avg_check_score] || summary[:pass_rate])
+    end
+
+    def ck_check_average_label(name, summary)
+      pass_rate = "#{ck_percent(summary[:pass_rate])} pass rate"
+      return "#{name} #{pass_rate}" unless summary[:avg_check_score]
+
+      "#{name} average score #{ck_percent(summary[:avg_check_score])}, #{pass_rate}"
+    end
+
+    def ck_check_score_change(left, right)
+      return nil if left.nil? || right.nil?
+
+      ck_percent_points(right) - ck_percent_points(left)
+    end
+
+    def ck_delta_chip(delta, unit = "")
+      tone, arrow = if delta.positive? then %w[positive ▲]
+                    elsif delta.negative? then %w[negative ▼]
+                    else %w[zero =]
+                    end
+      content_tag(:span, class: "ck-delta ck-delta--#{tone}") do
+        content_tag(:span, arrow, class: "ck-delta__arrow", "aria-hidden": "true") + "#{"+" if delta.positive?}#{delta}#{unit}"
+      end
+    end
+
     def ck_check_badge(passed, score = nil)
-      suffix = score.nil? ? "" : " #{score.to_f.round(2)}"
+      suffix = score.nil? ? "" : " #{ck_percent(score)}"
       if passed == true
         content_tag(:span, "Pass#{suffix}", class: ck_badge_classes(:high))
       elsif passed == false
