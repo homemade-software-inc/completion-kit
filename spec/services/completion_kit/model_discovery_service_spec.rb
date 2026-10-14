@@ -965,6 +965,60 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       end
     end
 
+    context "with an Ollama key and endpoint configured for the deployment" do
+      around do |example|
+        original = [CompletionKit.config.ollama_api_key, CompletionKit.config.ollama_api_endpoint]
+        CompletionKit.config.ollama_api_key = "configured-key"
+        CompletionKit.config.ollama_api_endpoint = "https://ollama.example.test/v1"
+        example.run
+      ensure
+        CompletionKit.config.ollama_api_key, CompletionKit.config.ollama_api_endpoint = original
+      end
+
+      before do
+        allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
+      end
+
+      def authorization_sent_during_discovery(config)
+        sent = []
+        conn = faraday_connection_stub
+        allow(conn).to receive(:get) do |*_args, &block|
+          request = Struct.new(:headers).new({})
+          block.call(request)
+          sent << [:list, request.headers["Authorization"]]
+          faraday_response(success: true, body: ollama_response_body)
+        end
+        allow(conn).to receive(:post) do |&block|
+          request = Struct.new(:headers, :body, :path, keyword_init: true) { def url(value); self.path = value; end }.new(headers: {})
+          block.call(request)
+          sent << [:probe, request.headers["Authorization"]]
+          ollama_judge_response
+        end
+        described_class.new(config: config).refresh!
+        sent.uniq
+      end
+
+      it "lists and probes with the configured key when a keyless credential points at the configured endpoint" do
+        config = { provider: "ollama", api_endpoint: "HTTPS://Ollama.Example.test/v1/" }
+
+        expect(authorization_sent_during_discovery(config))
+          .to eq([[:list, "Bearer configured-key"], [:probe, "Bearer configured-key"]])
+      end
+
+      it "lists and probes with no key when a keyless credential points somewhere else" do
+        config = { provider: "ollama", api_key: nil, api_endpoint: "https://attacker.example.test/v1" }
+
+        expect(authorization_sent_during_discovery(config)).to eq([[:list, nil], [:probe, nil]])
+      end
+
+      it "lists and probes with the stored key wherever the credential points" do
+        config = { provider: "ollama", api_key: "stored-key", api_endpoint: "https://elsewhere.example.test/v1" }
+
+        expect(authorization_sent_during_discovery(config))
+          .to eq([[:list, "Bearer stored-key"], [:probe, "Bearer stored-key"]])
+      end
+    end
+
     it "sends Authorization header when api_key is present" do
       request = stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
       stub_faraday_post(ollama_judge_response)
