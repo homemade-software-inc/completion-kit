@@ -97,6 +97,15 @@ RSpec.describe "CompletionKit metric groups", type: :request do
       expect(summary.css(".ck-error-list li").map(&:text)).to eq(["Name can't be blank"])
     end
 
+    it "keeps the saved name in the breadcrumb when an update blanks it" do
+      group = create(:completion_kit_metric_group, name: "Support pack")
+
+      patch "#{base_path}/#{group.id}", params: { metric_group: { name: "" } }
+
+      crumbs = Nokogiri::HTML5(response.body).css(".ck-breadcrumb li").map { |li| li.text.strip }
+      expect(crumbs).to eq(["Metrics", "Support pack", "Edit"])
+    end
+
     it "shows no summary on a fresh form" do
       get "#{base_path}/new"
 
