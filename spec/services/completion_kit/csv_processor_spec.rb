@@ -323,12 +323,14 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
       let(:placeholders) { values.keys.map { |name| "{{ #{name} }}" }.join(" ") }
       let(:expected) { values.values.join(" ") }
 
-      it "fills every column fast, even with a long run of padded braces after them" do
-        braces = "#{"{{#{" " * 20}x " * 40_000}}}"
+      it "fills every column fast, even with a long run of unclosed braces after them" do
+        template = "#{placeholders}#{"{{" * 100_000}}}"
 
-        rendered, elapsed = timed { fill("#{placeholders}#{braces}", values) }
+        started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        rendered = fill(template, values)
+        elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
 
-        expect(rendered).to eq("#{expected}#{braces}")
+        expect(rendered).to eq("#{expected}#{"{{" * 100_000}}}")
         expect(elapsed).to be < 1
       end
 
