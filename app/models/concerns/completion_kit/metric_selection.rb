@@ -13,10 +13,14 @@ module CompletionKit
 
     private
 
+    def normalize_metric_ids(ids)
+      Array(ids).reject(&:blank?).map(&:to_i).uniq
+    end
+
     def selected_metrics_out_of_scope?
       return false unless @metric_selection_assigned
 
-      wanted = Array(@selected_metric_ids).reject(&:blank?).map(&:to_s).uniq
+      wanted = normalize_metric_ids(@selected_metric_ids)
       CompletionKit::Metric.where(id: wanted).count < wanted.size
     end
 

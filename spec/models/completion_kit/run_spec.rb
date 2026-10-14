@@ -233,6 +233,33 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
   end
 
+  describe "#replace_metrics!" do
+    let(:metric) { create(:completion_kit_metric) }
+    let(:run) { create(:completion_kit_run) }
+
+    before { run.replace_metrics!([metric.id]) }
+
+    it "leaves the metrics alone when given nil" do
+      run.replace_metrics!(nil)
+
+      expect(run.run_metrics.pluck(:metric_id)).to eq([metric.id])
+    end
+
+    it "attaches a repeated id once" do
+      other = create(:completion_kit_metric)
+
+      run.replace_metrics!([other.id, other.id.to_s, "", metric.id, other.id])
+
+      expect(run.run_metrics.pluck(:metric_id, :position)).to eq([[other.id, 1], [metric.id, 2]])
+    end
+
+    it "clears the metrics when given an empty list" do
+      run.replace_metrics!([])
+
+      expect(run.run_metrics).to be_empty
+    end
+  end
+
   describe "metric ids outside the tenant scope" do
     let(:static_prompt) { create(:completion_kit_prompt, template: "Static prompt") }
     let(:own_metric) { create(:completion_kit_metric, name: "Own") }

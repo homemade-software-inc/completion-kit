@@ -225,8 +225,10 @@ module CompletionKit
     end
 
     def replace_metrics!(metric_ids)
+      return if metric_ids.nil?
+
       run_metrics.delete_all
-      Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
+      normalize_metric_ids(metric_ids).each_with_index do |metric_id, index|
         run_metrics.create!(metric_id: metric_id, position: index + 1)
       end
     end

@@ -25,6 +25,33 @@ RSpec.describe CompletionKit::MetricGroup, type: :model do
     expect(metric_group.ordered_metrics).to eq([earlier_metric, later_metric])
   end
 
+  describe "#replace_metrics!" do
+    let(:metric) { create(:completion_kit_metric) }
+    let(:group) { create(:completion_kit_metric_group) }
+
+    before { group.replace_metrics!([metric.id]) }
+
+    it "leaves the members alone when given nil" do
+      group.replace_metrics!(nil)
+
+      expect(group.metric_group_memberships.pluck(:metric_id)).to eq([metric.id])
+    end
+
+    it "attaches a repeated id once" do
+      other = create(:completion_kit_metric)
+
+      group.replace_metrics!([other.id, other.id.to_s, "", metric.id, other.id])
+
+      expect(group.metric_group_memberships.pluck(:metric_id, :position)).to eq([[other.id, 1], [metric.id, 2]])
+    end
+
+    it "clears the members when given an empty list" do
+      group.replace_metrics!([])
+
+      expect(group.metric_group_memberships).to be_empty
+    end
+  end
+
   describe "metric ids outside the tenant scope" do
     let(:own_metric) { create(:completion_kit_metric, name: "Own") }
     let!(:foreign_metric) { create(:completion_kit_metric, name: "Foreign") }

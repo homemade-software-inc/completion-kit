@@ -16,8 +16,10 @@ module CompletionKit
     end
 
     def replace_metrics!(metric_ids)
+      return if metric_ids.nil?
+
       metric_group_memberships.delete_all
-      Array(metric_ids).reject(&:blank?).each_with_index do |metric_id, index|
+      normalize_metric_ids(metric_ids).each_with_index do |metric_id, index|
         metric_group_memberships.create!(metric_id: metric_id, position: index + 1)
       end
     end
