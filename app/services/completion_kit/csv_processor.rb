@@ -64,11 +64,7 @@ module CompletionKit
     end
 
     def self.apply_variables(prompt, variables)
-      values = variables.to_h.transform_keys(&:to_s)
-      return prompt.template.dup if values.empty?
-
-      names = values.keys.map { |name| Regexp.escape(name) }.join("|")
-      prompt.template.gsub(/\{\{\s*(#{names})\s*\}\}/) { values[Regexp.last_match(1)].to_s }
+      PlaceholderFiller.fill(prompt.template, variables.to_h.transform_keys(&:to_s))
     end
   end
 end
