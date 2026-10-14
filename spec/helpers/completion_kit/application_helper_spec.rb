@@ -301,6 +301,11 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(html).to include("ck-badge--low")
     end
 
+    it "adds a list check's fraction to the verdict" do
+      expect(helper.ck_check_badge(false, BigDecimal("0.8333"))).to include(">Fail 0.83<")
+      expect(helper.ck_check_badge(true, 1)).to include(">Pass 1.0<")
+    end
+
     it "renders a neutral pending badge when the result is unknown" do
       html = helper.ck_check_badge(nil)
       expect(html).to include("Pending")

@@ -112,9 +112,12 @@ module CompletionKit
                   right_score: r_review ? r_review.ai_score : nil,
                   left_passed: l_review&.passed,
                   right_passed: r_review&.passed,
+                  left_check_score: l_review&.check_score&.to_f,
+                  right_check_score: r_review&.check_score&.to_f,
                   left_metric_version_id: l_review&.metric_version_id,
                   right_metric_version_id: r_review&.metric_version_id,
-                  delta: (l_review&.ai_score && r_review&.ai_score) ? (r_review.ai_score.to_f - l_review.ai_score.to_f).round(2) : nil,
+                  delta: CompletionKit::RunComparison.score_delta(l_review&.ai_score, r_review&.ai_score),
+                  check_score_delta: CompletionKit::RunComparison.score_delta(l_review&.check_score, r_review&.check_score),
                   result_change: CompletionKit::RunComparison.result_change(l_review&.passed, r_review&.passed)
                 }
               end.compact

@@ -28,6 +28,15 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     expect(html).to include("https://docs.example.test/api/v1/prompts")
   end
 
+  it "documents the list check fraction on a run and on a run comparison" do
+    page = Nokogiri::HTML5(render_body(base_url: "https://docs.example.test"))
+    run_get = page.css(".ck-api-endpoint").find { |node| node.at_css(".ck-api-method")&.text.to_s.squish == "GET /api/v1/runs/:id" }
+    compare = page.css(".ck-api-endpoint").find { |node| node.at_css(".ck-api-method")&.text.to_s.include?("/compare") }
+
+    expect(run_get.text).to include("avg_check_score")
+    expect(compare.text).to include("left_check_score", "right_check_score", "check_score_delta")
+  end
+
   it "lists the published prompts inside the Prompts section" do
     prompt = create(:completion_kit_prompt, name: "Crawlable Prompt")
 

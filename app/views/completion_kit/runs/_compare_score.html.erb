@@ -2,7 +2,7 @@
 <% if has_value && response %>
   <%= link_to run_response_path(run, response), class: "ck-cmp-score__link", title: "#{side}: open this response (#{run.name})" do %>
     <% if kind == "check" %>
-      <%= ck_check_badge(passed) %>
+      <%= ck_check_badge(passed, local_assigns[:check_score]) %>
     <% else %>
       <span class="<%= ck_badge_classes(ck_score_kind(score.to_f)) %>"><%= score %></span>
     <% end %>

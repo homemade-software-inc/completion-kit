@@ -135,7 +135,7 @@
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:id</p>
         <p class="ck-meta-copy">Get a run with status, progress, response count, and average score.</p>
-        <p class="ck-api-params"><strong>Also returns:</strong>&ensp;<code>metric_averages</code>, a per-metric breakdown with each metric's average score (<code>pass_rate</code> for checks), the number of rows it graded, and <code>low_count</code>, how many scored below the medium quality threshold</p>
+        <p class="ck-api-params"><strong>Also returns:</strong>&ensp;<code>metric_averages</code>, a per-metric breakdown with each metric's average score (<code>pass_rate</code> for checks, plus <code>avg_check_score</code> for a <code>list_overlap</code> check, the average fraction from 0 to 1), the number of rows it graded, and <code>low_count</code>, how many scored below the medium quality threshold</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl #{base_url}/api/v1/runs/1 \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <%= render "completion_kit/api_reference/resource_list", title: "Your recent runs",
@@ -166,7 +166,7 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">GET</span> /api/v1/runs/:id/compare?with=:other_id</p>
-        <p class="ck-meta-copy">Side-by-side comparison against another run. Returns <code>{left_run_id, right_run_id, metric_ids: [...], rows: [...]}</code> with one row per input case, per-metric scores on both sides, and the delta. Rows are keyed by the left run's input cases: a case present only in the left run is returned with the right side nulled out, and a case present only in the right run is omitted.</p>
+        <p class="ck-meta-copy">Side-by-side comparison against another run. Returns <code>{left_run_id, right_run_id, metric_ids: [...], rows: [...]}</code> with one row per input case, per-metric scores on both sides, and the delta. A check reports <code>left_passed</code>, <code>right_passed</code> and <code>result_change</code>, and a <code>list_overlap</code> check also reports <code>left_check_score</code>, <code>right_check_score</code> and <code>check_score_delta</code>, so a fraction that moved shows even when the verdict did not. Rows are keyed by the left run's input cases: a case present only in the left run is returned with the right side nulled out, and a case present only in the right run is omitted.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl \"#{base_url}/api/v1/runs/1/compare?with=2\" \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">

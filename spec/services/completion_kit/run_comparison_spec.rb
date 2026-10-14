@@ -20,4 +20,16 @@ RSpec.describe CompletionKit::RunComparison do
       expect(described_class.result_change(true, nil)).to be_nil
     end
   end
+
+  describe ".score_delta" do
+    it "is how far the right side moved from the left, to two places" do
+      expect(described_class.score_delta(BigDecimal("0.5"), BigDecimal("0.8333"))).to eq(0.33)
+      expect(described_class.score_delta(5, 3)).to eq(-2.0)
+    end
+
+    it "is nil when either side has no score" do
+      expect(described_class.score_delta(nil, 0.5)).to be_nil
+      expect(described_class.score_delta(0.5, nil)).to be_nil
+    end
+  end
 end

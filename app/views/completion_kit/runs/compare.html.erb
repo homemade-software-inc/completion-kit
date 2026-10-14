@@ -56,16 +56,16 @@
             <td class="ck-compare-metric" data-label="Metric" title="<%= pm[:metric_name] %>"><%= pm[:metric_name] %></td>
             <td class="ck-cmp-score" data-label="A → B">
               <span class="ck-cmp-score__pair">
-                <%= render "compare_score", kind: pm[:kind], passed: pm[:left_passed], score: pm[:left_score], response: row[:left_response], run: @run, side: "A" %>
+                <%= render "compare_score", kind: pm[:kind], passed: pm[:left_passed], score: pm[:left_score], check_score: pm[:left_check_score], response: row[:left_response], run: @run, side: "A" %>
                 <span class="ck-cmp-score__arrow" aria-hidden="true">→</span>
-                <%= render "compare_score", kind: pm[:kind], passed: pm[:right_passed], score: pm[:right_score], response: row[:right_response], run: @other_run, side: "B" %>
+                <%= render "compare_score", kind: pm[:kind], passed: pm[:right_passed], score: pm[:right_score], check_score: pm[:right_check_score], response: row[:right_response], run: @other_run, side: "B" %>
               </span>
             </td>
             <td class="ck-num ck-cmp-delta" data-label="Δ">
-              <% if pm[:kind] == "check" %>
+              <% d = pm[:delta] || pm[:check_score_delta] %>
+              <% if d.nil? && pm[:kind] == "check" %>
                 <%= ck_result_change_badge(pm[:result_change]) || content_tag(:span, "—", class: "ck-cmp-score__none") %>
-              <% elsif pm[:delta] %>
-                <% d = pm[:delta] %>
+              <% elsif d %>
                 <% dcls = d > 0 ? "ck-delta--positive" : d < 0 ? "ck-delta--negative" : "ck-delta--zero" %>
                 <span class="ck-delta <%= dcls %>"><span class="ck-delta__arrow" aria-hidden="true"><%= d > 0 ? "▲" : d < 0 ? "▼" : "=" %></span><%= d > 0 ? "+#{d}" : d.to_s %></span>
               <% else %>

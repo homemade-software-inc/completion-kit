@@ -9,5 +9,11 @@ module CompletionKit
 
       "same"
     end
+
+    def score_delta(left, right)
+      return nil if left.nil? || right.nil?
+
+      (right.to_f - left.to_f).round(2)
+    end
   end
 end

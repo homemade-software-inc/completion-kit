@@ -512,6 +512,37 @@ RSpec.describe "API V1 Runs", type: :request do
       expect(pm["result_change"]).to eq("broke")
     end
 
+    it "carries each side's fraction and how far it moved, so a partial gain shows when the verdict does not change" do
+      prompt = create(:completion_kit_prompt, template: "Static")
+      dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
+      left = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      right = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      check = create(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => "A, B" })
+      left_response = create(:completion_kit_response, run: left, input_data: "hi")
+      right_response = create(:completion_kit_response, run: right, input_data: "hi")
+      create(:completion_kit_review, :check, response: left_response, metric: check, metric_name: check.name, passed: false, check_score: 0.5)
+      create(:completion_kit_review, :check, response: right_response, metric: check, metric_name: check.name, passed: false, check_score: 0.8333)
+
+      get "/completion_kit/api/v1/runs/#{left.id}/compare", params: { with: right.id }, headers: headers
+
+      pm = JSON.parse(response.body)["rows"].first["per_metric"].first
+      expect(pm).to include("left_check_score" => 0.5, "right_check_score" => 0.8333, "check_score_delta" => 0.33, "result_change" => "same")
+    end
+
+    it "leaves the fraction fields empty for a check that only passes or fails" do
+      prompt = create(:completion_kit_prompt, template: "Static")
+      dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")
+      left = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      right = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      check = create(:completion_kit_metric, :check)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response, run: left, input_data: "hi"), metric: check, metric_name: check.name, passed: true)
+
+      get "/completion_kit/api/v1/runs/#{left.id}/compare", params: { with: right.id }, headers: headers
+
+      pm = JSON.parse(response.body)["rows"].first["per_metric"].first
+      expect(pm).to include("left_check_score" => nil, "right_check_score" => nil, "check_score_delta" => nil)
+    end
+
     it "reports result_change nil for a one-sided check review" do
       prompt = create(:completion_kit_prompt, template: "Static")
       dataset = create(:completion_kit_dataset, csv_data: "input\nhi\n")

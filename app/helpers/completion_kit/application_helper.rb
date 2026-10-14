@@ -204,11 +204,12 @@ module CompletionKit
       :low
     end
 
-    def ck_check_badge(passed)
+    def ck_check_badge(passed, score = nil)
+      suffix = score.nil? ? "" : " #{score.to_f.round(2)}"
       if passed == true
-        content_tag(:span, "Pass", class: ck_badge_classes(:high))
+        content_tag(:span, "Pass#{suffix}", class: ck_badge_classes(:high))
       elsif passed == false
-        content_tag(:span, "Fail", class: ck_badge_classes(:low))
+        content_tag(:span, "Fail#{suffix}", class: ck_badge_classes(:low))
       else
         content_tag(:span, "Pending", class: ck_badge_classes(:pending))
       end
