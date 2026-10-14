@@ -68,9 +68,21 @@ RSpec.describe CompletionKit::Checks::TargetResolver do
       expect(described_class.call_value(response, { "target" => "json_path", "target_path" => "$" })).to eq([1, 2])
     end
 
-    it "reads a $ followed directly by a key the same as $." do
+    it "reads a key that starts with $, such as $schema, as written" do
+      response = build(:completion_kit_response, response_text: '{"$schema":"v2","schema":"wrong","$ref":{"$id":"x"}}', status: "pending")
+      expect(described_class.call(response, { "target" => "json_path", "target_path" => " $schema " })).to eq("v2")
+      expect(described_class.call(response, { "target" => "json_path", "target_path" => "$ref.$id" })).to eq("x")
+      expect(described_class.call(response, { "target" => "json_path", "target_path" => "$.$ref.$id" })).to eq("x")
+    end
+
+    it "does not read a $-prefixed path as the key without the $" do
       response = build(:completion_kit_response, response_text: '{"mileage":82000}', status: "pending")
-      expect(described_class.call_value(response, { "target" => "json_path", "target_path" => " $mileage " })).to eq(82_000)
+      expect(described_class.call_value(response, { "target" => "json_path", "target_path" => "$mileage" })).to be(described_class::UNRESOLVED)
+    end
+
+    it "reads $.a as the key a" do
+      response = build(:completion_kit_response, response_text: '{"a":1}', status: "pending")
+      expect(described_class.call_value(response, { "target" => "json_path", "target_path" => "$.a" })).to eq(1)
     end
 
     it "exposes the allowed target set" do

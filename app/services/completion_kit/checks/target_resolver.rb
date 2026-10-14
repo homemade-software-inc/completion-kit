@@ -4,7 +4,7 @@ module CompletionKit
       TARGETS = %w[response_text input_data json_path].freeze
       UNRESOLVED = Object.new.freeze
       ARRAY_INDEX = /\A\d+\z/
-      ROOT = /\A\$\.?/
+      ROOT = /\A\$(?:\.|\z)/
 
       def self.call(response, config)
         stringify(call_value(response, config))
