@@ -40,7 +40,7 @@ module CompletionKit
     end
 
     def create
-      @run = Run.new(run_params.except(:metric_ids).merge(selected_metric_ids: params[:run][:metric_ids]))
+      @run = Run.new(run_attributes)
       if @run.save
         redirect_to run_path(@run), notice: "Run was successfully created."
       else
@@ -51,18 +51,18 @@ module CompletionKit
 
     def update
       if @run.responses.any? && run_generation_changed?
-        attrs = run_params.except(:metric_ids).to_h
+        attrs = run_attributes.to_h
         attrs.delete("name") if attrs["name"].to_s == @run.name.to_s
-        new_run = Run.new(attrs.merge(status: "pending", selected_metric_ids: params[:run][:metric_ids]))
+        new_run = Run.new(attrs.merge(status: "pending"))
         if new_run.save
           redirect_to run_path(new_run), notice: "Saved as a new run. The previous run and its results are preserved."
         else
-          @run.assign_attributes(run_params.except(:metric_ids).merge(selected_metric_ids: params[:run][:metric_ids]))
+          @run.assign_attributes(run_attributes)
           new_run.errors.each { |error| @run.errors.add(error.attribute, error.message) }
           load_form_collections
           render :edit, status: :unprocessable_entity
         end
-      elsif @run.update(run_params.except(:metric_ids).merge(selected_metric_ids: params[:run][:metric_ids]))
+      elsif @run.update(run_attributes)
         redirect_to run_path(@run), notice: "Run saved."
       else
         load_form_collections
@@ -225,6 +225,10 @@ module CompletionKit
 
     def run_params
       params.require(:run).permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :max_tokens, :judge_temperature, :output_column, :expected_column, metric_ids: [], tag_names: [])
+    end
+
+    def run_attributes
+      run_params.except(:metric_ids).merge(selected_metric_ids: run_params[:metric_ids])
     end
 
     # Editing a run that already has results forks a new run — but only when a

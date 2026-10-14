@@ -87,6 +87,26 @@ RSpec.describe "API V1 Metric Groups", type: :request do
         headers: headers
       expect(response).to have_http_status(:ok)
     end
+
+    it "keeps the members when metric_ids is nil or left out" do
+      metric_group = create(:completion_kit_metric_group, :with_metrics)
+      original = metric_group.metric_ids
+
+      patch "/completion_kit/api/v1/metric_groups/#{metric_group.id}", params: {metric_ids: nil}.to_json, headers: headers
+      expect(JSON.parse(response.body)["metric_ids"]).to eq(original)
+
+      patch "/completion_kit/api/v1/metric_groups/#{metric_group.id}", params: {name: "renamed"}.to_json, headers: headers
+      expect(JSON.parse(response.body)["metric_ids"]).to eq(original)
+    end
+
+    it "clears the members when metric_ids is an empty list" do
+      metric_group = create(:completion_kit_metric_group, :with_metrics)
+
+      patch "/completion_kit/api/v1/metric_groups/#{metric_group.id}", params: {metric_ids: []}.to_json, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["metric_ids"]).to eq([])
+    end
   end
 
   describe "metric ids from another tenant" do

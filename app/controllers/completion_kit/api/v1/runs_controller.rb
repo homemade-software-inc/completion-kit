@@ -18,7 +18,7 @@ module CompletionKit
         end
 
         def create
-          run = Run.new(run_params.except(:metric_ids).merge(selected_metric_ids: params[:metric_ids]))
+          run = Run.new(run_attributes)
           if run.save
             render json: run.reload, status: :created
           else
@@ -27,7 +27,7 @@ module CompletionKit
         end
 
         def update
-          if @run.update(run_params.except(:metric_ids).merge(selected_metric_ids: params[:metric_ids]))
+          if @run.update(run_attributes)
             render json: @run.reload
           else
             render_validation_errors(@run)
@@ -132,6 +132,10 @@ module CompletionKit
         def run_params
           params.permit(:name, :prompt_id, :dataset_id, :judge_model, :temperature, :max_tokens, :judge_temperature, :output_column, :expected_column,
             metric_ids: [], tag_names: [])
+        end
+
+        def run_attributes
+          run_params.except(:metric_ids).merge(selected_metric_ids: run_params[:metric_ids])
         end
       end
     end

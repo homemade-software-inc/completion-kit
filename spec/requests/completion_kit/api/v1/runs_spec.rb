@@ -179,6 +179,26 @@ RSpec.describe "API V1 Runs", type: :request do
       body = JSON.parse(response.body)
       expect(body["metric_ids"]).to eq([metric.id])
     end
+
+    it "clears a run's metrics when metric_ids is an empty list" do
+      run = create(:completion_kit_run)
+      run.replace_metrics!([create(:completion_kit_metric).id])
+
+      patch "/completion_kit/api/v1/runs/#{run.id}", params: {metric_ids: []}.to_json, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["metric_ids"]).to eq([])
+    end
+
+    it "keeps a run's metrics when metric_ids is left out" do
+      run = create(:completion_kit_run)
+      metric = create(:completion_kit_metric)
+      run.replace_metrics!([metric.id])
+
+      patch "/completion_kit/api/v1/runs/#{run.id}", params: {name: "renamed"}.to_json, headers: headers
+
+      expect(JSON.parse(response.body)["metric_ids"]).to eq([metric.id])
+    end
   end
 
   describe "prompt and dataset ids from another tenant" do

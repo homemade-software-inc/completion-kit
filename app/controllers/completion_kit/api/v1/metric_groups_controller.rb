@@ -15,7 +15,7 @@ module CompletionKit
         end
 
         def create
-          metric_group = MetricGroup.new(metric_group_params.except(:metric_ids).merge(selected_metric_ids: params[:metric_ids]))
+          metric_group = MetricGroup.new(metric_group_attributes)
           if metric_group.save
             render json: metric_group.reload, status: :created
           else
@@ -24,7 +24,7 @@ module CompletionKit
         end
 
         def update
-          if @metric_group.update(metric_group_params.except(:metric_ids).merge(selected_metric_ids: params[:metric_ids]))
+          if @metric_group.update(metric_group_attributes)
             render json: @metric_group.reload
           else
             render_validation_errors(@metric_group)
@@ -46,6 +46,10 @@ module CompletionKit
 
         def metric_group_params
           params.permit(:name, :description, metric_ids: [], tag_names: [])
+        end
+
+        def metric_group_attributes
+          metric_group_params.except(:metric_ids).merge(selected_metric_ids: metric_group_params[:metric_ids])
         end
       end
     end
