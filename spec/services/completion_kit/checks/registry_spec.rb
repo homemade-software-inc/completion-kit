@@ -392,9 +392,11 @@ RSpec.describe CompletionKit::Checks::Registry do
       expect(overlap(%w[a b x y], { "score_by" => "nonsense" }).score).to eq(0.5)
     end
 
-    it "treats an empty expected set as vacuously satisfied only when nothing was returned either" do
+    it "scores every measure as perfect when both lists are empty" do
       CompletionKit::Checks::ListOverlap::MEASURES.each do |measure|
-        expect(call("list_overlap", [], { "value" => [], "score_by" => measure }).score).to eq(1.0)
+        result = call("list_overlap", [], { "value" => [], "score_by" => measure })
+        expect(result.score).to eq(1.0), "#{measure} scored #{result.score} for two empty lists"
+        expect(result.passed).to be(true)
       end
     end
 
@@ -406,9 +408,19 @@ RSpec.describe CompletionKit::Checks::Registry do
       end
     end
 
-    it "scores every measure the same way when nothing was expected but something came back" do
-      CompletionKit::Checks::ListOverlap::MEASURES.each do |measure|
-        expect(call("list_overlap", %w[x y z], { "value" => [], "score_by" => measure }).score).to eq(0.0)
+    it "passes coverage when nothing was expected, since nothing was missed" do
+      result = call("list_overlap", %w[x y z], { "value" => [] })
+      expect(result.score).to eq(1.0)
+      expect(result.passed).to be(true)
+      expect(result.detail).to eq("found 0 of 0 expected, 3 returned (score 1.0)")
+      expect(call("list_overlap", %w[x], { "value" => "", "score_by" => "recall" }).score).to eq(1.0)
+    end
+
+    it "scores accuracy, balance and overlap as zero when nothing was expected but something came back" do
+      %w[precision f1 jaccard].each do |measure|
+        result = call("list_overlap", %w[x y z], { "value" => [], "score_by" => measure })
+        expect(result.score).to eq(0.0), "#{measure} scored #{result.score} with nothing expected"
+        expect(result.passed).to be(false)
       end
     end
 

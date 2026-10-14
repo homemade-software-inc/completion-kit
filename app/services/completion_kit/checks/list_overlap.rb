@@ -28,11 +28,13 @@ module CompletionKit
       def score_for(measure, overlap, actual_size, expected_size)
         return 1.0 if actual_size.zero? && expected_size.zero?
 
+        precision = ratio(overlap, actual_size)
+        recall = expected_size.zero? ? 1.0 : ratio(overlap, expected_size)
         case measure
-        when "precision" then ratio(overlap, actual_size)
+        when "precision" then precision
         when "jaccard" then ratio(overlap, actual_size + expected_size - overlap)
-        when "f1" then f1(ratio(overlap, actual_size), ratio(overlap, expected_size))
-        else ratio(overlap, expected_size)
+        when "f1" then f1(precision, recall)
+        else recall
         end
       end
 
