@@ -14,7 +14,6 @@
   </div>
 <% end %>
 
-
 <% if CompletionKit.config.judge_agreement_enabled %>
   <% stale_summary = @run.stale_review_summary %>
   <% if stale_summary.any? %>
@@ -168,18 +167,5 @@
 <% end %>
 
 <% if @run.status.in?(%w[pending running]) %>
-  <script>
-    (function() {
-      if (window.ckRunStatusPoll) clearInterval(window.ckRunStatusPoll);
-      var url = '<%= refresh_status_run_path(@run) %>';
-      var refresh = function() {
-        fetch(url, { headers: { Accept: 'text/vnd.turbo-stream.html' }, credentials: 'same-origin' })
-          .then(function(r) { return r.ok ? r.text() : null; })
-          .then(function(html) { if (html) Turbo.renderStreamMessage(html); })
-          .catch(function() {});
-      };
-      setTimeout(refresh, 1000);
-      window.ckRunStatusPoll = setInterval(refresh, 15000);
-    })();
-  </script>
+  <div hidden data-ck-run-status-url="<%= refresh_status_run_path(@run) %>"></div>
 <% end %>

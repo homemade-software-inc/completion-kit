@@ -126,7 +126,7 @@
     <% pred = predecessor_of[v] %>
     <% next unless v.change_summary_against(pred) %>
     <% vs = v.validation_summary %>
-    <dialog id="ck-mvdiff-<%= v.id %>" class="ck-modal" aria-labelledby="ck-mvdiff-title-<%= v.id %>" data-ck-dialog>
+    <dialog id="ck-mvdiff-<%= v.id %>" class="ck-modal" aria-labelledby="ck-mvdiff-title-<%= v.id %>" data-ck-dialog<%= " data-ck-dialog-autoopen" if params[:show_change].to_i == v.id %>>
       <article class="ck-modal__panel" tabindex="-1">
         <header class="ck-modal__header">
           <div class="ck-modal__heading">
@@ -223,13 +223,3 @@
     <% end %>
   </section>
 <% end %>
-
-<% if params[:show_change].present? %>
-  <script>
-    (function () {
-      var dialog = document.getElementById("ck-mvdiff-<%= params[:show_change].to_i %>");
-      if (dialog && typeof dialog.showModal === "function") dialog.showModal();
-    })();
-  </script>
-<% end %>
-

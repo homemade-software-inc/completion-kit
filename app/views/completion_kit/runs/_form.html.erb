@@ -132,8 +132,7 @@
                 <button type="button"
                         class="ck-metric-group-pill"
                         data-metric-group
-                        data-metric-ids="<%= g.metric_ids.join(",") %>"
-                        onclick="ckToggleMetricGroup(this)">
+                        data-metric-ids="<%= g.metric_ids.join(",") %>">
                   <span class="ck-metric-group-pill__check" aria-hidden="true">✓</span>
                   <span class="ck-metric-group-pill__label"><%= g.name %></span>
                   <span class="ck-metric-group-pill__count"><%= g.metric_ids.size %></span>
@@ -152,8 +151,7 @@
               <button type="button"
                       class="tag-mark tag-mark--off ck-metric-tag-filter__chip"
                       style="--mark-color: var(--tag-<%= tag.color %>);"
-                      data-filter-tag="<%= tag.name %>"
-                      onclick="ckToggleMetricGroupFilter(this)"><%= tag.name %></button>
+                      data-filter-tag="<%= tag.name %>"><%= tag.name %></button>
             <% end %>
           </div>
         <% end %>
@@ -180,180 +178,6 @@
         </div>
       <% end %>
     </div>
-
-    <script>
-function updateRunForm() {
-  var promptEl = document.getElementById('run_prompt_id');
-  var judgeEl = document.getElementById('run_judge_model');
-  var judgeOnlyEl = document.getElementById('run_judge_only');
-  var judgeOnly = !!(judgeOnlyEl && judgeOnlyEl.checked);
-  var promptField = document.getElementById('prompt-field');
-  var outputColumnField = document.getElementById('output-column-field');
-  var outputColumnEl = document.getElementById('run_output_column');
-  if (promptField) promptField.hidden = judgeOnly;
-  if (outputColumnField) outputColumnField.hidden = !judgeOnly;
-  if (judgeOnly && promptEl) promptEl.value = '';
-
-  var prompt = promptEl ? promptEl.value : '';
-  var judge = judgeEl ? judgeEl.value : '';
-  var judgeListed = !!judgeEl && judgeEl.type !== 'hidden';
-  var metrics = document.querySelectorAll('input[name="run[metric_ids][]"]:checked');
-  var judgeField = document.getElementById('judge-field');
-  var metricsField = document.getElementById('metrics-field');
-  var judgeHint = document.getElementById('judge-hint');
-  var metricsHint = document.getElementById('metrics-hint');
-  var submitBtn = document.getElementById('run-submit');
-
-  if (judgeField) judgeField.className = 'ck-field';
-  if (metricsField) metricsField.className = 'ck-field';
-  if (judgeHint) judgeHint.textContent = '';
-  if (metricsHint) metricsHint.textContent = '';
-
-  var judgedMetrics = Array.prototype.filter.call(metrics, function(cb) {
-    var lbl = cb.closest('[data-needs-judge]');
-    return !!lbl && lbl.dataset.needsJudge === '1';
-  });
-  var judgeUnpaired = judgeListed && !!judge && metrics.length === 0;
-  var metricsUnpaired = judgeListed && !judge && judgedMetrics.length > 0;
-  if (judgeListed && judge && metrics.length > 0 && judgedMetrics.length === 0) {
-    if (judgeHint) judgeHint.textContent = 'Checks need no judge, so this run will not use it.';
-  } else if (judgeListed && judge && metrics.length > 0) {
-    if (judgeHint) judgeHint.textContent = judgeOnly ? 'Existing outputs will be judged automatically.' : 'Responses will be generated then judged automatically.';
-  } else if (judgeUnpaired) {
-    if (judgeField) judgeField.className = 'ck-field ck-field--info';
-    if (metricsField) metricsField.className = 'ck-field ck-field--info';
-    if (metricsHint) metricsHint.textContent = 'Select at least one metric or group to enable judging.';
-  } else if (metricsUnpaired) {
-    if (judgeField) judgeField.className = 'ck-field ck-field--info';
-    if (judgeHint) judgeHint.textContent = 'Select a judge model to enable judging.';
-  }
-
-  var datasetEl = document.getElementById('run_dataset_id');
-  var datasetHint = document.getElementById('dataset-hint');
-  var datasetField = document.getElementById('dataset-field');
-  var dataset = datasetEl ? datasetEl.value : '';
-  var selectedOption = promptEl ? promptEl.options[promptEl.selectedIndex] : null;
-  var hasVars = selectedOption && selectedOption.dataset.hasVariables === '1';
-  var promptVars = (selectedOption && selectedOption.dataset.variables ? selectedOption.dataset.variables.split(/,\s*/) : []).filter(Boolean);
-
-  var missingVars = [];
-  if (hasVars && dataset && datasetEl) {
-    var datasetOption = datasetEl.options[datasetEl.selectedIndex];
-    var headers = (datasetOption && datasetOption.dataset.headers ? datasetOption.dataset.headers.split(/,\s*/) : []).filter(Boolean);
-    missingVars = promptVars.filter(function(v) { return headers.indexOf(v) === -1; });
-  }
-
-  if (datasetField) datasetField.className = 'ck-field';
-  if (datasetHint) datasetHint.textContent = '';
-  if (missingVars.length > 0) {
-    if (datasetField) datasetField.className = 'ck-field ck-field--error';
-    if (datasetHint) datasetHint.textContent = 'Dataset is missing ' + (missingVars.length === 1 ? 'column' : 'columns') + ' the prompt needs: ' + missingVars.join(', ');
-  } else if (hasVars && !dataset) {
-    if (datasetField) datasetField.className = 'ck-field ck-field--info';
-    if (datasetHint) datasetHint.textContent = 'This prompt uses variables. Select a dataset to provide values.';
-  }
-
-  var expectedWarn = document.getElementById('expected-column-warn');
-  var expectedField = document.getElementById('expected-column-field');
-  var expectedColEl = document.getElementById('run_expected_column');
-  if (expectedField) expectedField.className = 'ck-field';
-  if (expectedWarn) expectedWarn.textContent = '';
-  var wantsExpected = false;
-  document.querySelectorAll('input[name="run[metric_ids][]"]:checked').forEach(function(cb) {
-    var lbl = cb.closest('[data-compare-expected]');
-    if (lbl && lbl.dataset.compareExpected === '1') wantsExpected = true;
-  });
-  if (wantsExpected && dataset && datasetEl) {
-    var expOption = datasetEl.options[datasetEl.selectedIndex];
-    var expHeaders = (expOption && expOption.dataset.headers ? expOption.dataset.headers.split(/,\s*/) : []).filter(Boolean);
-    var expCol = ((expectedColEl && expectedColEl.value) || 'expected_output').trim();
-    if (expHeaders.indexOf(expCol) === -1) {
-      if (expectedField) expectedField.className = 'ck-field ck-field--error';
-      if (expectedWarn) expectedWarn.textContent = "A selected check grades against each row's expected value, but this dataset has no \"" + expCol + "\" column, so every row would fail. Add the column or point this at the right one.";
-    }
-  }
-
-  var summary = document.getElementById('prompt-summary');
-  if (summary) {
-    if (selectedOption && selectedOption.value) {
-      var desc = selectedOption.dataset.description || '';
-      var tmpl = selectedOption.dataset.templatePreview || '';
-      var descEl = document.getElementById('prompt-summary-description');
-      descEl.textContent = desc;
-      descEl.hidden = !desc;
-      document.getElementById('prompt-summary-template').textContent = tmpl;
-      summary.hidden = false;
-    } else {
-      summary.hidden = true;
-    }
-  }
-
-  var valid;
-  if (judgeOnly) {
-    valid = !!dataset;
-    if (dataset && datasetEl && outputColumnEl) {
-      var headersJudge = (datasetEl.options[datasetEl.selectedIndex] && datasetEl.options[datasetEl.selectedIndex].dataset.headers ? datasetEl.options[datasetEl.selectedIndex].dataset.headers.split(/,\s*/) : []).filter(Boolean);
-      var col = (outputColumnEl.value || 'actual_output').trim();
-      if (col === '' || headersJudge.indexOf(col) === -1) {
-        valid = false;
-        if (datasetField) datasetField.className = 'ck-field ck-field--error';
-        if (datasetHint) datasetHint.textContent = "Dataset has no \"" + col + "\" column. Pick a different output column or dataset.";
-      }
-    } else if (!dataset) {
-      if (datasetField) datasetField.className = 'ck-field ck-field--info';
-      if (datasetHint) datasetHint.textContent = 'Skip generation and score responses you already have from a dataset column. Works with rubric metrics or deterministic checks.';
-    }
-  } else {
-    valid = prompt !== '';
-    if (hasVars && !dataset) valid = false;
-    if (missingVars.length > 0) valid = false;
-  }
-  if (judgeUnpaired || metricsUnpaired) valid = false;
-  if (submitBtn) submitBtn.disabled = !valid;
-
-  ckUpdateMetricGroupsState();
-}
-
-function ckToggleMetricGroup(button) {
-  var ids = (button.getAttribute('data-metric-ids') || '').split(',').filter(Boolean);
-  var allChecked = ids.every(function(id) {
-    var cb = document.getElementById('run_metric_' + id);
-    return cb && cb.checked;
-  });
-  ids.forEach(function(id) {
-    var cb = document.getElementById('run_metric_' + id);
-    if (cb) cb.checked = !allChecked;
-  });
-  updateRunForm();
-}
-
-function ckUpdateMetricGroupsState() {
-  document.querySelectorAll('[data-metric-group]').forEach(function(btn) {
-    var ids = (btn.getAttribute('data-metric-ids') || '').split(',').filter(Boolean);
-    if (ids.length === 0) return;
-    var allChecked = ids.every(function(id) {
-      var cb = document.getElementById('run_metric_' + id);
-      return cb && cb.checked;
-    });
-    btn.classList.toggle('ck-metric-group-pill--active', allChecked);
-  });
-}
-
-var judgeEl = document.getElementById('run_judge_model');
-var promptEl = document.getElementById('run_prompt_id');
-var datasetEl = document.getElementById('run_dataset_id');
-var judgeOnlyEl = document.getElementById('run_judge_only');
-var outputColumnEl = document.getElementById('run_output_column');
-if (judgeEl) judgeEl.addEventListener('change', updateRunForm);
-if (promptEl) promptEl.addEventListener('change', updateRunForm);
-if (datasetEl) datasetEl.addEventListener('change', updateRunForm);
-if (judgeOnlyEl) judgeOnlyEl.addEventListener('change', updateRunForm);
-if (outputColumnEl) outputColumnEl.addEventListener('input', updateRunForm);
-document.querySelectorAll('input[name="run[metric_ids][]"]').forEach(function(cb) {
-  cb.addEventListener('change', updateRunForm);
-});
-updateRunForm();
-    </script>
 
     <%= render "completion_kit/tags/picker", record: run, param_namespace: :run %>
 

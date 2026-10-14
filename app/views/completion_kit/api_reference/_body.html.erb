@@ -423,30 +423,3 @@
 
   </div>
 </div>
-
-<script>
-function ckToggleToken(el) {
-  var showing = el.textContent === el.dataset.masked;
-  el.textContent = showing ? el.dataset.real : el.dataset.masked;
-  el.setAttribute('aria-pressed', showing ? 'true' : 'false');
-  el.setAttribute('aria-label', showing ? 'Hide API token' : 'Reveal API token');
-  navigator.clipboard.writeText(el.dataset.real).then(function() {
-    el.classList.add('ck-api-copy--done');
-    setTimeout(function() { el.classList.remove('ck-api-copy--done'); }, 1500);
-  });
-}
-
-function ckCopyExample(btn) {
-  var pre = btn.closest('.ck-api-example').querySelector('pre');
-  var text = pre.textContent;
-  var realToken = btn.dataset.realToken;
-  var displayToken = btn.dataset.displayToken;
-  if (realToken && displayToken) {
-    text = text.split(displayToken).join(realToken);
-  }
-  navigator.clipboard.writeText(text).then(function() {
-    btn.classList.add('ck-api-copy--done');
-    setTimeout(function() { btn.classList.remove('ck-api-copy--done'); }, 1500);
-  });
-}
-</script>

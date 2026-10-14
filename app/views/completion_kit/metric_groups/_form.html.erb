@@ -47,8 +47,7 @@
             <button type="button"
                     class="tag-mark tag-mark--off ck-metric-tag-filter__chip"
                     style="--mark-color: var(--tag-<%= tag.color %>);"
-                    data-filter-tag="<%= tag.name %>"
-                    onclick="ckToggleMetricGroupFilter(this)"><%= tag.name %></button>
+                    data-filter-tag="<%= tag.name %>"><%= tag.name %></button>
           <% end %>
         </div>
       <% end %>
@@ -77,24 +76,6 @@
       <% end %>
       <%= hidden_field_tag "metric_group[metric_ids][]", "" %>
     </div>
-
-    <script>
-      function ckToggleMetricGroupFilter(btn) {
-        btn.classList.toggle("tag-mark--off");
-        var bar = btn.closest("[data-metric-tag-filter]");
-        var grid = bar && bar.parentElement.querySelector("[data-metric-checkboxes]");
-        if (!grid) return;
-        var active = Array.prototype.map.call(
-          bar.querySelectorAll(".ck-metric-tag-filter__chip:not(.tag-mark--off)"),
-          function(b) { return b.getAttribute("data-filter-tag"); }
-        );
-        grid.querySelectorAll(".ck-checkbox-label").forEach(function(lbl) {
-          var tags = (lbl.getAttribute("data-metric-tags") || "").split(",").filter(Boolean);
-          var visible = active.length === 0 || tags.some(function(t) { return active.indexOf(t) !== -1; });
-          lbl.style.display = visible ? "" : "none";
-        });
-      }
-    </script>
 
     <div class="ck-actions">
       <% if metric_group.persisted? %>
