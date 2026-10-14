@@ -47,6 +47,15 @@ RSpec.describe "CompletionKit copy without em dashes", type: :request do
     expect(Nokogiri::HTML5(response.body).at_css(".ck-response-cell__error").text).to eq("Openai 429: Rate limit exceeded")
   end
 
+  it "shows a failed row's message alone when no provider or status was recorded" do
+    run = create(:completion_kit_run)
+    create(:completion_kit_response, :failed, run: run, error_provider: nil, error_status: nil, error_message: "No configured provider serves model \"x\"")
+
+    get "/completion_kit/runs/#{run.id}"
+
+    expect(Nokogiri::HTML5(response.body).at_css(".ck-response-cell__error").text).to eq("No configured provider serves model \"x\"")
+  end
+
   it "offers sample data in plain sentences" do
     get "/completion_kit/onboarding"
 

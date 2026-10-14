@@ -106,6 +106,15 @@ RSpec.describe "CompletionKit metric groups", type: :request do
       expect(crumbs).to eq(["Metrics", "Support pack", "Edit"])
     end
 
+    it "names the saved group in the delete confirmation when an update blanks the name" do
+      group = create(:completion_kit_metric_group, name: "Support pack")
+
+      patch "#{base_path}/#{group.id}", params: { metric_group: { name: "" } }
+
+      confirm = Nokogiri::HTML5(response.body).at_css("[data-turbo-confirm]")["data-turbo-confirm"]
+      expect(confirm).to start_with("Delete \"Support pack\"?")
+    end
+
     it "shows no summary on a fresh form" do
       get "#{base_path}/new"
 

@@ -158,6 +158,7 @@
           </div>
         <% end %>
 
+        <%= hidden_field_tag "run[metric_ids][]", "", id: nil %>
         <div class="ck-metric-checkboxes" data-metric-checkboxes role="group" aria-labelledby="run_metrics_label">
           <% @all_metrics.each do |metric| %>
             <label class="ck-checkbox-label" data-metric-tags="<%= metric.tag_names.join(",") %>" data-compare-expected="<%= metric.check? && metric.check_config.to_h["compare_to"] == "expected" ? "1" : "0" %>">

@@ -26,6 +26,18 @@ RSpec.describe "CompletionKit runs", type: :request do
     post "#{base_path}/#{run.id}", params: URI.encode_www_form(pairs), headers: { "CONTENT_TYPE" => "application/x-www-form-urlencoded" }
   end
 
+  it "clears a run's metrics when every metric box is unticked on the edit form" do
+    metric = create(:completion_kit_metric)
+    run = create(:completion_kit_run, prompt: prompt)
+    run.replace_metrics!([metric.id])
+
+    get "#{base_path}/#{run.id}/edit"
+    pairs = submitted_pairs(response.body).reject { |name, value| name == "run[metric_ids][]" && value.present? }
+    post "#{base_path}/#{run.id}", params: URI.encode_www_form(pairs), headers: { "CONTENT_TYPE" => "application/x-www-form-urlencoded" }
+
+    expect(run.reload.metrics).to be_empty
+  end
+
   it "renders index, show, new, and edit pages" do
     run = create(:completion_kit_run, prompt: prompt, name: "Run A")
 
