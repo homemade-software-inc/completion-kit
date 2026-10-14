@@ -651,6 +651,23 @@ RSpec.describe "CompletionKit runs", type: :request do
       expect(judge_error).to be_present
       expect(run.reload.judge_model).to eq("gpt-4.1-mini")
     end
+
+    it "shows the current judge as unavailable when it has no model row, and a save keeps it" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, name: "Legacy judge")
+      run.update_columns(judge_model: "legacy-judge")
+
+      get "#{base_path}/#{run.id}/edit"
+
+      expect(selected_judge).to eq(["legacy-judge (unavailable)", "legacy-judge"])
+      expect(judge_error).to be_nil
+      expect(judge_select.key?("aria-invalid")).to be(false)
+
+      patch "#{base_path}/#{run.id}", params: { run: { name: "Renamed", prompt_id: prompt.id, dataset_id: dataset.id, judge_model: "legacy-judge" } }
+
+      expect(response).to redirect_to("#{base_path}/#{run.id}")
+      expect(run.reload.judge_model).to eq("legacy-judge")
+      expect(run.name).to eq("Renamed")
+    end
   end
 
   describe "metric choices on a failed save" do

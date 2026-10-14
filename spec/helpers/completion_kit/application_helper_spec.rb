@@ -122,10 +122,14 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(result).not_to include("retired")
     end
 
-    it "handles selected model not found in registry" do
+    it "keeps a current model with no registry row selected, marked unavailable" do
       models = [{ id: "gpt-4", name: "GPT-4", provider: "openai" }]
-      result = helper.ck_grouped_models(models, "nonexistent")
-      expect(result).not_to include("retired")
+      options = Nokogiri::HTML5.fragment(helper.ck_grouped_models(models, "nonexistent")).css("option")
+
+      expect(options.map { |o| [o.text, o["value"], o.key?("selected")] }).to eq([
+        ["nonexistent (unavailable)", "nonexistent", true],
+        ["GPT-4", "gpt-4", false]
+      ])
     end
 
     it "keeps a rejected model selected as its id marked not served" do

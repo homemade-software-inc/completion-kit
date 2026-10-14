@@ -557,5 +557,21 @@ RSpec.describe "CompletionKit prompts", type: :request do
       expect(selected_option.text).to eq("ollama/llama3 (not served)")
       expect(Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error")).to be_present
     end
+
+    it "shows the current model as unavailable when it has no model row, and a save keeps it" do
+      prompt = create(:completion_kit_prompt)
+      prompt.update_columns(llm_model: "legacy-model")
+
+      get "#{base_path}/#{prompt.id}/edit"
+
+      expect([selected_option.text, selected_option["value"]]).to eq(["legacy-model (unavailable)", "legacy-model"])
+      expect(Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error")).to be_nil
+      expect(model_select.key?("aria-invalid")).to be(false)
+
+      patch "#{base_path}/#{prompt.id}", params: { prompt: { name: "Renamed", llm_model: selected_option["value"] } }
+
+      expect(response).to redirect_to("#{base_path}/#{prompt.id}")
+      expect(prompt.reload.llm_model).to eq("legacy-model")
+    end
   end
 end

@@ -157,8 +157,9 @@ module CompletionKit
         retired = CompletionKit::Model.find_by(model_id: selected) unless rejected
         if retired
           models = models + [{ id: retired.model_id, name: "#{retired.display_name || retired.model_id} (retired)", provider: retired.provider }]
-        elsif rejected
-          kept = [["#{selected} (not served)", selected]]
+        else
+          note = rejected ? "not served" : "unavailable"
+          kept = [["#{selected} (#{note})", selected]]
         end
       end
 
