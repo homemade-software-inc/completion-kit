@@ -40,7 +40,7 @@ module CompletionKit
           if review.check?
             sections << "  #{review.metric_name}: #{review.passed ? "PASS" : "FAIL"}"
           else
-            sections << "  #{review.metric_name}: #{review.ai_score}/5 — #{review.ai_feedback}"
+            sections << "  #{review.metric_name}: #{review.ai_score}/5. #{review.ai_feedback}"
           end
         end
         sections << ""

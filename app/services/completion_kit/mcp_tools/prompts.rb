@@ -28,7 +28,7 @@ module CompletionKit
           handler: :create
         },
         "prompts_update" => {
-          description: "Update a prompt. If the prompt already has runs, this creates a new DRAFT version (current=false) rather than editing in place or publishing — promote it with prompts_publish — so an agent's edits don't go live without a gate. If it has no runs, it is updated in place.",
+          description: "Update a prompt. If the prompt already has runs, this creates a new DRAFT version (current=false) rather than editing in place or publishing. Promote it with prompts_publish, so an agent's edits don't go live without a gate. If it has no runs, it is updated in place.",
           inputSchema: {
             type: "object",
             properties: {
