@@ -398,6 +398,21 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include(">Avg score</p>")
   end
 
+  it "lets a run's judge average and checks chip wrap inside the runs list score cell" do
+    llm = create(:completion_kit_metric, name: "Quality")
+    check = create(:completion_kit_metric, :check, name: "Valid JSON")
+    run = create(:completion_kit_run, prompt: prompt, name: "Mixed list", status: "completed", progress_total: 1)
+    run.replace_metrics!([llm.id, check.id])
+    resp = create(:completion_kit_response, run: run, status: "succeeded", response_text: "ok")
+    create(:completion_kit_review, response: resp, metric: llm, metric_name: "Quality", ai_score: 4.0)
+    create(:completion_kit_review, :check, response: resp, metric: check, metric_name: "Valid JSON", passed: true)
+
+    get base_path
+
+    cell = Nokogiri::HTML5(response.body).css(".ck-runs-table tbody tr").find { |row| row.text.include?("Mixed list") }.css("td")[3]
+    expect(cell.css("> .ck-chip-row > .ck-badge").map { |badge| badge.text.strip }).to eq(%w[4.0 100%])
+  end
+
   it "renders a Fail pip and a fraction on the run page for a failing check response" do
     check = create(:completion_kit_metric, :check, name: "Valid JSON")
     run = create(:completion_kit_run, prompt: prompt, name: "Failing show", status: "completed", progress_total: 1)

@@ -56,12 +56,14 @@
     <% avg = run.avg_score %>
     <% pass_rate = run.check_pass_rate %>
     <% if avg || pass_rate %>
-      <% if avg %>
-        <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
-      <% end %>
-      <% if pass_rate %>
-        <span class="<%= ck_badge_classes(ck_pass_rate_kind(pass_rate)) %>"><%= (pass_rate * 100).round %>%</span>
-      <% end %>
+      <div class="ck-chip-row">
+        <% if avg %>
+          <span class="<%= ck_badge_classes(ck_score_kind(avg)) %>"><%= avg %></span>
+        <% end %>
+        <% if pass_rate %>
+          <span class="<%= ck_badge_classes(ck_pass_rate_kind(pass_rate)) %>"><%= (pass_rate * 100).round %>%</span>
+        <% end %>
+      </div>
     <% else %>
       <span class="ck-runs-table__dim">—</span>
     <% end %>

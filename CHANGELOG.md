@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A check rule with no minimum or maximum no longer leaves a double gap in the form.** The empty row that holds those two fields kept its place in the layout after both were hidden. It is now hidden with them.
 
+- **A run with both a judge average and a checks score no longer spills into the runs list's When column.** The two chips sat on one line wider than the score column. They now wrap inside it.
+
 - **A menu showing a long choice no longer widens a form past a phone screen.** The selected choice now shortens with an ellipsis, and the open menu wraps each choice.
 
 - **Publishing a check version validates it first.** Publishing wrote the version's config onto the live metric without checking it, so an invalid draft could make every future row fail and leave the metric impossible to save. A version that does not pass is now refused with the reason over the web, REST and MCP, and the live metric is left as it was.
