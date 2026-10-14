@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A check form that fails to save shows the fields of the rule you chose.** After a failed save the form showed every check field under its default label, because the script that picks the fields ran only on a full page load. It now also runs when the failed form is rendered, and moves focus to the first field with an error, as it already did on a full page load.
 
+- **A run that uses only checks no longer needs a judge model.** The run form kept Create run disabled until a judge was picked whenever any metric was ticked, so a scoring-only run of checks could not start without one, and the run page then warned that the judge's provider was not configured. The form now asks for a judge only when a ticked metric is an LLM judge and says when a picked judge will go unused, and the run page warns about the judge's provider only when the run has an LLM judge metric.
+
 - **A menu showing a long choice no longer widens a form past a phone screen.** The selected choice now shortens with an ellipsis, and the open menu wraps each choice.
 
 - **Publishing a check version validates it first.** Publishing wrote the version's config onto the live metric without checking it, so an invalid draft could make every future row fail and leave the metric impossible to save. A version that does not pass is now refused with the reason over the web, REST and MCP, and the live metric is left as it was.

@@ -179,6 +179,20 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include('data-compare-expected="0"')
   end
 
+  it "asks for a judge model only when a selected metric needs one" do
+    judge = create(:completion_kit_metric, name: "Helpfulness")
+    check = create(:completion_kit_metric, :check, name: "Shape")
+
+    get "#{base_path}/new"
+
+    page = Nokogiri::HTML5(response.body)
+    expect(page.at_css("#run_metric_#{judge.id}").ancestors("label").first["data-needs-judge"]).to eq("1")
+    expect(page.at_css("#run_metric_#{check.id}").ancestors("label").first["data-needs-judge"]).to eq("0")
+    script = page.css("form script").map(&:text).join
+    expect(script).to include("var metricsUnpaired = judgeListed && !judge && judgedMetrics.length > 0;")
+    expect(script).to include("Checks need no judge, so this run will not use it.")
+  end
+
   it "skips the empty metrics-hint placeholder when there are no metrics" do
     get "#{base_path}/new"
     expect(response.body).not_to include('id="metrics-hint"')

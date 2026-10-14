@@ -19,7 +19,7 @@
     <div class="ck-run-config__row">
       <span class="ck-run-config__key">Judge</span>
       <span style="text-transform: none;"><%= run.judge_model %></span>
-      <% unless run.judge_configured? %>
+      <% if run.llm_metrics.any? && !run.llm_judge_configured? %>
         <span class="ck-run-config__warn">provider not configured</span>
       <% end %>
     </div>

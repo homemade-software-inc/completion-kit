@@ -161,7 +161,7 @@
         <%= hidden_field_tag "run[metric_ids][]", "", id: nil %>
         <div class="ck-metric-checkboxes" data-metric-checkboxes role="group" aria-labelledby="run_metrics_label">
           <% @all_metrics.each do |metric| %>
-            <label class="ck-checkbox-label" data-metric-tags="<%= metric.tag_names.join(",") %>" data-compare-expected="<%= metric.check? && metric.check_config.to_h["compare_to"] == "expected" ? "1" : "0" %>">
+            <label class="ck-checkbox-label" data-metric-tags="<%= metric.tag_names.join(",") %>" data-needs-judge="<%= metric.llm_judge? ? "1" : "0" %>" data-compare-expected="<%= metric.check? && metric.check_config.to_h["compare_to"] == "expected" ? "1" : "0" %>">
               <%= check_box_tag "run[metric_ids][]", metric.id, run.selected_metric_ids.include?(metric.id), class: "ck-checkbox", id: "run_metric_#{metric.id}" %>
               <span class="ck-checkbox-label__box" aria-hidden="true"></span>
               <span class="ck-checkbox-label__body">
@@ -209,9 +209,15 @@ function updateRunForm() {
   if (judgeHint) judgeHint.textContent = '';
   if (metricsHint) metricsHint.textContent = '';
 
+  var judgedMetrics = Array.prototype.filter.call(metrics, function(cb) {
+    var lbl = cb.closest('[data-needs-judge]');
+    return !!lbl && lbl.dataset.needsJudge === '1';
+  });
   var judgeUnpaired = judgeListed && !!judge && metrics.length === 0;
-  var metricsUnpaired = judgeListed && !judge && metrics.length > 0;
-  if (judgeListed && judge && metrics.length > 0) {
+  var metricsUnpaired = judgeListed && !judge && judgedMetrics.length > 0;
+  if (judgeListed && judge && metrics.length > 0 && judgedMetrics.length === 0) {
+    if (judgeHint) judgeHint.textContent = 'Checks need no judge, so this run will not use it.';
+  } else if (judgeListed && judge && metrics.length > 0) {
     if (judgeHint) judgeHint.textContent = judgeOnly ? 'Existing outputs will be judged automatically.' : 'Responses will be generated then judged automatically.';
   } else if (judgeUnpaired) {
     if (judgeField) judgeField.className = 'ck-field ck-field--info';

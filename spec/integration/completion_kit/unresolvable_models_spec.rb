@@ -158,15 +158,16 @@ RSpec.describe "Model ids no configured provider serves", type: :request do
           expect(response.body).to include("provider not configured")
         end
 
-        it "renders the run page and its status poll with only a check metric" do
+        it "renders the run page and its status poll with only a check metric, with no warning about a judge it never uses" do
           run = judged_run([check_metric])
 
           get "/completion_kit/runs/#{run.id}"
           expect(response).to have_http_status(:ok)
-          expect(response.body).to include("provider not configured")
+          expect(response.body).not_to include("provider not configured")
 
           get "/completion_kit/runs/#{run.id}/refresh_status", headers: {"Accept" => "text/vnd.turbo-stream.html"}
           expect(response).to have_http_status(:ok)
+          expect(response.body).not_to include("provider not configured")
         end
 
         it "refuses to regrade through MCP, REST and the UI, naming the judge" do
