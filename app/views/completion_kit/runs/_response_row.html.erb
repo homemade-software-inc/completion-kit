@@ -1,5 +1,5 @@
 <% clickable = response.terminal? %>
-<tr id="response_<%= response.id %>"<% if clickable %> onclick="window.location='<%= run_response_path(run, response, sort: params[:sort]) %>'" style="cursor: pointer;"<% end %>>
+<tr id="response_<%= response.id %>"<% if clickable %> data-ck-href="<%= run_response_path(run, response, sort: params[:sort]) %>" style="cursor: pointer;"<% end %>>
   <td class="ck-response-cell__index"><% if clickable %><%= link_to index, run_response_path(run, response, sort: params[:sort]), class: "ck-record-name" %><% else %><%= index %><% end %></td>
   <td class="ck-response-cell__text">
     <% if response.status == "failed" %>
@@ -69,8 +69,7 @@
       <%= button_to "Retry", retry_failures_run_path(run, only: response.id),
             method: :post,
             class: "ck-chip ck-chip--retry",
-            form_class: "inline-block",
-            onclick: "event.stopPropagation();" %>
+            form_class: "inline-block" %>
     <% end %>
   </td>
   <td class="ck-results-table__arrow"><% if clickable %><span aria-hidden="true">&rarr;</span><% end %></td>

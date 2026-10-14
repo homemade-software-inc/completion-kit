@@ -66,7 +66,8 @@ RSpec.describe "CompletionKit copy without em dashes", type: :request do
   it "tells a scoring-only run whose dataset lacks the output column what to do in two sentences" do
     get "/completion_kit/runs/new"
 
-    script = Nokogiri::HTML5(response.body).css("form script").map(&:text).join
+    expect(Nokogiri::HTML5(response.body).at_css("#run_output_column")).to be_present
+    script = CompletionKit::Engine.root.join("app/assets/javascripts/completion_kit/application.js").read
     expect(script).to include(%q{"Dataset has no \"" + col + "\" column. Pick a different output column or dataset."})
   end
 end

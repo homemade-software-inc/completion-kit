@@ -188,7 +188,7 @@ RSpec.describe "CompletionKit runs", type: :request do
     page = Nokogiri::HTML5(response.body)
     expect(page.at_css("#run_metric_#{judge.id}").ancestors("label").first["data-needs-judge"]).to eq("1")
     expect(page.at_css("#run_metric_#{check.id}").ancestors("label").first["data-needs-judge"]).to eq("0")
-    script = page.css("form script").map(&:text).join
+    script = CompletionKit::Engine.root.join("app/assets/javascripts/completion_kit/application.js").read
     expect(script).to include("var metricsUnpaired = judgeListed && !judge && judgedMetrics.length > 0;")
     expect(script).to include("Checks need no judge, so this run will not use it.")
   end
@@ -652,7 +652,8 @@ RSpec.describe "CompletionKit runs", type: :request do
     it "carries a judge hint for scoring existing outputs beside the one for generating" do
       get "#{base_path}/new"
 
-      script = Nokogiri::HTML5(response.body).css("form script").map(&:text).join
+      expect(Nokogiri::HTML5(response.body).at_css("#run_judge_only")).to be_present
+      script = CompletionKit::Engine.root.join("app/assets/javascripts/completion_kit/application.js").read
       expect(script).to include("judgeOnly ? 'Existing outputs will be judged automatically.' : 'Responses will be generated then judged automatically.'")
     end
 

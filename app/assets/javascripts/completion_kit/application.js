@@ -483,3 +483,386 @@ function ckInstallConfirm() {
 }
 document.addEventListener("turbo:load", ckInstallConfirm);
 ckInstallConfirm();
+
+var ckRowIgnoreSelector = "a, button, input, select, textarea, label, summary, form, dialog, [data-ck-row-ignore]";
+
+function ckRowHref(e) {
+  var target = e.target;
+  if (!target || !target.closest) return null;
+  var row = target.closest("[data-ck-href]");
+  if (!row) return null;
+  var inner = target.closest(ckRowIgnoreSelector);
+  if (inner && row.contains(inner)) return null;
+  return row.getAttribute("data-ck-href");
+}
+
+document.addEventListener("click", function(e) {
+  var href = ckRowHref(e);
+  if (!href) return;
+  if (e.metaKey || e.ctrlKey || e.shiftKey) {
+    window.open(href, "_blank");
+  } else if (window.Turbo && typeof window.Turbo.visit === "function") {
+    window.Turbo.visit(href);
+  } else {
+    window.location.assign(href);
+  }
+});
+
+document.addEventListener("auxclick", function(e) {
+  if (e.button !== 1) return;
+  var href = ckRowHref(e);
+  if (href) window.open(href, "_blank");
+});
+
+document.addEventListener("click", function(e) {
+  if (e.target && e.target.closest && e.target.closest("[data-ck-stop-propagation]")) e.stopPropagation();
+});
+
+function ckShowDialog(dialog) {
+  if (dialog && typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+}
+
+document.addEventListener("click", function(e) {
+  var target = e.target;
+  if (!target || !target.closest) return;
+  var opener = target.closest("[data-ck-dialog-open]");
+  if (opener) {
+    ckShowDialog(document.getElementById(opener.getAttribute("data-ck-dialog-open")));
+    return;
+  }
+  var closer = target.closest("[data-ck-dialog-close]");
+  if (closer) {
+    var dialog = closer.closest("dialog");
+    if (dialog) dialog.close();
+    return;
+  }
+  if (target.matches("dialog[data-ck-dialog]")) target.close();
+});
+
+document.addEventListener("turbo:load", function() {
+  ckShowDialog(document.querySelector("dialog[data-ck-dialog-autoopen]"));
+});
+
+function ckFlashCopied(el) {
+  el.classList.add("ck-api-copy--done");
+  setTimeout(function() { el.classList.remove("ck-api-copy--done"); }, 1500);
+}
+
+function ckCopyText(el, text) {
+  navigator.clipboard.writeText(text).then(function() {
+    if (el.hasAttribute("data-ck-copy-feedback")) ckFlashCopied(el);
+  });
+}
+
+function ckToggleToken(el) {
+  var showing = el.textContent === el.dataset.masked;
+  el.textContent = showing ? el.dataset.real : el.dataset.masked;
+  el.setAttribute("aria-pressed", showing ? "true" : "false");
+  el.setAttribute("aria-label", showing ? "Hide API token" : "Reveal API token");
+  navigator.clipboard.writeText(el.dataset.real).then(function() { ckFlashCopied(el); });
+}
+
+function ckCopyExample(btn) {
+  var text = btn.closest(".ck-api-example").querySelector("pre").textContent;
+  var realToken = btn.dataset.realToken;
+  var displayToken = btn.dataset.displayToken;
+  if (realToken && displayToken) text = text.split(displayToken).join(realToken);
+  navigator.clipboard.writeText(text).then(function() { ckFlashCopied(btn); });
+}
+
+document.addEventListener("click", function(e) {
+  var target = e.target;
+  if (!target || !target.closest) return;
+  var toggle = target.closest("[data-ck-token-toggle]");
+  if (toggle) { ckToggleToken(toggle); return; }
+  var example = target.closest("[data-ck-copy-example]");
+  if (example) { ckCopyExample(example); return; }
+  var literal = target.closest("[data-ck-copy-text]");
+  if (literal) { ckCopyText(literal, literal.getAttribute("data-ck-copy-text")); return; }
+  var copier = target.closest("[data-ck-copy]");
+  if (!copier) return;
+  var source = document.getElementById(copier.getAttribute("data-ck-copy"));
+  if (source) ckCopyText(copier, source.textContent);
+});
+
+document.addEventListener("click", function(e) {
+  var target = e.target;
+  if (!target || !target.closest) return;
+  if (target.closest("[data-ck-refresh-models]")) {
+    ckRefreshModels();
+    return;
+  }
+  var refresher = target.closest("[data-ck-provider-refresh]");
+  if (!refresher) return;
+  e.preventDefault();
+  fetch(refresher.getAttribute("data-ck-provider-refresh"), {
+    method: "POST",
+    headers: { "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').getAttribute("content") }
+  });
+  ckStartDiscoveryPolling(8000);
+});
+
+document.addEventListener("click", function(e) {
+  var toggle = e.target && e.target.closest && e.target.closest("[data-ck-prompt-toggle]");
+  if (!toggle) return;
+  var text = document.getElementById(toggle.getAttribute("aria-controls"));
+  if (!text) return;
+  var expanded = text.classList.toggle("ck-prompt-preview__text--expanded");
+  toggle.firstChild.textContent = expanded ? "Show less" : "Show more";
+  toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+});
+
+function ckToggleMetricGroupFilter(btn) {
+  btn.classList.toggle("tag-mark--off");
+  var bar = btn.closest("[data-metric-tag-filter]");
+  var grid = bar && bar.parentElement.querySelector("[data-metric-checkboxes]");
+  if (!grid) return;
+  var active = Array.prototype.map.call(
+    bar.querySelectorAll(".ck-metric-tag-filter__chip:not(.tag-mark--off)"),
+    function(b) { return b.getAttribute("data-filter-tag"); }
+  );
+  grid.querySelectorAll(".ck-checkbox-label").forEach(function(lbl) {
+    var tags = (lbl.getAttribute("data-metric-tags") || "").split(",").filter(Boolean);
+    var visible = active.length === 0 || tags.some(function(t) { return active.indexOf(t) !== -1; });
+    lbl.style.display = visible ? "" : "none";
+  });
+}
+
+document.addEventListener("click", function(e) {
+  var target = e.target;
+  if (!target || !target.closest) return;
+  var chip = target.closest("[data-metric-tag-filter] [data-filter-tag]");
+  if (chip) {
+    ckToggleMetricGroupFilter(chip);
+    return;
+  }
+  var group = target.closest("[data-metric-group]");
+  if (group) ckToggleMetricGroup(group);
+});
+
+function ckUpdateRunForm() {
+  var promptEl = document.getElementById('run_prompt_id');
+  var judgeEl = document.getElementById('run_judge_model');
+  var judgeOnlyEl = document.getElementById('run_judge_only');
+  var judgeOnly = !!(judgeOnlyEl && judgeOnlyEl.checked);
+  var promptField = document.getElementById('prompt-field');
+  var outputColumnField = document.getElementById('output-column-field');
+  var outputColumnEl = document.getElementById('run_output_column');
+  if (promptField) promptField.hidden = judgeOnly;
+  if (outputColumnField) outputColumnField.hidden = !judgeOnly;
+  if (judgeOnly && promptEl) promptEl.value = '';
+
+  var prompt = promptEl ? promptEl.value : '';
+  var judge = judgeEl ? judgeEl.value : '';
+  var judgeListed = !!judgeEl && judgeEl.type !== 'hidden';
+  var metrics = document.querySelectorAll('input[name="run[metric_ids][]"]:checked');
+  var judgeField = document.getElementById('judge-field');
+  var metricsField = document.getElementById('metrics-field');
+  var judgeHint = document.getElementById('judge-hint');
+  var metricsHint = document.getElementById('metrics-hint');
+  var submitBtn = document.getElementById('run-submit');
+
+  if (judgeField) judgeField.className = 'ck-field';
+  if (metricsField) metricsField.className = 'ck-field';
+  if (judgeHint) judgeHint.textContent = '';
+  if (metricsHint) metricsHint.textContent = '';
+
+  var judgedMetrics = Array.prototype.filter.call(metrics, function(cb) {
+    var lbl = cb.closest('[data-needs-judge]');
+    return !!lbl && lbl.dataset.needsJudge === '1';
+  });
+  var judgeUnpaired = judgeListed && !!judge && metrics.length === 0;
+  var metricsUnpaired = judgeListed && !judge && judgedMetrics.length > 0;
+  if (judgeListed && judge && metrics.length > 0 && judgedMetrics.length === 0) {
+    if (judgeHint) judgeHint.textContent = 'Checks need no judge, so this run will not use it.';
+  } else if (judgeListed && judge && metrics.length > 0) {
+    if (judgeHint) judgeHint.textContent = judgeOnly ? 'Existing outputs will be judged automatically.' : 'Responses will be generated then judged automatically.';
+  } else if (judgeUnpaired) {
+    if (judgeField) judgeField.className = 'ck-field ck-field--info';
+    if (metricsField) metricsField.className = 'ck-field ck-field--info';
+    if (metricsHint) metricsHint.textContent = 'Select at least one metric or group to enable judging.';
+  } else if (metricsUnpaired) {
+    if (judgeField) judgeField.className = 'ck-field ck-field--info';
+    if (judgeHint) judgeHint.textContent = 'Select a judge model to enable judging.';
+  }
+
+  var datasetEl = document.getElementById('run_dataset_id');
+  var datasetHint = document.getElementById('dataset-hint');
+  var datasetField = document.getElementById('dataset-field');
+  var dataset = datasetEl ? datasetEl.value : '';
+  var selectedOption = promptEl ? promptEl.options[promptEl.selectedIndex] : null;
+  var hasVars = selectedOption && selectedOption.dataset.hasVariables === '1';
+  var promptVars = (selectedOption && selectedOption.dataset.variables ? selectedOption.dataset.variables.split(/,\s*/) : []).filter(Boolean);
+
+  var missingVars = [];
+  if (hasVars && dataset && datasetEl) {
+    var datasetOption = datasetEl.options[datasetEl.selectedIndex];
+    var headers = (datasetOption && datasetOption.dataset.headers ? datasetOption.dataset.headers.split(/,\s*/) : []).filter(Boolean);
+    missingVars = promptVars.filter(function(v) { return headers.indexOf(v) === -1; });
+  }
+
+  if (datasetField) datasetField.className = 'ck-field';
+  if (datasetHint) datasetHint.textContent = '';
+  if (missingVars.length > 0) {
+    if (datasetField) datasetField.className = 'ck-field ck-field--error';
+    if (datasetHint) datasetHint.textContent = 'Dataset is missing ' + (missingVars.length === 1 ? 'column' : 'columns') + ' the prompt needs: ' + missingVars.join(', ');
+  } else if (hasVars && !dataset) {
+    if (datasetField) datasetField.className = 'ck-field ck-field--info';
+    if (datasetHint) datasetHint.textContent = 'This prompt uses variables. Select a dataset to provide values.';
+  }
+
+  var expectedWarn = document.getElementById('expected-column-warn');
+  var expectedField = document.getElementById('expected-column-field');
+  var expectedColEl = document.getElementById('run_expected_column');
+  if (expectedField) expectedField.className = 'ck-field';
+  if (expectedWarn) expectedWarn.textContent = '';
+  var wantsExpected = false;
+  document.querySelectorAll('input[name="run[metric_ids][]"]:checked').forEach(function(cb) {
+    var lbl = cb.closest('[data-compare-expected]');
+    if (lbl && lbl.dataset.compareExpected === '1') wantsExpected = true;
+  });
+  if (wantsExpected && dataset && datasetEl) {
+    var expOption = datasetEl.options[datasetEl.selectedIndex];
+    var expHeaders = (expOption && expOption.dataset.headers ? expOption.dataset.headers.split(/,\s*/) : []).filter(Boolean);
+    var expCol = ((expectedColEl && expectedColEl.value) || 'expected_output').trim();
+    if (expHeaders.indexOf(expCol) === -1) {
+      if (expectedField) expectedField.className = 'ck-field ck-field--error';
+      if (expectedWarn) expectedWarn.textContent = "A selected check grades against each row's expected value, but this dataset has no \"" + expCol + "\" column, so every row would fail. Add the column or point this at the right one.";
+    }
+  }
+
+  var summary = document.getElementById('prompt-summary');
+  if (summary) {
+    if (selectedOption && selectedOption.value) {
+      var desc = selectedOption.dataset.description || '';
+      var tmpl = selectedOption.dataset.templatePreview || '';
+      var descEl = document.getElementById('prompt-summary-description');
+      descEl.textContent = desc;
+      descEl.hidden = !desc;
+      document.getElementById('prompt-summary-template').textContent = tmpl;
+      summary.hidden = false;
+    } else {
+      summary.hidden = true;
+    }
+  }
+
+  var valid;
+  if (judgeOnly) {
+    valid = !!dataset;
+    if (dataset && datasetEl && outputColumnEl) {
+      var headersJudge = (datasetEl.options[datasetEl.selectedIndex] && datasetEl.options[datasetEl.selectedIndex].dataset.headers ? datasetEl.options[datasetEl.selectedIndex].dataset.headers.split(/,\s*/) : []).filter(Boolean);
+      var col = (outputColumnEl.value || 'actual_output').trim();
+      if (col === '' || headersJudge.indexOf(col) === -1) {
+        valid = false;
+        if (datasetField) datasetField.className = 'ck-field ck-field--error';
+        if (datasetHint) datasetHint.textContent = "Dataset has no \"" + col + "\" column. Pick a different output column or dataset.";
+      }
+    } else if (!dataset) {
+      if (datasetField) datasetField.className = 'ck-field ck-field--info';
+      if (datasetHint) datasetHint.textContent = 'Skip generation and score responses you already have from a dataset column. Works with rubric metrics or deterministic checks.';
+    }
+  } else {
+    valid = prompt !== '';
+    if (hasVars && !dataset) valid = false;
+    if (missingVars.length > 0) valid = false;
+  }
+  if (judgeUnpaired || metricsUnpaired) valid = false;
+  if (submitBtn) submitBtn.disabled = !valid;
+
+  ckUpdateMetricGroupsState();
+}
+
+function ckToggleMetricGroup(button) {
+  var ids = (button.getAttribute('data-metric-ids') || '').split(',').filter(Boolean);
+  var allChecked = ids.every(function(id) {
+    var cb = document.getElementById('run_metric_' + id);
+    return cb && cb.checked;
+  });
+  ids.forEach(function(id) {
+    var cb = document.getElementById('run_metric_' + id);
+    if (cb) cb.checked = !allChecked;
+  });
+  ckUpdateRunForm();
+}
+
+function ckUpdateMetricGroupsState() {
+  document.querySelectorAll('[data-metric-group]').forEach(function(btn) {
+    var ids = (btn.getAttribute('data-metric-ids') || '').split(',').filter(Boolean);
+    if (ids.length === 0) return;
+    var allChecked = ids.every(function(id) {
+      var cb = document.getElementById('run_metric_' + id);
+      return cb && cb.checked;
+    });
+    btn.classList.toggle('ck-metric-group-pill--active', allChecked);
+  });
+}
+
+var ckRunFormChangeIds = ["run_judge_model", "run_prompt_id", "run_dataset_id", "run_judge_only"];
+
+document.addEventListener("change", function(e) {
+  var target = e.target;
+  if (!target) return;
+  if (ckRunFormChangeIds.indexOf(target.id) !== -1 || (target.type === "checkbox" && target.name === "run[metric_ids][]")) ckUpdateRunForm();
+});
+
+document.addEventListener("input", function(e) {
+  if (e.target && e.target.id === "run_output_column") ckUpdateRunForm();
+});
+
+function ckInitRunForm() {
+  if (document.getElementById("run_judge_only")) ckUpdateRunForm();
+}
+
+function ckDatasetHeaderPreview() {
+  var area = document.getElementById("dataset_csv_data");
+  var box = document.getElementById("dataset-header-preview");
+  var chips = document.getElementById("dataset-header-chips");
+  if (!area || !box || !chips) return;
+  var recognized = { expected_output: "answer key", actual_output: "pre-made output" };
+  var firstLine = (area.value.split(/\r?\n/).find(function(l) { return l.trim() !== ""; }) || "");
+  var headers = firstLine.split(",").map(function(h) { return h.trim().replace(/^"|"$/g, ""); }).filter(Boolean);
+  if (headers.length === 0) { box.hidden = true; chips.textContent = ""; return; }
+  box.hidden = false;
+  chips.textContent = "";
+  headers.forEach(function(h) {
+    var role = recognized[h];
+    var chip = document.createElement("span");
+    chip.className = "ck-header-chip" + (role ? " ck-header-chip--special" : "");
+    chip.textContent = role ? h + " · " + role : h;
+    chips.appendChild(chip);
+  });
+}
+
+document.addEventListener("input", function(e) {
+  if (e.target && e.target.id === "dataset_csv_data") ckDatasetHeaderPreview();
+});
+
+function ckInitPageForms() {
+  ckInitRunForm();
+  ckDatasetHeaderPreview();
+}
+
+document.addEventListener("turbo:load", ckInitPageForms);
+document.addEventListener("turbo:render", ckInitPageForms);
+
+function ckStartRunStatusPoll() {
+  clearTimeout(window.ckRunStatusKick);
+  clearInterval(window.ckRunStatusPoll);
+  window.ckRunStatusKick = null;
+  window.ckRunStatusPoll = null;
+  var marker = document.querySelector("[data-ck-run-status-url]");
+  if (!marker) return;
+  var url = marker.getAttribute("data-ck-run-status-url");
+  var refresh = function() {
+    fetch(url, { headers: { Accept: "text/vnd.turbo-stream.html" }, credentials: "same-origin" })
+      .then(function(r) { return r.ok ? r.text() : null; })
+      .then(function(html) { if (html) Turbo.renderStreamMessage(html); })
+      .catch(function() {});
+  };
+  window.ckRunStatusKick = setTimeout(refresh, 1000);
+  window.ckRunStatusPoll = setInterval(refresh, 15000);
+}
+
+document.addEventListener("turbo:load", ckStartRunStatusPoll);
+
+ckInitPageForms();

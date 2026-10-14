@@ -71,10 +71,33 @@ The engine mounts at `/completion_kit`. Generate / judge flows enqueue Active Jo
 
 ```erb
 <%= stylesheet_link_tag "completion_kit/application", media: "all" %>
-<%= javascript_include_tag "completion_kit/application", defer: true %>
+<%= javascript_include_tag "completion_kit/application", defer: true, nonce: true %>
 ```
 
-Without the JavaScript include, in-page behaviours silently fail: live tag-breadcrumb updates, relative-time ticking, CSV row hover-expand, model-refresh progress, focus-first-error, and local-time formatting.
+Without the JavaScript include, in-page behaviours silently fail: clickable table rows, dialogs, copy buttons, the API token reveal, the run form, live run status, live tag-breadcrumb updates, relative-time ticking, CSV row hover-expand, model-refresh progress, focus-first-error, and local-time formatting.
+
+**Content Security Policy.** The engine's pages have no inline event handlers or inline scripts, and the engine layout puts the request nonce on its script tags, so the pages work under a nonce-based `script-src`. The views still use inline `style` attributes, so leave `style-src` out of the nonce directives and allow `'unsafe-inline'` there for now.
+
+Use a nonce that lasts the whole session, not a fresh random one per request. Turbo Drive re-creates the scripts in each new page body with the nonce from the `csp-nonce` meta tag, but the browser keeps enforcing the policy header of the first page it loaded, so a per-request nonce blocks nonce scripts after the first Drive visit.
+
+Keep a random nonce in the session, and skip it for API controllers so cookie-less API and MCP calls get no session cookie, as the example below does. The Rails default, `->(request) { request.session.id.to_s }`, also lasts the session, but it is empty on a brand-new visitor's first response, so a policy that admits scripts only by nonce blocks that first page's scripts until the session exists.
+
+```ruby
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    policy.default_src :self
+    policy.script_src  :self
+    policy.style_src   :self, :unsafe_inline
+  end
+
+  config.content_security_policy_nonce_generator = lambda do |request|
+    next if request.controller_instance.is_a?(ActionController::API)
+
+    request.session[:csp_nonce] ||= SecureRandom.base64(16)
+  end
+  config.content_security_policy_nonce_directives = %w(script-src)
+end
+```
 
 ## Providers
 

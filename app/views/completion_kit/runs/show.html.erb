@@ -14,7 +14,6 @@
   </div>
 <% end %>
 
-
 <% if CompletionKit.config.judge_agreement_enabled %>
   <% stale_summary = @run.stale_review_summary %>
   <% if stale_summary.any? %>
@@ -68,7 +67,7 @@
     </div>
     <p class="ck-prompt-preview__text" id="prompt_text"><%= @run.prompt.template %></p>
     <% if @run.prompt.template.length > 200 %>
-      <button type="button" class="ck-disclosure-toggle" id="prompt_toggle" aria-expanded="false" aria-controls="prompt_text" onclick="var t=document.getElementById('prompt_text');var l=this;var expanded=t.classList.toggle('ck-prompt-preview__text--expanded');l.firstChild.textContent=expanded?'Show less':'Show more';l.setAttribute('aria-expanded',expanded?'true':'false')"><span>Show more</span></button>
+      <button type="button" class="ck-disclosure-toggle" id="prompt_toggle" aria-expanded="false" aria-controls="prompt_text" data-ck-prompt-toggle><span>Show more</span></button>
     <% end %>
   </div>
 <% else %>
@@ -81,14 +80,14 @@
 <% end %>
 
 <% if @run.dataset %>
-  <dialog id="dataset-preview-<%= @run.id %>" class="ck-modal" aria-labelledby="dataset-preview-title-<%= @run.id %>" onclick="if(event.target===this)this.close()">
-    <article class="ck-modal__panel" tabindex="-1" autofocus onclick="event.stopPropagation()">
+  <dialog id="dataset-preview-<%= @run.id %>" class="ck-modal" aria-labelledby="dataset-preview-title-<%= @run.id %>" data-ck-dialog>
+    <article class="ck-modal__panel" tabindex="-1" autofocus>
       <header class="ck-modal__header">
         <div class="ck-modal__heading">
           <h2 class="ck-modal__title" id="dataset-preview-title-<%= @run.id %>"><%= @run.dataset.name %></h2>
           <span class="ck-modal__meta"><%= @run.dataset.row_count %> rows</span>
         </div>
-        <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">×</button>
+        <button type="button" class="ck-modal__close" aria-label="Close" data-ck-dialog-close>×</button>
       </header>
       <div class="ck-modal__body">
         <%
@@ -168,18 +167,5 @@
 <% end %>
 
 <% if @run.status.in?(%w[pending running]) %>
-  <script>
-    (function() {
-      if (window.ckRunStatusPoll) clearInterval(window.ckRunStatusPoll);
-      var url = '<%= refresh_status_run_path(@run) %>';
-      var refresh = function() {
-        fetch(url, { headers: { Accept: 'text/vnd.turbo-stream.html' }, credentials: 'same-origin' })
-          .then(function(r) { return r.ok ? r.text() : null; })
-          .then(function(html) { if (html) Turbo.renderStreamMessage(html); })
-          .catch(function() {});
-      };
-      setTimeout(refresh, 1000);
-      window.ckRunStatusPoll = setInterval(refresh, 15000);
-    })();
-  </script>
+  <div hidden data-ck-run-status-url="<%= refresh_status_run_path(@run) %>"></div>
 <% end %>

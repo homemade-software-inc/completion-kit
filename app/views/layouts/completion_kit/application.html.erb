@@ -8,8 +8,8 @@
 
   <%= favicon_link_tag "completion_kit/favicon.ico" %>
   <%= stylesheet_link_tag "completion_kit/application", media: "all" %>
-  <%= javascript_include_tag "turbo", type: "module" %>
-  <%= javascript_include_tag "completion_kit/application", defer: true %>
+  <%= javascript_include_tag "turbo", type: "module", nonce: true %>
+  <%= javascript_include_tag "completion_kit/application", defer: true, nonce: true %>
   <%= action_cable_meta_tag %>
 </head>
 <body class="ck-app">

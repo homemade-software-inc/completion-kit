@@ -31,7 +31,7 @@
     </thead>
     <tbody>
       <% @metric_groups.each do |metric_group| %>
-        <tr onclick="window.location='<%= metric_group_path(metric_group) %>'" style="cursor: pointer;">
+        <tr data-ck-href="<%= metric_group_path(metric_group) %>" style="cursor: pointer;">
           <td>
             <%= link_to metric_group_path(metric_group), class: "ck-record-name" do %><strong><%= metric_group.name %></strong><% end %>
             <% if metric_group.tags.any? %>
