@@ -48,6 +48,18 @@ RSpec.describe "API V1 MetricVersions", type: :request do
       expect(metric.reload.instruction).to eq("v2 instruction")
     end
 
+    it "refuses a check version whose config does not pass validation" do
+      check = create(:completion_kit_metric, :check, check_config: { "check_kind" => "length_bounds", "target" => "response_text", "max" => 10 })
+      draft = CompletionKit::MetricVersion.create!(metric: check, metric_type: "check", state: "draft", source: "edit",
+                                                   check_config: { "check_kind" => "length_bounds", "target" => "response_text", "min" => 9, "max" => 2 })
+
+      post "/completion_kit/api/v1/metrics/#{check.id}/metric_versions/#{draft.id}/publish", headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]["check_config"]).to include('needs "Shortest allowed" to be no more than "Longest allowed"')
+      expect(check.reload.check_config["max"]).to eq(10)
+    end
+
     it "reverts to an older published version in place, creating no new version" do
       v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
       v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")

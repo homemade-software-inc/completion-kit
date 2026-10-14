@@ -152,7 +152,11 @@ module CompletionKit
       reverting = was_published_already && !version.current?
       previously_current = MetricVersion.current.find_by(metric_id: @metric.id)
 
-      version.publish!
+      begin
+        version.publish!
+      rescue ActiveRecord::RecordInvalid => e
+        return redirect_to(metric_path(@metric), alert: "#{version.version_label} was not published. #{e.record.errors.full_messages.to_sentence}.")
+      end
 
       if reverting
         redirect_to metric_path(@metric),

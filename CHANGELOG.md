@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Editing a check validates the new values before saving them.** A check with reviews saved any change as a draft without validating it, and a check with none showed an error page on an invalid value and lost what you typed. Both now name the problem in the form and keep your values. A rename is saved in the same step as the config it repairs, so a check whose saved config no longer passes validation can be fixed from the form.
 
+- **Publishing a check version validates it first.** Publishing wrote the version's config onto the live metric without checking it, so an invalid draft could make every future row fail and leave the metric impossible to save. A version that does not pass is now refused with the reason over the web, REST and MCP, and the live metric is left as it was.
+
 - **A promptfoo import keeps promptfoo's case handling.** promptfoo's `contains`, `not-contains`, `equals` and `regex` asserts are case-sensitive, but they were imported with no `case_sensitive`, so the text checks matched case-insensitively. They now import with `case_sensitive: true`, and `icontains` and `not-icontains` with `false`. Regex checks imported before this release have no `case_sensitive`, so the regex change above applies to them.
 
 ### Changed

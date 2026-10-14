@@ -16,6 +16,8 @@ module CompletionKit
         def publish
           @version.publish!
           render json: @version.reload
+        rescue ActiveRecord::RecordInvalid => e
+          render_validation_errors(e.record)
         end
 
         def destroy

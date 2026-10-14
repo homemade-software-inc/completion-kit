@@ -112,6 +112,20 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       expect(metric.metric_type).to eq("check")
       expect(metric.rubric_bands).to be_nil
     end
+
+    it "refuses a config that does not pass validation and leaves the live metric and every version as they were" do
+      live = { "check_kind" => "list_overlap", "target" => "response_text", "value" => "A, B", "min" => 0.6 }
+      metric = create(:completion_kit_metric, :check, check_config: live)
+      current = described_class.ensure_current_for(metric)
+      version = described_class.create!(metric: metric, metric_type: "check", check_config: live.merge("min" => 1.5),
+                                        state: "draft", current: false)
+
+      expect { version.publish! }.to raise_error(ActiveRecord::RecordInvalid, /"Lowest score that passes" to be a number between 0 and 1/)
+
+      expect(metric.reload.check_config).to eq(live)
+      expect(current.reload).to be_current
+      expect(version.reload).to have_attributes(state: "draft", current: false)
+    end
   end
 
   describe "#change_summary_against for a check" do

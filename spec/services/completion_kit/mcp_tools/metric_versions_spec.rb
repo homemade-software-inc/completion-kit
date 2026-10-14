@@ -28,6 +28,16 @@ RSpec.describe CompletionKit::McpTools::MetricVersions, type: :service do
       expect(v1.reload.current).to be(false)
     end
 
+    it "refuses a check version whose config does not pass validation" do
+      check = create(:completion_kit_metric, :check)
+      draft = CompletionKit::MetricVersion.create!(metric: check, metric_type: "check", state: "draft", source: "edit",
+                                                   check_config: { "check_kind" => "regex", "target" => "response_text", "pattern" => "(" })
+
+      expect { CompletionKit::McpTools::MetricVersions.call("metric_versions_publish", { "metric_version_id" => draft.id }) }
+        .to raise_error(ActiveRecord::RecordInvalid, /"Pattern" to be a valid regular expression/)
+      expect(check.reload.check_config).to eq({ "check_kind" => "valid_json", "target" => "response_text" })
+    end
+
     it "reverts to an older published version in place, creating no new version" do
       v1 = CompletionKit::MetricVersion.ensure_current_for(metric)
       v2 = CompletionKit::MetricVersion.create!(metric: metric, instruction: "v2", rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")

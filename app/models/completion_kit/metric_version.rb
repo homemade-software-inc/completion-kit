@@ -85,6 +85,7 @@ module CompletionKit
     end
 
     def publish!
+      validate_check_config_on_metric! if check?
       MetricVersion.transaction do
         self.class.where(metric_id: metric_id).where.not(id: id).update_all(current: false)
         reload
@@ -122,6 +123,11 @@ module CompletionKit
     end
 
     private
+
+    def validate_check_config_on_metric!
+      metric.assign_attributes(metric_type: "check", check_config: check_config)
+      raise ActiveRecord::RecordInvalid, metric unless metric.valid?
+    end
 
     def check_change_summary_against(previous)
       return nil if check_config == previous.check_config

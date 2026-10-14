@@ -335,6 +335,19 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(errors).to include('Check needs "Lowest score that passes" to be a number between 0 and 1')
       expect(metric.reload.check_config["min"]).to eq(0.6)
     end
+
+    it "refuses to publish a check version that is not valid and leaves the live metric alone" do
+      metric = reviewed_check(list_config)
+      draft = CompletionKit::MetricVersion.create!(metric: metric, metric_type: "check", check_config: list_config.merge("min" => 1.5),
+                                                   state: "draft", source: "edit", current: false)
+
+      post "#{base_path}/#{metric.id}/publish_draft", params: { draft_id: draft.id }
+
+      expect(response).to redirect_to("#{base_path}/#{metric.id}")
+      expect(flash[:alert]).to eq("#{draft.version_label} was not published. Check needs \"Lowest score that passes\" to be a number between 0 and 1.")
+      expect(metric.reload.check_config["min"]).to eq(0.6)
+      expect(draft.reload).to be_draft
+    end
   end
 
   describe "resaving an in-use check through the edit form" do
