@@ -195,6 +195,7 @@ function updateRunForm() {
 
   var prompt = promptEl ? promptEl.value : '';
   var judge = judgeEl ? judgeEl.value : '';
+  var judgeListed = !!judgeEl && judgeEl.type !== 'hidden';
   var metrics = document.querySelectorAll('input[name="run[metric_ids][]"]:checked');
   var judgeField = document.getElementById('judge-field');
   var metricsField = document.getElementById('metrics-field');
@@ -207,13 +208,15 @@ function updateRunForm() {
   if (judgeHint) judgeHint.textContent = '';
   if (metricsHint) metricsHint.textContent = '';
 
-  if (judge && metrics.length > 0) {
+  var judgeUnpaired = judgeListed && !!judge && metrics.length === 0;
+  var metricsUnpaired = judgeListed && !judge && metrics.length > 0;
+  if (judgeListed && judge && metrics.length > 0) {
     if (judgeHint) judgeHint.textContent = 'Responses will be generated then judged automatically.';
-  } else if (judge && metrics.length === 0) {
+  } else if (judgeUnpaired) {
     if (judgeField) judgeField.className = 'ck-field ck-field--info';
     if (metricsField) metricsField.className = 'ck-field ck-field--info';
     if (metricsHint) metricsHint.textContent = 'Select at least one metric or group to enable judging.';
-  } else if (!judge && metrics.length > 0) {
+  } else if (metricsUnpaired) {
     if (judgeField) judgeField.className = 'ck-field ck-field--info';
     if (judgeHint) judgeHint.textContent = 'Select a judge model to enable judging.';
   }
@@ -298,8 +301,7 @@ function updateRunForm() {
     if (hasVars && !dataset) valid = false;
     if (missingVars.length > 0) valid = false;
   }
-  if (judge && metrics.length === 0) valid = false;
-  if (!judge && metrics.length > 0) valid = false;
+  if (judgeUnpaired || metricsUnpaired) valid = false;
   if (submitBtn) submitBtn.disabled = !valid;
 
   ckUpdateMetricGroupsState();

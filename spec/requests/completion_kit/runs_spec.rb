@@ -730,7 +730,8 @@ RSpec.describe "CompletionKit runs", type: :request do
     end
 
     it "keeps the judge when no judge models are listed" do
-      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1-mini", name: "Hidden judge")
+      metric = create(:completion_kit_metric)
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1-mini", name: "Hidden judge", selected_metric_ids: [metric.id])
       CompletionKit::Model.update_all(supports_judging: false)
 
       resubmit_edit_form(run, "run[name]" => "Renamed")
@@ -738,6 +739,23 @@ RSpec.describe "CompletionKit runs", type: :request do
       expect(response).to redirect_to("#{base_path}/#{run.id}")
       expect(run.reload.name).to eq("Renamed")
       expect(run.judge_model).to eq("gpt-4.1-mini")
+      expect(run.metric_ids).to eq([metric.id])
+    end
+
+    it "keeps a hidden judge on a run with no metrics" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1-mini", name: "Hidden judge")
+      CompletionKit::Model.update_all(supports_judging: false)
+
+      get "#{base_path}/#{run.id}/edit"
+      judge = Nokogiri::HTML5(response.body).at_css("input[type='hidden']#run_judge_model")
+      expect(judge["value"]).to eq("gpt-4.1-mini")
+
+      resubmit_edit_form(run, "run[name]" => "Renamed")
+
+      expect(response).to redirect_to("#{base_path}/#{run.id}")
+      expect(run.reload.name).to eq("Renamed")
+      expect(run.judge_model).to eq("gpt-4.1-mini")
+      expect(run.metric_ids).to be_empty
     end
 
     it "submits no judge from the new run form when no judge models are listed" do
