@@ -1,0 +1,12 @@
+en:
+  activerecord:
+    attributes:
+      completion_kit/prompt:
+        llm_model: Model
+      completion_kit/run:
+        judge_model: Judge model
+        metric_ids: Metrics
+      completion_kit/metric_group:
+        metric_ids: Metrics
+      completion_kit/provider_credential:
+        api_key: API key

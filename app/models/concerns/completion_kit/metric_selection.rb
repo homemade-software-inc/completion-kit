@@ -24,7 +24,7 @@ module CompletionKit
 
     def selected_metrics_in_scope
       wanted = selected_metric_ids
-      errors.add(:metric_ids, "not found") if CompletionKit::Metric.where(id: wanted).count < wanted.size
+      errors.add(:metric_ids, "include one that isn't available") if CompletionKit::Metric.where(id: wanted).count < wanted.size
     end
 
     def attach_selected_metrics

@@ -81,7 +81,7 @@ RSpec.describe CompletionKit::MetricGroup, type: :model do
       group = described_class.new(name: "Cross", selected_metric_ids: [own_metric.id, foreign_metric.id])
 
       expect(group.save).to be(false)
-      expect(group.errors.full_messages).to eq(["Metric ids not found"])
+      expect(group.errors.full_messages).to eq(["Metrics include one that isn't available"])
       expect(described_class.unscoped.count).to eq(0)
       expect(CompletionKit::MetricGroupMembership.unscoped.count).to eq(0)
     end

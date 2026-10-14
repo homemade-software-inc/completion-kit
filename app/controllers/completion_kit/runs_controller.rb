@@ -115,7 +115,7 @@ module CompletionKit
         redirect_to run_path(new_run), alert: new_run.failure_summary || "Could not start the new run."
       end
     rescue ActiveRecord::RecordInvalid => e
-      redirect_to run_path(@run), alert: e.record.errors.full_messages.to_sentence
+      redirect_to run_path(@run), alert: "This run can't be rerun. #{e.record.errors.full_messages.to_sentence}."
     end
 
     # The web process drives the live run page, because worker-side Turbo

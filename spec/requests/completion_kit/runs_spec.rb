@@ -643,7 +643,7 @@ RSpec.describe "CompletionKit runs", type: :request do
       end.not_to change { CompletionKit::Run.unscoped.count }
 
       expect(response).to redirect_to("/completion_kit/runs/#{legacy.id}")
-      expect(flash[:alert]).to eq("Prompt not found")
+      expect(flash[:alert]).to eq("This run can't be rerun. Prompt not found.")
     end
   end
 
@@ -659,7 +659,7 @@ RSpec.describe "CompletionKit runs", type: :request do
       end.not_to change { [CompletionKit::Run.unscoped.count, CompletionKit::RunMetric.unscoped.count] }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("Metric ids not found")
+      expect(Nokogiri::HTML5(response.body).text).to include("Metrics include one that isn't available")
     end
 
     it "refuses to swap a run's metrics for another tenant's in place" do
@@ -669,7 +669,7 @@ RSpec.describe "CompletionKit runs", type: :request do
       patch "#{base_path}/#{run.id}", params: { run: { name: "Mine", metric_ids: [foreign_metric.id] } }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("Metric ids not found")
+      expect(Nokogiri::HTML5(response.body).text).to include("Metrics include one that isn't available")
       expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
     end
 
@@ -683,7 +683,7 @@ RSpec.describe "CompletionKit runs", type: :request do
       end.not_to change { [CompletionKit::Run.unscoped.count, CompletionKit::RunMetric.unscoped.count] }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("Metric ids not found")
+      expect(Nokogiri::HTML5(response.body).text).to include("Metrics include one that isn't available")
     end
 
     it "sends a rerun of a run carrying another tenant's metric back with an alert" do
@@ -697,7 +697,7 @@ RSpec.describe "CompletionKit runs", type: :request do
       end.not_to change { CompletionKit::Run.unscoped.count }
 
       expect(response).to redirect_to("/completion_kit/runs/#{legacy.id}")
-      expect(flash[:alert]).to eq("Metric ids not found")
+      expect(flash[:alert]).to eq("This run can't be rerun. Metrics include one that isn't available.")
     end
   end
 

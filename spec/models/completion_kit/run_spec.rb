@@ -321,7 +321,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = described_class.new(name: "Cross", prompt: static_prompt, selected_metric_ids: [own_metric.id, foreign_metric.id])
 
       expect(run.save).to be(false)
-      expect(run.errors.full_messages).to eq(["Metric ids not found"])
+      expect(run.errors.full_messages).to eq(["Metrics include one that isn't available"])
       expect(described_class.unscoped.count).to eq(0)
       expect(CompletionKit::RunMetric.unscoped.count).to eq(0)
     end
@@ -331,7 +331,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = described_class.new(name: "Cross", prompt: static_prompt, selected_metric_ids: [missing.to_s])
 
       expect(run).not_to be_valid
-      expect(run.errors.full_messages).to eq(["Metric ids not found"])
+      expect(run.errors.full_messages).to eq(["Metrics include one that isn't available"])
     end
 
     it "keeps the existing metrics when an update points at another tenant's metric" do
@@ -339,7 +339,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       run.replace_metrics!([own_metric.id])
 
       expect(run.update(name: "Renamed", selected_metric_ids: [foreign_metric.id])).to be(false)
-      expect(run.errors.full_messages).to eq(["Metric ids not found"])
+      expect(run.errors.full_messages).to eq(["Metrics include one that isn't available"])
       expect(run.reload.name).not_to eq("Renamed")
       expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
     end
@@ -382,7 +382,7 @@ RSpec.describe CompletionKit::Run, type: :model do
       legacy.replace_metrics!([own_metric.id, foreign_metric.id])
       hide_outside_tenant(foreign_metric)
 
-      expect { legacy.reload.rerun! }.to raise_error(ActiveRecord::RecordInvalid, /Metric ids not found/)
+      expect { legacy.reload.rerun! }.to raise_error(ActiveRecord::RecordInvalid, /Metrics include one that isn't available/)
       expect(described_class.unscoped.count).to eq(1)
     end
   end

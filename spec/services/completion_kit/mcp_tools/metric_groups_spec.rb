@@ -62,7 +62,7 @@ RSpec.describe CompletionKit::McpTools::MetricGroups do
         expect {
           result = described_class.call("metric_groups_create", {"name" => "Cross", "metric_ids" => [own_metric.id, foreign_metric.id]})
           expect(result[:isError]).to be(true)
-          expect(result[:content].first[:text]).to eq("Metric ids not found")
+          expect(result[:content].first[:text]).to eq("Metrics include one that isn't available")
         }.not_to change { [CompletionKit::MetricGroup.unscoped.count, CompletionKit::MetricGroupMembership.unscoped.count] }
       end
 
@@ -72,7 +72,7 @@ RSpec.describe CompletionKit::McpTools::MetricGroups do
         result = described_class.call("metric_groups_update", {"id" => metric_group.id, "metric_ids" => [foreign_metric.id]})
 
         expect(result[:isError]).to be(true)
-        expect(result[:content].first[:text]).to eq("Metric ids not found")
+        expect(result[:content].first[:text]).to eq("Metrics include one that isn't available")
         expect(metric_group.metric_group_memberships.pluck(:metric_id)).to eq([own_metric.id])
       end
 

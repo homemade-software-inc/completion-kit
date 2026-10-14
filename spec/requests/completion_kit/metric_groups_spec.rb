@@ -84,7 +84,7 @@ RSpec.describe "CompletionKit metric groups", type: :request do
       end.not_to change { [CompletionKit::MetricGroup.unscoped.count, CompletionKit::MetricGroupMembership.unscoped.count] }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(Nokogiri::HTML5(response.body).at_css("#metric_group_metric_ids_error").text).to eq("Metric ids not found")
+      expect(Nokogiri::HTML5(response.body).at_css("#metric_group_metric_ids_error").text).to eq("Metrics include one that isn't available")
     end
 
     it "refuses to swap a group's metrics for another tenant's and keeps the old ones" do
@@ -94,7 +94,7 @@ RSpec.describe "CompletionKit metric groups", type: :request do
       patch "#{base_path}/#{group.id}", params: { metric_group: { name: group.name, metric_ids: [foreign_metric.id] } }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("Metric ids not found")
+      expect(Nokogiri::HTML5(response.body).text).to include("Metrics include one that isn't available")
       expect(group.metric_group_memberships.pluck(:metric_id)).to eq([own_metric.id])
     end
   end

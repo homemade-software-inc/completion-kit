@@ -101,7 +101,7 @@ RSpec.describe "API V1 Metric Groups", type: :request do
       }.not_to change { [CompletionKit::MetricGroup.unscoped.count, CompletionKit::MetricGroupMembership.unscoped.count] }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)["details"]).to eq("metric_ids" => ["not found"])
+      expect(JSON.parse(response.body)["details"]).to eq("metric_ids" => ["include one that isn't available"])
     end
 
     it "refuses to swap a group's metrics for another tenant's and keeps the old ones" do
@@ -111,7 +111,7 @@ RSpec.describe "API V1 Metric Groups", type: :request do
       patch "/completion_kit/api/v1/metric_groups/#{group.id}", params: {metric_ids: [foreign_metric.id]}.to_json, headers: headers
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)["details"]).to eq("metric_ids" => ["not found"])
+      expect(JSON.parse(response.body)["details"]).to eq("metric_ids" => ["include one that isn't available"])
       expect(group.metric_group_memberships.pluck(:metric_id)).to eq([own_metric.id])
     end
   end

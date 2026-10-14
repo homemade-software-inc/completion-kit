@@ -77,7 +77,7 @@ RSpec.describe CompletionKit::Prompt, type: :model do
           prompt = build(:completion_kit_prompt, llm_model: model_id)
 
           expect(prompt).not_to be_valid
-          expect(prompt.errors.full_messages).to include(%(Llm model "#{model_id}" is not served by any configured provider))
+          expect(prompt.errors.full_messages).to include(%(Model "#{model_id}" is not served by any configured provider))
         end
       end
 

@@ -165,7 +165,7 @@ RSpec.describe CompletionKit::McpTools::Runs do
         expect {
           result = described_class.call("runs_create", {"name" => "Cross", "prompt_id" => prompt.id, "metric_ids" => [own_metric.id, foreign_metric.id]})
           expect(result[:isError]).to be(true)
-          expect(result[:content].first[:text]).to eq("Metric ids not found")
+          expect(result[:content].first[:text]).to eq("Metrics include one that isn't available")
         }.not_to change { [CompletionKit::Run.unscoped.count, CompletionKit::RunMetric.unscoped.count] }
       end
 
@@ -175,7 +175,7 @@ RSpec.describe CompletionKit::McpTools::Runs do
         result = described_class.call("runs_update", {"id" => run.id, "metric_ids" => [foreign_metric.id]})
 
         expect(result[:isError]).to be(true)
-        expect(result[:content].first[:text]).to eq("Metric ids not found")
+        expect(result[:content].first[:text]).to eq("Metrics include one that isn't available")
         expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
       end
 
