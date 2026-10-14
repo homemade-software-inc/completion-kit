@@ -29,7 +29,10 @@ module CompletionKit
     end
 
     def update
-      if @provider_credential.update(provider_credential_update_params)
+      attributes = provider_credential_update_params
+      @remove_api_key = attributes[:remove_api_key] == "1"
+
+      if @provider_credential.update(with_api_key_choice(attributes.except(:remove_api_key), remove: @remove_api_key))
         redirect_to provider_credentials_path, notice: "Provider credential was successfully updated."
       else
         render :edit, status: :unprocessable_entity
@@ -74,13 +77,16 @@ module CompletionKit
     end
 
     def provider_credential_update_params
-      attributes = provider_credential_params
-      if params[:provider_credential][:remove_api_key] == "1"
-        attributes.merge(api_key: nil)
-      elsif attributes[:api_key].blank?
-        attributes.except(:api_key)
-      else
+      params.require(:provider_credential).permit(:provider, :api_key, :api_endpoint, :api_version, :remove_api_key)
+    end
+
+    def with_api_key_choice(attributes, remove:)
+      if attributes[:api_key].present?
         attributes
+      elsif remove
+        attributes.merge(api_key: nil)
+      else
+        attributes.except(:api_key)
       end
     end
   end

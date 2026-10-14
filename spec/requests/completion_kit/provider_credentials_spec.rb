@@ -236,7 +236,9 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
       doc = Nokogiri::HTML5(response.body)
       expect(doc.at_css("textarea[name='provider_credential[api_key]']").text.strip).to eq("")
       expect(response.body).to include("ending in <code>1a2b</code>")
-      expect(doc.at_css("input[type='checkbox'][name='provider_credential[remove_api_key]']")).to be_present
+      box = doc.at_css("input[type='checkbox'][name='provider_credential[remove_api_key]']")
+      expect(box).to be_present
+      expect(box.key?("checked")).to be(false)
     end
 
     it "offers no ending hint or remove option when no key is stored" do
@@ -267,6 +269,57 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
 
       expect(response).to redirect_to(base_path)
       expect(credential.reload.api_key).to be_nil
+    end
+
+    context "when the host app raises on unpermitted parameters" do
+      around do |example|
+        original = ActionController::Parameters.action_on_unpermitted_parameters
+        ActionController::Parameters.action_on_unpermitted_parameters = :raise
+        example.run
+      ensure
+        ActionController::Parameters.action_on_unpermitted_parameters = original
+      end
+
+      it "clears the key when the remove option is ticked" do
+        patch "#{base_path}/#{credential.id}", params: { provider_credential: form_params.merge(remove_api_key: "1") }
+
+        expect(response).to redirect_to(base_path)
+        expect(credential.reload.api_key).to be_nil
+      end
+
+      it "keeps the stored key when the remove option is left unticked" do
+        patch "#{base_path}/#{credential.id}", params: { provider_credential: form_params.merge(remove_api_key: "0") }
+
+        expect(response).to redirect_to(base_path)
+        expect(credential.reload.api_key).to eq(stored_key)
+      end
+    end
+
+    it "saves a typed key over the ticked remove option" do
+      patch "#{base_path}/#{credential.id}",
+        params: { provider_credential: form_params.merge(api_key: "sk-replacement", remove_api_key: "1") }
+
+      expect(response).to redirect_to(base_path)
+      expect(credential.reload.api_key).to eq("sk-replacement")
+    end
+
+    it "keeps the remove option ticked when the save fails" do
+      patch "#{base_path}/#{credential.id}",
+        params: { provider_credential: form_params.merge(provider: "azure_foundry", api_endpoint: "", remove_api_key: "1") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      box = Nokogiri::HTML5(response.body).at_css("input[type='checkbox'][name='provider_credential[remove_api_key]']")
+      expect(box.key?("checked")).to be(true)
+      expect(credential.reload.api_key).to eq(stored_key)
+    end
+
+    it "leaves the remove option unticked when the save fails without it" do
+      patch "#{base_path}/#{credential.id}",
+        params: { provider_credential: form_params.merge(provider: "azure_foundry", api_endpoint: "") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      box = Nokogiri::HTML5(response.body).at_css("input[type='checkbox'][name='provider_credential[remove_api_key]']")
+      expect(box.key?("checked")).to be(false)
     end
 
     it "rejects a new endpoint with a blank key, keeping the stored key and queueing no discovery" do

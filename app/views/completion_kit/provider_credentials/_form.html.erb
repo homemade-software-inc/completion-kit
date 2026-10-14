@@ -32,7 +32,7 @@
     <% if provider_credential.api_key_ending %>
       <div class="ck-field">
         <label class="ck-checkbox-label">
-          <%= check_box_tag "provider_credential[remove_api_key]", "1", false, id: "provider_credential_remove_api_key", class: "ck-checkbox" %>
+          <%= check_box_tag "provider_credential[remove_api_key]", "1", local_assigns[:remove_api_key], id: "provider_credential_remove_api_key", class: "ck-checkbox" %>
           <span class="ck-checkbox-label__box" aria-hidden="true"></span>
           <span class="ck-checkbox-label__body">
             <span class="ck-checkbox-label__text">Remove the stored key</span>
