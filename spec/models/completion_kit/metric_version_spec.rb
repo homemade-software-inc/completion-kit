@@ -113,6 +113,44 @@ RSpec.describe CompletionKit::MetricVersion, type: :model do
       expect(metric.rubric_bands).to be_nil
     end
 
+    it "publishes an older version whose leftover target_path sits beside another target, without the path" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text" })
+      version = described_class.create!(
+        metric: metric, metric_type: "check",
+        check_config: { "check_kind" => "contains", "target" => "response_text", "target_path" => "a.b", "value" => "ok" },
+        state: "draft", current: false
+      )
+
+      version.publish!
+
+      expect(metric.reload.check_config).to eq({ "check_kind" => "contains", "target" => "response_text", "value" => "ok" })
+    end
+
+    it "publishes a JSON path check with its path" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text" })
+      config = { "check_kind" => "numeric_bounds", "target" => "json_path", "target_path" => "vin.confidence", "min" => 0.8 }
+      version = described_class.create!(metric: metric, metric_type: "check", check_config: config, state: "draft", current: false)
+
+      version.publish!
+
+      expect(metric.reload.check_config).to eq(config)
+    end
+
+    it "publishes an older version with a target_path and no target as a JSON path check" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text" })
+      version = described_class.create!(
+        metric: metric, metric_type: "check",
+        check_config: { "check_kind" => "numeric_bounds", "target_path" => "vin.confidence", "min" => 0.8 },
+        state: "draft", current: false
+      )
+
+      version.publish!
+
+      expect(metric.reload.check_config).to eq(
+        { "check_kind" => "numeric_bounds", "target_path" => "vin.confidence", "min" => 0.8, "target" => "json_path" }
+      )
+    end
+
     it "refuses a config that does not pass validation and leaves the live metric and every version as they were" do
       live = { "check_kind" => "list_overlap", "target" => "response_text", "value" => "A, B", "min" => 0.6 }
       metric = create(:completion_kit_metric, :check, check_config: live)

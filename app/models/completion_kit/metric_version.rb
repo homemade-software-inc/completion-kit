@@ -85,13 +85,14 @@ module CompletionKit
     end
 
     def publish!
-      validate_check_config_on_metric! if check?
+      config = publishable_check_config if check?
+      validate_check_config_on_metric!(config) if check?
       MetricVersion.transaction do
         self.class.where(metric_id: metric_id).where.not(id: id).update_all(current: false)
         reload
         update!(state: "published", current: true, published_at: published_at || Time.current)
         if check?
-          metric.update_columns(metric_type: "check", check_config: check_config)
+          metric.update_columns(metric_type: "check", check_config: config)
         else
           metric.update_columns(
             metric_type: "llm_judge",
@@ -124,8 +125,16 @@ module CompletionKit
 
     private
 
-    def validate_check_config_on_metric!
-      metric.assign_attributes(metric_type: "check", check_config: check_config)
+    def publishable_check_config
+      config = check_config.to_h.stringify_keys
+      return config if config["target_path"].blank?
+      return config.merge("target" => "json_path") if config["target"].blank?
+
+      config["target"] == "json_path" ? config : config.except("target_path")
+    end
+
+    def validate_check_config_on_metric!(config)
+      metric.assign_attributes(metric_type: "check", check_config: config)
       raise ActiveRecord::RecordInvalid, metric unless metric.valid?
     end
 

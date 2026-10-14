@@ -3,7 +3,7 @@ module CompletionKit
     module NumericValue
       STRIPPED = /[\s_   ]/
       CURRENCY = /\A([+-]?)[$£€]/
-      GROUPED = /\A[+-]?\d{1,3}(?:,\d{3})+(?:\.\d*)?(?:[eE][+-]?\d+)?\z/
+      GROUPED = /\A[+-]?[1-9]\d{0,2}(?:,\d{3})+(?:\.\d*)?(?:[eE][+-]?\d+)?\z/
       NUMERIC = /\A[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?\z/
       PREVIEW_LENGTH = 40
 

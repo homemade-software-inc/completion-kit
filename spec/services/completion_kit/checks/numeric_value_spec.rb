@@ -28,6 +28,8 @@ RSpec.describe CompletionKit::Checks::NumericValue do
 
     it "refuses a decimal comma rather than reading it as a thousands separator" do
       expect(described_class.parse("1,5")).to be_nil
+      expect(described_class.parse("0,500")).to be_nil
+      expect(described_class.parse("-0,250")).to be_nil
       expect(described_class.parse("1.234,56")).to be_nil
       expect(described_class.parse("€1.234,56")).to be_nil
       expect(described_class.parse("82 000,50")).to be_nil
