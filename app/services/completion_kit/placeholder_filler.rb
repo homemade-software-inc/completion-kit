@@ -11,11 +11,10 @@ module CompletionKit
       @values = values
       @ranks = values.keys.each_with_index.to_h
       @padded = {}
-      @braced = {}
-      @blank = []
+      @braced = []
+      @blank_lengths = []
       values.each_key { |name| classify(name) }
-      @blank.sort_by!(&:bytesize)
-      [@padded, @braced].each { |table| table.each_value { |keys| keys.each_value(&:sort!) } }
+      @padded.each_value { |cores| cores.each_value(&:sort!) }
     end
 
     def fill
@@ -38,9 +37,9 @@ module CompletionKit
     def classify(name)
       lead = whitespace_after(name, 0)
       if name.include?("}}") || name.end_with?("}")
-        add(@braced, name.byteslice(lead..name.byteindex("}", lead)), [lead, @ranks[name], name])
+        @braced << [name, lead]
       elsif lead == name.bytesize
-        @blank << name
+        @blank_lengths |= [lead]
       else
         trail = whitespace_before(name, name.bytesize)
         add(@padded, name.byteslice(lead, name.bytesize - lead - trail), [lead, @ranks[name], trail, name])
@@ -70,15 +69,14 @@ module CompletionKit
     end
 
     def blank_match(start)
-      run = @template.byteslice(start, @closer - start)
-      found = nil
-      @blank.each do |name|
-        break if run.bytesize - name.bytesize < (found ? found.first : 0)
+      return if @blank_lengths.empty?
 
-        at = run.byterindex(name)
-        found = best([found, at && [at, name]].compact)
+      @closer.downto(start) do |from|
+        names = @blank_lengths.filter_map { |length| @template.byteslice(from, length) if from + length <= @closer }
+        name = first_ranked(names)
+        return [from, name] if name
       end
-      found && [start + found.first, found.last]
+      nil
     end
 
     def padded_match(start, top)
@@ -90,18 +88,14 @@ module CompletionKit
     end
 
     def braced_match(start, top)
-      return if @braced.empty?
-
-      @brace = @template.byteindex("}", top) unless @brace && @brace >= top
-      entries_at(@braced, top, @brace + 1)&.each do |lead, _, name|
+      best(@braced.filter_map do |name, lead|
         from = top - lead
         next if from < start || @template.byteslice(from, name.bytesize) != name
 
         finish = from + name.bytesize
         finish += whitespace_after(@template, finish)
-        return [from, name, finish + 2] if @template.byteslice(finish, 2) == "}}"
-      end
-      nil
+        [from, name, finish + 2] if @template.byteslice(finish, 2) == "}}"
+      end)
     end
 
     def entries_at(table, from, stop)
@@ -111,6 +105,10 @@ module CompletionKit
 
     def best(matches)
       matches.max_by { |from, name, _| [from, -@ranks[name]] }
+    end
+
+    def first_ranked(names)
+      names.select { |name| @ranks.key?(name) }.min_by { |name| @ranks[name] }
     end
 
     def whitespace_after(text, from)
