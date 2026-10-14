@@ -127,6 +127,25 @@ RSpec.describe CompletionKit::McpTools::Metrics do
       expect(config).to include("compare_to" => "expected", "expected_path" => "trim")
     end
 
+    it "refuses a list value on a rule that compares one value" do
+      result = described_class.call("metrics_create", {"name" => "Contains list", "metric_type" => "check",
+                                                       "check_config" => {"check_kind" => "contains", "target" => "response_text", "value" => %w[foo bar]}})
+
+      expect(result[:isError]).to be true
+      expect(result[:content].first[:text]).to eq('Check needs "Text to look for" to be a single value, since only list_overlap takes a list')
+      expect(CompletionKit::Metric.where(name: "Contains list")).to be_empty
+    end
+
+    it "refuses a list value when updating a rule that compares one value" do
+      check = create(:completion_kit_metric, :check, check_config: {"check_kind" => "numeric_equals", "target" => "response_text", "value" => 5})
+      result = described_class.call("metrics_update", {"id" => check.id,
+                                                       "check_config" => {"check_kind" => "numeric_equals", "target" => "response_text", "value" => [5, 6]}})
+
+      expect(result[:isError]).to be true
+      expect(result[:content].first[:text]).to include("only list_overlap takes a list")
+      expect(check.reload.check_config["value"]).to eq(5)
+    end
+
     it "advertises a value that may be text, a number or a list" do
       value = described_class::CHECK_CONFIG_SCHEMA[:properties][:value]
       expect(value[:type]).to match_array(%w[string number array])

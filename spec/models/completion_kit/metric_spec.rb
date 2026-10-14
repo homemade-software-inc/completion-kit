@@ -268,6 +268,29 @@ RSpec.describe CompletionKit::Metric, type: :model do
       expect(metric).not_to be_valid
       expect(metric.errors[:check_config].join).to include(%(can grade against "Each row's expected value" only with contains, not_contains, equals))
     end
+
+    it "refuses a list value on a rule that compares one value" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "contains", "target" => "response_text", "value" => %w[foo bar] })
+      expect(metric).not_to be_valid
+      expect(metric.errors.full_messages).to eq(['Check needs "Text to look for" to be a single value, since only list_overlap takes a list'])
+
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_equals", "target" => "response_text", "value" => [1, 2] })
+      expect(metric).not_to be_valid
+      expect(metric.errors.full_messages).to eq(['Check needs "Expected number" to be a single value, since only list_overlap takes a list'])
+    end
+
+    it "keeps accepting a list value on list_overlap" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => %w[foo bar] })
+      expect(metric).to be_valid
+    end
+
+    it "leaves a saved list value alone until the check itself changes" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "foo" })
+      metric.update_column(:check_config, metric.check_config.merge("value" => %w[foo bar]))
+
+      expect(metric.reload.update(name: "Renamed")).to be(true)
+      expect(metric.update(check_config: metric.check_config.merge("case_sensitive" => true))).to be(false)
+    end
   end
 
   describe "#in_use?" do

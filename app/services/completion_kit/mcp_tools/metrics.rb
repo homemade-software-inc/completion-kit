@@ -12,7 +12,7 @@ module CompletionKit
           check_kind: {type: "string", enum: CompletionKit::Checks::Registry.kinds},
           target: {type: "string", enum: CompletionKit::Checks::TargetResolver::TARGETS},
           target_path: {type: "string"},
-          value: {type: %w[string number array], items: {type: %w[string number]}, description: "A list is allowed for list_overlap, as a JSON array or as comma-separated text"},
+          value: {type: %w[string number array], items: {type: %w[string number]}, description: "Only list_overlap takes a list, as a JSON array or as comma-separated text; every other rule refuses one"},
           pattern: {type: "string"},
           json_path: {type: "string"},
           expected: {},

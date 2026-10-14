@@ -817,5 +817,25 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(response).to have_http_status(:created)
       expect(JSON.parse(response.body)["check_config"]).to include("check_kind" => "equals", "compare_to" => "expected", "expected_path" => "vin")
     end
+
+    it "refuses a list value on a rule that compares one value, as 0.28.46 did" do
+      post "/completion_kit/api/v1/metrics",
+           params: { name: "Contains list", metric_type: "check", check_config: { check_kind: "contains", target: "response_text", value: %w[foo bar] } }.to_json,
+           headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]["check_config"]).to eq(['needs "Text to look for" to be a single value, since only list_overlap takes a list'])
+      expect(CompletionKit::Metric.where(name: "Contains list")).to be_empty
+    end
+
+    it "refuses a list value when updating a rule that compares one value" do
+      metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "equals", "target" => "response_text", "value" => "foo" })
+
+      patch "/completion_kit/api/v1/metrics/#{metric.id}", params: { check_config: { check_kind: "equals", target: "response_text", value: %w[foo] } }.to_json,
+                                                          headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(metric.reload.check_config["value"]).to eq("foo")
+    end
   end
 end

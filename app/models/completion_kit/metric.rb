@@ -136,7 +136,15 @@ module CompletionKit
       validate_check_target(config)
       validate_check_compare_to(config, kind)
       validate_check_required_keys(config, kind)
-      validate_check_kind_rules(config, kind)
+      if refused_list_value?(config, kind)
+        errors.add(:check_config, "needs #{check_label("value", kind)} to be a single value, since only list_overlap takes a list")
+      else
+        validate_check_kind_rules(config, kind)
+      end
+    end
+
+    def refused_list_value?(config, kind)
+      config["value"].is_a?(Array) && kind != "list_overlap" && will_save_change_to_check_config?
     end
 
     def validate_check_compare_to(config, kind)
