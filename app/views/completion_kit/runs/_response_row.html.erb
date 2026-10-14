@@ -4,7 +4,7 @@
   <td class="ck-response-cell__text">
     <% if response.status == "failed" %>
       <% err = response.error_payload %>
-      <span class="ck-response-cell__preview ck-response-cell__error"><%= err && err[:provider]&.titleize %><%= " #{err[:status]}" if err && err[:status] %> — <%= truncate(err && err[:message].to_s, length: 600) %></span>
+      <span class="ck-response-cell__preview ck-response-cell__error"><%= err && err[:provider]&.titleize %><%= " #{err[:status]}" if err && err[:status] %>: <%= truncate(err && err[:message].to_s, length: 600) %></span>
     <% else %>
       <span class="ck-response-cell__preview"><%= truncate(response.response_text.to_s, length: 600) %></span>
     <% end %>

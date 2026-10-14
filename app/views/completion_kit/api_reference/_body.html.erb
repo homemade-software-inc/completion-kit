@@ -196,7 +196,7 @@
       </div>
       <%= render "completion_kit/api_reference/resource_list", title: "Your responses",
             items: recent_runs.first(1).map { |r|
-              { name: "#{r.name} — responses",
+              { name: "#{r.name} · responses",
                 url: "#{base_url}/api/v1/runs/#{r.id}/responses", dom_id: "responses_ep_#{r.id}" }
             } %>
     </div>

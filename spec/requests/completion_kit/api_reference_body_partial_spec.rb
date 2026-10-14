@@ -142,7 +142,7 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     expect(html).to include("#{base}/api/v1/runs/#{run.id}")
 
     expect(html).to include("Your responses")
-    expect(html).to include("Nightly Run — responses")
+    expect(html).to include("Nightly Run · responses")
     expect(html).to include("#{base}/api/v1/runs/#{run.id}/responses")
 
     expect(html).to include("Your datasets")

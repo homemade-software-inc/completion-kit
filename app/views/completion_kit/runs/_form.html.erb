@@ -290,7 +290,7 @@ function updateRunForm() {
       if (col === '' || headersJudge.indexOf(col) === -1) {
         valid = false;
         if (datasetField) datasetField.className = 'ck-field ck-field--error';
-        if (datasetHint) datasetHint.textContent = "Dataset has no \"" + col + "\" column — pick a different output column or dataset.";
+        if (datasetHint) datasetHint.textContent = "Dataset has no \"" + col + "\" column. Pick a different output column or dataset.";
       }
     } else if (!dataset) {
       if (datasetField) datasetField.className = 'ck-field ck-field--info';

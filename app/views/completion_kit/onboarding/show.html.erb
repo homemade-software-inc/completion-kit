@@ -72,7 +72,7 @@
 
       <% if @checklist.sample_loadable? %>
         <div class="ck-launch__sample">
-          <p class="ck-launch__sample-copy">Just exploring? Drop in a sample dataset and prompt to poke around — they're labelled <code>Sample:</code>, and you can edit or delete them whenever.</p>
+          <p class="ck-launch__sample-copy">Just exploring? Drop in a sample dataset and prompt to poke around. They're labelled <code>Sample:</code>, and you can edit or delete them whenever.</p>
           <%= button_to onboarding_sample_data_path, method: :post, class: "ck-launch__sample-cta", form: { style: "display:inline" } do %>
             Load sample data <span aria-hidden="true">&rarr;</span>
           <% end %>

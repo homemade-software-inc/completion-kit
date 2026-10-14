@@ -21,7 +21,7 @@ module CompletionKit
 
     def sample_data
       Onboarding::SampleData.install!
-      redirect_to onboarding_path, notice: "Loaded a sample dataset and prompt — edit or delete them whenever."
+      redirect_to onboarding_path, notice: "Loaded a sample dataset and prompt. Edit or delete them whenever."
     end
   end
 end

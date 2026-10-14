@@ -35,7 +35,7 @@
                     Gen<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup ck-info-popup--right">Generation models produce the responses your prompts ask for. Pick one when creating a prompt.</span>
                   </th>
                   <th scope="col" class="ck-model-table__cap">
-                    Judge<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup ck-info-popup--right">Judge models score generated responses against your metrics. Pick one when configuring a run. A <strong>?</strong> means we haven't confirmed this model works as a judge — it's still selectable, and a successful run promotes it to ✓.</span>
+                    Judge<span class="ck-info-toggle" tabindex="0">?</span><span class="ck-info-popup ck-info-popup--right">Judge models score generated responses against your metrics. Pick one when configuring a run. A <strong>?</strong> means we haven't confirmed this model works as a judge. It's still selectable, and a successful run promotes it to ✓.</span>
                   </th>
                 </tr>
               </thead>
@@ -58,7 +58,7 @@
                         <% if m.supports_judging %>
                           <span class="ck-model-table__tick" aria-label="Supports judging">✓</span>
                         <% elsif m.supports_judging.nil? %>
-                          <span class="ck-model-table__unknown" aria-label="Untested as judge" title="Untested as a judge — selectable; a successful run confirms it">?</span>
+                          <span class="ck-model-table__unknown" aria-label="Untested as judge" title="Untested as a judge but selectable. A successful run confirms it.">?</span>
                         <% else %>
                           <span class="ck-model-table__dash" aria-label="Not usable as judge">—</span>
                         <% end %>
