@@ -19,6 +19,27 @@ RSpec.describe CompletionKit::Checks::NumericValue do
       expect(described_class.parse("82_000")).to eq(82_000.0)
     end
 
+    it "reads a comma as a thousands separator only when three digits follow every comma" do
+      expect(described_class.parse("1,000")).to eq(1_000.0)
+      expect(described_class.parse("1,000,000")).to eq(1_000_000.0)
+      expect(described_class.parse("82,000.50")).to eq(82_000.5)
+      expect(described_class.parse("-$1,000")).to eq(-1_000.0)
+    end
+
+    it "refuses a decimal comma rather than reading it as a thousands separator" do
+      expect(described_class.parse("1,5")).to be_nil
+      expect(described_class.parse("1.234,56")).to be_nil
+      expect(described_class.parse("€1.234,56")).to be_nil
+      expect(described_class.parse("82 000,50")).to be_nil
+    end
+
+    it "refuses commas that do not group thousands" do
+      expect(described_class.parse("1,0000")).to be_nil
+      expect(described_class.parse("1234,567")).to be_nil
+      expect(described_class.parse(",000")).to be_nil
+      expect(described_class.parse("1,000.000,5")).to be_nil
+    end
+
     it "ignores the non-breaking and thin spaces some locales group thousands with" do
       expect(described_class.parse("82\u00A0000")).to eq(82_000.0)
       expect(described_class.parse("82\u2009000")).to eq(82_000.0)
@@ -73,6 +94,7 @@ RSpec.describe CompletionKit::Checks::NumericValue do
     end
 
     it "returns nil for anything parse would refuse" do
+      expect(described_class.decimal("1,5")).to be_nil
       expect(described_class.decimal("unknown")).to be_nil
       expect(described_class.decimal("1e400")).to be_nil
       expect(described_class.decimal(nil)).to be_nil

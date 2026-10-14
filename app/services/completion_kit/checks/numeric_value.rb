@@ -1,8 +1,9 @@
 module CompletionKit
   module Checks
     module NumericValue
-      STRIPPED = /[,\s_   ]/
+      STRIPPED = /[\s_   ]/
       CURRENCY = /\A([+-]?)[$£€]/
+      GROUPED = /\A[+-]?\d{1,3}(?:,\d{3})+(?:\.\d*)?(?:[eE][+-]?\d+)?\z/
       NUMERIC = /\A[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?\z/
       PREVIEW_LENGTH = 40
 
@@ -22,7 +23,8 @@ module CompletionKit
       end
 
       def self.clean(value)
-        value.to_s.gsub(STRIPPED, "").sub(CURRENCY) { ::Regexp.last_match(1) }
+        text = value.to_s.gsub(STRIPPED, "").sub(CURRENCY) { ::Regexp.last_match(1) }
+        GROUPED.match?(text) ? text.delete(",") : text
       end
 
       def self.finite(number)

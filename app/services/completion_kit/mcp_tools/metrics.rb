@@ -35,7 +35,8 @@ module CompletionKit
         "target_path walks array indices, as in items.0.name; any path may start at the root with $., as in $.items.0.name. " \
         "list_overlap grades a list-valued field and stores a fraction rather than a verdict: score_by is recall, precision, f1 or jaccard (recall by default), " \
         "and min is the fraction that counts as a pass (1, a perfect score, by default). " \
-        "numeric_bounds and numeric_equals read a number, ignoring the commas and currency symbol a figure is written with; " \
+        "numeric_bounds and numeric_equals read a number, ignoring the thousands commas and currency symbol a figure is written with; " \
+        "a comma counts only as a thousands separator, with three digits after it and no decimal point before it, so 1,5 is not a number; " \
         "numeric_equals takes a tolerance, either a plain number for a fixed amount or a percentage string such as 2% for a share of the expected value. " \
         "#{CASE_SENSITIVE_NOTE} " \
         "Set compare_to:\"expected\" on #{CompletionKit::Checks::Registry.comparable_kinds.join(", ")} to grade against each row's own expected_output (ground truth) " \
