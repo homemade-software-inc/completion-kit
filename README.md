@@ -183,6 +183,8 @@ end
 
 A prompt whose template is over `max_template_bytes` fails validation when its template is saved. Prompts saved before a lower limit keep working until their template changes.
 
+The first line of a dataset's CSV is its header row. A dataset fails validation when its CSV is saved with a header row that is blank or longer than 64 KB. The 64 KB limit is fixed, not a setting.
+
 A regex check that runs past `regex_timeout` fails that row and says it timed out. The limit is set on each pattern, so the engine never changes the process-wide `Regexp.timeout` your app may rely on. Set it to a positive number of seconds, or to `nil` to fall back to `Regexp.timeout`. Any other value, such as `0`, raises an `ArgumentError` when the initializer runs.
 
 ## How it works
