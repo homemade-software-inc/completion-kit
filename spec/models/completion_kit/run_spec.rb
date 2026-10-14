@@ -1392,7 +1392,9 @@ RSpec.describe CompletionKit::Run, type: :model do
     it "refuses to rerun a run whose judge does not resolve, before creating the copy" do
       run = run_with_judge("llama3", [llm_metric])
 
-      expect { run.rerun! }.to raise_error(CompletionKit::ConfigurationError, %(No configured provider serves judge model "llama3"))
+      expect { run.rerun! }.to raise_error(CompletionKit::UnknownModelError, %(No configured provider serves judge model "llama3")) { |error|
+        expect(error.model_name).to eq("llama3")
+      }
       expect(described_class.count).to eq(1)
     end
 
@@ -1400,7 +1402,9 @@ RSpec.describe CompletionKit::Run, type: :model do
       run = create(:completion_kit_run)
       run.prompt.update_columns(llm_model: "llama3")
 
-      expect { run.rerun! }.to raise_error(CompletionKit::ConfigurationError, %(No configured provider serves model "llama3"))
+      expect { run.rerun! }.to raise_error(CompletionKit::UnknownModelError, %(No configured provider serves model "llama3")) { |error|
+        expect(error.model_name).to eq("llama3")
+      }
       expect(described_class.count).to eq(1)
     end
 
@@ -1409,7 +1413,9 @@ RSpec.describe CompletionKit::Run, type: :model do
       allow(CompletionKit::LlmClient).to receive(:for_model).and_return(unconfigured)
       run = create(:completion_kit_run)
 
-      expect { run.rerun! }.to raise_error(CompletionKit::ConfigurationError, "LLM API not configured: OpenAI API key is not configured")
+      expect { run.rerun! }.to raise_error(CompletionKit::ConfigurationError, "LLM API not configured: OpenAI API key is not configured") { |error|
+        expect(error).not_to be_a(CompletionKit::UnknownModelError)
+      }
       expect(described_class.count).to eq(1)
 
       expect(run.start!).to be(false)

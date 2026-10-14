@@ -487,8 +487,7 @@ module CompletionKit
     end
 
     def rerun!
-      model_error = model_start_error
-      raise ConfigurationError, model_error if model_error
+      ensure_models_ready!
 
       Run.create!(
         prompt_id: prompt_id,
@@ -713,6 +712,18 @@ module CompletionKit
 
     def model_start_error
       (generation_client_error unless judge_only?) || judge_model_error
+    end
+
+    def ensure_models_ready!
+      unless judge_only?
+        raise UnknownModelError, prompt.llm_model unless ApiConfig.provider_for_model(prompt.llm_model)
+
+        client_error = generation_client_error
+        raise ConfigurationError, client_error if client_error
+      end
+
+      judge_error = judge_model_error
+      raise UnknownModelError.new(judge_model, judge_error) if judge_error
     end
 
     def judge_model_newly_selected?
