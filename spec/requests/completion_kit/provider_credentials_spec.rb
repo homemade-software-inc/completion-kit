@@ -227,6 +227,41 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(Nokogiri::HTML5(response.body).at_css("textarea[name='provider_credential[api_key]']").text.strip).to eq("sk-typed-new-key")
   end
 
+  describe "the key on the providers list" do
+    def card_key(provider_credential)
+      doc = Nokogiri::HTML5(response.body)
+      doc.at_css("a.ck-provider-card[href='#{base_path}/#{provider_credential.id}/edit'] .ck-provider-card__key").text
+    end
+
+    it "shows no more of a long key than its last four characters" do
+      credential = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-live-LONGSECRET-9z8y")
+
+      get base_path
+
+      expect(card_key(credential)).to eq("#{'•' * 12}9z8y")
+      expect(response.body).not_to include("sk-live")
+    end
+
+    it "shows only dots for a short key" do
+      credential = create(:completion_kit_provider_credential, provider: "openrouter", api_key: "short12")
+
+      get base_path
+
+      expect(card_key(credential)).to eq("•" * 12)
+      expect(response.body).not_to include("short12")
+      expect(response.body).not_to include("rt12")
+    end
+
+    it "says there is no key, without an em dash, when none is stored" do
+      credential = create(:completion_kit_provider_credential, provider: "ollama", api_key: nil)
+
+      get base_path
+
+      expect(card_key(credential)).to eq("No key")
+      expect(Nokogiri::HTML5(response.body).at_css(".ck-provider-list").text).not_to include("—")
+    end
+  end
+
   describe "the stored API key on the edit form" do
     let(:stored_key) { "sk-live-STOREDSECRET-1a2b" }
     let!(:credential) do
