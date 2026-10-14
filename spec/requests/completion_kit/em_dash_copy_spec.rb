@@ -2,11 +2,13 @@ require "rails_helper"
 
 RSpec.describe "CompletionKit copy without em dashes", type: :request do
   let(:em_dash) { "\u2014" }
+  let(:em_dash_entity) { /&(?:mdash|#8212|#x2014);/i }
 
-  it "keeps em dashes out of every engine string outside comments and lone empty-cell placeholders" do
+  it "keeps em dashes, literal or as HTML entities, out of every engine string outside comments and lone empty-cell placeholders" do
     sources = Dir[CompletionKit::Engine.root.join("{app,lib}/**/*.{rb,erb,js,rake}").to_s]
     offenders = sources.flat_map do |path|
-      File.readlines(path).each_with_index.filter_map do |line, index|
+      File.readlines(path).each_with_index.filter_map do |raw, index|
+        line = raw.gsub(em_dash_entity, em_dash)
         next unless line.include?(em_dash)
         next if line.strip.start_with?("#", "<%#", "//", "/*", "*")
 
@@ -16,6 +18,18 @@ RSpec.describe "CompletionKit copy without em dashes", type: :request do
     end
 
     expect(offenders).to be_empty
+  end
+
+  it "offers to skip onboarding in a plain sentence" do
+    get "/completion_kit/onboarding"
+
+    expect(Nokogiri::HTML5(response.body).at_css(".ck-launch__dismiss").text.squish).to eq("Skip setup and go to the app →")
+  end
+
+  it "describes the nested agreements endpoint in two sentences" do
+    get "/completion_kit/api_reference"
+
+    expect(response.body).to include("List agreements scoped to a specific run, response, and metric. It is the nested equivalent of the top-level index filtered by those three ids.")
   end
 
   it "titles each page with a middle dot before the product name" do
