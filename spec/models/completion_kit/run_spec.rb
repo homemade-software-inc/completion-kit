@@ -1387,16 +1387,26 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(run.update(name: "Renamed")).to be(true)
     end
 
-    it "copies an unservable judge onto a rerun, which then fails to start instead of staying pending" do
+    it "refuses to rerun a run whose judge does not resolve, before creating the copy" do
       run = run_with_judge("llama3", [llm_metric])
 
-      copy = run.rerun!
+      expect { run.rerun! }.to raise_error(CompletionKit::ConfigurationError, %(No configured provider serves judge model "llama3"))
+      expect(described_class.count).to eq(1)
+    end
 
-      expect(copy).to be_persisted
-      expect(copy.judge_model).to eq("llama3")
-      expect(copy.start!).to be(false)
-      expect(copy.reload.status).to eq("failed")
-      expect(copy.failure_summary).to eq(%(No configured provider serves judge model "llama3"))
+    it "refuses to rerun a run whose prompt model does not resolve, before creating the copy" do
+      run = create(:completion_kit_run)
+      run.prompt.update_columns(llm_model: "llama3")
+
+      expect { run.rerun! }.to raise_error(CompletionKit::UnknownModelError, %(No configured provider serves model "llama3"))
+      expect(described_class.count).to eq(1)
+    end
+
+    it "reruns a check-only run whose unused judge does not resolve" do
+      run = run_with_judge("llama3", [check_metric])
+
+      expect(run.rerun!).to be_persisted
+      expect(described_class.count).to eq(2)
     end
 
     it "fails to start, naming the model, when the prompt model does not resolve" do

@@ -490,6 +490,7 @@ module CompletionKit
     end
 
     def rerun!
+      ensure_models_resolve!
       Run.create!(
         prompt_id: prompt_id,
         dataset_id: dataset_id,
@@ -709,6 +710,13 @@ module CompletionKit
       return if ApiConfig.provider_for_model(judge_model)
 
       %(No configured provider serves judge model "#{judge_model}")
+    end
+
+    def ensure_models_resolve!
+      raise UnknownModelError, prompt.llm_model unless judge_only? || ApiConfig.provider_for_model(prompt.llm_model)
+
+      judge_error = judge_model_error
+      raise ConfigurationError, judge_error if judge_error
     end
 
     def judge_model_newly_selected?

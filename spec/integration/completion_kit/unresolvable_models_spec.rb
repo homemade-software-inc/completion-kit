@@ -122,7 +122,7 @@ RSpec.describe "Model ids no configured provider serves", type: :request do
           expect(run.reload.status).to eq("failed")
         end
 
-        it "leaves no rerun copy pending through MCP, REST or the UI" do
+        it "refuses a rerun through MCP, REST or the UI without creating a copy" do
           run = run_on(prompt: stranded_prompt)
 
           expect_tool_error(mcp_call("runs_rerun", {"id" => run.id}), including: model_message)
@@ -132,10 +132,10 @@ RSpec.describe "Model ids no configured provider serves", type: :request do
           expect(json_error).to eq(model_message)
 
           post "/completion_kit/runs/#{run.id}/rerun"
+          expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
           expect(flash[:alert]).to eq(model_message)
 
-          expect(new_runs_beside(run).pluck(:status)).to eq(%w[failed failed failed])
-          expect(new_runs_beside(run).pluck(:failure_summary).uniq).to eq([model_message])
+          expect(new_runs_beside(run)).to be_empty
         end
 
         it "fails prompts_suggest_improvement with the model named" do
@@ -183,6 +183,30 @@ RSpec.describe "Model ids no configured provider serves", type: :request do
 
           expect(run.reload.status).to eq("completed")
           expect(CompletionKit::JudgeReviewJob).not_to have_received(:perform_later)
+        end
+
+        it "refuses a rerun through MCP, REST and the UI, naming the judge, without creating a copy" do
+          run = judged_run([llm_metric])
+
+          expect_tool_error(mcp_call("runs_rerun", {"id" => run.id}), including: judge_message)
+
+          post "#{api}/runs/#{run.id}/rerun", headers: api_headers
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(json_error).to eq(judge_message)
+
+          post "/completion_kit/runs/#{run.id}/rerun"
+          expect(response).to redirect_to("/completion_kit/runs/#{run.id}")
+          expect(flash[:alert]).to eq(judge_message)
+
+          expect(new_runs_beside(run)).to be_empty
+        end
+
+        it "still reruns a run with only a check metric" do
+          run = judged_run([check_metric])
+
+          post "/completion_kit/runs/#{run.id}/rerun"
+
+          expect(new_runs_beside(run).count).to eq(1)
         end
 
         it "fails to start a generating run with an LLM-judge metric before spending tokens" do
