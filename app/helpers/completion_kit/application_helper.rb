@@ -174,15 +174,15 @@ module CompletionKit
     # else is a single group.
     def ck_model_optgroup_label(model)
       case model[:provider]
-      when "openrouter" then "OpenRouter — #{model[:id].to_s.split("/", 2).first.delete_prefix("~")}"
-      when "openai"     then "OpenAI — #{ck_openai_model_family(model[:id])}"
+      when "openrouter" then "OpenRouter · #{model[:id].to_s.split("/", 2).first.delete_prefix("~")}"
+      when "openai"     then "OpenAI · #{ck_openai_model_family(model[:id])}"
       else ck_provider_label(model[:provider])
       end
     end
 
     def ck_model_optgroup_sort_key(label)
-      if label.start_with?("OpenAI — ")
-        [0, OPENAI_MODEL_FAMILY_ORDER.index(label.delete_prefix("OpenAI — ")), label]
+      if label.start_with?("OpenAI · ")
+        [0, OPENAI_MODEL_FAMILY_ORDER.index(label.delete_prefix("OpenAI · ")), label]
       elsif label.start_with?("OpenRouter")
         [2, 0, label]
       else

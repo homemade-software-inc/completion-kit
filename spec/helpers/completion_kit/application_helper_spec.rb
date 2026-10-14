@@ -182,10 +182,11 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
         { id: "meta-llama/llama-3.3-70b", name: "Llama 3.3 70B", provider: "openrouter" }
       ]
       html = helper.ck_grouped_models(models)
-      expect(html).to include('label="OpenAI — GPT-4"')
-      expect(html).to include('label="OpenRouter — openai"')
-      expect(html).to include('label="OpenRouter — anthropic"') # ~anthropic merged in
-      expect(html).to include('label="OpenRouter — meta-llama"')
+      expect(html).to include('label="OpenAI · GPT-4"')
+      expect(html).to include('label="OpenRouter · openai"')
+      expect(html).to include('label="OpenRouter · anthropic"') # ~anthropic merged in
+      expect(html).to include('label="OpenRouter · meta-llama"')
+      expect(html).not_to include("\u2014")
     end
 
     it "groups openai models by family in a sensible order, ahead of other direct providers" do
@@ -197,7 +198,7 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       ]
       html = helper.ck_grouped_models(models)
       labels = html.scan(/label="([^"]+)"/).flatten
-      expect(labels).to eq(["OpenAI — GPT-5", "OpenAI — GPT-4", "OpenAI — o-series", "Anthropic"])
+      expect(labels).to eq(["OpenAI · GPT-5", "OpenAI · GPT-4", "OpenAI · o-series", "Anthropic"])
     end
 
     it "groups other direct providers as a single optgroup" do
