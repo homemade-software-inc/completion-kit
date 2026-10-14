@@ -66,6 +66,61 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
     CompletionKit.config.tenant_scope = original
   end
 
+  describe "the Ollama fallback key" do
+    before do
+      allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
+      CompletionKit.config.ollama_api_key = "ollama-key"
+      CompletionKit.config.ollama_api_endpoint = "https://ollama.example.test/v1"
+    end
+
+    it "pairs the configured key with a keyless credential on the configured endpoint" do
+      create(:completion_kit_provider_credential, provider: "ollama", api_key: nil,
+        api_endpoint: "HTTPS://Ollama.Example.test/v1/")
+
+      expect(described_class.for_provider("ollama"))
+        .to eq(provider: "ollama", api_key: "ollama-key", api_endpoint: "HTTPS://Ollama.Example.test/v1/")
+    end
+
+    it "drops the configured key when a keyless credential sets an endpoint of its own" do
+      create(:completion_kit_provider_credential, provider: "ollama", api_key: nil,
+        api_endpoint: "https://attacker.example.test/v1")
+
+      expect(described_class.for_provider("ollama"))
+        .to eq(provider: "ollama", api_key: nil, api_endpoint: "https://attacker.example.test/v1")
+    end
+
+    it "pairs the configured key with the built-in default endpoint when nothing else is configured" do
+      CompletionKit.config.ollama_api_endpoint = nil
+      expect(described_class.for_provider("ollama")).to eq(provider: "ollama", api_key: "ollama-key", api_endpoint: nil)
+
+      create(:completion_kit_provider_credential, provider: "ollama", api_key: nil,
+        api_endpoint: "https://attacker.example.test/v1")
+      expect(described_class.for_provider("ollama")[:api_key]).to be_nil
+    end
+
+    it "keeps a key stored on the credential, wherever it points" do
+      create(:completion_kit_provider_credential, provider: "ollama", api_key: "stored-key",
+        api_endpoint: "https://elsewhere.example.test/v1")
+
+      expect(described_class.for_provider("ollama"))
+        .to eq(provider: "ollama", api_key: "stored-key", api_endpoint: "https://elsewhere.example.test/v1")
+    end
+
+    it "adds neither the configured key nor the configured endpoint for tenants" do
+      original = CompletionKit.config.tenant_scope
+      CompletionKit.config.tenant_scope = -> { all }
+
+      expect(described_class.for_provider("ollama")).to eq(provider: "ollama")
+
+      create(:completion_kit_provider_credential, provider: "ollama", api_key: nil,
+        api_endpoint: "https://ollama.example.test/v1")
+      expect(described_class.for_provider("ollama")).to eq(provider: "ollama", api_endpoint: "https://ollama.example.test/v1")
+    ensure
+      CompletionKit.config.tenant_scope = original
+    end
+  end
+
   it "delegates validity and errors to the model-specific client" do
     client = instance_double(CompletionKit::OpenAiClient, configured?: true, configuration_errors: ["none"])
 

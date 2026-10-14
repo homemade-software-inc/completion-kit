@@ -22,7 +22,7 @@ module CompletionKit
                    when "ollama"
                      {
                        provider: "ollama",
-                       api_key: CompletionKit.config.ollama_api_key || ENV["OLLAMA_API_KEY"],
+                       api_key: OllamaClient.fallback_api_key(stored[:api_endpoint] || OllamaClient.configured_endpoint),
                        api_endpoint: CompletionKit.config.ollama_api_endpoint || ENV["OLLAMA_API_ENDPOINT"]
                      }
                    when "openrouter"

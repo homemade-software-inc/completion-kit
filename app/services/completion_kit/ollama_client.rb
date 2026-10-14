@@ -1,5 +1,18 @@
 module CompletionKit
   class OllamaClient < LlmClient
+    DEFAULT_ENDPOINT = "http://localhost:11434/v1"
+
+    def self.configured_endpoint
+      endpoint = CompletionKit.config.ollama_api_endpoint || ENV["OLLAMA_API_ENDPOINT"]
+      endpoint || (DEFAULT_ENDPOINT if CompletionKit.config.allow_loopback_endpoints)
+    end
+
+    def self.fallback_api_key(endpoint)
+      return unless ProviderEndpoint.same_destination?(endpoint, configured_endpoint)
+
+      env_key = ENV["OLLAMA_API_KEY"]
+      CompletionKit.config.tenant_scope ? env_key : CompletionKit.config.ollama_api_key || env_key
+    end
 
     def generate_completion(prompt, options = {})
       @temperature_dropped = false
@@ -75,12 +88,12 @@ module CompletionKit
     end
 
     def api_key
-      @config[:api_key] || ENV["OLLAMA_API_KEY"]
+      @config[:api_key] || self.class.fallback_api_key(api_endpoint)
     end
 
     def api_endpoint
       raw = @config[:api_endpoint] || ENV["OLLAMA_API_ENDPOINT"]
-      raw ||= "http://localhost:11434/v1" if CompletionKit.config.allow_loopback_endpoints
+      raw ||= DEFAULT_ENDPOINT if CompletionKit.config.allow_loopback_endpoints
       raw.to_s.delete_suffix("/")
     end
 
