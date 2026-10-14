@@ -5,7 +5,7 @@ module CompletionKit
     has_many :runs, dependent: :destroy
     has_many :responses, through: :runs
 
-    attr_accessor :cloned_from_llm_model
+    attr_accessor :cloned_from_llm_model, :allow_unconfigured_provider
 
     validates :name, presence: true
     validates :template, presence: true
@@ -105,12 +105,13 @@ module CompletionKit
     end
 
     def llm_model_usable_for_generation
-      rows = Model.where(model_id: llm_model)
-      return if rows.empty?
-      return if rows.where(supports_generation: true, status: "active").exists?
-      return unless rows.where(supports_generation: false).exists?
+      return if Model.for_generation.exists?(model_id: llm_model)
 
-      errors.add(:llm_model, "is not available for generating responses")
+      if Model.exists?(model_id: llm_model, supports_generation: false)
+        errors.add(:llm_model, "is not available for generating responses")
+      elsif !allow_unconfigured_provider && !ApiConfig.servable_model?(llm_model)
+        errors.add(:llm_model, %("#{llm_model}" is not served by any configured provider))
+      end
     end
 
     def assign_family_key

@@ -240,4 +240,16 @@ RSpec.describe CompletionKit::PromptfooImporter do
     expect(result.error).to match(/not available for generating responses/)
     expect(CompletionKit::Prompt.count).to eq(0)
   end
+
+  it "still imports the prompt when its provider is referenced but not configured yet" do
+    allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
+    create(:completion_kit_provider_credential, provider: "anthropic", api_key: "sk-test")
+    create(:completion_kit_model, provider: "anthropic", model_id: "claude-sonnet")
+
+    result = import(config)
+
+    expect(result.ok).to be(true)
+    expect(result.providers[:unmatched]).to include("openai:gpt-4o")
+    expect(CompletionKit::Prompt.pluck(:llm_model).uniq).to eq(["gpt-4o"])
+  end
 end

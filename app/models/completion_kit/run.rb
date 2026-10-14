@@ -21,6 +21,7 @@ module CompletionKit
     has_many :dashboard_dismissals, as: :dismissable, dependent: :destroy
 
     attr_writer :avg_score, :check_pass_rate, :metric_averages, :response_count
+    attr_accessor :cloned_from_judge_model
 
     validates :name, presence: true
     validates :status, inclusion: { in: STATUSES }
@@ -29,6 +30,7 @@ module CompletionKit
     validate :dataset_supplies_prompt_variables
     validate :judge_only_run_supplies_output_column
     validate :dataset_supplies_expected_column
+    validate :judge_model_servable, if: :judge_model_newly_selected?
 
     before_validation :set_default_status, on: :create
     before_validation :set_auto_name, on: :create
@@ -329,11 +331,12 @@ module CompletionKit
           return fail_with_summary!("Dataset has no \"#{column}\" column")
         end
       else
-        client = LlmClient.for_model(prompt.llm_model, ApiConfig.for_model(prompt.llm_model))
-        unless client.configured?
-          return fail_with_summary!("LLM API not configured: #{client.configuration_errors.join(', ')}")
-        end
+        generation_error = generation_client_error
+        return fail_with_summary!(generation_error) if generation_error
       end
+
+      judge_error = judge_model_error
+      return fail_with_summary!(judge_error) if judge_error
 
       begin
         transaction do
@@ -395,7 +398,7 @@ module CompletionKit
 
           response_ids = responses.order(:row_index).pluck(:id)
           if judge
-            judge_metrics = llm_judge_configured? ? llm_metrics.to_a : []
+            judge_metrics = judge_model.present? ? llm_metrics.to_a : []
             chk_metrics = check_metrics.to_a
             review_jobs = response_ids.flat_map do |rid|
               judge_metrics.map { |m| JudgeReviewJob.new(rid, m.id, id) } +
@@ -424,6 +427,11 @@ module CompletionKit
     end
 
     def regrade!
+      judge_error = judge_model_error
+      if judge_error
+        errors.add(:base, judge_error)
+        return false
+      end
       return false if metrics.empty? || !gradable?
 
       eligible_responses = responses.where(status: "succeeded")
@@ -447,7 +455,7 @@ module CompletionKit
         update!(status: "running", failure_summary: nil, error_message: nil, judge_temperature_ignored: false)
 
         response_ids.each do |rid|
-          llm_metrics.each { |m| JudgeReviewJob.perform_later(rid, m.id, id) } if llm_judge_configured?
+          llm_metrics.each { |m| JudgeReviewJob.perform_later(rid, m.id, id) } if judge_model.present?
           check_metrics.each { |m| CheckReviewJob.perform_later(rid, m.id, id) }
         end
         RunCompletionCheckJob.perform_later(id)
@@ -489,7 +497,8 @@ module CompletionKit
         output_column: output_column,
         expected_column: expected_column,
         tag_names: tag_names,
-        status: "pending"
+        status: "pending",
+        cloned_from_judge_model: judge_model
       )
       new_run.replace_metrics!(metric_ids)
       new_run
@@ -684,6 +693,33 @@ module CompletionKit
       CompletionKit.config.on_run_started&.call(self)
     rescue StandardError => e
       Rails.error.report(e, handled: true, context: { hook: "on_run_started", run_id: id })
+    end
+
+    def generation_client_error
+      client = LlmClient.for_model(prompt.llm_model, ApiConfig.for_model(prompt.llm_model))
+      "LLM API not configured: #{client.configuration_errors.join(', ')}" unless client.configured?
+    rescue UnknownModelError => e
+      e.message
+    end
+
+    def judge_model_error
+      return unless judge_model.present? && llm_metrics.exists?
+      return if ApiConfig.provider_for_model(judge_model)
+
+      %(No configured provider serves judge model "#{judge_model}")
+    end
+
+    def judge_model_newly_selected?
+      return false if judge_model.blank?
+      return judge_model != cloned_from_judge_model if new_record? && cloned_from_judge_model.present?
+
+      judge_model_changed?
+    end
+
+    def judge_model_servable
+      return if ApiConfig.servable_model?(judge_model)
+
+      errors.add(:judge_model, %("#{judge_model}" is not served by any configured provider))
     end
 
     def fail_with_summary!(message)

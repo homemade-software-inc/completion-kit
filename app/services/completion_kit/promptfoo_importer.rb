@@ -86,7 +86,7 @@ module CompletionKit
           next
         end
 
-        prompt = Prompt.create!(name: "Imported prompt #{index + 1}", template: template, llm_model: model)
+        prompt = Prompt.create!(name: "Imported prompt #{index + 1}", template: template, llm_model: model, allow_unconfigured_provider: true)
         created << prompt.name
       end
       { created: created, skipped: skipped }

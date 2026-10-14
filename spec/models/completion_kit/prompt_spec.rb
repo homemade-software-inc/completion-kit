@@ -64,6 +64,36 @@ RSpec.describe CompletionKit::Prompt, type: :model do
       expect(clone.llm_model).to eq("kept-model")
     end
 
+    context "when generation models have been discovered" do
+      before do
+        allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
+        create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+        create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1-mini")
+        create(:completion_kit_model, provider: "ollama", model_id: "llama3", status: "retired")
+      end
+
+      %w[llama3 ollama/llama3 ollama].each do |model_id|
+        it "rejects #{model_id.inspect}, which no configured provider serves" do
+          prompt = build(:completion_kit_prompt, llm_model: model_id)
+
+          expect(prompt).not_to be_valid
+          expect(prompt.errors.full_messages).to include(%(Llm model "#{model_id}" is not served by any configured provider))
+        end
+      end
+
+      it "accepts an undiscovered id whose prefix belongs to a configured provider" do
+        expect(build(:completion_kit_prompt, llm_model: "gpt-undiscovered")).to be_valid
+      end
+
+      it "keeps loading and editing a prompt whose model was retired after it was saved" do
+        prompt = create(:completion_kit_prompt)
+        prompt.update_columns(llm_model: "llama3")
+
+        prompt.template = "Updated {{content}} for {{audience}}"
+        expect(prompt).to be_valid
+      end
+    end
+
     it "still blocks re-versioning onto a different model that can't generate" do
       CompletionKit::Model.create!(provider: "azure_foundry", model_id: "switch-target",
         status: "active", supports_generation: false, supports_judging: false)

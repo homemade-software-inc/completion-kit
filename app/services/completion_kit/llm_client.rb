@@ -79,7 +79,7 @@ module CompletionKit
 
     def self.for_model(model_name, config = {})
       provider = ApiConfig.provider_for_model(model_name)
-      raise ArgumentError, "Unsupported model: #{model_name}" unless provider
+      raise UnknownModelError, model_name unless provider
 
       for_provider(provider, config)
     end

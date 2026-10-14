@@ -145,7 +145,7 @@
             } %>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/generate</p>
-        <p class="ck-meta-copy">Start generating responses. Returns 202 Accepted. Poll the run to check progress.</p>
+        <p class="ck-meta-copy">Start generating responses. Returns 202 Accepted. Poll the run to check progress. Returns 422 with the reason when the run cannot start, for example when no configured provider serves the prompt's model or the judge model.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/generate \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
@@ -161,7 +161,7 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/runs/:id/regrade</p>
-        <p class="ck-meta-copy">Re-judge the existing successful responses against the current metric versions without regenerating model output. Returns 202 Accepted, or 422 if no responses are eligible.</p>
+        <p class="ck-meta-copy">Re-judge the existing successful responses against the current metric versions without regenerating model output. Returns 202 Accepted, or 422 if no responses are eligible or no configured provider serves the judge model.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/runs/1/regrade \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>
       <div class="ck-api-endpoint">
@@ -258,7 +258,7 @@
       </div>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">POST</span> /api/v1/metrics/:id/suggest_variants</p>
-        <p class="ck-meta-copy">Generate draft metric versions from the current disagreements. Only rubric-style (llm_judge) metrics can suggest variants. Returns 201 with the new draft versions, or 422 if the metric is a check (checks are exact and have no variants to suggest), if no disagreements exist, or if the model produced nothing usable.</p>
+        <p class="ck-meta-copy">Generate draft metric versions from the current disagreements. Only rubric-style (llm_judge) metrics can suggest variants. Returns 201 with the new draft versions, or 422 if the metric is a check (checks are exact and have no variants to suggest), if no disagreements exist, if no configured provider serves the model, or if the model produced nothing usable.</p>
         <p class="ck-api-params"><strong>Optional:</strong>&ensp;<code>count</code>, <code>model</code></p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X POST #{base_url}/api/v1/metrics/1/suggest_variants \\\n  -H \"Authorization: Bearer #{token}\"" %>
       </div>

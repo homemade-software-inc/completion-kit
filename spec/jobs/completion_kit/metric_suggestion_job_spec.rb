@@ -48,6 +48,22 @@ RSpec.describe CompletionKit::MetricSuggestionJob do
     expect { described_class.perform_now(metric.id) }.not_to raise_error
   end
 
+  it "keeps the existing suggestion draft when the judge model resolves to no configured provider" do
+    allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
+    create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-test")
+    create(:completion_kit_model, provider: "openai", model_id: "gpt-4.1-mini")
+    create(:completion_kit_model, provider: "ollama", model_id: "llama3", status: "retired")
+    CompletionKit.config.judge_model = "llama3"
+    draft = create(:completion_kit_metric_version, metric: metric, state: "draft", source: "suggestion", current: false)
+    allow(Turbo::StreamsChannel).to receive(:broadcast_replace_to)
+
+    expect { described_class.perform_now(metric.id) }.not_to raise_error
+
+    expect(CompletionKit::MetricVersion.exists?(draft.id)).to be(true)
+  ensure
+    CompletionKit.config.judge_model = nil
+  end
+
   it "does nothing for a check metric" do
     check_metric = create(:completion_kit_metric, :check)
     CompletionKit::MetricVersion.ensure_current_for(check_metric)

@@ -201,6 +201,8 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     end
 
     it "is in use, and names the judge runs, when a run uses one of its models as judge" do
+      CompletionKit::Model.create!(provider: "ollama", model_id: "some-other-model",
+        status: "active", supports_generation: true)
       prompt = create(:completion_kit_prompt, llm_model: "some-other-model")
       create(:completion_kit_run, prompt: prompt, judge_model: "gpt-4.1")
 
