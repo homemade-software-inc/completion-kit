@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.1] - 2026-10-14
+
+### Security
+- **Regex checks stop at a time limit set on each pattern.** Each pattern is compiled with its own `timeout:`, the shorter of the new `config.regex_timeout` (default 1 second) and your app's `Regexp.timeout`, so the engine never loosens a stricter limit your app set and never changes the process-wide setting. A row that runs past the limit records a failed check that says it timed out, and the job carries on. Filling a prompt's `{{...}}` placeholders runs under the same limit.
+- **Saving, validating and starting a run no longer takes longer as the dataset or template grows.** Checking a dataset's columns reads only its header row, starting a run checks for a data row without counting every row, and prompt variables are found in one pass. MCP callers that hit the limit get JSON-RPC error `-32602` with "The input was too large or too complex to process."
+- **The configured Ollama key goes only to the configured Ollama endpoint.** `OLLAMA_API_KEY` and `config.ollama_api_key` used to fill in for any Ollama credential without a key of its own, wherever it pointed. A keyless credential now gets that key only when its endpoint matches `config.ollama_api_endpoint` or `OLLAMA_API_ENDPOINT`, or `http://localhost:11434/v1` when neither is set and loopback endpoints are allowed. Scheme, host, port and path must match, ignoring case, a written-out default port, a trailing slash and a trailing `/v1`. **A keyless Ollama credential pointing anywhere else now sends no key, so store the key on the credential.** Model discovery follows the same rule.
+
+### Added
+- **Hosts can cap prompt template size and regex check time.** `config.max_template_bytes` (default 1 MB) limits a prompt template when it is saved. `config.regex_timeout` takes a finite number of seconds of at least 0.001, or `nil` to use `Regexp.timeout` alone; any other value raises an `ArgumentError` when the initializer runs. The README's "Input limits" section documents both.
+
+### Changed
+- **A dataset's CSV must be valid UTF-8, and its header row must hold the column names and fit in 64 KB.** A CSV that was not valid UTF-8 used to cause a server error, and a blank first line was stored and left every run on it with no columns. Datasets saved earlier can still be renamed or retagged until their CSV changes.
+- **Clicking a list row navigates with Turbo Drive, and a Cmd, Ctrl, Shift or middle click opens the row in a new tab.** Clicks on links and buttons inside a row are left alone.
+
+### Fixed
+- **Engine pages work under a nonce-based Content Security Policy.** The views no longer carry inline event handlers or inline scripts. Row navigation, dialogs, copy buttons, model refresh, metric group toggles and filters, the run and check forms, live run status, the dataset header preview and the API token reveal run from `completion_kit/application.js` through data attributes, and the engine layout puts the nonce on its script tags. Add `nonce: true` to `javascript_include_tag` in any host layout that wraps engine pages. The README explains the setup: put only `script-src` in the nonce directives, allow `'unsafe-inline'` in `style-src` for now, and keep the nonce for the whole session, because Turbo Drive reuses the first page's policy.
+- **Leaving a running run's page stops its status polling.** The poll used to keep running after a Turbo visit and could replace another run's page with the first run's.
+
 ## [0.29.0] - 2026-10-14
 
 **Every host app must run `bin/rails completion_kit:install:migrations && bin/rails db:migrate` for this release.** It adds a `check_score` column to `completion_kit_reviews`. Every check metric writes that column when it grades a row, and the run pages read it, so a host that skips the migration gets failed checks and broken run pages whether or not it uses `list_overlap`.
