@@ -129,7 +129,7 @@ module CompletionKit
 
       kind = config["check_kind"]
       unless CompletionKit::Checks::Registry.kinds.include?(kind)
-        errors.add(:check_config, "check_kind must be one of #{CompletionKit::Checks::Registry.kinds.join(", ")}")
+        errors.add(:check_config, "needs #{check_label("check_kind")} to be one of #{CompletionKit::Checks::Registry.kinds.join(", ")}")
         return
       end
 
@@ -143,21 +143,21 @@ module CompletionKit
       return unless config.key?("compare_to")
 
       unless %w[constant expected].include?(config["compare_to"])
-        errors.add(:check_config, "compare_to must be constant or expected")
+        errors.add(:check_config, "needs #{check_label("compare_to")} to be constant or expected")
         return
       end
       if config["compare_to"] == "expected" && !CompletionKit::Checks::Registry.compares_value?(kind)
-        errors.add(:check_config, "compare_to expected only applies to #{CompletionKit::Checks::Registry.comparable_kinds.join(", ")}")
+        errors.add(:check_config, "can grade against \"Each row's expected value\" only with #{CompletionKit::Checks::Registry.comparable_kinds.join(", ")}")
       end
     end
 
     def validate_check_target(config)
       target = config["target"].presence || "response_text"
       unless CompletionKit::Checks::TargetResolver::TARGETS.include?(target)
-        errors.add(:check_config, "target must be one of #{CompletionKit::Checks::TargetResolver::TARGETS.join(", ")}")
+        errors.add(:check_config, "needs #{check_label("target")} to be one of #{CompletionKit::Checks::TargetResolver::TARGETS.join(", ")}")
       end
       if target == "json_path" && config["target_path"].to_s.strip.empty?
-        errors.add(:check_config, "target_path is required when target is json_path")
+        errors.add(:check_config, "needs #{check_label("target_path")} filled in to check a value from the response JSON")
       end
     end
 
@@ -165,11 +165,8 @@ module CompletionKit
       required = CompletionKit::Checks::Registry.required_keys.fetch(kind)
       required -= [CompletionKit::Checks::Registry.expected_key(kind)] if config["compare_to"] == "expected" && CompletionKit::Checks::Registry.compares_value?(kind)
       required.each do |required_key|
-        if required_key == "expected"
-          errors.add(:check_config, "expected is required") unless config.key?("expected")
-        elsif config[required_key].to_s.strip.empty?
-          errors.add(:check_config, "#{required_key} is required")
-        end
+        missing = required_key == "expected" ? !config.key?("expected") : config[required_key].to_s.strip.empty?
+        errors.add(:check_config, "needs #{check_label(required_key, kind)} filled in") if missing
       end
     end
 
@@ -188,36 +185,38 @@ module CompletionKit
     def validate_check_pattern(config)
       Regexp.new(config["pattern"].to_s)
     rescue RegexpError
-      errors.add(:check_config, "pattern is not a valid regular expression")
+      errors.add(:check_config, "needs #{check_label("pattern")} to be a valid regular expression")
     end
 
     def validate_check_bounds(config, kind)
       min = config["min"].to_s.strip
       max = config["max"].to_s.strip
+      min_label = check_label("min", kind)
+      max_label = check_label("max", kind)
       if min.empty? && max.empty?
-        errors.add(:check_config, "#{kind} requires at least one of min or max")
+        errors.add(:check_config, "needs #{min_label} or #{max_label} filled in")
         return
       end
 
       min_value = CompletionKit::Checks::NumericValue.parse(min)
       max_value = CompletionKit::Checks::NumericValue.parse(max)
       if (!min.empty? && min_value.nil?) || (!max.empty? && max_value.nil?)
-        errors.add(:check_config, "min and max must be numbers")
+        errors.add(:check_config, "needs #{min_label} and #{max_label} to be numbers")
       elsif min_value && max_value && min_value > max_value
-        errors.add(:check_config, "min must be less than or equal to max")
+        errors.add(:check_config, "needs #{min_label} to be no more than #{max_label}")
       end
     end
 
     def validate_check_list_overlap(config)
       measures = CompletionKit::Checks::ListOverlap::MEASURES
       if config["score_by"].present? && !measures.include?(config["score_by"])
-        errors.add(:check_config, "score_by must be one of #{measures.join(", ")}")
+        errors.add(:check_config, "needs #{check_label("score_by")} to be one of #{measures.join(", ")}")
       end
       return if config["min"].to_s.strip.empty?
 
       threshold = CompletionKit::Checks::NumericValue.parse(config["min"])
       if threshold.nil? || threshold.negative? || threshold > 1
-        errors.add(:check_config, "min must be a number between 0 and 1")
+        errors.add(:check_config, "needs #{check_label("min", "list_overlap")} to be a number between 0 and 1")
       end
     end
 
@@ -225,7 +224,7 @@ module CompletionKit
       validate_check_tolerance(config)
       return if config["compare_to"] == "expected" || config["value"].to_s.strip.empty?
 
-      errors.add(:check_config, "value must be a number") if CompletionKit::Checks::NumericValue.parse(config["value"]).nil?
+      errors.add(:check_config, "needs #{check_label("value", "numeric_equals")} to be a number") if CompletionKit::Checks::NumericValue.parse(config["value"]).nil?
     end
 
     def validate_check_tolerance(config)
@@ -233,8 +232,12 @@ module CompletionKit
 
       tolerance = CompletionKit::Checks::NumericEquals.tolerance_value(config["tolerance"])
       if tolerance.nil? || tolerance.negative?
-        errors.add(:check_config, "tolerance must be a number that is not negative, or a percentage like 2%")
+        errors.add(:check_config, "needs #{check_label("tolerance")} to be a number that is not negative, or a percentage like 2%")
       end
+    end
+
+    def check_label(key, kind = nil)
+      "\"#{CompletionKit::Checks::Labels.field(key, kind)}\""
     end
 
     def set_defaults

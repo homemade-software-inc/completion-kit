@@ -6,6 +6,8 @@ en:
       completion_kit/run:
         judge_model: Judge model
         metric_ids: Metrics
+      completion_kit/metric:
+        check_config: Check
       completion_kit/metric_group:
         metric_ids: Metrics
       completion_kit/provider_credential:

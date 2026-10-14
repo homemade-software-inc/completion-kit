@@ -66,7 +66,8 @@ RSpec.describe "Check metric authoring", type: :request do
                                           check_config: { check_kind: "length_bounds", target: "response_text", min: "abc" } } }
 
       expect(CompletionKit::Metric.find_by(name: "Bad bound")).to be_nil
-      expect(response.body).to include("must be numbers")
+      expect(Nokogiri::HTML5(response.body).css(".ck-error-list li").map(&:text))
+        .to include('Check needs "Shortest allowed" and "Longest allowed" to be numbers')
     end
 
     it "drops target_path when the check no longer reads the response JSON" do

@@ -87,43 +87,43 @@ RSpec.describe CompletionKit::Metric, type: :model do
     it "is invalid for an unknown check_kind" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "telepathy", "target" => "response_text" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("check_kind")
+      expect(metric.errors[:check_config].join).to include('needs "Rule" to be one of contains,')
     end
 
     it "is invalid when a required per-kind key is missing" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "contains", "target" => "response_text" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("value")
+      expect(metric.errors.full_messages).to include('Check needs "Text to look for" filled in')
     end
 
     it "is invalid for an unknown target" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "telepathy" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("target")
+      expect(metric.errors[:check_config].join).to include('needs "What to check" to be one of response_text, input_data, json_path')
     end
 
     it "requires target_path when target is json_path" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "json_path" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("target_path")
+      expect(metric.errors[:check_config].join).to include('needs "Path into the JSON" filled in')
     end
 
     it "is invalid when a regex pattern will not compile" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "regex", "target" => "response_text", "pattern" => "(" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("regular expression")
+      expect(metric.errors[:check_config].join).to include('needs "Pattern" to be a valid regular expression')
     end
 
     it "requires at least one bound for length_bounds" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "length_bounds", "target" => "response_text" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("min or max")
+      expect(metric.errors[:check_config].join).to include('needs "Shortest allowed" or "Longest allowed" filled in')
     end
 
     it "rejects length_bounds where min exceeds max" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "length_bounds", "target" => "response_text", "min" => 9, "max" => 2 })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("less than or equal")
+      expect(metric.errors[:check_config].join).to include('needs "Shortest allowed" to be no more than "Longest allowed"')
     end
 
     it "accepts a valid length_bounds with both bounds" do
@@ -134,23 +134,31 @@ RSpec.describe CompletionKit::Metric, type: :model do
     it "treats a blank bound as absent rather than as a zero that can never fail" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "length_bounds", "target" => "response_text", "min" => "", "max" => "" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("min or max")
+      expect(metric.errors[:check_config].join).to include('"Shortest allowed" or "Longest allowed"')
     end
 
     it "rejects a bound that is not a number" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "length_bounds", "target" => "response_text", "min" => "abc" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("must be numbers")
+      expect(metric.errors[:check_config].join).to include('needs "Shortest allowed" and "Longest allowed" to be numbers')
 
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "length_bounds", "target" => "response_text", "max" => "abc" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("must be numbers")
+      expect(metric.errors[:check_config].join).to include("to be numbers")
     end
 
     it "applies the same bound rules to numeric_bounds" do
       expect(build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_bounds", "target" => "response_text" })).not_to be_valid
       expect(build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_bounds", "target" => "response_text", "min" => 0.8 })).to be_valid
-      expect(build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_bounds", "target" => "response_text", "min" => 9, "max" => 2 })).not_to be_valid
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_bounds", "target" => "response_text", "min" => 9, "max" => 2 })
+      expect(metric).not_to be_valid
+      expect(metric.errors[:check_config].join).to include('needs "Lowest allowed" to be no more than "Highest allowed"')
+    end
+
+    it "names each field the way its own rule labels it on the form" do
+      metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text" })
+      expect(metric).not_to be_valid
+      expect(metric.errors.full_messages).to include('Check needs "Expected list" filled in')
     end
 
     it "accepts list_overlap with a known measure and a threshold in range" do
@@ -166,14 +174,14 @@ RSpec.describe CompletionKit::Metric, type: :model do
     it "rejects an unknown list_overlap measure" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => "a", "score_by" => "vibes" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("score_by must be one of")
+      expect(metric.errors.full_messages).to include('Check needs "How to score it" to be one of recall, precision, f1, jaccard')
     end
 
     it "rejects a list_overlap threshold outside zero to one" do
       %w[abc -0.5 1.5].each do |threshold|
         metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => "a", "min" => threshold })
         expect(metric).not_to be_valid
-        expect(metric.errors[:check_config].join).to include("between 0 and 1")
+        expect(metric.errors[:check_config].join).to include('needs "Lowest score that passes" to be a number between 0 and 1')
       end
     end
 
@@ -195,7 +203,7 @@ RSpec.describe CompletionKit::Metric, type: :model do
     it "rejects a numeric_equals value that is not a number" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_equals", "target" => "response_text", "value" => "twenty" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("value must be a number")
+      expect(metric.errors[:check_config].join).to include('needs "Expected number" to be a number')
     end
 
     it "skips the numeric_equals value rule when the operand comes from the row" do
@@ -207,7 +215,7 @@ RSpec.describe CompletionKit::Metric, type: :model do
       %w[abc -1].each do |tolerance|
         metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "numeric_equals", "target" => "response_text", "value" => 1, "tolerance" => tolerance })
         expect(metric).not_to be_valid
-        expect(metric.errors[:check_config].join).to include("tolerance must be a number")
+        expect(metric.errors.full_messages.join).to include('Check needs "How far off is still right" to be a number')
       end
     end
 
@@ -235,7 +243,7 @@ RSpec.describe CompletionKit::Metric, type: :model do
     it "is invalid when json_path_equals omits expected entirely" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "json_path_equals", "target" => "response_text", "json_path" => "ok" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("expected")
+      expect(metric.errors[:check_config].join).to include('needs "Expected value" filled in')
     end
 
     it "does not require value when a comparison check grades against the row's expected value" do
@@ -246,19 +254,19 @@ RSpec.describe CompletionKit::Metric, type: :model do
     it "still requires value for a comparison check that compares to a constant" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "equals", "target" => "response_text", "compare_to" => "constant" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("value")
+      expect(metric.errors[:check_config].join).to include('needs "Text to look for" filled in')
     end
 
     it "is invalid when compare_to is neither constant nor expected" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "equals", "target" => "response_text", "compare_to" => "guess", "value" => "x" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("compare_to must be constant or expected")
+      expect(metric.errors[:check_config].join).to include('needs "Compare against" to be constant or expected')
     end
 
     it "rejects compare_to expected on a check kind that has no value operand" do
       metric = build(:completion_kit_metric, :check, check_config: { "check_kind" => "valid_json", "target" => "response_text", "compare_to" => "expected" })
       expect(metric).not_to be_valid
-      expect(metric.errors[:check_config].join).to include("only applies to")
+      expect(metric.errors[:check_config].join).to include(%(can grade against "Each row's expected value" only with contains, not_contains, equals))
     end
   end
 
