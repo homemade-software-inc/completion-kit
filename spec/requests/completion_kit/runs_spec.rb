@@ -738,6 +738,20 @@ RSpec.describe "CompletionKit runs", type: :request do
       expect(judge["name"]).to eq("run[judge_model]")
       expect(judge["value"].to_s).to eq("")
     end
+
+    it "forks a run with results onto another dataset, keeping a judge that has no model row" do
+      other = create(:completion_kit_dataset, name: "Other")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, name: "Legacy judge")
+      run.update_columns(judge_model: "legacy-judge")
+      run.responses.create!(response_text: "Some output")
+
+      expect { resubmit_edit_form(run, "run[dataset_id]" => other.id.to_s) }.to change(CompletionKit::Run, :count).by(1)
+
+      fork = CompletionKit::Run.order(:id).last
+      expect(response).to redirect_to("#{base_path}/#{fork.id}")
+      expect([fork.dataset_id, fork.judge_model]).to eq([other.id, "legacy-judge"])
+      expect(run.reload.dataset_id).to eq(dataset.id)
+    end
   end
 
   describe "metric choices on a failed save" do

@@ -55,7 +55,7 @@ module CompletionKit
       if @run.responses.any? && run_generation_changed?
         attrs = run_attributes.to_h
         attrs.delete("name") if attrs["name"].to_s == @run.name.to_s
-        new_run = Run.new(attrs.merge(status: "pending"))
+        new_run = Run.new(attrs.merge(status: "pending", cloned_from_judge_model: @run.judge_model))
         if new_run.save
           redirect_to run_path(new_run), notice: "Saved as a new run. The previous run and its results are preserved."
         else
