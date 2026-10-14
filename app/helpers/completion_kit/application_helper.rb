@@ -314,7 +314,8 @@ module CompletionKit
       return "Yes" if CompletionKit::Checks::Registry::FLAG_KEYS.include?(key.to_s)
       return ck_check_field_value(key, value) if CompletionKit::Checks::Labels.worded?(key)
 
-      content_tag(:code, ck_check_input_value(value).to_s, class: "ck-check-spec__code")
+      shown = key.to_s == "expected" ? ck_check_expected_input_value(value) : ck_check_input_value(value)
+      content_tag(:code, shown.to_s, class: "ck-check-spec__code")
     end
 
     def ck_check_score_by_options

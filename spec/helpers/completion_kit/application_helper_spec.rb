@@ -458,6 +458,12 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_check_expected_input_value({ "a" => 1 })).to eq('{"a":1}')
       expect(helper.ck_check_expected_input_value(nil)).to be_nil
     end
+
+    it "shows an answer key on the metric page the way the form writes it" do
+      expect(Nokogiri::HTML5.fragment(helper.ck_check_spec_value("expected", "200")).text).to eq('"200"')
+      expect(Nokogiri::HTML5.fragment(helper.ck_check_spec_value("expected", 200)).text).to eq("200")
+      expect(Nokogiri::HTML5.fragment(helper.ck_check_spec_value("value", "42")).text).to eq("42")
+    end
   end
 
   describe "#ck_result_change_badge" do
