@@ -15,7 +15,12 @@ module CompletionKit
     def ck_current_reviewer
       @ck_current_reviewer ||= begin
         cfg = CompletionKit.config
-        cfg.current_reviewer&.call(self).to_s.presence || cfg.username.presence || "operator"
+        name = cfg.current_reviewer&.call(self)
+        unless name.nil? || name.is_a?(String)
+          raise CompletionKit::ConfigurationError,
+            "current_reviewer must return a String or nil, got #{name.class}. Return a name such as current_user.email."
+        end
+        name.presence || cfg.username.presence || "operator"
       end
     end
 

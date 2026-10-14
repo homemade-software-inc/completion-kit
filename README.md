@@ -144,13 +144,15 @@ CompletionKit.configure do |c|
 end
 ```
 
-If `current_reviewer` is unset or returns a blank value, verdicts are saved under `username`, or `"operator"` when no username is set. The web UI does not read the `X-Remote-User` header on its own. If a proxy in front of your app sets that header, pass it through:
+The callable must return a String or nil. Any other value, such as a user record, raises `CompletionKit::ConfigurationError`. If `current_reviewer` is unset or returns a blank value, verdicts are saved under `username`, or `"operator"` when no username is set. The web UI does not read the `X-Remote-User` header on its own. If a proxy in front of your app sets that header, pass it through:
 
 ```ruby
 CompletionKit.configure do |c|
   c.current_reviewer = ->(controller) { controller.request.headers["X-Remote-User"] }
 end
 ```
+
+Only use this header when a trusted proxy always overwrites it. Otherwise any client can send it and claim any reviewer name.
 
 The REST API and the MCP server take the reviewer name from their own `created_by` parameter.
 

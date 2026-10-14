@@ -111,10 +111,19 @@ RSpec.describe "CompletionKit agreements (web)", type: :request do
       expect(CompletionKit::Agreement.pluck(:created_by, :verdict)).to contain_exactly(["alice", "agree"], ["bob", "disagree"])
     end
 
-    it "stringifies whatever current_reviewer returns" do
-      CompletionKit.config.current_reviewer = ->(_controller) { 42 }
+    it "refuses a current_reviewer that returns something other than a String" do
+      user = Struct.new(:email).new("alice@example.com")
+      CompletionKit.config.current_reviewer = ->(_controller) { user }
+      expect {
+        post base_path, params: { metric_id: metric.id, verdict: "agree" }, headers: stream_headers
+      }.to raise_error(CompletionKit::ConfigurationError, /current_reviewer must return a String/)
+      expect(CompletionKit::Agreement.count).to eq(0)
+    end
+
+    it "falls back to operator when current_reviewer returns nil" do
+      CompletionKit.config.current_reviewer = ->(_controller) { nil }
       post base_path, params: { metric_id: metric.id, verdict: "agree" }, headers: stream_headers
-      expect(CompletionKit::Agreement.pluck(:created_by)).to eq(["42"])
+      expect(CompletionKit::Agreement.pluck(:created_by)).to eq(["operator"])
     end
 
     context "when current_reviewer returns nothing" do
