@@ -207,7 +207,7 @@
 
       <div class="ck-field" data-ck-check-field="value">
         <label class="ck-label" for="metric_check_value"><span data-ck-check-label="value">Text to look for</span></label>
-        <input type="text" name="metric[check_config][value]" id="metric_check_value" class="ck-input" value="<%= check["value"] %>">
+        <input type="text" name="metric[check_config][value]" id="metric_check_value" class="ck-input" value="<%= ck_check_input_value(check["value"]) %>">
       </div>
 
       <div class="ck-field" data-ck-check-field="pattern">
@@ -225,7 +225,7 @@
       <div class="ck-field" data-ck-check-field="expected">
         <label class="ck-label" for="metric_check_expected">Expected value</label>
         <p class="ck-hint">The value it should equal.</p>
-        <input type="text" name="metric[check_config][expected]" id="metric_check_expected" class="ck-input" value="<%= check["expected"] %>">
+        <input type="text" name="metric[check_config][expected]" id="metric_check_expected" class="ck-input" value="<%= ck_check_input_value(check["expected"]) %>">
       </div>
 
       <div class="ck-field" data-ck-check-field="expected_path">
@@ -265,17 +265,17 @@
 
       <label class="ck-checkbox" data-ck-check-field="case_sensitive">
         <input type="hidden" name="metric[check_config][case_sensitive]" value="false">
-        <input type="checkbox" name="metric[check_config][case_sensitive]" value="true"<%= " checked" if check["case_sensitive"] %>>
+        <input type="checkbox" name="metric[check_config][case_sensitive]" value="true"<%= " checked" if CompletionKit::Checks::Flag.on?(check, "case_sensitive") %>>
         <span>Case sensitive</span>
       </label>
       <label class="ck-checkbox" data-ck-check-field="multiline">
         <input type="hidden" name="metric[check_config][multiline]" value="false">
-        <input type="checkbox" name="metric[check_config][multiline]" value="true"<%= " checked" if check["multiline"] %>>
+        <input type="checkbox" name="metric[check_config][multiline]" value="true"<%= " checked" if CompletionKit::Checks::Flag.on?(check, "multiline") %>>
         <span>Multiline</span>
       </label>
       <label class="ck-checkbox" data-ck-check-field="trim">
         <input type="hidden" name="metric[check_config][trim]" value="false">
-        <input type="checkbox" name="metric[check_config][trim]" value="true"<%= " checked" if check["trim"] %>>
+        <input type="checkbox" name="metric[check_config][trim]" value="true"<%= " checked" if CompletionKit::Checks::Flag.on?(check, "trim") %>>
         <span>Trim whitespace</span>
       </label>
     </div>

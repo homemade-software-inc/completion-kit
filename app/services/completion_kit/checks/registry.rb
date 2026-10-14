@@ -41,6 +41,9 @@ module CompletionKit
       }.freeze
 
       SHARED_KEYS = %w[check_kind target target_path compare_to expected_path].freeze
+      FLAG_KEYS = %w[case_sensitive multiline trim].freeze
+      NUMBER_KEYS = %w[min max tolerance].freeze
+      DEFAULTS = { "target" => "response_text", "score_by" => ListOverlap::DEFAULT_MEASURE }.freeze
 
       EXPECTED_KEYS = {
         "contains" => "value",
@@ -100,6 +103,46 @@ module CompletionKit
 
       def self.fetch(kind)
         CHECKS.fetch(kind).new
+      end
+
+      def self.unused_keys(config)
+        kind = config["check_kind"]
+        keys = config["compare_to"] == "expected" && compares_value?(kind) ? [expected_key(kind)] : %w[compare_to expected_path]
+        config["target"] == "json_path" ? keys : keys + %w[target_path]
+      end
+
+      def self.canonical(config)
+        hash = config.to_h.stringify_keys
+        relevant = hash.slice(*SHARED_KEYS, *config_keys(hash["check_kind"])).except(*unused_keys(hash))
+        relevant.to_h { |key, value| [key, canonical_value(key, value)] }.reject { |key, value| omitted?(key, value) }
+      end
+
+      def self.canonical_value(key, value)
+        case key
+        when *FLAG_KEYS then Flag.cast(value)
+        when *NUMBER_KEYS then NumericValue.parse(value) || value
+        when "value" then canonical_operand(value)
+        when "expected" then value.is_a?(String) ? parse_json(value) : value
+        else value
+        end
+      end
+
+      def self.canonical_operand(value)
+        return value.to_s if value.is_a?(::Numeric)
+        return value unless value.is_a?(String)
+
+        parsed = parse_json(value)
+        parsed.is_a?(Array) ? parsed : value
+      end
+
+      def self.parse_json(text)
+        JSON.parse(text)
+      rescue JSON::ParserError
+        text
+      end
+
+      def self.omitted?(key, value)
+        value.nil? || value == "" || (FLAG_KEYS.include?(key) && !value) || DEFAULTS[key] == value
       end
     end
   end

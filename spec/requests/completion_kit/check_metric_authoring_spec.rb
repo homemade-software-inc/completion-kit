@@ -215,6 +215,16 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(metric.reload.name).to eq("Renamed Check")
     end
 
+    it "saves a json_path_equals check whose expected value is a number" do
+      metric = create(:completion_kit_metric, :check)
+
+      patch "#{base_path}/#{metric.id}", params: { metric: { check_config: { check_kind: "json_path_equals", target: "response_text",
+                                                                             json_path: "code", expected: "200" } } }
+
+      expect(response).to redirect_to("#{base_path}/#{metric.id}")
+      expect(metric.reload.check_config["expected"]).to eq(200)
+    end
+
     it "updates check_config in place even when no current published version exists yet" do
       metric = create(:completion_kit_metric, :check)
 
@@ -231,6 +241,88 @@ RSpec.describe "Check metric authoring", type: :request do
       patch "#{base_path}/#{metric.id}", params: { metric: { metric_type: "llm_judge" } }
 
       expect(metric.reload.metric_type).to eq("check")
+    end
+  end
+
+  describe "resaving an in-use check through the edit form" do
+    let(:token) { "edit-form-token" }
+
+    before { CompletionKit.config.api_token = token }
+    after { CompletionKit.instance_variable_set(:@config, nil) }
+
+    def review!(metric)
+      create(:completion_kit_review, :check, response: create(:completion_kit_response), metric: metric,
+             metric_version: CompletionKit::MetricVersion.ensure_current_for(metric))
+      metric
+    end
+
+    def rest_check(name, config)
+      post "/completion_kit/api/v1/metrics", params: { name: name, metric_type: "check", check_config: config }.to_json,
+                                             headers: { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
+      expect(response).to have_http_status(:created), response.body
+      CompletionKit::Metric.find(JSON.parse(response.body)["id"])
+    end
+
+    def resubmit_edit_form(metric, overrides)
+      get "#{base_path}/#{metric.id}/edit"
+      form = Nokogiri::HTML5(response.body).css("form").find { |candidate| candidate.at_css('input[name="_method"][value="patch"]') }
+      fields = form.css("input, textarea").filter_map do |field|
+        next if field["name"].blank?
+        next if %w[checkbox radio].include?(field["type"]) && !field.key?("checked")
+
+        [field["name"], overrides.fetch(field["name"]) { field.name == "textarea" ? field.text : field["value"].to_s }]
+      end
+      patch "#{base_path}/#{metric.id}", params: Rack::Utils.parse_nested_query(URI.encode_www_form(fields))
+    end
+
+    def expect_rename_without_draft(metric)
+      original = metric.check_config
+
+      expect { resubmit_edit_form(metric, "metric[name]" => "#{metric.name} renamed") }
+        .not_to change(CompletionKit::MetricVersion.drafts, :count)
+
+      expect(response).to redirect_to("#{base_path}/#{metric.id}")
+      expect(metric.reload.name).to end_with("renamed")
+      expect(metric.check_config).to eq(original)
+    end
+
+    it "creates no draft for contains, regex and REST list checks when only the name changes" do
+      expect_rename_without_draft(review!(create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "TOKEN" })))
+      expect_rename_without_draft(review!(create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "regex", "target" => "response_text", "pattern" => "\\d{3}" })))
+      expect_rename_without_draft(review!(rest_check("Codes", { check_kind: "list_overlap", target: "json_path",
+                                                                target_path: "codes", value: %w[A B], min: 0.5 })))
+    end
+
+    it "creates no draft for REST checks whose values the form writes back as text" do
+      expect_rename_without_draft(review!(rest_check("Price", { check_kind: "numeric_equals", target: "response_text",
+                                                                value: 82_000, tolerance: 500 })))
+      expect_rename_without_draft(review!(rest_check("Status", { check_kind: "json_path_equals", target: "response_text",
+                                                                 json_path: "code", expected: "200" })))
+      expect_rename_without_draft(review!(rest_check("Loose", { check_kind: "regex", target: "response_text",
+                                                                pattern: "ok", case_sensitive: "false" })))
+    end
+
+    it "still drafts a real change made through the form" do
+      metric = review!(create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "TOKEN" }))
+
+      expect { resubmit_edit_form(metric, "metric[check_config][value]" => "OTHER") }
+        .to change(CompletionKit::MetricVersion.drafts, :count).by(1)
+
+      expect(CompletionKit::MetricVersion.drafts.find_by(metric_id: metric.id).check_config).to include("value" => "OTHER")
+    end
+
+    it "writes a list value into the form as JSON and leaves an unticked string flag unticked" do
+      list = rest_check("Codes", { check_kind: "list_overlap", target: "response_text", value: ["A", "B \"quoted\""] })
+      loose = rest_check("Loose", { check_kind: "regex", target: "response_text", pattern: "ok", case_sensitive: "false" })
+
+      get "#{base_path}/#{list.id}/edit"
+      expect(Nokogiri::HTML5(response.body).at_css('input[name="metric[check_config][value]"]')["value"]).to eq('["A","B \"quoted\""]')
+
+      get "#{base_path}/#{loose.id}/edit"
+      expect(Nokogiri::HTML5(response.body).at_css('input[type=checkbox][name="metric[check_config][case_sensitive]"]').key?("checked")).to be(false)
     end
   end
 

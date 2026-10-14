@@ -81,6 +81,81 @@ RSpec.describe CompletionKit::Checks::Registry do
     end
   end
 
+  describe ".unused_keys" do
+    it "drops the answer-key fields when grading against a constant, and the typed value when grading against the answer key" do
+      expect(described_class.unused_keys({ "check_kind" => "contains", "compare_to" => "constant" }))
+        .to eq(%w[compare_to expected_path target_path])
+      expect(described_class.unused_keys({ "check_kind" => "json_path_equals", "compare_to" => "expected", "target" => "json_path" }))
+        .to eq(%w[expected])
+    end
+
+    it "ignores compare_to expected on a kind that cannot use the answer key" do
+      expect(described_class.unused_keys({ "check_kind" => "regex", "compare_to" => "expected", "target" => "json_path" }))
+        .to eq(%w[compare_to expected_path])
+    end
+  end
+
+  describe ".canonical" do
+    def canonical(config)
+      described_class.canonical(config)
+    end
+
+    it "treats a config saved before the form sent explicit false flags as the same check" do
+      before = { "check_kind" => "contains", "target" => "response_text", "value" => "TOKEN" }
+      resaved = before.merge("case_sensitive" => false, "trim" => false)
+
+      expect(canonical(resaved)).to eq(canonical(before))
+    end
+
+    it "keeps a flag that is on, however it was written" do
+      expect(canonical({ "check_kind" => "regex", "pattern" => "x", "multiline" => "true" }))
+        .to eq({ "check_kind" => "regex", "pattern" => "x", "multiline" => true })
+    end
+
+    it "drops keys the kind does not read and the fields a constant or answer-key comparison leaves unused" do
+      config = { "check_kind" => "contains", "target" => "input_data", "target_path" => "leftover",
+                 "value" => "OK", "pattern" => "leftover", "compare_to" => "constant", "expected_path" => "vin", "json_path" => "x" }
+
+      expect(canonical(config)).to eq({ "check_kind" => "contains", "target" => "input_data", "value" => "OK" })
+    end
+
+    it "drops a default target and a default list measure" do
+      expect(canonical({ "check_kind" => "list_overlap", "target" => "response_text", "value" => "A", "score_by" => "recall" }))
+        .to eq({ "check_kind" => "list_overlap", "value" => "A" })
+      expect(canonical({ "check_kind" => "list_overlap", "value" => "A", "score_by" => "f1" })).to include("score_by" => "f1")
+    end
+
+    it "reads a list value written as a JSON string the same as the list itself" do
+      expect(canonical({ "check_kind" => "list_overlap", "value" => '["A","B"]' }))
+        .to eq(canonical({ "check_kind" => "list_overlap", "value" => %w[A B] }))
+      expect(canonical({ "check_kind" => "list_overlap", "value" => "A, B" })["value"]).to eq("A, B")
+      expect(canonical({ "check_kind" => "contains", "value" => "[not json" })["value"]).to eq("[not json")
+      expect(canonical({ "check_kind" => "contains", "value" => "42" })["value"]).to eq("42")
+    end
+
+    it "reads a number value the way the form writes it back" do
+      expect(canonical({ "check_kind" => "numeric_equals", "value" => 82_000 }))
+        .to eq(canonical({ "check_kind" => "numeric_equals", "value" => "82000" }))
+    end
+
+    it "compares bounds and tolerances as numbers" do
+      expect(canonical({ "check_kind" => "length_bounds", "min" => "2", "max" => 9.0 }))
+        .to eq(canonical({ "check_kind" => "length_bounds", "min" => 2, "max" => "9" }))
+      expect(canonical({ "check_kind" => "numeric_equals", "value" => "1", "tolerance" => "2%" })["tolerance"]).to eq("2%")
+    end
+
+    it "reads an answer key written as JSON text the same as the value it encodes, and keeps a false one" do
+      expect(canonical({ "check_kind" => "json_path_equals", "json_path" => "code", "expected" => "200" }))
+        .to eq(canonical({ "check_kind" => "json_path_equals", "json_path" => "code", "expected" => 200 }))
+      expect(canonical({ "check_kind" => "json_path_equals", "json_path" => "state", "expected" => "active" })["expected"]).to eq("active")
+      expect(canonical({ "check_kind" => "json_path_equals", "json_path" => "ok", "expected" => false })["expected"]).to be(false)
+    end
+
+    it "reads a missing config as empty" do
+      expect(canonical(nil)).to eq({})
+    end
+  end
+
   describe ".raw_target? and .raw_expected?" do
     it "marks the kinds that compare parsed JSON rather than strings" do
       expect(described_class.raw_target?("list_overlap")).to be(true)

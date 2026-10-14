@@ -275,6 +275,10 @@ module CompletionKit
       end
     end
 
+    def ck_check_input_value(value)
+      value.is_a?(Array) || value.is_a?(Hash) ? value.to_json : value
+    end
+
     def ck_check_spec_fields(config)
       config.except("check_kind", "target").reject do |key, _value|
         CHECK_FLAG_FIELDS.include?(key) && !CompletionKit::Checks::Flag.on?(config, key)

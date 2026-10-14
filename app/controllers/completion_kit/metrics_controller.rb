@@ -208,10 +208,9 @@ module CompletionKit
     end
 
     def update_check_definition
-      raw = metric_params[:check_config]
-      proposed = raw.nil? ? nil : normalize_check_config(raw)
+      proposed = metric_params.to_unsafe_h[:check_config]
 
-      unless !proposed.nil? && proposed != @metric.check_config
+      unless !proposed.nil? && CompletionKit::Checks::Registry.canonical(proposed) != CompletionKit::Checks::Registry.canonical(@metric.check_config)
         return redirect_to(metric_path(@metric), notice: "Metric was successfully updated.")
       end
 
@@ -258,14 +257,7 @@ module CompletionKit
       %w[min max tolerance].each { |key| hash[key] = coerce_number(hash[key]) if hash[key].present? }
       %w[case_sensitive multiline trim].each { |key| hash[key] = ActiveModel::Type::Boolean.new.cast(hash[key]) if hash.key?(key) }
       hash["expected"] = coerce_scalar(hash["expected"]) if hash["expected"].present?
-      if hash["compare_to"] == "expected" && CompletionKit::Checks::Registry.compares_value?(hash["check_kind"])
-        hash.delete(CompletionKit::Checks::Registry.expected_key(hash["check_kind"]))
-      else
-        hash.delete("compare_to")
-        hash.delete("expected_path")
-      end
-      hash.delete("target_path") unless hash["target"] == "json_path"
-      prune_check_config(hash)
+      prune_check_config(hash.except(*CompletionKit::Checks::Registry.unused_keys(hash)))
     end
 
     def prune_check_config(hash)

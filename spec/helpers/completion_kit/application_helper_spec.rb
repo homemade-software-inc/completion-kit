@@ -403,6 +403,13 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_check_field_label("tolerance")).to eq("How far off is still right")
       expect(helper.ck_check_kind_label("numeric_equals")).to eq("A number is close enough")
     end
+
+    it "writes a list or an object into a form input as JSON and leaves text and numbers alone" do
+      expect(helper.ck_check_input_value(%w[A B])).to eq('["A","B"]')
+      expect(helper.ck_check_input_value({ "a" => 1 })).to eq('{"a":1}')
+      expect(helper.ck_check_input_value("A, B")).to eq("A, B")
+      expect(helper.ck_check_input_value(82_000)).to eq(82_000)
+    end
   end
 
   describe "#ck_result_change_badge" do
