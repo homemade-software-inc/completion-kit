@@ -7,6 +7,11 @@ CompletionKit.configure do |config|
   # config.anthropic_api_key    = ENV['ANTHROPIC_API_KEY']
   # config.ollama_api_key       = ENV['OLLAMA_API_KEY']
   # config.ollama_api_endpoint  = ENV['OLLAMA_API_ENDPOINT']
+  #
+  # The Ollama key is sent only to the Ollama endpoint set here, or to
+  # http://localhost:11434/v1 when no endpoint is set and
+  # config.allow_loopback_endpoints is on (the default). A provider credential
+  # that points at any other endpoint gets no key unless it stores its own.
 
   # 2. Dotenv (.env file):
   # require 'dotenv/load'

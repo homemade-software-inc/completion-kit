@@ -51,6 +51,16 @@ module CompletionKit
       nil
     end
 
+    def same_destination?(url, other)
+      destination = destination(url)
+      !destination.nil? && destination == destination(other)
+    end
+
+    def destination(url)
+      uri = parse(url)
+      [uri.scheme, uri.host.downcase, uri.port, uri.path.delete_suffix("/")] if uri
+    end
+
     def issues_for(addrs)
       return [:unresolvable] if addrs.empty?
       return [:unsafe_host] if addrs.any? { |ip| unsafe?(ip) }
