@@ -147,5 +147,41 @@ RSpec.describe CompletionKit::Dataset, type: :model do
 
       expect(dataset.update(name: "Renamed")).to be(true)
     end
+
+    it "rejects csv_data whose header row is blank" do
+      ["\nname\nfoo\n", "  \nname\nfoo\n", "\r\nname\r\nfoo\r\n", "\u00a0\nname\n"].each do |csv|
+        dataset = build(:completion_kit_dataset, csv_data: csv)
+
+        expect(dataset).not_to be_valid, "for #{csv.inspect}"
+        expect(dataset.errors[:csv_data]).to eq(["has a blank header row"]), "for #{csv.inspect}"
+      end
+    end
+
+    it "says only that csv_data can't be blank when it holds nothing but whitespace" do
+      [nil, "", " ", "\n\n", " \r\n \t\n", " " * (described_class::HEADER_ROW_LIMIT + 1)].each do |csv|
+        dataset = build(:completion_kit_dataset, csv_data: csv)
+
+        expect(dataset).not_to be_valid, "for #{csv.inspect}"
+        expect(dataset.errors[:csv_data]).to eq(["can't be blank"]), "for #{csv.inspect}"
+      end
+    end
+
+    it "refuses a whitespace-led upload at the size limit without blank? or a regex over the whole file" do
+      dataset = build(:completion_kit_dataset, csv_data: whitespace_led_csv(CompletionKit.config.max_upload_bytes))
+      scans = track_string_scans(dataset.csv_data)
+
+      expect(dataset).not_to be_valid
+      expect(dataset.errors[:csv_data]).to eq(["has a blank header row"])
+      expect(scans).to be_empty
+    end
+
+    it "renames an existing whitespace-led dataset without blank? or a regex over the whole file" do
+      dataset = build(:completion_kit_dataset, csv_data: whitespace_led_csv(CompletionKit.config.max_upload_bytes))
+      dataset.save!(validate: false)
+      scans = track_string_scans(dataset.csv_data)
+
+      expect(dataset.update(name: "Renamed")).to be(true)
+      expect(scans).to be_empty
+    end
   end
 end
