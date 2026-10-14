@@ -2053,6 +2053,10 @@ label.ck-checkbox[hidden] {
   flex: 1;
 }
 
+.ck-field-row:not(:has(> .ck-field:not([hidden]))) {
+  display: none;
+}
+
 .ck-metric-type-chip {
   text-transform: uppercase;
   letter-spacing: 0.04em;

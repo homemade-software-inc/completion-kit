@@ -617,6 +617,14 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(script).to include('document.addEventListener("turbo:render", ckAutoFocusFirstError);')
     end
 
+    it "hides the min and max row when the rule shows neither, so the row leaves no double gap" do
+      css = File.read(CompletionKit::Engine.root.join("app/assets/stylesheets/completion_kit/application.css"))
+
+      expect(css).to match(/^\.ck-field-row:not\(:has\(> \.ck-field:not\(\[hidden\]\)\)\) \{\n  display: none;\n\}/)
+      get "#{base_path}/new"
+      expect(Nokogiri::HTML5(response.body).css(".ck-field-row > .ck-field").map { |field| field["data-ck-check-field"] }).to eq(%w[min max])
+    end
+
     it "renders a failed list check save with the list check's own labels and hints" do
       post base_path, params: { metric: { name: "Codes", metric_type: "check",
                                           check_config: { check_kind: "list_overlap", target: "response_text", value: "A, B", min: "5" } } }
