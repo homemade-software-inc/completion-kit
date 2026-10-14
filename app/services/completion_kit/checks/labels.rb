@@ -66,7 +66,7 @@ module CompletionKit
       }.freeze
 
       HINTS_BY_KIND = {
-        "list_overlap" => { "min" => "Leave blank to require a perfect score." }
+        "list_overlap" => { "min" => "Give a value from 0 to 1, like 0.6 for 60%. Leave blank to require a perfect score." }
       }.freeze
 
       VALUES = { "compare_to" => COMPARE_TO, "score_by" => SCORE_BY }.freeze

@@ -625,7 +625,7 @@ RSpec.describe "Check metric authoring", type: :request do
       page = Nokogiri::HTML5(response.body)
       expect(page.at_css('[data-ck-check-label="value"]').text).to eq("Expected list")
       expect(page.at_css('[data-ck-check-label="min"]').text).to eq("Lowest score that passes")
-      expect(page.at_css('[data-ck-check-hint="min"]').text).to eq("Leave blank to require a perfect score.")
+      expect(page.at_css('[data-ck-check-hint="min"]').text).to eq("Give a value from 0 to 1, like 0.6 for 60%. Leave blank to require a perfect score.")
     end
 
     it "marks each check field with an error, so focus lands on the first one after a failed save" do

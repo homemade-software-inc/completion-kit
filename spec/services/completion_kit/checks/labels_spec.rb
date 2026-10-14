@@ -39,7 +39,7 @@ RSpec.describe CompletionKit::Checks::Labels do
   end
 
   it "gives a hint the way the chosen rule does" do
-    expect(described_class.hint("min", "list_overlap")).to eq("Leave blank to require a perfect score.")
+    expect(described_class.hint("min", "list_overlap")).to eq("Give a value from 0 to 1, like 0.6 for 60%. Leave blank to require a perfect score.")
     expect(described_class.hint("min", "length_bounds")).to eq("Leave blank for no minimum.")
     expect(described_class.hint("max")).to eq("Leave blank for no maximum.")
   end
