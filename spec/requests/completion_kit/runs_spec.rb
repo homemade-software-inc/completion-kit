@@ -4,6 +4,28 @@ RSpec.describe "CompletionKit runs", type: :request do
   let!(:prompt) { create(:completion_kit_prompt, name: "Prompt A", template: "Static prompt without variables") }
   let(:base_path) { "/completion_kit/runs" }
 
+  def submitted_pairs(html)
+    form = Nokogiri::HTML5(html).at_css("form[action^='#{base_path}/']")
+    form.css("input, select, textarea").filter_map do |field|
+      name = field["name"]
+      next if name.blank? || %w[submit button].include?(field["type"])
+      next if %w[checkbox radio].include?(field["type"]) && !field.key?("checked")
+
+      value = case field.name
+              when "select" then (field.at_css("option[selected]") || field.at_css("option"))["value"].to_s
+              when "textarea" then field.text
+              else field["value"].to_s
+              end
+      [name, value]
+    end
+  end
+
+  def resubmit_edit_form(run, changes)
+    get "#{base_path}/#{run.id}/edit"
+    pairs = submitted_pairs(response.body).map { |name, value| [name, changes.fetch(name, value)] }
+    post "#{base_path}/#{run.id}", params: URI.encode_www_form(pairs), headers: { "CONTENT_TYPE" => "application/x-www-form-urlencoded" }
+  end
+
   it "renders index, show, new, and edit pages" do
     run = create(:completion_kit_run, prompt: prompt, name: "Run A")
 
@@ -673,28 +695,6 @@ RSpec.describe "CompletionKit runs", type: :request do
   describe "saving the edit form exactly as the browser submits it" do
     let(:dataset) { create(:completion_kit_dataset) }
 
-    def submitted_pairs(html)
-      form = Nokogiri::HTML5(html).at_css("form[action^='#{base_path}/']")
-      form.css("input, select, textarea").filter_map do |field|
-        name = field["name"]
-        next if name.blank? || %w[submit button].include?(field["type"])
-        next if %w[checkbox radio].include?(field["type"]) && !field.key?("checked")
-
-        value = case field.name
-                when "select" then (field.at_css("option[selected]") || field.at_css("option"))["value"].to_s
-                when "textarea" then field.text
-                else field["value"].to_s
-                end
-        [name, value]
-      end
-    end
-
-    def resubmit_edit_form(run, changes)
-      get "#{base_path}/#{run.id}/edit"
-      pairs = submitted_pairs(response.body).map { |name, value| [name, changes.fetch(name, value)] }
-      post "#{base_path}/#{run.id}", params: URI.encode_www_form(pairs), headers: { "CONTENT_TYPE" => "application/x-www-form-urlencoded" }
-    end
-
     it "renames a run with results in place, keeping a judge that has no model row" do
       run = create(:completion_kit_run, prompt: prompt, dataset: dataset, name: "Legacy judge")
       run.update_columns(judge_model: "legacy-judge", output_column: nil)
@@ -716,6 +716,27 @@ RSpec.describe "CompletionKit runs", type: :request do
 
       expect(CompletionKit::Run.order(:id).last.output_column).to eq("other_output")
       expect(run.reload.output_column).to eq("actual_output")
+    end
+
+    it "keeps the judge when no judge models are listed" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, judge_model: "gpt-4.1-mini", name: "Hidden judge")
+      CompletionKit::Model.update_all(supports_judging: false)
+
+      resubmit_edit_form(run, "run[name]" => "Renamed")
+
+      expect(response).to redirect_to("#{base_path}/#{run.id}")
+      expect(run.reload.name).to eq("Renamed")
+      expect(run.judge_model).to eq("gpt-4.1-mini")
+    end
+
+    it "submits no judge from the new run form when no judge models are listed" do
+      CompletionKit::Model.update_all(supports_judging: false)
+
+      get "#{base_path}/new"
+
+      judge = Nokogiri::HTML5(response.body).at_css("input[type='hidden']#run_judge_model")
+      expect(judge["name"]).to eq("run[judge_model]")
+      expect(judge["value"].to_s).to eq("")
     end
   end
 

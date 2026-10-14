@@ -113,7 +113,7 @@
         <p class="ck-field-hint" id="refresh-status" role="status" aria-live="polite" style="min-height: 1.2em; margin-top: -0.25rem; font-size: 0.75rem;">&nbsp;</p>
       <% else %>
         <p class="ck-field-hint" style="color: var(--ck-warning);">No judge models available.&ensp;<%= link_to "Add a provider", provider_credentials_path, class: "ck-link" %></p>
-        <%= form.hidden_field :judge_model, value: nil, id: "run_judge_model" %>
+        <%= form.hidden_field :judge_model, id: "run_judge_model" %>
       <% end %>
     </div>
 
