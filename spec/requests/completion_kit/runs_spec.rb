@@ -633,6 +633,17 @@ RSpec.describe "CompletionKit runs", type: :request do
         expect(response).to redirect_to("#{base_path}/#{run.id}")
         expect(run.reload.name).to eq("Renamed")
       end
+
+      it "saves the edit form of a scoring-only run exactly as the browser submits it" do
+        run = create(:completion_kit_run, prompt: nil, dataset: scoring_dataset, output_column: "actual_output", name: "Scored")
+        run.replace_metrics!([create(:completion_kit_metric).id])
+
+        resubmit_edit_form(run, "run[name]" => "Renamed")
+
+        expect(response).to redirect_to("#{base_path}/#{run.id}")
+        expect(run.reload.name).to eq("Renamed")
+        expect(run).to be_judge_only
+      end
     end
   end
 
