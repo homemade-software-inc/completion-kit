@@ -19,7 +19,7 @@
 
     <div class="ck-field">
       <label class="ck-checkbox-label">
-        <%= check_box_tag "run[judge_only]", "1", run.persisted? && run.judge_only?, id: "run_judge_only", class: "ck-checkbox" %>
+        <%= check_box_tag "run[judge_only]", "1", local_assigns[:judge_only] || (run.persisted? && run.judge_only?), id: "run_judge_only", class: "ck-checkbox" %>
         <span class="ck-checkbox-label__box" aria-hidden="true"></span>
         <span class="ck-checkbox-label__body">
           <span class="ck-checkbox-label__text">Score existing outputs</span>

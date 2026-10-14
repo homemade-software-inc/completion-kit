@@ -541,6 +541,79 @@ RSpec.describe "CompletionKit runs", type: :request do
     expect(response.body).to include("prevented this run from being saved")
   end
 
+  describe "the Score existing outputs option" do
+    let(:scoring_dataset) { create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n") }
+
+    def judge_only_box
+      Nokogiri::HTML5(response.body).at_css("input[type='checkbox'][name='run[judge_only]']")
+    end
+
+    it "drops a submitted prompt when ticked, so the run scores the dataset column" do
+      post base_path, params: { run: { name: "Scored", judge_only: "1", prompt_id: prompt.id, dataset_id: scoring_dataset.id, output_column: "actual_output" } }
+
+      run = CompletionKit::Run.order(:id).last
+      expect(response).to redirect_to("#{base_path}/#{run.id}")
+      expect(run.prompt_id).to be_nil
+      expect(run).to be_judge_only
+    end
+
+    it "forks a run with results into a scoring-only run when ticked on edit" do
+      run = create(:completion_kit_run, prompt: prompt, dataset: scoring_dataset, output_column: "actual_output", name: "Generated")
+      run.responses.create!(response_text: "Some output")
+
+      expect do
+        patch "#{base_path}/#{run.id}", params: { run: { name: "Generated", judge_only: "1", prompt_id: prompt.id, dataset_id: scoring_dataset.id, output_column: "actual_output" } }
+      end.to change(CompletionKit::Run, :count).by(1)
+
+      fork = CompletionKit::Run.order(:id).last
+      expect(fork.prompt_id).to be_nil
+      expect(run.reload.prompt_id).to eq(prompt.id)
+    end
+
+    it "keeps the box ticked when a ticked create fails" do
+      bare_dataset = create(:completion_kit_dataset, csv_data: "input,response\nhi,hello\n")
+
+      post base_path, params: { run: { name: "Bad column", judge_only: "1", prompt_id: "", dataset_id: bare_dataset.id, output_column: "actual_output" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(judge_only_box.key?("checked")).to be(true)
+    end
+
+    it "leaves the box unticked when an unticked create fails" do
+      post base_path, params: { run: { prompt_id: "" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(judge_only_box.key?("checked")).to be(false)
+    end
+
+    context "when the host app raises on unpermitted parameters" do
+      around do |example|
+        original = ActionController::Parameters.action_on_unpermitted_parameters
+        ActionController::Parameters.action_on_unpermitted_parameters = :raise
+        example.run
+      ensure
+        ActionController::Parameters.action_on_unpermitted_parameters = original
+      end
+
+      it "creates a scoring-only run when ticked" do
+        post base_path, params: { run: { name: "Scored", judge_only: "1", prompt_id: "", dataset_id: scoring_dataset.id, output_column: "actual_output", expected_column: "", max_tokens: "", judge_model: "", tag_names: [""] } }
+
+        run = CompletionKit::Run.order(:id).last
+        expect(response).to redirect_to("#{base_path}/#{run.id}")
+        expect(run).to be_judge_only
+      end
+
+      it "saves an edit of a scoring-only run with the box still ticked" do
+        run = create(:completion_kit_run, prompt: nil, dataset: scoring_dataset, output_column: "actual_output", name: "Scored")
+
+        patch "#{base_path}/#{run.id}", params: { run: { name: "Renamed", judge_only: "1", prompt_id: "", dataset_id: scoring_dataset.id, output_column: "actual_output" } }
+
+        expect(response).to redirect_to("#{base_path}/#{run.id}")
+        expect(run.reload.name).to eq("Renamed")
+      end
+    end
+  end
+
   describe "metric choices on a failed save" do
     let!(:saved_metric) { create(:completion_kit_metric, name: "Saved") }
     let!(:chosen_metric) { create(:completion_kit_metric, name: "Chosen") }
