@@ -224,5 +224,70 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
       expect(rendered).to eq("Hi {{name}} {{}}")
       expect(rendered).not_to equal(prompt.template)
     end
+
+    def fill(template, values)
+      described_class.apply_variables(build(:completion_kit_prompt, template: template), values)
+    end
+
+    def pattern_fill(template, values)
+      return template.dup if values.empty?
+
+      names = values.keys.map { |name| Regexp.escape(name) }.join("|")
+      template.gsub(/\{\{\s*(#{names})\s*\}\}/) { values[Regexp.last_match(1)].to_s }
+    end
+
+    it "matches a padded name only where the {{name}} pattern did, as a CSV header row like `name, city` gives" do
+      values = { "name" => "Ada", " city" => "Paris", "zip " => "75" }
+
+      expect(fill("{{name}} {{city}} {{ city }} {{zip}} {{ zip }}", values)).to eq("Ada {{city}} Paris {{zip}} 75")
+    end
+
+    it "fills the name the {{name}} pattern picked when several could match one placeholder" do
+      expect(fill("{{ a }}", { " a " => "1", " a" => "2", "a" => "3" })).to eq("3")
+      expect(fill("{{ a }}", { " a " => "1", "a " => "2" })).to eq("2")
+      expect(fill("{{ a }}", { " a " => "1", " a" => "2" })).to eq("1")
+      expect(fill("{{a}}}", { "a" => "1", "a}" => "2" })).to eq("1}")
+      expect(fill("{{a}}}", { "a}" => "2", "a" => "1" })).to eq("2")
+    end
+
+    it "fills blank and brace-bearing names the way the {{name}} pattern did" do
+      {
+        ["{{}} {{  }}", { "" => "E" }] => "E E",
+        ["{{ \t}} {{ }}", { " " => "S" }] => "S S",
+        ["{{ \t}}", { " " => "S", "\t" => "T" }] => "T",
+        ["{{a}}}", { "a}" => "1" }] => "1",
+        ["{{{{x}}}}", { "{{x}}" => "1" }] => "1",
+        ["{{ a}} }} {{b}}", { "a}} " => "1", "b" => "2" }] => "1 2",
+        ["{{a}b}} {{a}}", { "a}b" => "1" }] => "1 {{a}}",
+        ["{{a}}", { "a}}" => "1" }] => "{{a}}"
+      }.each do |(template, values), expected|
+        expect(fill(template, values)).to eq(expected), "for #{template.inspect} with #{values.inspect}"
+      end
+    end
+
+    it "agrees with the {{name}} pattern on every template and name set in a seeded random sample" do
+      random = Random.new(20_261_015)
+      alphabet = ["{", "}", "}", "a", "b", " ", " ", "\t", "\n", "é"]
+      spaces = [" ", "\t", "\n", "\v", "\f", "\r"]
+      word = ->(longest) { Array.new(random.rand(0..longest)) { alphabet[random.rand(alphabet.length)] }.join }
+      padding = -> { Array.new(random.rand(0..3)) { spaces[random.rand(spaces.length)] }.join }
+
+      2_000.times do
+        values = Array.new(random.rand(0..5)) { [word.call(5), "<#{random.rand(100)}>"] }.to_h
+        names = values.keys
+        template = Array.new(random.rand(1..6)) do
+          name = names.empty? ? word.call(3) : names[random.rand(names.length)]
+          case random.rand(4)
+          when 0 then word.call(4)
+          when 1 then "{{#{padding.call}#{name}#{padding.call}}}"
+          when 2 then "{{#{padding.call}#{word.call(4)}#{padding.call}}}"
+          else "#{"{" * random.rand(1..3)}#{name}#{"}" * random.rand(1..3)}"
+          end
+        end.join
+
+        expect(fill(template, values)).to eq(pattern_fill(template, values)), "for #{template.inspect} with #{values.inspect}"
+      end
+    end
+
   end
 end
