@@ -56,6 +56,9 @@ RSpec.describe "CompletionKit boot smoke" do
     expect(CompletionKit.config.judge_model).to eq("claude-3-7-sonnet-latest")
 
     expect { CompletionKit.configure }.not_to raise_error
+    expect { CompletionKit.configure { |config| config.regex_timeout = 0 } }
+      .to raise_error(ArgumentError, "regex_timeout must be a positive number of seconds or nil, got 0")
+    expect(CompletionKit.config.regex_timeout).to eq(1.0)
 
     expect { silently_load(File.expand_path("../../lib/completion-kit.rb", __dir__)) }.not_to raise_error
 
