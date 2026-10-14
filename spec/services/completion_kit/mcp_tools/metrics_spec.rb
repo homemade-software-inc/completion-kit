@@ -77,6 +77,15 @@ RSpec.describe CompletionKit::McpTools::Metrics do
       expect(described_class::CHECK_CONFIG_HINT).to include("compare_to")
     end
 
+    it "says a missing case_sensitive matches case-insensitively on text, regex and list checks" do
+      sentence = "A check with no case_sensitive matches case-insensitively, regex and list_overlap included"
+      expect(described_class::CHECK_CONFIG_HINT).to include(sentence)
+      expect(described_class::CHECK_CONFIG_SCHEMA[:properties][:case_sensitive][:description]).to include(sentence)
+      %w[metrics_create metrics_update].each do |tool|
+        expect(described_class::TOOLS[tool][:description]).to include(sentence)
+      end
+    end
+
     it "creates a comparison check that grades against each row's expected_output" do
       result = described_class.call("metrics_create", {
         "name" => "VIN ground truth", "metric_type" => "check",

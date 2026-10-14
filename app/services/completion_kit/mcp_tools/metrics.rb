@@ -3,6 +3,9 @@ module CompletionKit
     module Metrics
       extend Base
 
+      CASE_SENSITIVE_NOTE = "A check with no case_sensitive matches case-insensitively, regex and list_overlap included; " \
+        "send case_sensitive: true to match case exactly. Before 0.29.0 a regex check read a missing case_sensitive as case-sensitive."
+
       CHECK_CONFIG_SCHEMA = {
         type: "object",
         properties: {
@@ -19,7 +22,7 @@ module CompletionKit
           max: {type: "number"},
           score_by: {type: "string", enum: CompletionKit::Checks::ListOverlap::MEASURES},
           tolerance: {type: %w[number string], description: "A plain number for a fixed amount, or a percentage string such as \"2%\" for a share of the expected value"},
-          case_sensitive: {type: "boolean"},
+          case_sensitive: {type: "boolean", description: CASE_SENSITIVE_NOTE},
           multiline: {type: "boolean"},
           trim: {type: "boolean"}
         }
@@ -33,6 +36,7 @@ module CompletionKit
         "and min is the fraction that counts as a pass (1, a perfect score, by default). " \
         "numeric_bounds and numeric_equals read a number, ignoring the commas and currency symbol a figure is written with; " \
         "numeric_equals takes a tolerance, either a plain number for a fixed amount or a percentage string such as 2% for a share of the expected value. " \
+        "#{CASE_SENSITIVE_NOTE} " \
         "Set compare_to:\"expected\" on #{CompletionKit::Checks::Registry.comparable_kinds.join(", ")} to grade against each row's own expected_output (ground truth) " \
         "instead of a constant; drop value (or expected, for json_path_equals) and add expected_path to dig into the answer key when it is JSON."
 

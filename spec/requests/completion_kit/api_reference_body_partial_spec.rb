@@ -48,6 +48,14 @@ RSpec.describe "completion_kit/api_reference/_body partial", type: :request do
     expect(html).to include("https://app.example.test/api/v1/prompts/#{prompt.slug}")
   end
 
+  it "says on metric create that a missing case_sensitive matches case-insensitively" do
+    page = Nokogiri::HTML5(render_body(base_url: "https://docs.example.test"))
+    create = page.css(".ck-api-endpoint").find { |node| node.at_css(".ck-api-method")&.text.to_s.squish == "POST /api/v1/metrics" }
+
+    expect(create.text.squish).to include("A check with no case_sensitive matches case-insensitively, regex and list_overlap included")
+    expect(create.text.squish).to include('"case_sensitive": true')
+  end
+
   it "documents metric_type and check_config in the REST metrics contract" do
     html = render_body(base_url: "https://docs.example.test")
 
