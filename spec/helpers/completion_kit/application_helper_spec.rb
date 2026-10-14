@@ -386,6 +386,13 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
       expect(helper.ck_check_score_by_options.map(&:last).join).not_to match(/recall|precision|jaccard|F1/i)
     end
 
+    it "hides only an unset case, multiline or trim flag on the metric page, never a false answer" do
+      config = { "check_kind" => "json_path_equals", "target" => "response_text", "json_path" => "ok",
+                 "expected" => false, "case_sensitive" => false, "multiline" => "false", "trim" => true }
+
+      expect(helper.ck_check_spec_fields(config)).to eq("json_path" => "ok", "expected" => false, "trim" => true)
+    end
+
     it "labels the new numeric and list fields without engineering jargon" do
       expect(helper.ck_check_field_label("score_by")).to eq("How to score it")
       expect(helper.ck_check_field_label("tolerance")).to eq("How far off is still right")

@@ -259,6 +259,8 @@ module CompletionKit
 
     CHECK_TRANSLATED_FIELDS = %w[compare_to score_by].freeze
 
+    CHECK_FLAG_FIELDS = %w[case_sensitive multiline trim].freeze
+
     CHECK_TARGET_LABELS = {
       "response_text" => "The response text",
       "input_data" => "The input row",
@@ -307,6 +309,12 @@ module CompletionKit
       when "compare_to" then CHECK_COMPARE_TO_LABELS.fetch(value.to_s, value)
       when "score_by" then CHECK_SCORE_BY_LABELS.fetch(value.to_s, value)
       else value
+      end
+    end
+
+    def ck_check_spec_fields(config)
+      config.except("check_kind", "target").reject do |key, _value|
+        CHECK_FLAG_FIELDS.include?(key) && !CompletionKit::Checks::Flag.on?(config, key)
       end
     end
 

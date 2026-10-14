@@ -338,6 +338,33 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(response.body).not_to include("ck-rubric-display")
     end
 
+    it "shows a JSON field expected to be false, while hiding an unticked flag" do
+      metric = create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "json_path_equals", "target" => "response_text",
+                        "json_path" => "recalled", "expected" => false })
+      metric.update_column(:check_config, metric.check_config.merge("case_sensitive" => false))
+
+      get "#{base_path}/#{metric.id}"
+
+      spec = Nokogiri::HTML5(response.body).at_css(".ck-check-spec")
+      expect(spec.css(".ck-check-spec__term").map(&:text)).to include("Expected value")
+      expect(spec.css(".ck-check-spec__code").map(&:text)).to include("false")
+      expect(spec.text).not_to include("Case sensitive")
+    end
+
+    it "shows a list check's measure and threshold in the words the form uses" do
+      metric = create(:completion_kit_metric, :check,
+        check_config: { "check_kind" => "list_overlap", "target" => "response_text",
+                        "value" => "A, B", "score_by" => "f1", "min" => 0.5 })
+
+      get "#{base_path}/#{metric.id}"
+
+      spec = Nokogiri::HTML5(response.body).at_css(".ck-check-spec")
+      expect(spec.css(".ck-check-spec__term").map(&:text)).to include("Expected list", "How to score it", "Lowest score that passes")
+      expect(spec.text).to include("A balance of the two")
+      expect(spec.text).not_to include("f1")
+    end
+
     it "tags each row in the index with a Judge or Check chip" do
       create(:completion_kit_metric, name: "Helpfulness")
       create(:completion_kit_metric, :check, name: "JSON shape")
