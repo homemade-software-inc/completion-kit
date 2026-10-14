@@ -313,6 +313,33 @@ RSpec.describe CompletionKit::Metric, type: :model do
       expect(metric.reload.check_config).not_to have_key("target")
     end
 
+    it "names the form fields each check error is about, so the form can mark them" do
+      keys_for = lambda do |config|
+        metric = build(:completion_kit_metric, :check, check_config: config)
+        metric.validate
+        metric.check_error_keys
+      end
+
+      expect(keys_for.call({ "check_kind" => "regex", "target" => "response_text", "pattern" => "(" })).to eq(%w[pattern])
+      expect(keys_for.call({ "check_kind" => "contains", "target" => "json_path", "target_path" => "" })).to eq(%w[target_path value])
+      expect(keys_for.call({ "check_kind" => "length_bounds", "target" => "response_text" })).to eq(%w[min max])
+      expect(keys_for.call({ "check_kind" => "length_bounds", "target" => "response_text", "min" => 2, "max" => "abc" })).to eq(%w[max])
+      expect(keys_for.call({ "check_kind" => "numeric_bounds", "target" => "response_text", "min" => 9, "max" => 2 })).to eq(%w[min max])
+      expect(keys_for.call({ "check_kind" => "list_overlap", "target" => "response_text", "value" => "a", "score_by" => "vibes", "min" => 5 })).to eq(%w[score_by min])
+      expect(keys_for.call({ "check_kind" => "numeric_equals", "target" => "response_text", "value" => "x", "tolerance" => "-1" })).to eq(%w[tolerance value])
+      expect(keys_for.call({ "check_kind" => "contains", "target" => "response_text", "value" => %w[a] })).to eq(%w[value])
+      expect(keys_for.call({ "check_kind" => "equals", "target" => "input_data", "target_path" => "a", "compare_to" => "guess", "value" => "x" })).to eq(%w[target compare_to])
+      expect(keys_for.call({ "check_kind" => "valid_json", "target" => "telepathy", "compare_to" => "expected" })).to eq(%w[target compare_to])
+      expect(keys_for.call({ "check_kind" => "telepathy" })).to eq(%w[check_kind])
+      expect(keys_for.call("nope")).to eq([])
+    end
+
+    it "names no check fields when the check is valid" do
+      metric = build(:completion_kit_metric, :check)
+      metric.validate
+      expect(metric.check_error_keys).to eq([])
+    end
+
     it "leaves a saved list value alone until the check itself changes" do
       metric = create(:completion_kit_metric, :check, check_config: { "check_kind" => "contains", "target" => "response_text", "value" => "foo" })
       metric.update_column(:check_config, metric.check_config.merge("value" => %w[foo bar]))

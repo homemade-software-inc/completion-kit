@@ -628,6 +628,32 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(page.at_css('[data-ck-check-hint="min"]').text).to eq("Leave blank to require a perfect score.")
     end
 
+    it "marks each check field with an error, so focus lands on the first one after a failed save" do
+      post base_path, params: { metric: { name: "Codes", metric_type: "check",
+                                          check_config: { check_kind: "list_overlap", target: "response_text", value: "A, B", min: "5" } } }
+
+      page = Nokogiri::HTML5(response.body)
+      expect(page.css('form [aria-invalid="true"]').map { |node| node["name"] }).to eq(["metric[check_config][min]"])
+
+      post base_path, params: { metric: { name: "", metric_type: "check",
+                                          check_config: { check_kind: "contains", target: "json_path", target_path: "", value: "" } } }
+
+      page = Nokogiri::HTML5(response.body)
+      expect(page.css('form [aria-invalid="true"]').map { |node| node["name"] })
+        .to eq(["metric[name]", "metric[check_config][target_path]", "metric[check_config][value]"])
+    end
+
+    it "marks a branded select whose choice was refused" do
+      post base_path, params: { metric: { name: "Codes", metric_type: "check",
+                                          check_config: { check_kind: "list_overlap", target: "telepathy", value: "A", score_by: "vibes" } } }
+
+      page = Nokogiri::HTML5(response.body)
+      invalid = page.css('form [aria-invalid="true"]')
+      expect(invalid.map { |node| node["class"] }).to eq(%w[ck-select__trigger ck-select__trigger])
+      expect(invalid.map { |node| node["aria-labelledby"] }).to eq(%w[metric_check_target_label metric_check_score_by_label])
+      expect(page.at_css('[aria-labelledby="metric_check_kind_label"].ck-select__trigger')["aria-invalid"]).to be_nil
+    end
+
     it "prefills a list check's measure and a number check's tolerance when editing" do
       list = create(:completion_kit_metric, :check,
         check_config: { "check_kind" => "list_overlap", "target" => "response_text", "value" => "A, B", "score_by" => "f1", "min" => 0.5 })

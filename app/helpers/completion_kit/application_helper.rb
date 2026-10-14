@@ -318,6 +318,14 @@ module CompletionKit
       content_tag(:code, shown.to_s, class: "ck-check-spec__code")
     end
 
+    def ck_check_field_invalid?(metric, key)
+      metric.check_error_keys.include?(key)
+    end
+
+    def ck_check_field_aria(metric, key)
+      ck_check_field_invalid?(metric, key) ? { "aria-invalid" => "true" } : {}
+    end
+
     def ck_check_score_by_options
       CompletionKit::Checks::Labels::SCORE_BY.to_a
     end

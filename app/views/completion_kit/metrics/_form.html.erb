@@ -176,7 +176,8 @@
                    name: "metric[check_config][check_kind]",
                    options: CompletionKit::Checks::Registry.kinds.map { |option| [option, ck_check_kind_label(option)] },
                    selected: kind,
-                   labelledby: "metric_check_kind_label" %>
+                   labelledby: "metric_check_kind_label",
+                   invalid: ck_check_field_invalid?(metric, "check_kind") %>
       </div>
 
       <div class="ck-field">
@@ -185,55 +186,56 @@
                    name: "metric[check_config][target]",
                    options: CompletionKit::Checks::TargetResolver::TARGETS.map { |target| [target, ck_check_target_label(target)] },
                    selected: check["target"] || CompletionKit::Checks::TargetResolver::TARGETS.first,
-                   labelledby: "metric_check_target_label" %>
+                   labelledby: "metric_check_target_label",
+                   invalid: ck_check_field_invalid?(metric, "target") %>
       </div>
 
       <div class="ck-field" data-ck-check-field="target_path">
         <label class="ck-label" for="metric_check_target_path"><%= ck_check_field_label("target_path") %></label>
         <p class="ck-hint">Where to look inside the response, like data.items.0.name. Use a number to pick an item out of a list.</p>
-        <input type="text" name="metric[check_config][target_path]" id="metric_check_target_path" class="ck-input" value="<%= check["target_path"] %>">
+        <input type="text" name="metric[check_config][target_path]" id="metric_check_target_path" class="ck-input" value="<%= check["target_path"] %>" <%= tag.attributes(ck_check_field_aria(metric, "target_path")) %>>
       </div>
 
       <div class="ck-field" data-ck-check-field="compare_to">
         <p class="ck-label"><%= ck_check_field_label("compare_to") %></p>
         <p class="ck-hint">Check every output against one fixed value, or against each row's own expected value (its answer key).</p>
         <label class="ck-radio">
-          <input type="radio" name="metric[check_config][compare_to]" value="constant" <%= "checked" unless check["compare_to"] == "expected" %>>
+          <input type="radio" name="metric[check_config][compare_to]" value="constant" <%= "checked" unless check["compare_to"] == "expected" %> <%= tag.attributes(ck_check_field_aria(metric, "compare_to")) %>>
           <span><%= ck_check_field_value("compare_to", "constant") %></span>
         </label>
         <label class="ck-radio">
-          <input type="radio" name="metric[check_config][compare_to]" value="expected" <%= "checked" if check["compare_to"] == "expected" %>>
+          <input type="radio" name="metric[check_config][compare_to]" value="expected" <%= "checked" if check["compare_to"] == "expected" %> <%= tag.attributes(ck_check_field_aria(metric, "compare_to")) %>>
           <span><%= ck_check_field_value("compare_to", "expected") %></span>
         </label>
       </div>
 
       <div class="ck-field" data-ck-check-field="value">
         <label class="ck-label" for="metric_check_value"><span data-ck-check-label="value"><%= ck_check_field_label("value", kind) %></span></label>
-        <input type="text" name="metric[check_config][value]" id="metric_check_value" class="ck-input" value="<%= ck_check_input_value(check["value"]) %>">
+        <input type="text" name="metric[check_config][value]" id="metric_check_value" class="ck-input" value="<%= ck_check_input_value(check["value"]) %>" <%= tag.attributes(ck_check_field_aria(metric, "value")) %>>
       </div>
 
       <div class="ck-field" data-ck-check-field="pattern">
         <label class="ck-label" for="metric_check_pattern"><%= ck_check_field_label("pattern") %></label>
         <p class="ck-hint">A regular expression to match against.</p>
-        <input type="text" name="metric[check_config][pattern]" id="metric_check_pattern" class="ck-input" value="<%= check["pattern"] %>">
+        <input type="text" name="metric[check_config][pattern]" id="metric_check_pattern" class="ck-input" value="<%= check["pattern"] %>" <%= tag.attributes(ck_check_field_aria(metric, "pattern")) %>>
       </div>
 
       <div class="ck-field" data-ck-check-field="json_path">
         <label class="ck-label" for="metric_check_json_path"><%= ck_check_field_label("json_path") %></label>
         <p class="ck-hint">The path to the value inside the response, like data.status.</p>
-        <input type="text" name="metric[check_config][json_path]" id="metric_check_json_path" class="ck-input" value="<%= check["json_path"] %>">
+        <input type="text" name="metric[check_config][json_path]" id="metric_check_json_path" class="ck-input" value="<%= check["json_path"] %>" <%= tag.attributes(ck_check_field_aria(metric, "json_path")) %>>
       </div>
 
       <div class="ck-field" data-ck-check-field="expected">
         <label class="ck-label" for="metric_check_expected"><%= ck_check_field_label("expected") %></label>
         <p class="ck-hint">The value it should equal. A number, true or false matches that JSON value. Put it in quotes, like "200", to match it as text.</p>
-        <input type="text" name="metric[check_config][expected]" id="metric_check_expected" class="ck-input" value="<%= ck_check_expected_input_value(check["expected"]) %>">
+        <input type="text" name="metric[check_config][expected]" id="metric_check_expected" class="ck-input" value="<%= ck_check_expected_input_value(check["expected"]) %>" <%= tag.attributes(ck_check_field_aria(metric, "expected")) %>>
       </div>
 
       <div class="ck-field" data-ck-check-field="expected_path">
         <label class="ck-label" for="metric_check_expected_path"><%= ck_check_field_label("expected_path") %></label>
         <p class="ck-hint">Optional. If the expected value is JSON, name the field to read from it, like data.answer. Leave blank to compare against the whole value.</p>
-        <input type="text" name="metric[check_config][expected_path]" id="metric_check_expected_path" class="ck-input" value="<%= check["expected_path"] %>">
+        <input type="text" name="metric[check_config][expected_path]" id="metric_check_expected_path" class="ck-input" value="<%= check["expected_path"] %>" <%= tag.attributes(ck_check_field_aria(metric, "expected_path")) %>>
       </div>
 
       <div class="ck-field" data-ck-check-field="score_by">
@@ -243,7 +245,8 @@
                    name: "metric[check_config][score_by]",
                    options: ck_check_score_by_options,
                    selected: check["score_by"] || CompletionKit::Checks::ListOverlap::DEFAULT_MEASURE,
-                   labelledby: "metric_check_score_by_label" %>
+                   labelledby: "metric_check_score_by_label",
+                   invalid: ck_check_field_invalid?(metric, "score_by") %>
       </div>
 
       <div class="ck-field-row">
@@ -251,7 +254,7 @@
           <div class="ck-field" data-ck-check-field="<%= bound %>">
             <label class="ck-label" for="metric_check_<%= bound %>"><span data-ck-check-label="<%= bound %>"><%= ck_check_field_label(bound, kind) %></span></label>
             <p class="ck-hint" data-ck-check-hint="<%= bound %>"><%= ck_check_field_hint(bound, kind) %></p>
-            <input type="number" step="any" name="metric[check_config][<%= bound %>]" id="metric_check_<%= bound %>" class="ck-input" value="<%= check[bound] %>">
+            <input type="number" step="any" name="metric[check_config][<%= bound %>]" id="metric_check_<%= bound %>" class="ck-input" value="<%= check[bound] %>" <%= tag.attributes(ck_check_field_aria(metric, bound)) %>>
           </div>
         <% end %>
       </div>
@@ -259,7 +262,7 @@
       <div class="ck-field" data-ck-check-field="tolerance">
         <label class="ck-label" for="metric_check_tolerance"><%= ck_check_field_label("tolerance") %></label>
         <p class="ck-hint">How far a number can be out and still count as correct. Write a plain number for a fixed amount, or add a percent sign, like 2%, for a share of the expected number. Leave blank to require an exact match.</p>
-        <input type="text" inputmode="decimal" name="metric[check_config][tolerance]" id="metric_check_tolerance" class="ck-input" value="<%= check["tolerance"] %>">
+        <input type="text" inputmode="decimal" name="metric[check_config][tolerance]" id="metric_check_tolerance" class="ck-input" value="<%= check["tolerance"] %>" <%= tag.attributes(ck_check_field_aria(metric, "tolerance")) %>>
       </div>
 
       <% CompletionKit::Checks::Registry::FLAG_KEYS.each do |flag| %>

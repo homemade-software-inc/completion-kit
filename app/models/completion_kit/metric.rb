@@ -95,6 +95,10 @@ module CompletionKit
       RunMetric.exists?(metric_id: id) || reviews.exists? || metric_versions.exists?
     end
 
+    def check_error_keys
+      errors.objects.select { |error| error.attribute == :check_config }.flat_map { |error| Array(error.options[:check_keys]) }.uniq
+    end
+
     def as_json(options = {})
       base = {
         id: id, name: name, key: key, metric_type: metric_type,
@@ -130,7 +134,7 @@ module CompletionKit
 
       kind = config["check_kind"]
       unless CompletionKit::Checks::Registry.kinds.include?(kind)
-        errors.add(:check_config, "needs #{check_label("check_kind")} to be one of #{CompletionKit::Checks::Registry.kinds.join(", ")}")
+        add_check_error("needs #{check_label("check_kind")} to be one of #{CompletionKit::Checks::Registry.kinds.join(", ")}", "check_kind")
         return
       end
 
@@ -138,7 +142,7 @@ module CompletionKit
       validate_check_compare_to(config, kind)
       validate_check_required_keys(config, kind)
       if refused_list_value?(config, kind)
-        errors.add(:check_config, "needs #{check_label("value", kind)} to be a single value, since only list_overlap takes a list")
+        add_check_error("needs #{check_label("value", kind)} to be a single value, since only list_overlap takes a list", "value")
       else
         validate_check_kind_rules(config, kind)
       end
@@ -152,11 +156,11 @@ module CompletionKit
       return unless config.key?("compare_to")
 
       unless %w[constant expected].include?(config["compare_to"])
-        errors.add(:check_config, "needs #{check_label("compare_to")} to be constant or expected")
+        add_check_error("needs #{check_label("compare_to")} to be constant or expected", "compare_to")
         return
       end
       if config["compare_to"] == "expected" && !CompletionKit::Checks::Registry.compares_value?(kind)
-        errors.add(:check_config, "can grade against \"Each row's expected value\" only with #{CompletionKit::Checks::Registry.comparable_kinds.join(", ")}")
+        add_check_error("can grade against \"Each row's expected value\" only with #{CompletionKit::Checks::Registry.comparable_kinds.join(", ")}", "compare_to")
       end
     end
 
@@ -164,11 +168,11 @@ module CompletionKit
       target = config["target"].presence || "response_text"
       path_given = config["target_path"].present?
       if !CompletionKit::Checks::TargetResolver::TARGETS.include?(target)
-        errors.add(:check_config, "needs #{check_label("target")} to be one of #{CompletionKit::Checks::TargetResolver::TARGETS.join(", ")}")
+        add_check_error("needs #{check_label("target")} to be one of #{CompletionKit::Checks::TargetResolver::TARGETS.join(", ")}", "target")
       elsif target == "json_path" && !path_given
-        errors.add(:check_config, "needs #{check_label("target_path")} filled in to check a value from the response JSON")
+        add_check_error("needs #{check_label("target_path")} filled in to check a value from the response JSON", "target_path")
       elsif target != "json_path" && path_given && will_save_change_to_check_config?
-        errors.add(:check_config, "needs #{check_label("target")} to be \"#{CompletionKit::Checks::Labels.target("json_path")}\" when #{check_label("target_path")} is filled in")
+        add_check_error("needs #{check_label("target")} to be \"#{CompletionKit::Checks::Labels.target("json_path")}\" when #{check_label("target_path")} is filled in", "target")
       end
     end
 
@@ -184,7 +188,7 @@ module CompletionKit
       required -= [CompletionKit::Checks::Registry.expected_key(kind)] if config["compare_to"] == "expected" && CompletionKit::Checks::Registry.compares_value?(kind)
       required.each do |required_key|
         missing = required_key == "expected" ? !config.key?("expected") : config[required_key].to_s.strip.empty?
-        errors.add(:check_config, "needs #{check_label(required_key, kind)} filled in") if missing
+        add_check_error("needs #{check_label(required_key, kind)} filled in", required_key) if missing
       end
     end
 
@@ -203,7 +207,7 @@ module CompletionKit
     def validate_check_pattern(config)
       Regexp.new(config["pattern"].to_s)
     rescue RegexpError
-      errors.add(:check_config, "needs #{check_label("pattern")} to be a valid regular expression")
+      add_check_error("needs #{check_label("pattern")} to be a valid regular expression", "pattern")
     end
 
     def validate_check_bounds(config, kind)
@@ -212,29 +216,30 @@ module CompletionKit
       min_label = check_label("min", kind)
       max_label = check_label("max", kind)
       if min.empty? && max.empty?
-        errors.add(:check_config, "needs #{min_label} or #{max_label} filled in")
+        add_check_error("needs #{min_label} or #{max_label} filled in", "min", "max")
         return
       end
 
       min_value = CompletionKit::Checks::NumericValue.parse(min)
       max_value = CompletionKit::Checks::NumericValue.parse(max)
-      if (!min.empty? && min_value.nil?) || (!max.empty? && max_value.nil?)
-        errors.add(:check_config, "needs #{min_label} and #{max_label} to be numbers")
+      not_numbers = { "min" => !min.empty? && min_value.nil?, "max" => !max.empty? && max_value.nil? }.select { |_key, bad| bad }.keys
+      if not_numbers.any?
+        add_check_error("needs #{min_label} and #{max_label} to be numbers", *not_numbers)
       elsif min_value && max_value && min_value > max_value
-        errors.add(:check_config, "needs #{min_label} to be no more than #{max_label}")
+        add_check_error("needs #{min_label} to be no more than #{max_label}", "min", "max")
       end
     end
 
     def validate_check_list_overlap(config)
       measures = CompletionKit::Checks::ListOverlap::MEASURES
       if config["score_by"].present? && !measures.include?(config["score_by"])
-        errors.add(:check_config, "needs #{check_label("score_by")} to be one of #{measures.join(", ")}")
+        add_check_error("needs #{check_label("score_by")} to be one of #{measures.join(", ")}", "score_by")
       end
       return if config["min"].to_s.strip.empty?
 
       threshold = CompletionKit::Checks::NumericValue.parse(config["min"])
       if threshold.nil? || threshold.negative? || threshold > 1
-        errors.add(:check_config, "needs #{check_label("min", "list_overlap")} to be a number between 0 and 1")
+        add_check_error("needs #{check_label("min", "list_overlap")} to be a number between 0 and 1", "min")
       end
     end
 
@@ -242,7 +247,7 @@ module CompletionKit
       validate_check_tolerance(config)
       return if config["compare_to"] == "expected" || config["value"].to_s.strip.empty?
 
-      errors.add(:check_config, "needs #{check_label("value", "numeric_equals")} to be a number") if CompletionKit::Checks::NumericValue.parse(config["value"]).nil?
+      add_check_error("needs #{check_label("value", "numeric_equals")} to be a number", "value") if CompletionKit::Checks::NumericValue.parse(config["value"]).nil?
     end
 
     def validate_check_tolerance(config)
@@ -250,8 +255,12 @@ module CompletionKit
 
       tolerance = CompletionKit::Checks::NumericEquals.tolerance_value(config["tolerance"])
       if tolerance.nil? || tolerance.negative?
-        errors.add(:check_config, "needs #{check_label("tolerance")} to be a number that is not negative, or a percentage like 2%")
+        add_check_error("needs #{check_label("tolerance")} to be a number that is not negative, or a percentage like 2%", "tolerance")
       end
+    end
+
+    def add_check_error(message, *keys)
+      errors.add(:check_config, message, check_keys: keys)
     end
 
     def check_label(key, kind = nil)

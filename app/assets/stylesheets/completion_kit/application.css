@@ -5209,12 +5209,14 @@ a.tag-mark {
 
 
 .ck-input--error,
-.ck-input[aria-invalid="true"] {
+.ck-input[aria-invalid="true"],
+.ck-select__trigger[aria-invalid="true"] {
   border-color: var(--ck-danger);
   background-color: rgba(248, 113, 113, 0.05);
 }
 .ck-input--error:focus,
-.ck-input[aria-invalid="true"]:focus {
+.ck-input[aria-invalid="true"]:focus,
+.ck-select__trigger[aria-invalid="true"]:focus-visible {
   box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
   border-color: var(--ck-danger);
 }

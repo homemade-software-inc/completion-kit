@@ -2,7 +2,7 @@
 <div class="ck-select" data-ck-select>
   <input type="hidden" name="<%= name %>" value="<%= chosen && chosen.first %>" data-ck-select-value>
   <button type="button" class="ck-select__trigger" data-ck-select-trigger
-          aria-haspopup="listbox" aria-expanded="false" aria-labelledby="<%= labelledby %>">
+          aria-haspopup="listbox" aria-expanded="false" aria-labelledby="<%= labelledby %>" <%= tag.attributes("aria-invalid": ("true" if local_assigns[:invalid])) %>>
     <span class="ck-select__label" data-ck-select-label><%= chosen && chosen.last %></span>
     <span class="ck-select__chevron" aria-hidden="true"><%= heroicon_tag "chevron-down" %></span>
   </button>
