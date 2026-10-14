@@ -2108,6 +2108,7 @@ label.ck-checkbox[hidden] {
 
 .ck-select {
   position: relative;
+  min-width: 0;
 }
 
 .ck-select__trigger {

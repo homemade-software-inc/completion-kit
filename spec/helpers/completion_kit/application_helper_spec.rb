@@ -369,9 +369,10 @@ RSpec.describe CompletionKit::ApplicationHelper, type: :helper do
     end
 
     it "never shows the scoring jargon the stored value uses" do
-      expect(helper.ck_check_field_value("score_by", "recall")).to eq("How much of the expected list was found")
-      expect(helper.ck_check_field_value("score_by", "f1")).to eq("A balance of the two")
-      expect(helper.ck_check_field_value("score_by", "jaccard")).to eq("How much the two lists overlap")
+      expect(helper.ck_check_field_value("score_by", "recall")).to eq("Coverage: how much of the expected list it found")
+      expect(helper.ck_check_field_value("score_by", "precision")).to eq("Accuracy: how much of what it returned was expected")
+      expect(helper.ck_check_field_value("score_by", "f1")).to eq("Balance: coverage and accuracy weighed equally")
+      expect(helper.ck_check_field_value("score_by", "jaccard")).to eq("Overlap: shared items out of every item in either list")
     end
 
     it "passes an unrecognised measure through rather than blanking it" do

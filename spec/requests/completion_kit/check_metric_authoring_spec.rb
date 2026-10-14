@@ -539,7 +539,12 @@ RSpec.describe "Check metric authoring", type: :request do
       page = Nokogiri::HTML5(response.body)
       expect(page.at_css('[data-ck-check-field="score_by"] .ck-label').text).to eq("How to score it")
       expect(response.body).to include('name="metric[check_config][score_by]" value="recall"')
-      expect(response.body).to include("How much of the expected list was found", "A balance of the two")
+      expect(response.body).to include(*CompletionKit::Checks::Labels::SCORE_BY.values)
+      hint = page.at_css('[data-ck-check-field="score_by"] .ck-hint').text
+      expect(hint).to eq(CompletionKit::Checks::Labels.hint("score_by"))
+      CompletionKit::Checks::Labels::SCORE_BY.each_value do |label|
+        expect(hint.downcase).to include(label.split(":").first.downcase)
+      end
       expect(page.at_css('[data-ck-check-field="tolerance"] input[name="metric[check_config][tolerance]"]')).to be_present
       expect(page.at_css('input[name="metric[check_config][min]"]')["step"]).to eq("any")
       %w[min max value].each { |key| expect(page.at_css("[data-ck-check-label=#{key}]")).to be_present }
@@ -668,7 +673,7 @@ RSpec.describe "Check metric authoring", type: :request do
 
       spec = Nokogiri::HTML5(response.body).at_css(".ck-check-spec")
       expect(spec.css(".ck-check-spec__term").map(&:text)).to include("Expected list", "How to score it", "Lowest score that passes")
-      expect(spec.text).to include("A balance of the two")
+      expect(spec.text).to include("Balance: coverage and accuracy weighed equally")
       expect(spec.text).not_to include("f1")
     end
 

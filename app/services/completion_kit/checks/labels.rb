@@ -26,10 +26,10 @@ module CompletionKit
       }.freeze
 
       SCORE_BY = {
-        "recall" => "How much of the expected list was found",
-        "precision" => "How much of the answer belonged",
-        "f1" => "A balance of the two",
-        "jaccard" => "How much the two lists overlap"
+        "recall" => "Coverage: how much of the expected list it found",
+        "precision" => "Accuracy: how much of what it returned was expected",
+        "f1" => "Balance: coverage and accuracy weighed equally",
+        "jaccard" => "Overlap: shared items out of every item in either list"
       }.freeze
 
       FIELDS = {
@@ -59,6 +59,8 @@ module CompletionKit
       }.freeze
 
       HINTS = {
+        "score_by" => "Coverage ignores extra items, and accuracy ignores missing ones. Balance weighs the two equally. " \
+                      "Overlap divides the shared items by every item in either list, so it never scores higher than the other three.",
         "min" => "Leave blank for no minimum.",
         "max" => "Leave blank for no maximum."
       }.freeze

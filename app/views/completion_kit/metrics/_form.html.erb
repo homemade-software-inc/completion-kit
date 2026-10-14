@@ -238,7 +238,7 @@
 
       <div class="ck-field" data-ck-check-field="score_by">
         <p class="ck-label" id="metric_check_score_by_label"><%= ck_check_field_label("score_by") %></p>
-        <p class="ck-hint">Choose what matters most to you: what the model left out, what it added that should not be there, or a mix of the two.</p>
+        <p class="ck-hint"><%= ck_check_field_hint("score_by") %></p>
         <%= render "completion_kit/shared/branded_select",
                    name: "metric[check_config][score_by]",
                    options: ck_check_score_by_options,

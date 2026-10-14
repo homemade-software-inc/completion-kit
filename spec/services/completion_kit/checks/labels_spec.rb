@@ -15,6 +15,15 @@ RSpec.describe CompletionKit::Checks::Labels do
     expect(keys.uniq - described_class::FIELDS.keys).to be_empty
   end
 
+  it "describes all four ways to score a list, each under its own name" do
+    names = described_class::SCORE_BY.values.map { |label| label.split(":").first }
+    expect(names).to eq(%w[Coverage Accuracy Balance Overlap])
+    expect(described_class.hint("score_by")).to eq(
+      "Coverage ignores extra items, and accuracy ignores missing ones. Balance weighs the two equally. " \
+      "Overlap divides the shared items by every item in either list, so it never scores higher than the other three."
+    )
+  end
+
   it "humanizes a kind, target or field it does not know" do
     expect(described_class.kind("mystery_kind")).to eq("Mystery kind")
     expect(described_class.target("elsewhere")).to eq("Elsewhere")
