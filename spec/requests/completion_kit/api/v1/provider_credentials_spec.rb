@@ -68,6 +68,53 @@ RSpec.describe "API V1 Provider Credentials", type: :request do
     end
   end
 
+  describe "PATCH /api/v1/provider_credentials/:id moving a stored key" do
+    let!(:cred) do
+      create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-stored-secret")
+    end
+
+    it "rejects a new endpoint without api_key and queues no discovery" do
+      ollama = create(:completion_kit_provider_credential, provider: "ollama", api_key: "ollama-secret",
+        api_endpoint: "https://ollama.example.test")
+      expect(CompletionKit::ModelDiscoveryJob).not_to receive(:perform_later)
+
+      patch "/completion_kit/api/v1/provider_credentials/#{ollama.id}",
+        params: {api_endpoint: "https://elsewhere.example.test"}.to_json,
+        headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]["api_key"].join).to match(/entered again/)
+      ollama.reload
+      expect(ollama.api_endpoint).to eq("https://ollama.example.test")
+      expect(ollama.api_key).to eq("ollama-secret")
+    end
+
+    it "rejects a provider switch without api_key" do
+      expect(CompletionKit::ModelDiscoveryJob).not_to receive(:perform_later)
+
+      patch "/completion_kit/api/v1/provider_credentials/#{cred.id}",
+        params: {provider: "ollama", api_endpoint: "https://elsewhere.example.test"}.to_json,
+        headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      cred.reload
+      expect(cred.provider).to eq("openai")
+      expect(cred.api_endpoint).to be_nil
+      expect(cred.api_key).to eq("sk-stored-secret")
+    end
+
+    it "accepts a new endpoint sent with api_key" do
+      patch "/completion_kit/api/v1/provider_credentials/#{cred.id}",
+        params: {api_endpoint: "https://elsewhere.example.test", api_key: "sk-for-elsewhere"}.to_json,
+        headers: headers
+
+      expect(response).to have_http_status(:ok)
+      cred.reload
+      expect(cred.api_endpoint).to eq("https://elsewhere.example.test")
+      expect(cred.api_key).to eq("sk-for-elsewhere")
+    end
+  end
+
   describe "azure_foundry api-version" do
     it "accepts api_version on create and returns it (without the key)" do
       post "/completion_kit/api/v1/provider_credentials",

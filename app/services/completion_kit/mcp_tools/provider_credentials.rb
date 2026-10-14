@@ -29,12 +29,13 @@ module CompletionKit
           handler: :create
         },
         "provider_credentials_update" => {
-          description: "Update a provider credential",
+          description: "Update a provider credential. Changing provider or api_endpoint on a credential with a stored key requires api_key in the same call, so a stored key never moves to a new provider or endpoint.",
           inputSchema: {
             type: "object",
             properties: {
               id: {type: "integer"}, provider: {type: "string"},
-              api_key: {type: "string"}, api_endpoint: {type: "string"}, api_version: {type: "string"}
+              api_key: {type: "string", description: "Required when provider or api_endpoint changes and a key is stored"},
+              api_endpoint: {type: "string"}, api_version: {type: "string"}
             },
             required: ["id"]
           },

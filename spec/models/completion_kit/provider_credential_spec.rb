@@ -371,4 +371,88 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
       expect(cred("http://api.example/v1")).to be_valid
     end
   end
+
+  describe "re-entering the key when the provider or endpoint changes" do
+    let(:credential) do
+      create(:completion_kit_provider_credential, provider: "ollama", api_key: "stored-secret-key",
+        api_endpoint: "https://ollama.example.test")
+    end
+
+    it "rejects a new endpoint unless the key is supplied, leaving the stored record alone" do
+      record = CompletionKit::ProviderCredential.find(credential.id)
+      expect(CompletionKit::ModelDiscoveryJob).not_to receive(:perform_later)
+
+      expect(record.update(api_endpoint: "https://elsewhere.example.test")).to be(false)
+      expect(record.errors[:api_key]).to be_present
+      expect(credential.reload.api_endpoint).to eq("https://ollama.example.test")
+      expect(credential.api_key).to eq("stored-secret-key")
+    end
+
+    it "rejects a new provider unless the key is supplied" do
+      record = CompletionKit::ProviderCredential.find(credential.id)
+
+      expect(record.update(provider: "azure_foundry")).to be(false)
+      expect(record.errors[:api_key]).to be_present
+      expect(credential.reload.provider).to eq("ollama")
+    end
+
+    it "still asks for the key after an earlier save on the same object" do
+      expect(credential.update(api_endpoint: "https://elsewhere.example.test")).to be(false)
+      expect(credential.errors[:api_key]).to be_present
+    end
+
+    it "forgets a key typed into a failed save once the record is reloaded" do
+      record = CompletionKit::ProviderCredential.find(credential.id)
+      expect(record.update(api_key: "sk-typed", api_endpoint: "ftp://not-http")).to be(false)
+
+      record.reload
+      expect(record.update(api_endpoint: "https://elsewhere.example.test")).to be(false)
+      expect(record.errors[:api_key]).to be_present
+    end
+
+    it "accepts a new endpoint when the same key is entered again" do
+      record = CompletionKit::ProviderCredential.find(credential.id)
+
+      expect(record.update(api_endpoint: "https://elsewhere.example.test", api_key: "stored-secret-key")).to be(true)
+      expect(credential.reload.api_endpoint).to eq("https://elsewhere.example.test")
+    end
+
+    it "accepts a new endpoint when the key is removed in the same save" do
+      record = CompletionKit::ProviderCredential.find(credential.id)
+
+      expect(record.update(api_endpoint: "https://elsewhere.example.test", api_key: nil)).to be(true)
+      expect(credential.reload.api_key).to be_nil
+    end
+
+    it "does not treat a blank endpoint replacing a missing one as a change" do
+      openai = create(:completion_kit_provider_credential, provider: "openai", api_key: "sk-stored", api_endpoint: nil)
+      record = CompletionKit::ProviderCredential.find(openai.id)
+
+      expect(record.update(api_endpoint: "", api_version: "")).to be(true)
+    end
+
+    it "lets a credential with no stored key move to a new endpoint" do
+      keyless = create(:completion_kit_provider_credential, provider: "ollama", api_key: nil,
+        api_endpoint: "https://ollama.example.test")
+      record = CompletionKit::ProviderCredential.find(keyless.id)
+
+      expect(record.update(api_endpoint: "https://elsewhere.example.test")).to be(true)
+    end
+  end
+
+  describe "#api_key_ending" do
+    it "returns the last four characters of the stored key, not a key assigned since" do
+      credential = create(:completion_kit_provider_credential, api_key: "sk-stored-1a2b")
+      record = CompletionKit::ProviderCredential.find(credential.id)
+      record.api_key = "sk-typed-9z9z"
+
+      expect(record.api_key_ending).to eq("1a2b")
+    end
+
+    it "is nil when no key is stored" do
+      credential = create(:completion_kit_provider_credential, provider: "ollama", api_key: nil)
+      expect(CompletionKit::ProviderCredential.find(credential.id).api_key_ending).to be_nil
+      expect(CompletionKit::ProviderCredential.new(api_key: "sk-new").api_key_ending).to be_nil
+    end
+  end
 end

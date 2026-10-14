@@ -27,6 +27,7 @@ module CompletionKit
     validates :provider, tenant_scoped_uniqueness: true
     validates :api_endpoint, presence: true, if: :azure_foundry?
     validate :api_endpoint_not_internal
+    validate :api_key_reentered_for_new_destination, on: :update
 
     after_save :enqueue_discovery
     before_destroy :ensure_not_in_use, prepend: true
@@ -34,6 +35,10 @@ module CompletionKit
 
     def azure_foundry?
       provider == "azure_foundry"
+    end
+
+    def api_key_ending
+      api_key_in_database.presence&.last(4)
     end
 
     def config_hash
@@ -178,6 +183,13 @@ module CompletionKit
       yield
     rescue StandardError => e
       Rails.logger.error("[CompletionKit] discovery broadcast render failed: #{e.class}: #{e.message}")
+    end
+
+    def api_key_reentered_for_new_destination
+      return if api_key_came_from_user? || api_key.blank?
+      return unless provider_changed? || api_endpoint_in_database.presence != api_endpoint.presence
+
+      errors.add(:api_key, "must be entered again when the provider or endpoint changes")
     end
 
     def api_endpoint_not_internal
