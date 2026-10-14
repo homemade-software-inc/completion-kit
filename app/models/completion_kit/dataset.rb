@@ -49,6 +49,14 @@ module CompletionKit
       []
     end
 
+    def any_rows?
+      stop = csv_data.present? && header_row_end
+      return false unless stop
+
+      stop += 1 if csv_data.byteslice(stop, 2) == "\r\n"
+      csv_data.bytesize > stop + 1
+    end
+
     private
 
     def header_row

@@ -164,6 +164,28 @@ RSpec.describe "MCP endpoint", type: :request do
       expect(list.length).to eq(1)
     end
 
+    it "starts a run over a dataset at the upload limit without reading the whole file in the request" do
+      create(:completion_kit_provider_credential)
+      header = "content,audience,expected_output\n"
+      body = header + ("a,b,c\n" * ((CompletionKit.config.max_upload_bytes - header.bytesize) / 6))
+      dataset = create(:completion_kit_dataset, csv_data: body)
+      prompt = create(:completion_kit_prompt, template: "Write {{content}} for {{audience}}")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset, expected_column: "expected_output")
+      sizes = track_csv_reads
+      expect_any_instance_of(CompletionKit::Dataset).not_to receive(:row_count)
+
+      expect {
+        post mcp_path, params: {jsonrpc: "2.0", id: 6, method: "tools/call", params: {
+          name: "runs_generate", arguments: {id: run.id}
+        }}.to_json, headers: session_headers
+      }.to have_enqueued_job(CompletionKit::StartRunJob)
+
+      result = JSON.parse(JSON.parse(response.body)["result"]["content"].first["text"])
+      expect(result["status"]).to eq("running")
+      expect(sizes).not_to be_empty
+      expect(sizes.max).to eq(header.chomp.bytesize)
+    end
+
     it "returns JSON-RPC error for unknown tool" do
       post mcp_path, params: {jsonrpc: "2.0", id: 4, method: "tools/call", params: {
         name: "nonexistent_tool", arguments: {}

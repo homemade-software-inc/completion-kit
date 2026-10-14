@@ -797,6 +797,27 @@ RSpec.describe CompletionKit::Run, type: :model do
       expect(run.reload.failure_summary).to include("Dataset has no rows")
     end
 
+    it "refuses a header-only dataset before claiming the run, without counting or parsing its rows" do
+      dataset = create(:completion_kit_dataset, csv_data: "header\n")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+      sizes = track_csv_reads
+      expect_any_instance_of(CompletionKit::Dataset).not_to receive(:row_count)
+
+      expect(run.start!).to be(false)
+      expect(run.reload.status).to eq("failed")
+      expect(run.failure_summary).to eq("Dataset has no rows")
+      expect(sizes).to be_empty
+    end
+
+    it "leaves a malformed dataset to StartRunJob, which fails the run with the same summary" do
+      dataset = create(:completion_kit_dataset, csv_data: "input\n\"unclosed\n")
+      run = create(:completion_kit_run, prompt: prompt, dataset: dataset)
+
+      expect(start_run!(run)).to be(true)
+      expect(run.reload.status).to eq("failed")
+      expect(run.failure_summary).to eq("Dataset has no rows")
+    end
+
     it "returns false and sets failure_summary when LLM client is not configured" do
       bad_client = instance_double(CompletionKit::LlmClient, configured?: false, configuration_errors: ["API key missing"])
       allow(CompletionKit::LlmClient).to receive(:for_model).and_return(bad_client)

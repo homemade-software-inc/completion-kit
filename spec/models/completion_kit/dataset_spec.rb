@@ -101,6 +101,38 @@ RSpec.describe CompletionKit::Dataset, type: :model do
     end
   end
 
+  describe "#any_rows?" do
+    it "is true when a data row follows the header row, blank rows included, as CSV counts them" do
+      ["name\nfoo\n", "name\nfoo", "name\r\nfoo\r\n", "name\rfoo\r", "name\n\n"].each do |csv|
+        expect(build(:completion_kit_dataset, csv_data: csv).any_rows?).to be(true), "for #{csv.inspect}"
+      end
+    end
+
+    it "is false when the file holds only a header row" do
+      ["name\n", "name", "name\r\n", "name\r", "\n", ""].each do |csv|
+        expect(build(:completion_kit_dataset, csv_data: csv).any_rows?).to be(false), "for #{csv.inspect}"
+      end
+    end
+
+    it "agrees with row_count on whether a well-formed file has rows" do
+      ["a,b\n1,2\n3,4\n", "a,b\n", "a,b\r\n1,2\r\n", "a,b\n\n1,2\n", "a,b"].each do |csv|
+        dataset = build(:completion_kit_dataset, csv_data: csv)
+        expect(dataset.any_rows?).to eq(dataset.row_count.positive?), "for #{csv.inspect}"
+      end
+    end
+
+    it "is false when the header row runs past the limit" do
+      expect(build(:completion_kit_dataset, csv_data: "a" * (described_class::HEADER_ROW_LIMIT + 1)).any_rows?).to be(false)
+    end
+
+    it "never parses the file" do
+      sizes = track_csv_reads
+
+      expect(build(:completion_kit_dataset, csv_data: "name\n#{"x\n" * 100_000}").any_rows?).to be(true)
+      expect(sizes).to be_empty
+    end
+  end
+
   describe "header row limit" do
     it "rejects csv_data whose header row runs past the limit" do
       dataset = build(:completion_kit_dataset, csv_data: "#{"a" * (described_class::HEADER_ROW_LIMIT + 1)}\n1\n")
