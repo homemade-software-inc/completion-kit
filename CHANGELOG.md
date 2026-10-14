@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.46] - 2026-10-14
+
+### Changed
+- **This release drops the unused `completion_kit_mcp_sessions` table.** Run `bin/rails completion_kit:install:migrations && bin/rails db:migrate`. Nothing has read or written the table since 0.28.45, so deploy 0.28.45 to every instance first. The migration uses `if_exists`, and its rollback rebuilds the table.
+- **Engine copy no longer uses em dashes.** Model groups, prompt versions, new auto run names and page titles now use a middle dot, such as "OpenAI · GPT-5" and "Support Reply Generator · v1 #3". Run names saved before this release keep their old form.
+
+### Fixed
+- **A prompt or run form rejected for its model keeps the choice and shows the error beside the select.** The rejected model stays selected, marked "(unavailable)", and the select keeps its full width with the same red border as other invalid fields.
+- **Saving a run keeps a judge that has no model row.** The run form used to show such a judge as "None", so a save cleared it. A save that forks a run with results also keeps a judge you did not change, and a run whose judge is hidden because no judge models are listed can be saved.
+- **A rerun is refused before anything is created when the generation API key is missing.** It used to leave a failed run on every click. `Run#rerun!` raises `CompletionKit::UnknownModelError` when a model does not resolve and `CompletionKit::ConfigurationError` when the client is not configured.
+- **Unticking every metric on the run edit form now removes them.** The form used to send nothing, so the run kept its metrics.
+- **The metric group form shows its errors at the top, and its breadcrumb and delete prompt keep the saved name after a failed save.**
+- **Ticking "Score existing outputs" no longer returns a 500 in a host that raises on unpermitted parameters.** The hint now says existing outputs will be judged.
+- **Renaming a run with results no longer forks it when the run has no output column set.**
+- **A failed row whose provider is unknown shows its message without a stray colon.**
+
 ## [0.28.45] - 2026-10-13
 
 ### Security
