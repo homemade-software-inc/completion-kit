@@ -181,6 +181,58 @@ RSpec.describe "API V1 Runs", type: :request do
     end
   end
 
+  describe "prompt and dataset ids from another tenant" do
+    let!(:foreign_prompt) { create(:completion_kit_prompt, template: "Static prompt") }
+    let!(:foreign_dataset) { create(:completion_kit_dataset) }
+
+    before { hide_outside_tenant(foreign_prompt, foreign_dataset) }
+
+    it "refuses to create a run on another tenant's prompt and writes no row" do
+      scoring = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+
+      expect {
+        post "/completion_kit/api/v1/runs", params: {name: "Cross", prompt_id: foreign_prompt.id, dataset_id: scoring.id}.to_json, headers: headers
+      }.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]).to eq("prompt_id" => ["not found"])
+    end
+
+    it "refuses to create a run on another tenant's dataset and writes no row" do
+      prompt = create(:completion_kit_prompt, template: "Static prompt")
+
+      expect {
+        post "/completion_kit/api/v1/runs", params: {name: "Cross", prompt_id: prompt.id, dataset_id: foreign_dataset.id}.to_json, headers: headers
+      }.not_to change { CompletionKit::Run.unscoped.count }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]).to eq("dataset_id" => ["not found"])
+    end
+
+    it "refuses to move a run onto another tenant's prompt" do
+      scoring = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+      run = create(:completion_kit_run, prompt: create(:completion_kit_prompt, template: "Static prompt"), dataset: scoring)
+      original_prompt_id = run.prompt_id
+
+      patch "/completion_kit/api/v1/runs/#{run.id}", params: {prompt_id: foreign_prompt.id}.to_json, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]).to eq("prompt_id" => ["not found"])
+      expect(run.reload.prompt_id).to eq(original_prompt_id)
+    end
+
+    it "refuses to move a run onto another tenant's dataset" do
+      run = create(:completion_kit_run, prompt: create(:completion_kit_prompt, template: "Static prompt"))
+      original_dataset_id = run.dataset_id
+
+      patch "/completion_kit/api/v1/runs/#{run.id}", params: {dataset_id: foreign_dataset.id}.to_json, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["details"]).to eq("dataset_id" => ["not found"])
+      expect(run.reload.dataset_id).to eq(original_dataset_id)
+    end
+  end
+
   describe "DELETE /api/v1/runs/:id" do
     it "deletes the run" do
       run = create(:completion_kit_run)

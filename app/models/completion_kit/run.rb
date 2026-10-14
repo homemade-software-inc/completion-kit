@@ -26,8 +26,9 @@ module CompletionKit
     validates :status, inclusion: { in: STATUSES }
     validates :max_tokens, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :judge_temperature, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 1 }, allow_nil: true
-    validate :dataset_supplies_prompt_variables
-    validate :judge_only_run_supplies_output_column
+    validate :references_in_scope
+    validate :dataset_supplies_prompt_variables, unless: :reference_out_of_scope?
+    validate :judge_only_run_supplies_output_column, unless: :reference_out_of_scope?
     validate :dataset_supplies_expected_column
 
     before_validation :set_default_status, on: :create
@@ -734,6 +735,23 @@ module CompletionKit
         count = Run.where(prompt_id: nil, dataset_id: dataset.id).count + 1
         self.name = "#{dataset.name} scoring ##{count}"
       end
+    end
+
+    def prompt_out_of_scope?
+      will_save_change_to_prompt_id? && prompt_id.present? && prompt.nil?
+    end
+
+    def dataset_out_of_scope?
+      will_save_change_to_dataset_id? && dataset_id.present? && dataset.nil?
+    end
+
+    def reference_out_of_scope?
+      prompt_out_of_scope? || dataset_out_of_scope?
+    end
+
+    def references_in_scope
+      errors.add(:prompt_id, "not found") if prompt_out_of_scope?
+      errors.add(:dataset_id, "not found") if dataset_out_of_scope?
     end
 
     def dataset_supplies_prompt_variables
