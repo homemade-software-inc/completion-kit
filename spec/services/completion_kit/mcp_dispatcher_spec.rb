@@ -9,10 +9,16 @@ RSpec.describe CompletionKit::McpDispatcher do
       expect(result[:capabilities][:tools]).to eq({listChanged: false})
     end
 
-    it "returns a session_id and records an active session" do
-      result = described_class.initialize_session
-      expect(result[:session_id]).to be_present
-      expect(CompletionKit::McpSession.active?(result[:session_id])).to be true
+    it "returns a fresh random session_id without touching the database" do
+      queries = []
+      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") { |*, payload| queries << payload[:sql] }
+      first = described_class.initialize_session[:session_id]
+      second = described_class.initialize_session[:session_id]
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+
+      expect(first).to match(/\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/)
+      expect(second).not_to eq(first)
+      expect(queries).to be_empty
     end
   end
 
