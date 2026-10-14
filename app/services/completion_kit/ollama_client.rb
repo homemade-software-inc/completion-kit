@@ -26,7 +26,7 @@ module CompletionKit
       end
 
       if response.success?
-        data = JSON.parse(response.body)
+        data = JsonObject.parse(response.body)
         data["choices"][0]["text"].strip
       else
         "Error: #{response.status} - #{response.body}"
@@ -37,6 +37,8 @@ module CompletionKit
       raise
     rescue ProviderEndpoint::UnsafeEndpoint => e
       "Error: API endpoint #{e.message}"
+    rescue JSON::ParserError => e
+      "Error: #{EndpointError.from(e).message}"
     rescue => e
       "Error: #{e.message}"
     end
@@ -50,7 +52,7 @@ module CompletionKit
 
       return [] unless response.success?
 
-      models = JSON.parse(response.body).fetch("data", []).map { |entry| entry["id"] }.sort
+      models = JsonObject.parse(response.body).fetch("data", []).map { |entry| entry["id"] }.sort
       models.map { |id| { id: id, name: id } }
     rescue StandardError
       []

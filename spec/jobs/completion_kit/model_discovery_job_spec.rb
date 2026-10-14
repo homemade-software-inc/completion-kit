@@ -79,6 +79,77 @@ RSpec.describe CompletionKit::ModelDiscoveryJob, type: :job do
     expect { described_class.perform_now(-1) }.not_to raise_error
   end
 
+  it "retries a connection failure before it records a discovery error" do
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(Faraday::ConnectionFailed, "Connection refused")
+
+    expect { described_class.perform_now(credential.id) }.to have_enqueued_job(described_class)
+
+    credential.reload
+    expect(credential.discovery_status).to eq("discovering")
+    expect(credential.discovery_error).to be_nil
+  end
+
+  it "retries a rate limit before it records a discovery error" do
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(CompletionKit::RateLimitError, "slow down")
+
+    expect { described_class.perform_now(credential.id) }.to have_enqueued_job(described_class)
+    expect(credential.reload.discovery_error).to be_nil
+  end
+
+  it "records a rate limit once its retries are exhausted and reports it" do
+    allow(Rails.error).to receive(:report)
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(CompletionKit::RateLimitError, "slow down")
+    job = described_class.new(credential.id)
+    job.exception_executions = { "[CompletionKit::RateLimitError]" => 4 }
+
+    job.perform_now
+
+    credential.reload
+    expect(credential.discovery_status).to eq("failed")
+    expect(credential.discovery_error).to eq("slow down")
+    expect(Rails.error).to have_received(:report)
+      .with(an_instance_of(CompletionKit::RateLimitError), handled: true, context: { job: described_class.name, provider_credential_id: credential.id })
+  end
+
+  it "does not report a connection failure while it still has retries left" do
+    allow(Rails.error).to receive(:report)
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(Faraday::ConnectionFailed, "Connection refused")
+
+    described_class.perform_now(credential.id)
+
+    expect(Rails.error).not_to have_received(:report)
+  end
+
+  TransportErrors.samples.each do |label, (error, message)|
+    it "records one fixed message for #{label} once retries are exhausted and reports it" do
+      allow(Rails.error).to receive(:report)
+      allow(Rails.logger).to receive(:warn)
+      allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(error)
+      job = described_class.new(credential.id)
+      job.exception_executions = { "[Faraday::TimeoutError, Faraday::ConnectionFailed]" => 4 }
+
+      job.perform_now
+
+      credential.reload
+      expect(credential.discovery_status).to eq("failed")
+      expect(credential.discovery_error).to eq(message)
+      expect(Rails.logger).to have_received(:warn).with(include(error.message))
+      expect(Rails.error).to have_received(:report)
+        .with(error, handled: true, context: { job: described_class.name, provider_credential_id: credential.id })
+    end
+  end
+
+  it "records one fixed message when the model list is not JSON" do
+    allow(Rails.error).to receive(:report)
+    allow_any_instance_of(CompletionKit::ModelDiscoveryService).to receive(:refresh!).and_raise(TransportErrors.not_json)
+
+    described_class.perform_now(credential.id)
+
+    credential.reload
+    expect(credential.discovery_status).to eq("failed")
+    expect(credential.discovery_error).to eq("The endpoint did not return JSON.")
+  end
+
   it "rate-limit wait is 30 seconds times the execution count" do
     expect(described_class.rate_limit_wait(1)).to eq(30)
     expect(described_class.rate_limit_wait(4)).to eq(120)

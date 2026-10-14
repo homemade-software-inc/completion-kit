@@ -101,6 +101,7 @@ module CompletionKit
       response = Response.find_by(id: @response_id)
       return unless response
 
+      error = EndpointError.from(error)
       response.update!(
         status: "failed",
         error_provider: provider_for(response),

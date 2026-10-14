@@ -106,7 +106,7 @@ module CompletionKit
       rescue ProviderEndpoint::UnsafeEndpoint => e
         error_result("URL is not allowed: it #{e.message}.")
       rescue Faraday::Error => e
-        error_result("Could not download CSV: #{e.message}")
+        error_result("Could not download CSV. #{EndpointError.from(e).message}")
       end
 
       def self.csv_connection(url)

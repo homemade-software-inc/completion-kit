@@ -7,6 +7,7 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:available_models).and_return([{ id: "gpt-4.1" }])
     allow_any_instance_of(CompletionKit::ProviderCredential).to receive(:configured?).and_return(true)
     allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
+    allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
   end
 
   it "covers index, new, edit, create, update, and invalid branches" do

@@ -1,3 +1,6 @@
+require "faraday"
+require "json"
+
 module CompletionKit
   class Error < StandardError; end
 
@@ -9,6 +12,24 @@ module CompletionKit
     def initialize(model_name = nil)
       @model_name = model_name
       super(%(No configured provider serves model "#{model_name}"))
+    end
+  end
+
+  class EndpointError < Error
+    CONNECTION_MESSAGE = "Could not connect to the endpoint."
+    TIMEOUT_MESSAGE = "The endpoint did not respond in time."
+    NOT_JSON_MESSAGE = "The endpoint did not return JSON."
+
+    def self.from(error)
+      message = case error
+                when Faraday::TimeoutError then TIMEOUT_MESSAGE
+                when Faraday::Error then CONNECTION_MESSAGE
+                when JSON::ParserError then NOT_JSON_MESSAGE
+                end
+      return error unless message
+
+      Rails.logger.warn("[CompletionKit] endpoint request failed: #{error.class}: #{error.message}")
+      new(message)
     end
   end
 

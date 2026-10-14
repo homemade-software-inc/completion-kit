@@ -117,6 +117,7 @@ module CompletionKit
       response = Response.find_by(id: @response_id)
       return unless response
 
+      error = EndpointError.from(error)
       review = response.reviews.find_or_initialize_by(metric_id: @metric_id)
       review.assign_attributes(
         metric_name: review.metric_name || Metric.find_by(id: @metric_id)&.name || "(deleted metric)",

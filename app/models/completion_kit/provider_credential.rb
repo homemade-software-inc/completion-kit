@@ -198,8 +198,8 @@ module CompletionKit
       issues = ProviderEndpoint.validate(api_endpoint)
       if issues.include?(:invalid_url)
         errors.add(:api_endpoint, "must be a valid http or https URL")
-      elsif issues.include?(:unsafe_host)
-        errors.add(:api_endpoint, "must not point at a private or internal address")
+      elsif issues.any?
+        errors.add(:api_endpoint, "must resolve to a public address")
       end
     end
   end

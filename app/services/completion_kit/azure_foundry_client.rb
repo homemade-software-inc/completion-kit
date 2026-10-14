@@ -35,7 +35,7 @@ module CompletionKit
       end
 
       if response.success?
-        data = JSON.parse(response.body)
+        data = JsonObject.parse(response.body)
         content = data.dig("choices", 0, "message", "content").to_s.strip
         return "Error: model returned empty content" if content.empty?
         content
@@ -48,6 +48,8 @@ module CompletionKit
       raise
     rescue ProviderEndpoint::UnsafeEndpoint => e
       "Error: API endpoint #{e.message}"
+    rescue JSON::ParserError => e
+      "Error: #{EndpointError.from(e).message}"
     rescue => e
       "Error: #{e.message}"
     end
@@ -61,7 +63,7 @@ module CompletionKit
       end
       return [] unless response.success?
 
-      body = JSON.parse(response.body)
+      body = JsonObject.parse(response.body)
       if foundry_project?
         body.fetch("value", []).map { |d| { id: d["name"], name: d["name"] } }
       else

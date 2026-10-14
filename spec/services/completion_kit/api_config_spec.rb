@@ -31,6 +31,7 @@ RSpec.describe CompletionKit::ApiConfig, type: :service do
 
   it "routes a discovered azure_foundry deployment to the azure config, api-version included" do
     allow(CompletionKit::ModelDiscoveryJob).to receive(:perform_later)
+    allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
     create(:completion_kit_provider_credential, provider: "azure_foundry", api_key: "azure-key",
       api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21")
     CompletionKit::Model.create!(provider: "azure_foundry", model_id: "my-gpt4o",

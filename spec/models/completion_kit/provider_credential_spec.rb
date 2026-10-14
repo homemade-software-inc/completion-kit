@@ -62,6 +62,7 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     end
 
     it "is valid with an endpoint and key, with or without an api-version" do
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).with("my-resource.openai.azure.com").and_return(["20.62.58.128"])
       with_version = CompletionKit::ProviderCredential.new(provider: "azure_foundry", api_key: "k",
         api_endpoint: "https://my-resource.openai.azure.com", api_version: "2024-10-21")
       expect(with_version).to be_valid
@@ -362,6 +363,21 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
     it "rejects a hostname that resolves to a private address" do
       allow(CompletionKit::ProviderEndpoint).to receive(:resolve).with("internal.example").and_return(["10.1.2.3"])
       expect(cred("http://internal.example")).not_to be_valid
+    end
+
+    it "rejects a name that does not resolve with the same message as a name that resolves privately" do
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).with("gone.example").and_return([])
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).with("internal.example").and_return(["10.1.2.3"])
+      unresolvable = cred("http://gone.example")
+      private_name = cred("http://internal.example")
+
+      expect(unresolvable).not_to be_valid
+      expect(private_name).not_to be_valid
+      expect(unresolvable.errors[:api_endpoint]).to eq(private_name.errors[:api_endpoint])
+    end
+
+    it "rejects a NAT64 address of the metadata service" do
+      expect(cred("http://[64:ff9b::a9fe:a9fe]")).not_to be_valid
     end
 
     it "rejects a metadata address written as a hex number" do
