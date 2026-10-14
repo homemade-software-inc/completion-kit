@@ -21,6 +21,18 @@ RSpec.describe CompletionKit::McpTools::Judges do
       expect(run.metrics).to include(metric)
     end
 
+    it "saves the run with its metric in one step, so the host hears of a run that already has it" do
+      seen = []
+      CompletionKit.config.on_run_created = ->(run) { seen << run.metric_ids }
+
+      described_class.call("judges_replay", {
+        "name" => "replay hook", "metric_id" => metric.id, "dataset_id" => dataset.id,
+        "judge_model" => "claude-3-7-sonnet-latest"
+      })
+
+      expect(seen).to eq([[metric.id]])
+    end
+
     it "honors an explicit output_column" do
       described_class.call("judges_replay", {
         "name" => "replay r", "metric_id" => metric.id, "dataset_id" => dataset.id,

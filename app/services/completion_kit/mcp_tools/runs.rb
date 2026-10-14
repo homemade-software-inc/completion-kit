@@ -158,6 +158,8 @@ module CompletionKit
         else
           error_result(new_run.failure_summary || "Could not start the new run.")
         end
+      rescue ActiveRecord::RecordInvalid => e
+        error_result(e.record.errors.full_messages.join(", "))
       end
 
       def self.retry_failures(args)

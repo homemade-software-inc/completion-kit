@@ -41,10 +41,10 @@ module CompletionKit
           name: args["name"],
           dataset: dataset,
           judge_model: args["judge_model"],
-          output_column: args["output_column"].presence || "actual_output"
+          output_column: args["output_column"].presence || "actual_output",
+          selected_metric_ids: [metric.id]
         )
         if run.save
-          run.replace_metrics!([metric.id])
           text_result(run.reload.as_json)
         else
           error_result(run.errors.full_messages.join(", "))

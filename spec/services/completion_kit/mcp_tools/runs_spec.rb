@@ -186,6 +186,18 @@ RSpec.describe CompletionKit::McpTools::Runs do
 
         expect(run.run_metrics.pluck(:metric_id)).to eq([own_metric.id])
       end
+
+      it "answers a rerun of a run carrying another tenant's metric with an error and writes nothing" do
+        reset_tenant_scope
+        run.replace_metrics!([own_metric.id, foreign_metric.id])
+        hide_outside_tenant(foreign_metric)
+
+        expect {
+          result = described_class.call("runs_rerun", {"id" => run.id})
+          expect(result[:isError]).to be(true)
+          expect(result[:content].first[:text]).to eq("Metrics include one that isn't available")
+        }.not_to change { CompletionKit::Run.unscoped.count }
+      end
     end
 
     it "creates a run with metric_ids" do
