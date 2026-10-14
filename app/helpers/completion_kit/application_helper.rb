@@ -158,8 +158,7 @@ module CompletionKit
         if retired
           models = models + [{ id: retired.model_id, name: "#{retired.display_name || retired.model_id} (retired)", provider: retired.provider }]
         else
-          note = rejected ? "not served" : "unavailable"
-          kept = [["#{selected} (#{note})", selected]]
+          kept = [["#{selected} (unavailable)", selected]]
         end
       end
 

@@ -536,15 +536,25 @@ RSpec.describe "CompletionKit prompts", type: :request do
       model_select.at_css("option[selected]")
     end
 
-    it "keeps a rejected model selected, marked not served, with the error beside the select" do
+    it "keeps a rejected model selected, marked unavailable, with the error beside the select" do
       post base_path, params: { prompt: valid_params[:prompt].merge(llm_model: "ollama/llama3") }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect([selected_option.text, selected_option["value"]]).to eq(["ollama/llama3 (not served)", "ollama/llama3"])
+      expect([selected_option.text, selected_option["value"]]).to eq(["ollama/llama3 (unavailable)", "ollama/llama3"])
       error = Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error")
       expect(error.text).to eq(%("ollama/llama3" is not served by any configured provider))
       expect(model_select["aria-invalid"]).to eq("true")
       expect(model_select["aria-describedby"]).to eq("prompt_llm_model_error")
+    end
+
+    it "keeps a model rejected as unfit for generation selected, with a label that agrees with its error" do
+      create(:completion_kit_model, provider: "openai", model_id: "text-embed", display_name: "Text Embed", supports_generation: false)
+
+      post base_path, params: { prompt: valid_params[:prompt].merge(llm_model: "text-embed") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect([selected_option.text, selected_option["value"]]).to eq(["text-embed (unavailable)", "text-embed"])
+      expect(Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error").text).to eq("is not available for generating responses")
     end
 
     it "keeps a model rejected on re-version selected, with the error beside the select" do
@@ -554,7 +564,7 @@ RSpec.describe "CompletionKit prompts", type: :request do
       patch "#{base_path}/#{prompt.id}", params: { prompt: { template: "Updated {{content}}", llm_model: "ollama/llama3" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(selected_option.text).to eq("ollama/llama3 (not served)")
+      expect(selected_option.text).to eq("ollama/llama3 (unavailable)")
       expect(Nokogiri::HTML5(response.body).at_css("#prompt_llm_model_error")).to be_present
     end
 

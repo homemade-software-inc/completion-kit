@@ -663,11 +663,11 @@ RSpec.describe "CompletionKit runs", type: :request do
       Nokogiri::HTML5(response.body).at_css("#run_judge_model_error")
     end
 
-    it "keeps a rejected judge selected, marked not served, with the error beside the select on create" do
+    it "keeps a rejected judge selected, marked unavailable, with the error beside the select on create" do
       post base_path, params: { run: { prompt_id: prompt.id, dataset_id: dataset.id, judge_model: "ollama/llama3" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(selected_judge).to eq(["ollama/llama3 (not served)", "ollama/llama3"])
+      expect(selected_judge).to eq(["ollama/llama3 (unavailable)", "ollama/llama3"])
       expect(judge_error.text).to eq(%("ollama/llama3" is not served by any configured provider))
       expect(judge_select["aria-invalid"]).to eq("true")
       expect(judge_select["aria-describedby"]).to eq("run_judge_model_error")
@@ -680,7 +680,7 @@ RSpec.describe "CompletionKit runs", type: :request do
       patch "#{base_path}/#{run.id}", params: { run: { judge_model: "ollama/llama3" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(selected_judge).to eq(["ollama/llama3 (not served)", "ollama/llama3"])
+      expect(selected_judge).to eq(["ollama/llama3 (unavailable)", "ollama/llama3"])
       expect(judge_error).to be_present
       expect(run.reload.judge_model).to eq("gpt-4.1-mini")
     end
