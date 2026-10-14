@@ -7,7 +7,7 @@
     <span class="ck-starter-card__cta">Preview →</span>
     <%= button_to "dismiss", dismiss_starter_metrics_path(key: starter.key),
           method: :post,
-          form: { onclick: "event.stopPropagation();" },
+          form: { data: { ck_stop_propagation: true } },
           form_class: "inline-block ck-starter-card__dismiss-form",
           class: "ck-starter-card__dismiss",
           data: { turbo_confirm: "Hide \"#{starter.name}\" from this list?" } %>

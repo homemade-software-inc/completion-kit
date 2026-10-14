@@ -91,7 +91,7 @@
                     <% if v.draft? && vs.present? %>
                       <span class="ck-version-score"><span class="ck-version-score__label">Match</span> <%= vs["after"] %>/<%= vs["tested"] %></span>
                     <% end %>
-                    <button type="button" class="ck-cell-link ck-cell-link--delta" title="What changed from <%= pred.version_label %>" onclick="document.getElementById('ck-mvdiff-<%= v.id %>').showModal()">&Delta;</button>
+                    <button type="button" class="ck-cell-link ck-cell-link--delta" title="What changed from <%= pred.version_label %>" data-ck-dialog-open="ck-mvdiff-<%= v.id %>">&Delta;</button>
                   </div>
                 <% end %>
               </div>
@@ -126,14 +126,14 @@
     <% pred = predecessor_of[v] %>
     <% next unless v.change_summary_against(pred) %>
     <% vs = v.validation_summary %>
-    <dialog id="ck-mvdiff-<%= v.id %>" class="ck-modal" aria-labelledby="ck-mvdiff-title-<%= v.id %>" onclick="if(event.target===this)this.close()">
-      <article class="ck-modal__panel" tabindex="-1" onclick="event.stopPropagation()">
+    <dialog id="ck-mvdiff-<%= v.id %>" class="ck-modal" aria-labelledby="ck-mvdiff-title-<%= v.id %>" data-ck-dialog>
+      <article class="ck-modal__panel" tabindex="-1">
         <header class="ck-modal__header">
           <div class="ck-modal__heading">
             <h2 class="ck-modal__title" id="ck-mvdiff-title-<%= v.id %>"><%= pred.version_label %> &rarr; <%= v.version_label %></h2>
             <span class="ck-modal__meta">What changed in <%= v.version_label %><% if v.current? %> (live)<% elsif v.draft? %> (draft)<% end %></span>
           </div>
-          <button type="button" class="ck-modal__close" aria-label="Close" onclick="this.closest('dialog').close()">&times;</button>
+          <button type="button" class="ck-modal__close" aria-label="Close" data-ck-dialog-close>&times;</button>
         </header>
         <div class="ck-modal__body">
           <% if v.draft? && vs.present? %>

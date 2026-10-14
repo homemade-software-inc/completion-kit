@@ -9,7 +9,7 @@
       <span class="ck-run-config__dataset">
         <%= link_to run.dataset.name, dataset_path(run.dataset), class: "ck-link" %>
         <span class="ck-run-config__dataset-meta"><%= run.dataset.row_count %> rows</span>
-        <button type="button" class="ck-run-config__dataset-preview" onclick="document.getElementById('dataset-preview-<%= run.id %>').showModal()">Preview</button>
+        <button type="button" class="ck-run-config__dataset-preview" data-ck-dialog-open="dataset-preview-<%= run.id %>">Preview</button>
       </span>
     <% else %>
       <span class="ck-run-config__none">None</span>

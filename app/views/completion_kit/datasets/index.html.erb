@@ -27,7 +27,7 @@
     </thead>
     <tbody>
       <% @datasets.each do |dataset| %>
-        <tr onclick="window.location='<%= dataset_path(dataset) %>'" style="cursor: pointer;">
+        <tr data-ck-href="<%= dataset_path(dataset) %>" style="cursor: pointer;">
           <td>
             <%= link_to dataset_path(dataset), class: "ck-record-name" do %><strong><%= dataset.name %></strong><% end %>
             <% if dataset.tags.any? %>

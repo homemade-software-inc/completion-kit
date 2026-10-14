@@ -483,3 +483,107 @@ function ckInstallConfirm() {
 }
 document.addEventListener("turbo:load", ckInstallConfirm);
 ckInstallConfirm();
+
+var ckRowIgnoreSelector = "a, button, input, select, textarea, label, summary, form, dialog, [data-ck-row-ignore]";
+
+function ckRowHref(e) {
+  var target = e.target;
+  if (!target || !target.closest) return null;
+  var row = target.closest("[data-ck-href]");
+  if (!row) return null;
+  var inner = target.closest(ckRowIgnoreSelector);
+  if (inner && row.contains(inner)) return null;
+  return row.getAttribute("data-ck-href");
+}
+
+document.addEventListener("click", function(e) {
+  var href = ckRowHref(e);
+  if (!href) return;
+  if (e.metaKey || e.ctrlKey || e.shiftKey) {
+    window.open(href, "_blank");
+  } else if (window.Turbo && typeof window.Turbo.visit === "function") {
+    window.Turbo.visit(href);
+  } else {
+    window.location.assign(href);
+  }
+});
+
+document.addEventListener("auxclick", function(e) {
+  if (e.button !== 1) return;
+  var href = ckRowHref(e);
+  if (href) window.open(href, "_blank");
+});
+
+document.addEventListener("click", function(e) {
+  if (e.target && e.target.closest && e.target.closest("[data-ck-stop-propagation]")) e.stopPropagation();
+});
+
+function ckShowDialog(dialog) {
+  if (dialog && typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+}
+
+document.addEventListener("click", function(e) {
+  var target = e.target;
+  if (!target || !target.closest) return;
+  var opener = target.closest("[data-ck-dialog-open]");
+  if (opener) {
+    ckShowDialog(document.getElementById(opener.getAttribute("data-ck-dialog-open")));
+    return;
+  }
+  var closer = target.closest("[data-ck-dialog-close]");
+  if (closer) {
+    var dialog = closer.closest("dialog");
+    if (dialog) dialog.close();
+    return;
+  }
+  if (target.matches("dialog[data-ck-dialog]")) target.close();
+});
+
+function ckFlashCopied(el) {
+  el.classList.add("ck-api-copy--done");
+  setTimeout(function() { el.classList.remove("ck-api-copy--done"); }, 1500);
+}
+
+function ckCopyText(el, text) {
+  navigator.clipboard.writeText(text).then(function() {
+    if (el.hasAttribute("data-ck-copy-feedback")) ckFlashCopied(el);
+  });
+}
+
+document.addEventListener("click", function(e) {
+  var target = e.target;
+  if (!target || !target.closest) return;
+  var literal = target.closest("[data-ck-copy-text]");
+  if (literal) { ckCopyText(literal, literal.getAttribute("data-ck-copy-text")); return; }
+  var copier = target.closest("[data-ck-copy]");
+  if (!copier) return;
+  var source = document.getElementById(copier.getAttribute("data-ck-copy"));
+  if (source) ckCopyText(copier, source.textContent);
+});
+
+document.addEventListener("click", function(e) {
+  var target = e.target;
+  if (!target || !target.closest) return;
+  if (target.closest("[data-ck-refresh-models]")) {
+    ckRefreshModels();
+    return;
+  }
+  var refresher = target.closest("[data-ck-provider-refresh]");
+  if (!refresher) return;
+  e.preventDefault();
+  fetch(refresher.getAttribute("data-ck-provider-refresh"), {
+    method: "POST",
+    headers: { "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').getAttribute("content") }
+  });
+  ckStartDiscoveryPolling(8000);
+});
+
+document.addEventListener("click", function(e) {
+  var toggle = e.target && e.target.closest && e.target.closest("[data-ck-prompt-toggle]");
+  if (!toggle) return;
+  var text = document.getElementById(toggle.getAttribute("aria-controls"));
+  if (!text) return;
+  var expanded = text.classList.toggle("ck-prompt-preview__text--expanded");
+  toggle.firstChild.textContent = expanded ? "Show less" : "Show more";
+  toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+});

@@ -25,7 +25,7 @@
         <% count = @tagging_counts.fetch(tag.id, 0) %>
         <% by_type = @tagging_by_type.select { |(tid, _), _| tid == tag.id } %>
         <% breakdown = by_type.map { |(_, type), n| pluralize(n, type.demodulize.titleize.downcase) }.join(" · ") %>
-        <tr onclick="window.location='<%= edit_tag_path(tag) %>'" style="cursor: pointer;">
+        <tr data-ck-href="<%= edit_tag_path(tag) %>" style="cursor: pointer;">
           <td><%= link_to edit_tag_path(tag), class: "ck-record-name" do %><span class="tag-mark tag-mark--lg" style="--mark-color: var(--tag-<%= tag.color %>);"><%= tag.name %></span><% end %></td>
           <td data-label="Applied to" class="ck-meta-copy">
             <% if count.zero? %>
