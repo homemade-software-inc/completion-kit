@@ -220,6 +220,13 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
     expect(response.body).to include(%(data-ck-statuses-url="#{base_path}/statuses"))
   end
 
+  it "keeps a key typed into a failed create so it need not be pasted again" do
+    post base_path, params: { provider_credential: { provider: "azure_foundry", api_key: "sk-typed-new-key", api_endpoint: "" } }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(Nokogiri::HTML5(response.body).at_css("textarea[name='provider_credential[api_key]']").text.strip).to eq("sk-typed-new-key")
+  end
+
   describe "the stored API key on the edit form" do
     let(:stored_key) { "sk-live-STOREDSECRET-1a2b" }
     let!(:credential) do
@@ -312,6 +319,26 @@ RSpec.describe "CompletionKit provider credentials", type: :request do
       box = Nokogiri::HTML5(response.body).at_css("input[type='checkbox'][name='provider_credential[remove_api_key]']")
       expect(box.key?("checked")).to be(true)
       expect(credential.reload.api_key).to eq(stored_key)
+    end
+
+    it "unticks the remove option when a typed key wins but the save fails" do
+      patch "#{base_path}/#{credential.id}",
+        params: { provider_credential: form_params.merge(provider: "azure_foundry", api_endpoint: "", api_key: "sk-replacement", remove_api_key: "1") }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      box = Nokogiri::HTML5(response.body).at_css("input[type='checkbox'][name='provider_credential[remove_api_key]']")
+      expect(box.key?("checked")).to be(false)
+    end
+
+    it "offers the remove option without an ending hint for a short stored key" do
+      short = create(:completion_kit_provider_credential, provider: "openrouter", api_key: "k3y9x")
+
+      get "#{base_path}/#{short.id}/edit"
+
+      expect(response.body).not_to include("k3y9x")
+      expect(response.body).not_to include("ending in")
+      expect(response.body).to include("Leave blank to keep the current key.")
+      expect(Nokogiri::HTML5(response.body).at_css("input[type='checkbox'][name='provider_credential[remove_api_key]']")).to be_present
     end
 
     it "leaves the remove option unticked when the save fails without it" do

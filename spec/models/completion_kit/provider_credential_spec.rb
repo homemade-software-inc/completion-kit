@@ -469,10 +469,26 @@ RSpec.describe CompletionKit::ProviderCredential, type: :model do
       expect(record.api_key_ending).to eq("1a2b")
     end
 
+    it "is nil for a stored key of eight characters or fewer, so a short key is never shown whole" do
+      credential = create(:completion_kit_provider_credential, provider: "ollama", api_key: "k3y9x")
+      expect(CompletionKit::ProviderCredential.find(credential.id).api_key_ending).to be_nil
+    end
+
     it "is nil when no key is stored" do
       credential = create(:completion_kit_provider_credential, provider: "ollama", api_key: nil)
       expect(CompletionKit::ProviderCredential.find(credential.id).api_key_ending).to be_nil
       expect(CompletionKit::ProviderCredential.new(api_key: "sk-new").api_key_ending).to be_nil
+    end
+  end
+
+  describe "#api_key_stored?" do
+    it "reports whether a key is stored, ignoring a key assigned since" do
+      stored = CompletionKit::ProviderCredential.find(create(:completion_kit_provider_credential, api_key: "sk-stored-1a2b").id)
+      keyless = CompletionKit::ProviderCredential.find(create(:completion_kit_provider_credential, provider: "ollama", api_key: nil).id)
+      keyless.api_key = "sk-typed"
+
+      expect(stored.api_key_stored?).to be(true)
+      expect(keyless.api_key_stored?).to be(false)
     end
   end
 end

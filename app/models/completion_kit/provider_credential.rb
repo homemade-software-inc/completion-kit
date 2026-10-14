@@ -37,8 +37,13 @@ module CompletionKit
       provider == "azure_foundry"
     end
 
+    def api_key_stored?
+      api_key_in_database.present?
+    end
+
     def api_key_ending
-      api_key_in_database.presence&.last(4)
+      key = api_key_in_database.to_s
+      key.last(4) if key.length > 8
     end
 
     def config_hash

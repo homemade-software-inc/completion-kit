@@ -22,14 +22,21 @@
 
     <div class="ck-field">
       <%= form.label :api_key, "API key", class: "ck-label" %>
-      <%= form.text_area :api_key, value: "", rows: 3, class: "ck-input ck-input--area ck-input--code", placeholder: "Paste the provider API key", **ck_field_aria(form, :api_key) %>
+      <%= form.text_area :api_key, value: (provider_credential.persisted? ? "" : provider_credential.api_key), rows: 3, class: "ck-input ck-input--area ck-input--code", placeholder: "Paste the provider API key", **ck_field_aria(form, :api_key) %>
       <%= ck_field_error(form, :api_key) %>
-      <% if provider_credential.api_key_ending %>
-        <p class="ck-field-hint">Leave blank to keep the current key ending in <code><%= provider_credential.api_key_ending %></code>. Enter it again if you change the provider or endpoint.</p>
+      <% if provider_credential.api_key_stored? %>
+        <p class="ck-field-hint">
+          <% if provider_credential.api_key_ending %>
+            Leave blank to keep the current key ending in <code><%= provider_credential.api_key_ending %></code>.
+          <% else %>
+            Leave blank to keep the current key.
+          <% end %>
+          Enter it again if you change the provider or endpoint.
+        </p>
       <% end %>
     </div>
 
-    <% if provider_credential.api_key_ending %>
+    <% if provider_credential.api_key_stored? %>
       <div class="ck-field">
         <label class="ck-checkbox-label">
           <%= check_box_tag "provider_credential[remove_api_key]", "1", local_assigns[:remove_api_key], id: "provider_credential_remove_api_key", class: "ck-checkbox" %>
