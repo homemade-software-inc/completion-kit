@@ -469,8 +469,25 @@ RSpec.describe CompletionKit::Checks::Registry do
       expect(call("list_overlap", "[2.0, 3]", { "value" => "[2, 3]" }).score).to eq(1.0)
     end
 
+    it "matches a number in comma-separated text against the same number in a JSON list" do
+      expect(call("list_overlap", "2.0, 3", { "value" => [2, 3] }).score).to eq(1.0)
+      expect(call("list_overlap", [2, 3], { "value" => "2.0, 3.00" }).score).to eq(1.0)
+    end
+
+    it "matches a number written as a string against the same number written as a number" do
+      expect(call("list_overlap", %w[2.0 4.50], { "value" => [2, 4.5] }).score).to eq(1.0)
+      expect(call("list_overlap", ["-1.0"], { "value" => [-1] }).score).to eq(1.0)
+    end
+
+    it "reads a number the same way in exact decimals, so long figures never collide" do
+      expect(call("list_overlap", ["12345678901234567890"], { "value" => ["12345678901234567891"] }).score).to eq(0.0)
+      expect(call("list_overlap", [0.0000001], { "value" => ["0.0000001"] }).score).to eq(1.0)
+    end
+
     it "keeps text members that look numeric as written, so a code like 01 never matches 1" do
       expect(call("list_overlap", %w[01], { "value" => [1] }).score).to eq(0.0)
+      expect(call("list_overlap", "01, 007", { "value" => [1, 7] }).score).to eq(0.0)
+      expect(call("list_overlap", %w[1e3 +5 2.], { "value" => [1000, 5, 2] }).score).to eq(0.0)
     end
 
     it "keeps a single unquoted number as one member" do

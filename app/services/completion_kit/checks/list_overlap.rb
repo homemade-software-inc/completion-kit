@@ -6,6 +6,7 @@ module CompletionKit
       DEFAULT_MIN = 1.0
       SEPARATORS = /[,;\n]/
       DECORATION = /\A(?:["'`]+|[-*•]\s+)|["'`]+\z/
+      PLAIN_NUMBER = /\A-?(?:0|[1-9]\d*)(?:\.\d+)?\z/
 
       def call(target, config)
         actual = to_set(target, config)
@@ -53,10 +54,17 @@ module CompletionKit
       end
 
       def normalize(item, config)
-        return NumericValue.format(item) if item.is_a?(::Numeric)
+        return number_text(item.to_s) if item.is_a?(::Numeric)
 
         text = item.to_s.strip.gsub(DECORATION, "").strip
+        return number_text(text) if PLAIN_NUMBER.match?(text)
+
         Flag.on?(config, "case_sensitive") ? text : text.downcase
+      end
+
+      def number_text(text)
+        number = BigDecimal(text)
+        number.frac.zero? ? number.to_i.to_s : number.to_s("F")
       end
 
       def coerce_list(value)
