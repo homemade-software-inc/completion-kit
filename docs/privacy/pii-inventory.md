@@ -63,7 +63,6 @@ metadata (`completion_kit_models`), tag names and colors
 | Table | Field | Notes |
 |---|---|---|
 | `completion_kit_provider_credentials` | `api_key`, `api_endpoint` | Encrypted at rest via Active Record encryption. Org-level secret material (provider key), not user PII; treat as a workspace secret. |
-| `completion_kit_mcp_sessions` | `session_id` | Former MCP session marker. Nothing reads or writes it now, and a later release drops the table. Not user PII. |
 
 ## Survival semantics
 
