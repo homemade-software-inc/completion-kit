@@ -234,4 +234,26 @@ RSpec.describe CompletionKit::ProviderEndpoint do
       expect(builder).not_to have_received(:adapter)
     end
   end
+
+  describe ".same_destination?" do
+    it "matches URLs that differ only in scheme or host case, an explicit default port or a trailing slash" do
+      expect(described_class.same_destination?("HTTPS://Ollama.Example.test:443/v1/", "https://ollama.example.test/v1")).to eq(true)
+      expect(described_class.same_destination?(" http://localhost:11434/v1 ", "http://localhost:11434/v1/")).to eq(true)
+      expect(described_class.same_destination?("http://ollama.example.test", "http://ollama.example.test:80/")).to eq(true)
+    end
+
+    it "tells apart URLs with a different scheme, host, port or path" do
+      expect(described_class.same_destination?("http://ollama.example.test/v1", "https://ollama.example.test/v1")).to eq(false)
+      expect(described_class.same_destination?("https://attacker.example.test/v1", "https://ollama.example.test/v1")).to eq(false)
+      expect(described_class.same_destination?("https://ollama.example.test:8443/v1", "https://ollama.example.test/v1")).to eq(false)
+      expect(described_class.same_destination?("https://ollama.example.test/proxy/v1", "https://ollama.example.test/v1")).to eq(false)
+    end
+
+    it "never matches a missing or invalid URL" do
+      expect(described_class.same_destination?(nil, nil)).to eq(false)
+      expect(described_class.same_destination?("", "")).to eq(false)
+      expect(described_class.same_destination?("not a url", "not a url")).to eq(false)
+      expect(described_class.same_destination?("https://ollama.example.test/v1", nil)).to eq(false)
+    end
+  end
 end
