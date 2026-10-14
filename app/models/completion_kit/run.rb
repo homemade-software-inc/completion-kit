@@ -782,7 +782,7 @@ module CompletionKit
 
       if prompt.present?
         count = Run.where(prompt_id: prompt_id).count + 1
-        self.name = "#{prompt.name} — v#{prompt.version_number} ##{count}"
+        self.name = "#{prompt.name} · v#{prompt.version_number} ##{count}"
       elsif dataset.present?
         count = Run.where(prompt_id: nil, dataset_id: dataset.id).count + 1
         self.name = "#{dataset.name} scoring ##{count}"

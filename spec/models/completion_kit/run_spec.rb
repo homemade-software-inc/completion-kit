@@ -843,6 +843,19 @@ RSpec.describe CompletionKit::Run, type: :model do
     end
 
     describe "auto-generated name" do
+      it "names an unnamed run after its prompt version and run count" do
+        prompt = create(:completion_kit_prompt, name: "Support Reply Generator")
+        create(:completion_kit_run, prompt: prompt)
+        run = create(:completion_kit_run, prompt: prompt, name: nil)
+        expect(run.name).to eq("Support Reply Generator · v1 #2")
+      end
+
+      it "leaves a stored name alone when the run is saved again" do
+        run = create(:completion_kit_run, name: "Support Reply Generator \u2014 v1 #3")
+        run.update!(max_tokens: 200)
+        expect(run.reload.name).to eq("Support Reply Generator \u2014 v1 #3")
+      end
+
       it "names an unnamed scoring run after its dataset" do
         dataset = create(:completion_kit_dataset, name: "Tickets", csv_data: "input,actual_output\nhi,hello\n")
         run = create(:completion_kit_run, prompt: nil, dataset: dataset, output_column: "actual_output", name: nil)
