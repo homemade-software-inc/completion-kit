@@ -53,6 +53,8 @@ module CompletionKit
       end
 
       def normalize(item, config)
+        return NumericValue.format(item) if item.is_a?(::Numeric)
+
         text = item.to_s.strip.gsub(DECORATION, "").strip
         Flag.on?(config, "case_sensitive") ? text : text.downcase
       end

@@ -4,11 +4,11 @@ module CompletionKit
       PERCENT = /\A(.*)%\z/
 
       def call(target, config)
-        actual = NumericValue.parse(target)
-        return Result.new(passed: false, detail: "#{target.inspect} is not a number") if actual.nil?
+        actual = NumericValue.decimal(target)
+        return Result.new(passed: false, detail: "#{NumericValue.preview(target)} is not a number") if actual.nil?
 
-        expected = NumericValue.parse(config["value"])
-        return Result.new(passed: false, detail: "expected #{config["value"].inspect} is not a number") if expected.nil?
+        expected = NumericValue.decimal(config["value"])
+        return Result.new(passed: false, detail: "expected #{NumericValue.preview(config["value"])} is not a number") if expected.nil?
 
         difference = (actual - expected).abs
         allowed = self.class.allowance(config["tolerance"], expected)
@@ -23,9 +23,9 @@ module CompletionKit
 
       def self.allowance(raw, expected)
         share = PERCENT.match(raw.to_s)
-        return (NumericValue.parse(share[1]) || 0.0) / 100.0 * expected.abs if share
+        return (NumericValue.decimal(share[1]) || BigDecimal("0")) / 100 * expected.abs if share
 
-        NumericValue.parse(raw) || 0.0
+        NumericValue.decimal(raw) || BigDecimal("0")
       end
 
       def self.tolerance_value(raw)

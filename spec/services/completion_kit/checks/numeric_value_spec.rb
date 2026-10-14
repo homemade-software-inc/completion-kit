@@ -19,6 +19,12 @@ RSpec.describe CompletionKit::Checks::NumericValue do
       expect(described_class.parse("82_000")).to eq(82_000.0)
     end
 
+    it "ignores the non-breaking and thin spaces some locales group thousands with" do
+      expect(described_class.parse("82\u00A0000")).to eq(82_000.0)
+      expect(described_class.parse("82\u2009000")).to eq(82_000.0)
+      expect(described_class.parse("1\u202F234\u202F567")).to eq(1_234_567.0)
+    end
+
     it "reads a leading currency symbol off a sticker price" do
       expect(described_class.parse("$24,995")).to eq(24_995.0)
       expect(described_class.parse("£10")).to eq(10.0)
@@ -55,6 +61,32 @@ RSpec.describe CompletionKit::Checks::NumericValue do
     end
   end
 
+  describe ".decimal" do
+    it "reads a figure as an exact decimal" do
+      expect(described_class.decimal("$0.30")).to eq(BigDecimal("0.3"))
+      expect(described_class.decimal("82,000")).to eq(BigDecimal("82000"))
+    end
+
+    it "reads a float through its shortest written form rather than its binary value" do
+      expect(described_class.decimal(0.1)).to eq(BigDecimal("0.1"))
+      expect(described_class.decimal(7)).to eq(BigDecimal("7"))
+    end
+
+    it "returns nil for anything parse would refuse" do
+      expect(described_class.decimal("unknown")).to be_nil
+      expect(described_class.decimal("1e400")).to be_nil
+      expect(described_class.decimal(nil)).to be_nil
+    end
+  end
+
+  describe ".preview" do
+    it "shows a short value whole and cuts a long one short" do
+      expect(described_class.preview("n/a")).to eq("\"n/a\"")
+      expect(described_class.preview("x" * 200)).to eq("#{"\"" + "x" * 36}...")
+      expect(described_class.preview(nil)).to eq("nil")
+    end
+  end
+
   describe ".format" do
     it "drops the decimal point from a whole number" do
       expect(described_class.format(3.0)).to eq("3")
@@ -63,6 +95,11 @@ RSpec.describe CompletionKit::Checks::NumericValue do
 
     it "keeps a fractional part" do
       expect(described_class.format(0.8)).to eq("0.8")
+    end
+
+    it "writes a decimal in plain notation" do
+      expect(described_class.format(BigDecimal("1.999"))).to eq("1.999")
+      expect(described_class.format(BigDecimal("20.00"))).to eq("20")
     end
   end
 end

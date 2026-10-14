@@ -389,6 +389,15 @@ RSpec.describe CompletionKit::Checks::Registry do
       expect(overlap("a;b").score).to eq(0.5)
     end
 
+    it "matches a whole number written as a float against the same number written as an integer" do
+      expect(call("list_overlap", [2.0, 3, 4.5], { "value" => [2, 3.0, "4.5"] }).score).to eq(1.0)
+      expect(call("list_overlap", "[2.0, 3]", { "value" => "[2, 3]" }).score).to eq(1.0)
+    end
+
+    it "keeps text members that look numeric as written, so a code like 01 never matches 1" do
+      expect(call("list_overlap", %w[01], { "value" => [1] }).score).to eq(0.0)
+    end
+
     it "keeps a single unquoted number as one member" do
       expect(call("list_overlap", "123", { "value" => %w[123] }).score).to eq(1.0)
     end
@@ -413,6 +422,12 @@ RSpec.describe CompletionKit::Checks::Registry do
       result = call("numeric_bounds", "unknown", { "min" => 0.8 })
       expect(result.passed).to be(false)
       expect(result.detail).to eq("\"unknown\" is not a number")
+    end
+
+    it "keeps a whole answer out of the detail when the target is not a number" do
+      detail = call("numeric_bounds", "word " * 200, { "min" => 0 }).detail
+      expect(detail.length).to be < 80
+      expect(detail).to end_with("... is not a number")
     end
 
     it "carries no fractional score, since it is a yes or no" do
@@ -460,6 +475,32 @@ RSpec.describe CompletionKit::Checks::Registry do
     it "treats an unreadable percentage as no tolerance at all rather than raising" do
       expect(call("numeric_equals", "101", { "value" => 100, "tolerance" => "abc%" }).passed).to be(false)
       expect(call("numeric_equals", "100", { "value" => 100, "tolerance" => "abc%" }).passed).to be(true)
+    end
+
+    it "passes a decimal that sits exactly on an absolute tolerance" do
+      expect(call("numeric_equals", "0.4", { "value" => "0.3", "tolerance" => 0.1 }).passed).to be(true)
+      expect(call("numeric_equals", 0.4, { "value" => 0.3, "tolerance" => "0.1" }).passed).to be(true)
+      expect(call("numeric_equals", "20.00", { "value" => "19.99", "tolerance" => 0.01 }).detail).to eq("20 vs 19.99, within 0.01")
+      expect(call("numeric_equals", "20.01", { "value" => "19.99", "tolerance" => 0.01 }).passed).to be(false)
+    end
+
+    it "passes a decimal that sits exactly on a percentage tolerance" do
+      expect(call("numeric_equals", "0.303", { "value" => "0.3", "tolerance" => "1%" }).passed).to be(true)
+      expect(call("numeric_equals", "21.989", { "value" => 19.99, "tolerance" => "10%" }).detail).to eq("21.989 vs 19.99, within 1.999")
+      expect(call("numeric_equals", "1.122", { "value" => 1.1, "tolerance" => "2%" }).passed).to be(true)
+      expect(call("numeric_equals", "1.1221", { "value" => 1.1, "tolerance" => "2%" }).passed).to be(false)
+    end
+
+    it "keeps a whole answer out of the detail when the target is not a number" do
+      detail = call("numeric_equals", "The mileage is #{"very " * 100}high", { "value" => 1 }).detail
+      expect(detail.length).to be < 80
+      expect(detail).to end_with("... is not a number")
+    end
+
+    it "keeps a long answer key out of the detail when the expected value is not a number" do
+      detail = call("numeric_equals", "1", { "value" => "n/a " * 100 }).detail
+      expect(detail.length).to be < 90
+      expect(detail).to start_with("expected \"n/a")
     end
 
     it "fails rather than raises when either side is not a number" do

@@ -3,7 +3,7 @@ module CompletionKit
     class NumericBounds
       def call(target, config)
         number = NumericValue.parse(target)
-        return Result.new(passed: false, detail: "#{target.inspect} is not a number") if number.nil?
+        return Result.new(passed: false, detail: "#{NumericValue.preview(target)} is not a number") if number.nil?
 
         min = NumericValue.parse(config["min"])
         max = NumericValue.parse(config["max"])
