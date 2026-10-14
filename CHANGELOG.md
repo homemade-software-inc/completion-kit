@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.45] - 2026-10-13
+
+### Security
+- **The provider pages no longer show the stored API key.** The edit form used to fill the key field with the full key, and the providers list showed the start of the key. Both now show only the last four characters of a longer key and nothing of a short one. On the edit form, a blank field keeps the stored key and a "Remove the stored key" option clears it.
+- **Changing a provider credential's provider or endpoint now requires its API key in the same update.** This applies to the web form, the REST API and MCP. An update that moves a credential without the key is rejected and queues no model discovery.
+- **Custom endpoints and CSV imports by URL refuse more address ranges.** An IPv6 transition address is judged by the IPv4 address it carries, and reserved IPv4 and IPv6 ranges are refused. The `allow_loopback_endpoints` default is unchanged.
+- **Failed requests to an endpoint return generic errors.** A connection failure, a timeout or a reply that is not JSON now reads "Could not connect to the endpoint.", "The endpoint did not respond in time." or "The endpoint did not return JSON.", and the detail goes to the server log. Saving a credential now refuses an endpoint that does not resolve, the same way it refuses one that resolves to a private address.
+- **Runs and metric groups refuse prompts, datasets and metrics outside the current tenant scope.** A host that sets `tenant_scope` now gets a validation error, with nothing written, when a run or metric group names a record the scope cannot see. Runs saved before this release keep their references.
+- **MCP tool errors no longer include the database query behind a failed lookup.** A missing record now reads like "Dataset 42 not found", and a foreign key failure returns a fixed message while the detail goes to `Rails.error`.
+- **Prompt variables are filled in a single pass.** Each value now reaches the model exactly as written, including backslashes and any `{{name}}` text inside it.
+
+### Fixed
+- **A model id that no configured provider serves gets a clear error instead of a 500 or a run stuck in pending.** Prompts and runs reject such a model when it is chosen, a run that cannot resolve its model fails with a summary that names it, the REST API answers 422, and MCP returns an `isError` result.
+- **The `completion_kit:mark_interrupted_runs_failed` task marks in-flight runs in every tenant.** It used to inherit `tenant_scope` and match nothing. A host that enforces tenancy with row-level security must run it as a database role that can see every tenant's rows.
+- **Run lists say "No runs to show." when `runs_display_scope` hides every run.** They used to say your older runs were hidden, a reason the engine cannot know. The prompt and dataset pages keep their Runs section with the same sentence.
+- **A rerun whose prompt or judge model no provider serves is refused before anything is created.** It used to leave a new failed run on every click. The web UI, the REST API and MCP all refuse it with the same message.
+- **A run or metric group form that fails to save keeps the metrics you ticked.** Validation messages also name fields the way the UI does, such as "Model", "Judge model", "API key" and "Metrics", and the same metric sent twice is attached once.
+
+### Changed
+- **Web verdicts are saved under the reviewer your app names with the new `current_reviewer` setting.** Set `config.current_reviewer = ->(controller) { ... }` to return a String. Without it, verdicts fall back to `username`, then `"operator"`. The engine no longer reads `X-Remote-User` on its own. A host behind a trusted proxy that always sets that header can return `controller.request.headers["X-Remote-User"]`.
+- **The REST API reads `metric_ids` only as an array.** A single id sent as a bare value is now ignored, so send `[5]` rather than `5`.
+- **The MCP server no longer stores sessions.** `initialize` still returns an `Mcp-Session-Id` header but writes nothing, and `DELETE /mcp` does nothing. The `completion_kit_mcp_sessions` table stays for this release so old and new instances can serve side by side during a deploy, and a later release drops it.
+
 ## [0.28.44] - 2026-10-13
 
 ### Fixed
