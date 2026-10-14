@@ -74,7 +74,7 @@ The engine mounts at `/completion_kit`. Generate / judge flows enqueue Active Jo
 <%= javascript_include_tag "completion_kit/application", defer: true, nonce: true %>
 ```
 
-Without the JavaScript include, in-page behaviours silently fail: live tag-breadcrumb updates, relative-time ticking, CSV row hover-expand, model-refresh progress, focus-first-error, and local-time formatting.
+Without the JavaScript include, in-page behaviours silently fail: clickable table rows, dialogs, copy buttons, the API token reveal, the run form, live run status, live tag-breadcrumb updates, relative-time ticking, CSV row hover-expand, model-refresh progress, focus-first-error, and local-time formatting.
 
 **Content Security Policy.** The engine's pages have no inline event handlers or inline scripts, and the engine layout puts the request nonce on its script tags, so the pages work under a nonce-based `script-src`. The views still use inline `style` attributes, so leave `style-src` out of the nonce directives and allow `'unsafe-inline'` there for now.
 
