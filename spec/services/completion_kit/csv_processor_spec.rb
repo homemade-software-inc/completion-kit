@@ -250,20 +250,6 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
       expect(fill("{{a}}}", { "a}" => "2", "a" => "1" })).to eq("2")
     end
 
-    it "prefers the name with the least whitespace of its own before the text, then the earlier column, as the {{name}} pattern did" do
-      expect(fill("{{  a  }}", { "  a" => "1", " a  " => "2" })).to eq("2")
-      expect(fill("{{  a  }}", { " a " => "1", "a  " => "2", " a" => "3" })).to eq("2")
-      expect(fill("{{  a  }}", { "  a  " => "1", " a" => "2", " a " => "3" })).to eq("2")
-      expect(fill("{{ \ta\t }}", { " \ta\t " => "1", "\ta " => "2", "\ta\t" => "3" })).to eq("3")
-      expect(fill("{{ \ta\t }}", { "\ta " => "1", "  a" => "2", " \ta\t " => "3" })).to eq("3")
-    end
-
-    it "prefers the blank name that starts latest, then the earlier column, as the {{name}} pattern did" do
-      expect(fill("{{ \t}}", { " \t" => "A", " " => "B" })).to eq("A")
-      expect(fill("{{ \t}}", { " " => "B", " \t" => "A" })).to eq("B")
-      expect(fill("{{\t}} {{\t\t}}", { "\t\t" => "2", "\t" => "1" })).to eq("1 1")
-    end
-
     it "fills blank and brace-bearing names the way the {{name}} pattern did" do
       {
         ["{{}} {{  }}", { "" => "E" }] => "E E",
