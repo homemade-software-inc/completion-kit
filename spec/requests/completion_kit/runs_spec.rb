@@ -608,6 +608,13 @@ RSpec.describe "CompletionKit runs", type: :request do
       expect(judge_only_box.key?("checked")).to be(false)
     end
 
+    it "carries a judge hint for scoring existing outputs beside the one for generating" do
+      get "#{base_path}/new"
+
+      script = Nokogiri::HTML5(response.body).css("form script").map(&:text).join
+      expect(script).to include("judgeOnly ? 'Existing outputs will be judged automatically.' : 'Responses will be generated then judged automatically.'")
+    end
+
     context "when the host app raises on unpermitted parameters" do
       around do |example|
         original = ActionController::Parameters.action_on_unpermitted_parameters

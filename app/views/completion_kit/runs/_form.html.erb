@@ -211,7 +211,7 @@ function updateRunForm() {
   var judgeUnpaired = judgeListed && !!judge && metrics.length === 0;
   var metricsUnpaired = judgeListed && !judge && metrics.length > 0;
   if (judgeListed && judge && metrics.length > 0) {
-    if (judgeHint) judgeHint.textContent = 'Responses will be generated then judged automatically.';
+    if (judgeHint) judgeHint.textContent = judgeOnly ? 'Existing outputs will be judged automatically.' : 'Responses will be generated then judged automatically.';
   } else if (judgeUnpaired) {
     if (judgeField) judgeField.className = 'ck-field ck-field--info';
     if (metricsField) metricsField.className = 'ck-field ck-field--info';
