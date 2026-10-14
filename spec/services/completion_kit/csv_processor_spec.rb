@@ -119,5 +119,68 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
 
       expect(described_class.apply_variables(prompt, "name" => "Ada", "audience" => "ops")).to eq("Hi Ada for ops")
     end
+
+    [
+      "C:\\\\Users\\\\share",
+      "match \\0 here",
+      "match \\& here",
+      "C:\\Users\\1a",
+      "\\'",
+      "\\`",
+      "last \\+ group",
+      "named \\k<x> group"
+    ].each do |value|
+      it "inserts #{value.inspect} exactly as written" do
+        prompt = build(:completion_kit_prompt, template: "A {{q}} B")
+
+        expect(described_class.apply_variables(prompt, "q" => value)).to eq("A #{value} B")
+      end
+    end
+
+    it "leaves a placeholder inside a value alone whatever the variable order" do
+      prompt = build(:completion_kit_prompt, template: "A {{q}} B")
+
+      expect(described_class.apply_variables(prompt, "q" => "{{r}}", "r" => "R")).to eq("A {{r}} B")
+      expect(described_class.apply_variables(prompt, "r" => "R", "q" => "{{r}}")).to eq("A {{r}} B")
+    end
+
+    it "fills the template's own placeholder but not the copy inside another value" do
+      prompt = build(:completion_kit_prompt, template: "A {{q}} B {{r}}")
+
+      expect(described_class.apply_variables(prompt, "q" => "{{r}}", "r" => "R")).to eq("A {{r}} B R")
+    end
+
+    it "fills placeholders padded with whitespace or wrapped in a third brace" do
+      prompt = build(:completion_kit_prompt, template: "{{  q }} {{{q}}}")
+
+      expect(described_class.apply_variables(prompt, "q" => "x")).to eq("x {x}")
+    end
+
+    it "tells apart names where one is a prefix of another" do
+      prompt = build(:completion_kit_prompt, template: "{{a}} {{ab}} {{a b}}")
+
+      expect(described_class.apply_variables(prompt, "a" => "1", "ab" => "2", "a b" => "3")).to eq("1 2 3")
+    end
+
+    it "accepts symbol keys and renders nil as empty" do
+      prompt = build(:completion_kit_prompt, template: "[{{name}}] [{{note}}]")
+
+      expect(described_class.apply_variables(prompt, name: "Ada", note: nil)).to eq("[Ada] []")
+    end
+
+    it "leaves a placeholder with no matching variable unchanged" do
+      prompt = build(:completion_kit_prompt, template: "Hi {{name}} from {{place}}")
+
+      expect(described_class.apply_variables(prompt, "name" => "Ada")).to eq("Hi Ada from {{place}}")
+    end
+
+    it "returns a copy of the template when there are no variables" do
+      prompt = build(:completion_kit_prompt, template: "Hi {{name}} {{}}")
+
+      rendered = described_class.apply_variables(prompt, {})
+
+      expect(rendered).to eq("Hi {{name}} {{}}")
+      expect(rendered).not_to equal(prompt.template)
+    end
   end
 end

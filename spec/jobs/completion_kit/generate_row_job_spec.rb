@@ -177,6 +177,21 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     expect(response.status).to eq("succeeded")
   end
 
+  it "sends each cell to the model exactly as the dataset holds it" do
+    run.prompt.update!(template: "Path {{path}} note {{note}} pattern {{pattern}}")
+    response.update!(input_data: { path: "C:\\Users\\1a", note: "{{answer}}", pattern: "(?<x>a)\\k<x>", answer: "42" }.to_json)
+
+    fake_client = double("client", configured?: true)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
+    expect(fake_client).to receive(:generate_completion)
+      .with("Path C:\\Users\\1a note {{answer}} pattern (?<x>a)\\k<x>", anything)
+      .and_return("ok")
+
+    described_class.perform_now(run.id, response.id)
+
+    expect(response.reload.status).to eq("succeeded")
+  end
+
   it "treats malformed input_data as an empty hash" do
     response.update!(input_data: "not-json{{{")
 
