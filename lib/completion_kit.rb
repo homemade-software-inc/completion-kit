@@ -12,6 +12,7 @@ module CompletionKit
     attr_accessor :api_reference_authentication_partial
     attr_accessor :runs_display_scope, :runs_display_footer_partial
     attr_accessor :api_rate_limit, :web_rate_limit, :max_upload_bytes
+    attr_accessor :regex_timeout
     attr_accessor :allow_loopback_endpoints
     attr_accessor :judge_agreement_enabled
     attr_accessor :judge_examples_from_reviews
@@ -31,6 +32,7 @@ module CompletionKit
       @api_rate_limit = 120
       @web_rate_limit = 300
       @max_upload_bytes = 25 * 1024 * 1024
+      @regex_timeout = 1.0
 
       @allow_loopback_endpoints = true
       @judge_agreement_enabled = true

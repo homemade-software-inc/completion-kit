@@ -8,4 +8,8 @@ RSpec.describe CompletionKit::Configuration do
     expect(config).not_to respond_to(:runs_index_scope)
     expect(config).not_to respond_to(:runs_index_footer_partial)
   end
+
+  it "gives each regex check pattern a one second match timeout by default" do
+    expect(described_class.new.regex_timeout).to eq(1.0)
+  end
 end

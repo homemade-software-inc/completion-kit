@@ -59,4 +59,13 @@ CompletionKit.configure do |config|
   # web_rate_limit. Both are enforced through Rails.cache.
   # config.api_rate_limit = 120
   # config.web_rate_limit = 300
+
+  # Input limits
+  # Largest dataset CSV or import file, in bytes.
+  # config.max_upload_bytes = 25 * 1024 * 1024
+  # Seconds one regex check pattern may spend matching one row. A row that runs
+  # past it fails and says it timed out. The limit is set on each pattern, so
+  # the process-wide Regexp.timeout is never changed. Set nil to fall back to
+  # Regexp.timeout.
+  # config.regex_timeout = 1.0
 end

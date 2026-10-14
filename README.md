@@ -169,6 +169,19 @@ end
 
 Limiting uses `Rails.cache`. A shared cache store (Solid Cache, Redis) throttles accurately across multiple app instances; a per-process store still throttles each instance independently.
 
+## Input limits
+
+Uploads and regex check patterns have limits, so one large or hostile input cannot tie up a worker. Tune them in the initializer:
+
+```ruby
+CompletionKit.configure do |c|
+  c.max_upload_bytes = 25 * 1024 * 1024  # largest dataset CSV or import file (default 25 MB)
+  c.regex_timeout = 1.0                  # seconds a regex check may spend matching one row (default 1.0)
+end
+```
+
+A regex check that runs past `regex_timeout` fails that row and says it timed out. The limit is set on each pattern, so the engine never changes the process-wide `Regexp.timeout` your app may rely on. Set it to `nil` to fall back to `Regexp.timeout`.
+
 ## How it works
 
 <p align="center">

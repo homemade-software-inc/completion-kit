@@ -282,6 +282,63 @@ RSpec.describe CompletionKit::Checks::Registry do
     it "fails an uncompilable pattern rather than raising" do
       expect { call("regex", "x", { "pattern" => "(" }) }.not_to raise_error
       expect(call("regex", "x", { "pattern" => "(" }).passed).to be(false)
+      expect(call("regex", "x", { "pattern" => "(" }).detail).to start_with("invalid pattern: ")
+    end
+
+    context "with a backtracking pattern" do
+      let(:pattern) { '^(a|a)*\1$' }
+      let(:target) { "#{"a" * 40}b" }
+
+      around do |example|
+        original_global = Regexp.timeout
+        original_config = CompletionKit.config.regex_timeout
+        Regexp.timeout = nil
+        example.run
+      ensure
+        Regexp.timeout = original_global
+        CompletionKit.config.regex_timeout = original_config
+      end
+
+      def timed
+        started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        result = yield
+        [result, Process.clock_gettime(Process::CLOCK_MONOTONIC) - started]
+      end
+
+      it "stops at the per-pattern timeout with no global timeout and reports a timeout, not an invalid pattern" do
+        CompletionKit.config.regex_timeout = 0.05
+
+        result, elapsed = timed { call("regex", target, { "pattern" => pattern }) }
+
+        expect(result.passed).to be(false)
+        expect(result.detail).to eq("timed out after 0.05s matching /#{pattern}/")
+        expect(elapsed).to be < 2
+      end
+
+      it "falls back to the global timeout when the host clears the per-pattern one" do
+        CompletionKit.config.regex_timeout = nil
+        Regexp.timeout = 0.05
+
+        result, elapsed = timed { call("regex", target, { "pattern" => pattern }) }
+
+        expect(result.detail).to eq("timed out after 0.05s matching /#{pattern}/")
+        expect(elapsed).to be < 2
+      end
+    end
+
+    it "compiles with the configured per-pattern timeout and leaves the global one alone" do
+      original = CompletionKit.config.regex_timeout
+      CompletionKit.config.regex_timeout = 0.25
+
+      expect(CompletionKit::Checks::Regex.build({ "pattern" => "a+" }).timeout).to eq(0.25)
+      expect(Regexp.timeout).to be_nil
+    ensure
+      CompletionKit.config.regex_timeout = original
+    end
+
+    it "compiles with the same flags the check matches with" do
+      expect(CompletionKit::Checks::Regex.build({ "pattern" => "a" }).options).to eq(Regexp::IGNORECASE)
+      expect(CompletionKit::Checks::Regex.build({ "pattern" => "a", "case_sensitive" => true, "multiline" => true }).options).to eq(Regexp::MULTILINE)
     end
   end
 
