@@ -1,21 +1,20 @@
 require "rails_helper"
 
 RSpec.describe "The standalone app's nonce-based script policy", type: :request do
-  let(:standalone_config) do
-    config = Rails::Application::Configuration.new(Rails.root)
-    application = Struct.new(:config) { def configure(&) = instance_eval(&) }.new(config)
+  before(:context) do
+    @standalone_config = Rails::Application::Configuration.new(Rails.root)
+    application = Struct.new(:config) { def configure(&) = instance_eval(&) }.new(@standalone_config)
     RSpec::Mocks.with_temporary_scope do
       allow(Rails).to receive(:application).and_return(application)
       load File.expand_path("../../../standalone/config/initializers/content_security_policy.rb", __dir__)
     end
-    config
   end
 
   let(:browser_accept) { "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" }
   let(:token) { "standalone-csp-token-0123456789" }
 
   before do
-    config = standalone_config
+    config = @standalone_config
     allow(Rails.application).to receive(:env_config).and_wrap_original do |original|
       original.call.merge(
         "action_dispatch.content_security_policy" => config.content_security_policy,
