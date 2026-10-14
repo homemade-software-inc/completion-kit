@@ -48,6 +48,8 @@ module CompletionKit
       raise
     rescue ProviderEndpoint::UnsafeEndpoint => e
       "Error: API endpoint #{e.message}"
+    rescue JSON::ParserError => e
+      "Error: #{EndpointError.from(e).message}"
     rescue => e
       "Error: #{e.message}"
     end

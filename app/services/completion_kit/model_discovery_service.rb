@@ -356,7 +356,7 @@ module CompletionKit
       end
     rescue StandardError => e
       model.supports_generation = false
-      model.generation_error = redact_secrets(e.message)
+      model.generation_error = redact_secrets(EndpointError.from(e).message)
     end
 
     def probe_judging(model)
@@ -384,7 +384,7 @@ module CompletionKit
       end
     rescue StandardError => e
       model.supports_judging = false
-      model.judging_error = redact_secrets(e.message)
+      model.judging_error = redact_secrets(EndpointError.from(e).message)
     end
 
     OPENAI_REASONING_PROBE_BUDGET = 65_536

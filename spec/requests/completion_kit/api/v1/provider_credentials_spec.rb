@@ -69,6 +69,8 @@ RSpec.describe "API V1 Provider Credentials", type: :request do
   end
 
   describe "azure_foundry api-version" do
+    before { allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"]) }
+
     it "accepts api_version on create and returns it (without the key)" do
       post "/completion_kit/api/v1/provider_credentials",
         params: { provider: "azure_foundry", api_key: "k",

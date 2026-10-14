@@ -80,6 +80,46 @@ RSpec.describe CompletionKit::ProviderEndpoint do
       CompletionKit.config.allow_loopback_endpoints = true
       expect(described_class.validate("http://127.0.0.1:11434")).to eq([])
     end
+
+    [true, false].each do |loopback|
+      context "with allow_loopback_endpoints #{loopback}" do
+        before { CompletionKit.config.allow_loopback_endpoints = loopback }
+
+        {
+          "a NAT64 address of the metadata service" => "http://[64:ff9b::a9fe:a9fe]/",
+          "a NAT64 address of a private host" => "http://[64:ff9b::a00:1]/",
+          "a NAT64 address of loopback" => "http://[64:ff9b::7f00:1]/",
+          "a local-use NAT64 address" => "http://[64:ff9b:1::a00:1]/",
+          "a 6to4 address" => "http://[2002:a9fe:a9fe::]/",
+          "a Teredo address" => "http://[2001:0:4136:e378:8000:63bf:5601:5601]/",
+          "an IPv4-translated address" => "http://[::ffff:0:a9fe:a9fe]/",
+          "an IETF protocol assignment address" => "http://192.0.0.192/",
+          "a benchmarking address" => "http://198.18.0.1/",
+          "a multicast address" => "http://224.0.0.1/",
+          "a reserved address" => "http://240.0.0.1/",
+          "the broadcast address" => "http://255.255.255.255/",
+          "a documentation address" => "http://203.0.113.10/",
+          "an IPv6 multicast address" => "http://[ff02::1]/",
+          "an IPv6 site-local address" => "http://[fec0::1]/",
+          "an IPv6 unique local address" => "http://[fc00::1]/",
+          "an IPv6 link-local address" => "http://[fe80::1]/",
+          "an IPv6 documentation address" => "http://[2001:db8::1]/",
+          "an IPv6 discard address" => "http://[100::1]/"
+        }.each do |label, url|
+          it "returns :unsafe_host for #{label}" do
+            expect(described_class.validate(url)).to eq([:unsafe_host])
+          end
+        end
+
+        it "allows a public IPv6 address" do
+          expect(described_class.validate("http://[2606:4700:4700::1111]/")).to eq([])
+        end
+
+        it "allows a NAT64 address of a public host" do
+          expect(described_class.validate("http://[64:ff9b::808:808]/")).to eq([])
+        end
+      end
+    end
   end
 
   describe ".safe?" do
@@ -125,13 +165,24 @@ RSpec.describe CompletionKit::ProviderEndpoint do
     it "raises for a host that cannot be resolved" do
       allow(described_class).to receive(:resolve).with("nowhere.example").and_return([])
       expect { described_class.pinned_address("http://nowhere.example") }
-        .to raise_error(described_class::UnsafeEndpoint, "could not be resolved")
+        .to raise_error(described_class::UnsafeEndpoint, "does not resolve to a public address")
     end
 
     it "raises when any resolved address is internal" do
       allow(described_class).to receive(:resolve).with("mixed.example").and_return(["93.184.216.34", "10.0.0.5"])
       expect { described_class.pinned_address("http://mixed.example") }
-        .to raise_error(described_class::UnsafeEndpoint, "resolves to a private address")
+        .to raise_error(described_class::UnsafeEndpoint, "does not resolve to a public address")
+    end
+
+    it "gives a name that does not resolve and a name that resolves privately the same message" do
+      allow(described_class).to receive(:resolve).with("nowhere.example").and_return([])
+      allow(described_class).to receive(:resolve).with("internal.example").and_return(["10.0.0.5"])
+      messages = %w[nowhere.example internal.example].map do |host|
+        described_class.pinned_address("http://#{host}/")
+      rescue described_class::UnsafeEndpoint => e
+        e.message
+      end
+      expect(messages.uniq.length).to eq(1)
     end
   end
 
@@ -169,7 +220,17 @@ RSpec.describe CompletionKit::ProviderEndpoint do
       allow(builder).to receive(:adapter)
 
       expect { described_class.pin(builder, "http://0xA9FEA9FE/") }
-        .to raise_error(described_class::UnsafeEndpoint, "resolves to a private address")
+        .to raise_error(described_class::UnsafeEndpoint, "does not resolve to a public address")
+      expect(builder).not_to have_received(:adapter)
+    end
+
+    it "raises for a name that resolves to a NAT64 address of a private host" do
+      builder = double("Faraday::RackBuilder")
+      allow(builder).to receive(:adapter)
+      allow(described_class).to receive(:resolve).with("nat64.example").and_return(["64:ff9b::a00:1"])
+
+      expect { described_class.pin(builder, "http://nat64.example/") }
+        .to raise_error(described_class::UnsafeEndpoint)
       expect(builder).not_to have_received(:adapter)
     end
   end

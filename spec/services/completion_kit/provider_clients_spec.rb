@@ -389,15 +389,32 @@ RSpec.describe "CompletionKit provider clients", type: :service do
 
   it "refuses to call out when the configured endpoint resolves to a private address" do
     client = CompletionKit::OllamaClient.new(api_endpoint: "http://10.0.0.5:11434")
-    expect(client.generate_completion("prompt")).to eq("Error: API endpoint resolves to a private address")
+    expect(client.generate_completion("prompt")).to eq("Error: API endpoint does not resolve to a public address")
     expect(client.available_models).to eq([])
   end
 
   it "refuses to call Ollama when the endpoint host cannot be resolved" do
     allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return([])
     client = CompletionKit::OllamaClient.new(api_endpoint: "https://gone.example.test")
-    expect(client.generate_completion("prompt")).to eq("Error: API endpoint could not be resolved")
+    expect(client.generate_completion("prompt")).to eq("Error: API endpoint does not resolve to a public address")
     expect(client.available_models).to eq([])
+  end
+
+  it "answers a 200 from Ollama that is not JSON with one fixed message and logs the detail" do
+    allow(Rails.logger).to receive(:warn)
+    client = CompletionKit::OllamaClient.new(api_endpoint: "https://ollama.example.test")
+    stub_faraday(faraday_response(success: true, body: "<html><title>Internal admin</title></html>"))
+
+    expect(client.generate_completion("prompt")).to eq("Error: The endpoint did not return JSON.")
+    expect(Rails.logger).to have_received(:warn).with(/unexpected/)
+  end
+
+  it "answers a 200 from Azure that is not JSON with one fixed message" do
+    allow(Rails.logger).to receive(:warn)
+    client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "https://azure.example.test", api_version: "2024-10-21")
+    stub_faraday(faraday_response(success: true, body: "<html><title>Internal admin</title></html>"))
+
+    expect(client.generate_completion("prompt", model: "d")).to eq("Error: The endpoint did not return JSON.")
   end
 
   it "pins Ollama requests to the checked address" do
@@ -477,14 +494,14 @@ RSpec.describe "CompletionKit provider clients", type: :service do
 
   it "refuses to call Azure when the endpoint resolves to a private address" do
     client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "http://10.0.0.5", api_version: "2024-10-21")
-    expect(client.generate_completion("prompt", model: "d")).to eq("Error: API endpoint resolves to a private address")
+    expect(client.generate_completion("prompt", model: "d")).to eq("Error: API endpoint does not resolve to a public address")
     expect(client.available_models).to eq([])
   end
 
   it "refuses to call Azure when the endpoint host cannot be resolved" do
     allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return([])
     client = CompletionKit::AzureFoundryClient.new(api_key: "k", api_endpoint: "https://gone.example.test", api_version: "2024-10-21")
-    expect(client.generate_completion("prompt", model: "d")).to eq("Error: API endpoint could not be resolved")
+    expect(client.generate_completion("prompt", model: "d")).to eq("Error: API endpoint does not resolve to a public address")
     expect(client.available_models).to eq([])
   end
 

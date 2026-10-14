@@ -767,7 +767,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       service = described_class.new(config: { provider: "ollama", api_key: nil, api_endpoint: "http://0xA9FEA9FE" })
 
       expect { service.refresh! }
-        .to raise_error(described_class::DiscoveryError, "The model endpoint resolves to a private address.")
+        .to raise_error(described_class::DiscoveryError, "The model endpoint does not resolve to a public address.")
       expect(conn).not_to have_received(:get)
     end
 
@@ -780,7 +780,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
 
       expect(faraday_connection_stub).not_to have_received(:post)
       expect(CompletionKit::Model.where(provider: "ollama").pluck(:judging_error).uniq)
-        .to eq(["The model endpoint resolves to a private address."])
+        .to eq(["The model endpoint does not resolve to a public address."])
     end
 
     it "discovers ollama models, marks supports_generation true and probes judging" do
@@ -800,6 +800,24 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       expect(models.where(supports_judging: true).count).to eq(3)
       expect(models.where("probed_at IS NOT NULL").count).to eq(3)
       expect(models.find_by(model_id: "llama3.3:70b").display_name).to eq("llama3.3:70b")
+    end
+
+    TransportErrors.samples.merge("a reply that is not JSON" => nil).each do |label, error|
+      it "stores one fixed judging probe error for #{label}" do
+        allow(Rails.logger).to receive(:warn)
+        stub_faraday_get(faraday_response(success: true, body: ollama_response_body))
+        if error
+          allow(faraday_connection_stub).to receive(:post).and_raise(error)
+        else
+          stub_faraday_post(faraday_response(success: true, body: "<html><title>Internal admin</title></html>"))
+        end
+
+        described_class.new(config: config).refresh!
+
+        errors = CompletionKit::Model.where(provider: "ollama").pluck(:judging_error).uniq
+        expect(errors).to eq([error ? "Could not connect to the endpoint." : "The endpoint did not return JSON."])
+        expect(Rails.logger).to have_received(:warn).at_least(:once)
+      end
     end
 
     it "handles an empty ollama response" do
@@ -971,7 +989,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
       service = described_class.new(config: config.merge(api_endpoint: "http://169.254.169.254"))
 
       expect { service.refresh! }
-        .to raise_error(described_class::DiscoveryError, "The model endpoint resolves to a private address.")
+        .to raise_error(described_class::DiscoveryError, "The model endpoint does not resolve to a public address.")
       expect(conn).not_to have_received(:get)
     end
 
@@ -984,7 +1002,7 @@ RSpec.describe CompletionKit::ModelDiscoveryService, type: :service do
 
       expect(faraday_connection_stub).not_to have_received(:post)
       expect(CompletionKit::Model.where(provider: "azure_foundry").pluck(:generation_error).uniq)
-        .to eq(["The model endpoint resolves to a private address."])
+        .to eq(["The model endpoint does not resolve to a public address."])
     end
 
     it "lists deployments at /openai/deployments with the api-version and api-key header" do

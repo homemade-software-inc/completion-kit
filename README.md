@@ -271,6 +271,8 @@ end
 
 `tenant_scope` runs as each engine model's `default_scope` (use `unscoped` to bypass). `tenant_scope_columns` is appended to every engine uniqueness validation. Adding the tenant columns and composite unique indexes lives in your host migrations. Both defaults (`nil`, `[]`) are no-ops.
 
+Custom model endpoints and CSV imports by URL may reach the server's own loopback interface by default, so a local Ollama works out of the box. If the people using the engine should not reach services on the app server itself, set `config.allow_loopback_endpoints = false`. Private, link-local and reserved addresses are always refused.
+
 One hook lets a host apply run-history retention everywhere the engine lists, counts, or traverses runs, without overriding controllers or views:
 
 ```ruby

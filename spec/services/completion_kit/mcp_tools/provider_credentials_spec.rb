@@ -15,6 +15,8 @@ RSpec.describe CompletionKit::McpTools::ProviderCredentials do
   describe ".call" do
     let!(:credential) { create(:completion_kit_provider_credential, provider: "openai") }
 
+    before { allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"]) }
+
     it "lists provider credentials" do
       result = described_class.call("provider_credentials_list", {})
       content = JSON.parse(result[:content].first[:text])

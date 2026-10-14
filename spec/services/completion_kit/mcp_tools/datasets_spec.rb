@@ -1,4 +1,5 @@
 require "rails_helper"
+require "socket"
 
 RSpec.describe CompletionKit::McpTools::Datasets do
   describe ".definitions" do
@@ -110,7 +111,7 @@ RSpec.describe CompletionKit::McpTools::Datasets do
           {"name" => "x", "url" => "http://169.254.169.254/latest/meta-data"})
       end.not_to change(CompletionKit::Dataset, :count)
       expect(@result[:isError]).to be(true)
-      expect(@result[:content].first[:text]).to eq("URL is not allowed: it resolves to a private address.")
+      expect(@result[:content].first[:text]).to eq("URL is not allowed: it does not resolve to a public address.")
     end
 
     it "rejects a url whose host cannot be resolved" do
@@ -119,7 +120,18 @@ RSpec.describe CompletionKit::McpTools::Datasets do
       result = described_class.call("datasets_create_from_url",
         {"name" => "x", "url" => "https://gone.example.test/data.csv"})
       expect(result[:isError]).to be(true)
-      expect(result[:content].first[:text]).to eq("URL is not allowed: it could not be resolved.")
+      expect(result[:content].first[:text]).to eq("URL is not allowed: it does not resolve to a public address.")
+    end
+
+    it "gives a name that does not resolve and a name that resolves privately the same outcome" do
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).with("gone.example.test").and_return([])
+      allow(CompletionKit::ProviderEndpoint).to receive(:resolve).with("internal.example.test").and_return(["10.0.0.5"])
+
+      results = %w[gone.example.test internal.example.test].map do |host|
+        described_class.call("datasets_create_from_url", {"name" => "x", "url" => "https://#{host}/data.csv"})
+      end
+      expect(results.uniq.length).to eq(1)
+      expect(results.first[:isError]).to be(true)
     end
 
     it "pins the download to the checked address" do
@@ -161,6 +173,55 @@ RSpec.describe CompletionKit::McpTools::Datasets do
       result = described_class.call("datasets_create_from_url",
         {"name" => "x", "url" => "https://example.com/data.csv"})
       expect(result[:isError]).to be(true)
+    end
+
+    it "answers every transport failure with one fixed message and logs the detail" do
+      allow(Rails.logger).to receive(:warn)
+      texts = TransportErrors.samples.values.map do |error|
+        stub_fetch(raises: error)
+        described_class.call("datasets_create_from_url",
+          {"name" => "x", "url" => "https://example.com/data.csv"})[:content].first[:text]
+      end
+
+      expect(texts.uniq).to eq(["Could not download CSV. Could not connect to the endpoint."])
+      expect(Rails.logger).to have_received(:warn).with(/Connection refused/)
+    end
+
+    context "against real sockets" do
+      around do |example|
+        original = CompletionKit.config.allow_loopback_endpoints
+        CompletionKit.config.allow_loopback_endpoints = true
+        example.run
+        CompletionKit.config.allow_loopback_endpoints = original
+      end
+
+      before { allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_call_original }
+
+      def fetch_text(port)
+        described_class.call("datasets_create_from_url",
+          {"name" => "x", "url" => "http://localhost:#{port}/data.csv"})[:content].first[:text]
+      end
+
+      it "hides a closed port and a service that is not HTTP behind the same message" do
+        closed = TCPServer.new("127.0.0.1", 0)
+        closed_port = closed.addr[1]
+        closed.close
+
+        server = TCPServer.new("127.0.0.1", 0)
+        thread = Thread.new do
+          client = server.accept
+          client.write("SSH-2.0-OpenSSH_9.6 test\r\n")
+          client.close
+        end
+
+        texts = [fetch_text(closed_port), fetch_text(server.addr[1])]
+
+        expect(texts.uniq).to eq(["Could not download CSV. Could not connect to the endpoint."])
+        expect(texts.none? { |text| TransportErrors.leaks?(text) || text.include?("127.0.0.1") }).to be(true)
+      ensure
+        thread&.join(1)
+        server&.close
+      end
     end
   end
 end

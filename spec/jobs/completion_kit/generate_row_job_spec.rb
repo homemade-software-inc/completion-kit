@@ -66,6 +66,22 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
     expect(response.response_text).to be_nil
   end
 
+  it "stores one fixed message when a custom endpoint answers 200 with a body that is not JSON" do
+    allow(Rails.logger).to receive(:warn)
+    allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
+    connection = double("Faraday::Connection", request: nil, adapter: nil, options: Struct.new(:timeout, :open_timeout).new)
+    allow(connection).to receive(:post).and_return(instance_double("Faraday::Response", status: 200, success?: true, body: "<html><title>Internal admin</title></html>"))
+    allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(CompletionKit::OllamaClient.new(api_endpoint: "https://ollama.example.test"))
+
+    described_class.perform_now(run.id, response.id)
+
+    response.reload
+    expect(response.status).to eq("failed")
+    expect(response.error_message).to eq("The endpoint did not return JSON.")
+    expect(TransportErrors.leaks?(response.as_json.to_s)).to be(false)
+  end
+
   it "records a provider HTTP error as a clean failed response without paging the error tracker" do
     fake_client = double("client", generate_completion: 'Error: 402 - {"error":{"message":"Insufficient credits"}}', configured?: true)
     allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
@@ -126,7 +142,28 @@ RSpec.describe CompletionKit::GenerateRowJob, type: :job do
 
     response.reload
     expect(response.status).to eq("failed")
-    expect(response.error_class).to eq("Faraday::TimeoutError")
+    expect(response.error_class).to eq("CompletionKit::EndpointError")
+  end
+
+  TransportErrors.samples.each do |label, error|
+    it "stores one fixed message for #{label}" do
+      allow(Rails.error).to receive(:report)
+      allow(Rails.logger).to receive(:warn)
+      fake_client = double("client", configured?: true)
+      allow(fake_client).to receive(:generate_completion).and_raise(error)
+      allow(CompletionKit::LlmClient).to receive(:for_model).and_return(fake_client)
+
+      job = described_class.new(run.id, response.id)
+      job.exception_executions = { "[Faraday::TimeoutError, Faraday::ConnectionFailed]" => 4 }
+      job.perform_now
+
+      response.reload
+      expect(response.status).to eq("failed")
+      expect(response.error_message).to eq("Could not connect to the endpoint.")
+      expect(response.error_class).to eq("CompletionKit::EndpointError")
+      expect(TransportErrors.leaks?(response.as_json.to_s)).to be(false)
+      expect(Rails.logger).to have_received(:warn).with(include(error.message))
+    end
   end
 
   it "enqueues a JudgeReviewJob per metric on success" do

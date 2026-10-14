@@ -113,7 +113,46 @@ RSpec.describe CompletionKit::JudgeReviewJob, type: :job do
 
     review = response.reviews.find_by(metric_id: metric.id)
     expect(review.status).to eq("failed")
-    expect(review.error_class).to eq("Faraday::TimeoutError")
+    expect(review.error_class).to eq("CompletionKit::EndpointError")
+  end
+
+  TransportErrors.samples.each do |label, error|
+    it "stores one fixed message for #{label}" do
+      allow(Rails.error).to receive(:report)
+      allow(Rails.logger).to receive(:warn)
+      fake_judge = double("judge", temperature_dropped?: false)
+      allow(fake_judge).to receive(:evaluate).and_raise(error)
+      allow(CompletionKit::JudgeService).to receive(:new).and_return(fake_judge)
+      allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+
+      job = described_class.new(response.id, metric.id)
+      job.exception_executions = { "[Faraday::TimeoutError, Faraday::ConnectionFailed]" => 4 }
+      job.perform_now
+
+      review = response.reviews.find_by(metric_id: metric.id)
+      expect(review.status).to eq("failed")
+      expect(review.error_message).to eq("Could not connect to the endpoint.")
+      expect(review.error_class).to eq("CompletionKit::EndpointError")
+      expect(TransportErrors.leaks?(review.as_json.to_s)).to be(false)
+      expect(Rails.logger).to have_received(:warn).with(include(error.message))
+    end
+  end
+
+  it "stores one fixed message when a custom judge endpoint answers 200 with a body that is not JSON" do
+    allow(Rails.logger).to receive(:warn)
+    allow(CompletionKit::ProviderEndpoint).to receive(:resolve).and_return(["93.184.216.34"])
+    connection = double("Faraday::Connection", request: nil, adapter: nil, options: Struct.new(:timeout, :open_timeout).new)
+    allow(connection).to receive(:post).and_return(instance_double("Faraday::Response", status: 200, success?: true, body: "<html><title>Internal admin</title></html>"))
+    allow(Faraday).to receive(:new).and_yield(connection).and_return(connection)
+    allow(CompletionKit::LlmClient).to receive(:for_model).and_return(CompletionKit::OllamaClient.new(api_endpoint: "https://ollama.example.test"))
+    allow(CompletionKit::ApiConfig).to receive(:for_model).and_return({})
+
+    described_class.perform_now(response.id, metric.id)
+
+    review = response.reviews.find_by(metric_id: metric.id)
+    expect(review.status).to eq("failed")
+    expect(review.error_message).to eq("The endpoint did not return JSON.")
+    expect(TransportErrors.leaks?(review.as_json.to_s)).to be(false)
   end
 
   it "records terminal failure and discards when the judge is not configured" do

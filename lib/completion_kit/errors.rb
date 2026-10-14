@@ -1,7 +1,26 @@
+require "faraday"
+require "json"
+
 module CompletionKit
   class Error < StandardError; end
 
   class ConfigurationError < Error; end
+
+  class EndpointError < Error
+    CONNECTION_MESSAGE = "Could not connect to the endpoint."
+    NOT_JSON_MESSAGE = "The endpoint did not return JSON."
+
+    def self.from(error)
+      message = case error
+                when Faraday::Error then CONNECTION_MESSAGE
+                when JSON::ParserError then NOT_JSON_MESSAGE
+                end
+      return error unless message
+
+      Rails.logger.warn("[CompletionKit] endpoint request failed: #{error.class}: #{error.message}")
+      new(message)
+    end
+  end
 
   class RateLimitError < Error
     attr_reader :provider, :status, :retry_after

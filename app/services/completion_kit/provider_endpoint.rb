@@ -5,11 +5,17 @@ module CompletionKit
   module ProviderEndpoint
     class UnsafeEndpoint < StandardError; end
 
-    BLOCKED_NETS = [IPAddr.new("0.0.0.0/8"), IPAddr.new("100.64.0.0/10")].freeze
+    BLOCKED_NETS = %w[
+      0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 169.254.0.0/16 172.16.0.0/12 192.0.0.0/24 192.0.2.0/24
+      192.88.99.0/24 192.168.0.0/16 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4
+      2001::/23 2001:db8::/32 2002::/16 3fff::/20
+    ].map { |net| IPAddr.new(net) }.freeze
+    GLOBAL_UNICAST = IPAddr.new("2000::/3")
+    NAT64 = IPAddr.new("64:ff9b::/96")
     ISSUE_MESSAGES = {
       invalid_url: "is not a valid http or https URL",
-      unresolvable: "could not be resolved",
-      unsafe_host: "resolves to a private address"
+      unresolvable: "does not resolve to a public address",
+      unsafe_host: "does not resolve to a public address"
     }.freeze
 
     module_function
@@ -66,12 +72,15 @@ module CompletionKit
 
     def unsafe?(ip)
       ip = ip.native
-      return true if ip.private?
-      return true if ip.link_local?
-      return true if ip.to_i.zero?
-      return true if ip.ipv4? && BLOCKED_NETS.any? { |net| net.include?(ip) }
-      return true if ip.loopback? && !CompletionKit.config.allow_loopback_endpoints
-      false
+      return !CompletionKit.config.allow_loopback_endpoints if ip.loopback?
+      return nat64_unsafe?(ip) if NAT64.include?(ip)
+      return true if ip.ipv6? && !GLOBAL_UNICAST.include?(ip)
+      BLOCKED_NETS.any? { |net| net.include?(ip) }
+    end
+
+    def nat64_unsafe?(ip)
+      target = IPAddr.new(ip.to_i & 0xffff_ffff, Socket::AF_INET)
+      target.loopback? || unsafe?(target)
     end
   end
 end

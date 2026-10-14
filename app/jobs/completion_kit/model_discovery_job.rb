@@ -8,25 +8,25 @@ module CompletionKit
       30 * executions
     end
 
-    retry_on Faraday::TimeoutError,
-             Faraday::ConnectionFailed,
-             wait: :polynomially_longer, attempts: 5
-
-    retry_on CompletionKit::RateLimitError,
-             wait: method(:rate_limit_wait), attempts: 5
-
-    discard_on ActiveJob::DeserializationError
-
     rescue_from(StandardError) do |error|
       unless error.is_a?(CompletionKit::ModelDiscoveryService::DiscoveryError)
         Rails.error.report(error, handled: true, context: { job: self.class.name, provider_credential_id: arguments.first })
       end
-      credential = ProviderCredential.find_by(id: arguments.first)
-      next unless credential
-      credential.update_columns(discovery_status: "failed", discovery_error: error.message.to_s.truncate(500))
-      credential.reload
-      credential.broadcast_discovery_progress
+      record_failure!(error)
     end
+
+    retry_on Faraday::TimeoutError,
+             Faraday::ConnectionFailed,
+             wait: :polynomially_longer, attempts: 5 do |job, error|
+      job.send(:record_failure!, error)
+    end
+
+    retry_on CompletionKit::RateLimitError,
+             wait: ->(executions) { rate_limit_wait(executions) }, attempts: 5 do |job, error|
+      job.send(:record_failure!, error)
+    end
+
+    discard_on ActiveJob::DeserializationError
 
     def perform(provider_credential_id, force: false)
       credential = ProviderCredential.find_by(id: provider_credential_id)
@@ -56,6 +56,17 @@ module CompletionKit
       )
       credential.reload
       credential.broadcast_discovery_complete
+    end
+
+    private
+
+    def record_failure!(error)
+      credential = ProviderCredential.find_by(id: arguments.first)
+      return unless credential
+
+      credential.update_columns(discovery_status: "failed", discovery_error: EndpointError.from(error).message.to_s.truncate(500))
+      credential.reload
+      credential.broadcast_discovery_progress
     end
   end
 end
