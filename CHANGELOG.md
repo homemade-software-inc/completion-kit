@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Editing a check validates the new values before saving them.** A check with reviews saved any change as a draft without validating it, and a check with none showed an error page on an invalid value and lost what you typed. Both now name the problem in the form and keep your values. A rename is saved in the same step as the config it repairs, so a check whose saved config no longer passes validation can be fixed from the form.
 
+- **A check form that fails to save shows the fields of the rule you chose.** After a failed save the form showed every check field under its default label, because the script that picks the fields ran only on a full page load. It now also runs when the failed form is rendered, and moves focus to the first field with an error, as it already did on a full page load.
+
 - **Publishing a check version validates it first.** Publishing wrote the version's config onto the live metric without checking it, so an invalid draft could make every future row fail and leave the metric impossible to save. A version that does not pass is now refused with the reason over the web, REST and MCP, and the live metric is left as it was.
 
 - **The edit page shows a check's pending draft.** It showed the live config under a banner saying it showed the draft, and the banner read "Publish to replace the live for future runs". The form now loads the draft, and the banner says publishing replaces the live check.

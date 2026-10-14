@@ -8,6 +8,8 @@ document.addEventListener("turbo:load", function() {
   if (ckDiscoveringInDom()) ckStartDiscoveryPolling(0);
 });
 
+document.addEventListener("turbo:render", ckAutoFocusFirstError);
+
 document.addEventListener("input", function(e) {
   if (!e.target || e.target.id !== "tag_name") return;
   var text = document.getElementById("tag-pill-text");
@@ -292,14 +294,17 @@ function ckApplyMetricType(group) {
   ckApplyCheckFields(scope);
 }
 
-document.addEventListener("turbo:load", function() {
+function ckApplyMetricForms() {
   document.querySelectorAll("[data-ck-metric-type]").forEach(function(group) {
     ckApplyMetricType(group);
   });
-  document.querySelectorAll('[data-ck-metric-editor="check"]').forEach(function(editor) {
+  document.querySelectorAll("[data-ck-check-form]").forEach(function(editor) {
     ckApplyCheckFields(editor);
   });
-});
+}
+
+document.addEventListener("turbo:load", ckApplyMetricForms);
+document.addEventListener("turbo:render", ckApplyMetricForms);
 
 document.addEventListener("change", function(e) {
   var target = e.target;
@@ -326,11 +331,14 @@ function ckApplyProviderFields(scope) {
   });
 }
 
-document.addEventListener("turbo:load", function() {
+function ckApplyProviderForms() {
   document.querySelectorAll("[data-ck-provider-select]").forEach(function(select) {
     ckApplyProviderFields(select.closest("form") || document);
   });
-});
+}
+
+document.addEventListener("turbo:load", ckApplyProviderForms);
+document.addEventListener("turbo:render", ckApplyProviderForms);
 
 document.addEventListener("change", function(e) {
   var target = e.target;

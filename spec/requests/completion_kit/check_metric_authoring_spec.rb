@@ -572,6 +572,14 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(script).not_to include("Shortest allowed", "Text to look for", "Leave blank", "json_path_equals")
     end
 
+    it "sets up the check fields again when Turbo renders a failed save, not only on a full page load" do
+      script = File.read(CompletionKit::Engine.root.join("app/assets/javascripts/completion_kit/application.js"))
+
+      expect(script).to include('document.addEventListener("turbo:render", ckApplyMetricForms);')
+      expect(script).to include('document.addEventListener("turbo:render", ckApplyProviderForms);')
+      expect(script).to include('document.addEventListener("turbo:render", ckAutoFocusFirstError);')
+    end
+
     it "renders a failed list check save with the list check's own labels and hints" do
       post base_path, params: { metric: { name: "Codes", metric_type: "check",
                                           check_config: { check_kind: "list_overlap", target: "response_text", value: "A, B", min: "5" } } }
