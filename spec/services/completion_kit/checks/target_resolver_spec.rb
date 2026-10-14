@@ -58,6 +58,21 @@ RSpec.describe CompletionKit::Checks::TargetResolver do
       expect(described_class.call(response, { "target" => "json_path", "target_path" => " a " })).to eq("1")
     end
 
+    it "reads a JSONPath-style target_path that starts at the root with $." do
+      response = build(:completion_kit_response, response_text: '{"vin":{"confidence":0.9}}', status: "pending")
+      expect(described_class.call(response, { "target" => "json_path", "target_path" => "$.vin.confidence" })).to eq("0.9")
+    end
+
+    it "reads a bare $ as the whole document" do
+      response = build(:completion_kit_response, response_text: '[1,2]', status: "pending")
+      expect(described_class.call_value(response, { "target" => "json_path", "target_path" => "$" })).to eq([1, 2])
+    end
+
+    it "reads a $ followed directly by a key the same as $." do
+      response = build(:completion_kit_response, response_text: '{"mileage":82000}', status: "pending")
+      expect(described_class.call_value(response, { "target" => "json_path", "target_path" => " $mileage " })).to eq(82_000)
+    end
+
     it "exposes the allowed target set" do
       expect(described_class::TARGETS).to eq(%w[response_text input_data json_path])
     end

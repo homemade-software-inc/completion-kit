@@ -38,6 +38,17 @@ RSpec.describe CompletionKit::Checks::ExpectedResolver do
       expect(described_class.call(response, { "expected_path" => "make" })).to be(described_class::UNRESOLVED)
     end
 
+    it "reads a JSONPath-style expected_path that starts at the root with $." do
+      response = build(:completion_kit_response, expected_output: '{"optionCodes":["A","B"]}', status: "pending")
+      expect(described_class.call(response, { "expected_path" => "$.optionCodes.1" })).to eq("B")
+    end
+
+    it "keeps the whole answer key as text for a text comparison, even when it parses as JSON" do
+      response = build(:completion_kit_response, expected_output: '"quoted"', status: "pending")
+      expect(described_class.call(response, {})).to eq('"quoted"')
+      expect(described_class.call(response, { "expected_path" => "$" })).to eq('"quoted"')
+    end
+
     it "shares the TargetResolver UNRESOLVED sentinel" do
       expect(described_class::UNRESOLVED).to be(CompletionKit::Checks::TargetResolver::UNRESOLVED)
     end
@@ -58,6 +69,21 @@ RSpec.describe CompletionKit::Checks::ExpectedResolver do
     it "returns the whole answer key when no expected_path is given" do
       response = build(:completion_kit_response, expected_output: "X1", status: "pending")
       expect(described_class.call_value(response, {})).to eq("X1")
+    end
+
+    it "parses a whole answer key that is JSON, so a number or a boolean keeps its type" do
+      expect(described_class.call_value(build(:completion_kit_response, expected_output: "82000", status: "pending"), {})).to eq(82_000)
+      expect(described_class.call_value(build(:completion_kit_response, expected_output: "true", status: "pending"), {})).to be(true)
+      expect(described_class.call_value(build(:completion_kit_response, expected_output: '["A","B"]', status: "pending"), {})).to eq(%w[A B])
+    end
+
+    it "keeps a whole answer key that is not JSON as the text it is" do
+      expect(described_class.call_value(build(:completion_kit_response, expected_output: "82,000", status: "pending"), {})).to eq("82,000")
+    end
+
+    it "treats a bare $ expected_path as the whole answer key" do
+      response = build(:completion_kit_response, expected_output: "82000", status: "pending")
+      expect(described_class.call_value(response, { "expected_path" => "$" })).to eq(82_000)
     end
 
     it "returns UNRESOLVED when the row has no answer key" do

@@ -125,6 +125,35 @@ RSpec.describe CompletionKit::CheckReviewJob, type: :job do
       expect(response.reviews.find_by(metric_id: metric.id).passed).to be(true)
     end
 
+    it "matches a numeric field against a whole answer key that holds the bare number" do
+      metric.update!(check_config: { "check_kind" => "json_path_equals", "json_path" => "mileage", "compare_to" => "expected" })
+      response.update!(response_text: '{"mileage":82000}', expected_output: "82000")
+
+      described_class.perform_now(response.id, metric.id, run.id)
+
+      review = response.reviews.find_by(metric_id: metric.id)
+      expect(review.passed).to be(true)
+      expect(review.ai_feedback).to eq("mileage == 82000")
+    end
+
+    it "matches a boolean field against a whole answer key that holds true" do
+      metric.update!(check_config: { "check_kind" => "json_path_equals", "json_path" => "$.sunroof", "compare_to" => "expected" })
+      response.update!(response_text: '{"sunroof":true}', expected_output: "true")
+
+      described_class.perform_now(response.id, metric.id, run.id)
+
+      expect(response.reviews.find_by(metric_id: metric.id).passed).to be(true)
+    end
+
+    it "still matches a text field against a whole answer key that is plain text" do
+      metric.update!(check_config: { "check_kind" => "json_path_equals", "json_path" => "vin", "compare_to" => "expected" })
+      response.update!(response_text: '{"vin":"5YFBURHE0KP891234"}', expected_output: "5YFBURHE0KP891234")
+
+      described_class.perform_now(response.id, metric.id, run.id)
+
+      expect(response.reviews.find_by(metric_id: metric.id).passed).to be(true)
+    end
+
     it "fills expected rather than value, leaving the constant form untouched" do
       metric.update!(check_config: { "check_kind" => "json_path_equals", "json_path" => "trim", "expected" => "XSE" })
 

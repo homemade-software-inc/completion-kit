@@ -4,6 +4,7 @@ module CompletionKit
       TARGETS = %w[response_text input_data json_path].freeze
       UNRESOLVED = Object.new.freeze
       ARRAY_INDEX = /\A\d+\z/
+      ROOT = /\A\$\.?/
 
       def self.call(response, config)
         stringify(call_value(response, config))
@@ -21,13 +22,13 @@ module CompletionKit
       end
 
       def self.dig_json(text, path)
-        walk(JSON.parse(text.to_s), path.to_s.strip)
+        walk(JSON.parse(text.to_s), path)
       rescue JSON::ParserError
         UNRESOLVED
       end
 
       def self.walk(document, path)
-        path.split(".").reduce(document) do |node, key|
+        normalize_path(path).split(".").reduce(document) do |node, key|
           case node
           when Hash
             return UNRESOLVED unless node.key?(key)
@@ -42,6 +43,10 @@ module CompletionKit
             return UNRESOLVED
           end
         end
+      end
+
+      def self.normalize_path(path)
+        path.to_s.strip.sub(ROOT, "")
       end
 
       def self.array_index(array, key)

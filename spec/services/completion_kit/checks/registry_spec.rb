@@ -234,6 +234,15 @@ RSpec.describe CompletionKit::Checks::Registry do
     it "fails a non-JSON target without raising" do
       expect(call("json_path_equals", "plain text", { "json_path" => "a", "expected" => "x" }).passed).to be(false)
     end
+
+    it "indexes into a list the same way target_path and expected_path do" do
+      expect(call("json_path_equals", '{"codes":["A","B"]}', { "json_path" => "codes.1", "expected" => "B" }).passed).to be(true)
+      expect(call("json_path_equals", '{"codes":["A"]}', { "json_path" => "codes.3", "expected" => "A" }).detail).to eq("path codes.3 not found")
+    end
+
+    it "reads a JSONPath-style json_path that starts at the root with $." do
+      expect(call("json_path_equals", '{"vin":{"value":"X1"}}', { "json_path" => "$.vin.value", "expected" => "X1" }).passed).to be(true)
+    end
   end
 
   describe "length_bounds" do
