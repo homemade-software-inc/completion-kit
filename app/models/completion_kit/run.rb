@@ -107,16 +107,16 @@ module CompletionKit
     # Scores below this are the ones worth reading: `low_count` on each metric
     # average counts them, so a caller can spot the dragging metric without
     # pulling every review.
+    def self.low_score_ceiling
+      CompletionKit.config.medium_quality_threshold.to_f
+    end
+
     def self.check_summary(name, passed, resolved, fraction_avg)
       summary = { name: name, kind: "check", pass_rate: (passed.to_f / resolved).round(2),
                   count: resolved, low_count: resolved - passed }
       return summary if fraction_avg.nil?
 
       summary.merge(avg_check_score: fraction_avg.round(3))
-    end
-
-    def self.low_score_ceiling
-      CompletionKit.config.medium_quality_threshold.to_f
     end
 
     TOP_SCORE = 5.0
