@@ -71,6 +71,11 @@
     <p class="ck-kicker">Runs</p>
     <%= render "completion_kit/runs/table", runs: @runs %>
   </section>
+<% elsif @dataset.runs.exists? %>
+  <section class="ck-card--spaced">
+    <p class="ck-kicker">Runs</p>
+    <div class="ck-empty">No runs to show.</div>
+  </section>
 <% end %>
 
 <%= ck_runs_display_footer(@runs) %>

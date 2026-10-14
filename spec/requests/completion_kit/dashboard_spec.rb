@@ -162,7 +162,7 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       expect(response.body).to include("is-loss")
     end
 
-    it "shows a hidden-runs message, not the new-user CTA, when every run is hidden on the dashboard" do
+    it "shows a neutral empty state, not the new-user CTA, when the display scope returns nothing" do
       cookies[:ck_onboarding_dismissed] = "1"
       prompt = create(:completion_kit_prompt)
       dataset = create(:completion_kit_dataset)
@@ -172,7 +172,7 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       get dashboard
 
       expect(response.body).not_to include("Create your first run")
-      expect(response.body).to include("Your older runs are hidden")
+      expect(response.body).to include("No runs to show")
     ensure
       CompletionKit.config.runs_display_scope = nil
     end
@@ -230,7 +230,7 @@ RSpec.describe "CompletionKit dashboard", type: :request do
       CompletionKit.config.runs_display_scope = nil
     end
 
-    it "keeps the stat cards gated on the unscoped run total when retention hides most runs" do
+    it "keeps the stat cards gated on the unscoped run total when the display scope excludes most runs" do
       cookies[:ck_onboarding_dismissed] = "1"
       prompt = create(:completion_kit_prompt)
       dataset = create(:completion_kit_dataset)
