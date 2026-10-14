@@ -10,11 +10,10 @@ module CompletionKit
       @template = template
       @values = values
       @ranks = values.keys.each_with_index.to_h
-      @padded = {}
       @braced = []
       @blank_lengths = []
+      @lead = @trail = @core = 0
       values.each_key { |name| classify(name) }
-      @padded.each_value { |cores| cores.each_value(&:sort!) }
     end
 
     def fill
@@ -42,12 +41,10 @@ module CompletionKit
         @blank_lengths |= [lead]
       else
         trail = whitespace_before(name, name.bytesize)
-        add(@padded, name.byteslice(lead, name.bytesize - lead - trail), [lead, @ranks[name], trail, name])
+        @lead = [@lead, lead].max
+        @trail = [@trail, trail].max
+        @core = [@core, name.bytesize - lead - trail].max
       end
-    end
-
-    def add(table, key, entry)
-      ((table[key.bytesize] ||= {})[key] ||= []) << entry
     end
 
     def closer_from(start)
@@ -81,10 +78,16 @@ module CompletionKit
 
     def padded_match(start, top)
       @tail ||= @closer - whitespace_before(@template, @closer)
-      entry = entries_at(@padded, top, @tail)&.find do |lead, _, trail, name|
-        lead <= top - start && trail <= @closer - @tail && @template.byteslice(top - lead, name.bytesize) == name
+      return if @tail - top > @core
+
+      0.upto([top - start, @lead].min) do |lead|
+        names = 0.upto([@closer - @tail, @trail].min).map do |trail|
+          @template.byteslice(top - lead, @tail - top + lead + trail)
+        end
+        name = first_ranked(names)
+        return [top - lead, name] if name
       end
-      [top - entry.first, entry.last] if entry
+      nil
     end
 
     def braced_match(start, top)
@@ -96,11 +99,6 @@ module CompletionKit
         finish += whitespace_after(@template, finish)
         [from, name, finish + 2] if @template.byteslice(finish, 2) == "}}"
       end)
-    end
-
-    def entries_at(table, from, stop)
-      keys = table[stop - from]
-      keys[@template.byteslice(from, stop - from)] if keys
     end
 
     def best(matches)

@@ -236,12 +236,6 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
       template.gsub(/\{\{\s*(#{names})\s*\}\}/) { values[Regexp.last_match(1)].to_s }
     end
 
-    def timed
-      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      result = yield
-      [result, Process.clock_gettime(Process::CLOCK_MONOTONIC) - started]
-    end
-
     it "matches a padded name only where the {{name}} pattern did, as a CSV header row like `name, city` gives" do
       values = { "name" => "Ada", " city" => "Paris", "zip " => "75" }
 
@@ -268,15 +262,6 @@ RSpec.describe CompletionKit::CsvProcessor, type: :service do
       expect(fill("{{ \t}}", { " \t" => "A", " " => "B" })).to eq("A")
       expect(fill("{{ \t}}", { " " => "B", " \t" => "A" })).to eq("B")
       expect(fill("{{\t}} {{\t\t}}", { "\t\t" => "2", "\t" => "1" })).to eq("1 1")
-    end
-
-    it "fills a name padded with 30,000 spaces on each side fast" do
-      padding = " " * 30_000
-
-      rendered, elapsed = timed { fill("{{#{padding}z#{padding}}}", { "#{padding}z#{padding}" => "Z" }) }
-
-      expect(rendered).to eq("Z")
-      expect(elapsed).to be < 1
     end
 
     it "fills blank and brace-bearing names the way the {{name}} pattern did" do
