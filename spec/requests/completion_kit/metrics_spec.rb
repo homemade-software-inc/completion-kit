@@ -127,6 +127,25 @@ RSpec.describe "CompletionKit metrics", type: :request do
     expect(trigger["data-turbo-confirm"]).to be_present
   end
 
+  it "names what a judge draft replaces in the draft banner" do
+    metric = create(:completion_kit_metric, name: "Draft Metric")
+    CompletionKit::MetricVersion.ensure_current_for(metric)
+    draft = CompletionKit::MetricVersion.create!(metric: metric, instruction: "draft instruction",
+      rubric_bands: metric.rubric_bands || [], state: "draft", source: "edit")
+    banner = -> { Nokogiri::HTML5(response.body).at_css(".ck-suggestion-banner .ck-meta-copy").text.squish }
+
+    get "#{base_path}/#{metric.id}/edit"
+    expect(banner.call).to include("Publish to replace the live instruction for future runs")
+
+    draft.update!(rubric_bands: metric.rubric_bands.map { |band| band.merge("description" => "changed") })
+    get "#{base_path}/#{metric.id}/edit"
+    expect(banner.call).to include("Publish to replace the live instruction and rubric for future runs")
+
+    draft.update!(instruction: metric.instruction, rubric_bands: metric.rubric_bands)
+    get "#{base_path}/#{metric.id}/edit"
+    expect(banner.call).to include("Publish to replace the live version for future runs")
+  end
+
   it "keeps the edit form intact (Save not orphaned, no swallowed DELETE) when a draft banner is showing" do
     metric = create(:completion_kit_metric, name: "Draft Metric")
     CompletionKit::MetricVersion.ensure_current_for(metric)

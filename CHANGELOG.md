@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Publishing a check version validates it first.** Publishing wrote the version's config onto the live metric without checking it, so an invalid draft could make every future row fail and leave the metric impossible to save. A version that does not pass is now refused with the reason over the web, REST and MCP, and the live metric is left as it was.
 
+- **The edit page shows a check's pending draft.** It showed the live config under a banner saying it showed the draft, and the banner read "Publish to replace the live for future runs". The form now loads the draft, and the banner says publishing replaces the live check.
+
 - **A promptfoo import keeps promptfoo's case handling.** promptfoo's `contains`, `not-contains`, `equals` and `regex` asserts are case-sensitive, but they were imported with no `case_sensitive`, so the text checks matched case-insensitively. They now import with `case_sensitive: true`, and `icontains` and `not-icontains` with `false`. Regex checks imported before this release have no `case_sensitive`, so the regex change above applies to them.
 
 ### Changed

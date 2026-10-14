@@ -336,6 +336,17 @@ RSpec.describe "Check metric authoring", type: :request do
       expect(metric.reload.check_config["min"]).to eq(0.6)
     end
 
+    it "loads a check draft into the edit form and says publishing replaces the live check" do
+      metric = reviewed_check(list_config)
+      save_list(metric, "0.8")
+
+      get "#{base_path}/#{metric.id}/edit"
+
+      expect(page.at_css('input[name="metric[check_config][min]"]')["value"]).to eq("0.8")
+      expect(page.at_css(".ck-suggestion-banner .ck-meta-copy").text.squish)
+        .to eq("The form below shows your unpublished draft. Publish to replace the live check for future runs, or keep editing.")
+    end
+
     it "refuses to publish a check version that is not valid and leaves the live metric alone" do
       metric = reviewed_check(list_config)
       draft = CompletionKit::MetricVersion.create!(metric: metric, metric_type: "check", check_config: list_config.merge("min" => 1.5),

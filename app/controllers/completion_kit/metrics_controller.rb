@@ -61,7 +61,9 @@ module CompletionKit
       @published_metric_version = MetricVersion.published.where(metric_id: @metric.id, current: true).first
       @improve_disagreement_count = @metric.check? ? 0 : Agreement.where(metric_id: @metric.id, verdict: "disagree", run_id: CompletionKit::Run.visible_run_ids).count
 
-      if @edit_draft
+      if @edit_draft&.check?
+        @metric.check_config = @edit_draft.check_config
+      elsif @edit_draft
         @metric.instruction = @edit_draft.instruction
         @metric.rubric_bands = @edit_draft.rubric_bands
       end
