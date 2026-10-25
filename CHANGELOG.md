@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.2] - 2026-10-24
+
+### Fixed
+- **An API list request with `limit` or `offset` sent as an array gets the default page instead of a server error.** `?limit[]=5` and `?offset[]=1` used to return a 500. A `count` sent as an array to `suggest_variants`, and a `show_change` sent as an array to a metric's page, no longer raise either.
+
 ## [0.29.1] - 2026-10-14
 
 ### Security
