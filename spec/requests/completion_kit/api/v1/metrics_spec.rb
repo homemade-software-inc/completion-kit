@@ -134,6 +134,13 @@ RSpec.describe "API V1 Metrics", type: :request do
       expect(JSON.parse(response.body).first["source"]).to eq("suggestion")
     end
 
+    it "falls back to the default variant count when count arrives as an array" do
+      add_disagree
+      stub_llm("VARIANT:\nREASONING: tighter\nINSTRUCTION:\nbe sharper\nEND_VARIANT")
+      post "/completion_kit/api/v1/metrics/#{metric.id}/suggest_variants?count[]=2", headers: headers
+      expect(response).to have_http_status(:created)
+    end
+
     it "returns 422 when no disagreements exist" do
       post "/completion_kit/api/v1/metrics/#{metric.id}/suggest_variants", headers: headers
       expect(response).to have_http_status(:unprocessable_entity)

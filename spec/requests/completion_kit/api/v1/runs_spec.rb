@@ -81,6 +81,14 @@ RSpec.describe "API V1 Runs", type: :request do
       get "/completion_kit/api/v1/runs?limit=10000", headers: headers
       expect(response.headers["X-Limit"]).to eq("500")
     end
+
+    it "falls back to the defaults when limit or offset arrive as arrays" do
+      create(:completion_kit_run)
+      get "/completion_kit/api/v1/runs?limit[]=5&offset[]=1", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["X-Limit"]).to eq("50")
+      expect(response.headers["X-Offset"]).to eq("0")
+    end
   end
 
   describe "GET /api/v1/runs/:id" do

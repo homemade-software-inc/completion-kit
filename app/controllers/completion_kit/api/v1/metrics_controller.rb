@@ -48,7 +48,7 @@ module CompletionKit
             return
           end
 
-          generator = MetricVariantGenerator.new(@metric, count: params[:count].to_i, model: params[:model])
+          generator = MetricVariantGenerator.new(@metric, count: params[:count].to_s.to_i, model: params[:model])
           variants = generator.call
           MetricVersion.drafts.where(metric_id: @metric.id, source: "suggestion").destroy_all
           if variants.empty?

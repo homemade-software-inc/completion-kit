@@ -45,10 +45,10 @@ module CompletionKit
 
         def paginate(scope)
           total = scope.count
-          limit = (params[:limit].presence || PAGINATION_DEFAULT_LIMIT).to_i
+          limit = params[:limit].to_s.to_i
           limit = PAGINATION_DEFAULT_LIMIT if limit <= 0
           limit = PAGINATION_MAX_LIMIT if limit > PAGINATION_MAX_LIMIT
-          offset = params[:offset].to_i
+          offset = params[:offset].to_s.to_i
           offset = 0 if offset < 0
           response.set_header("X-Total-Count", total.to_s)
           response.set_header("X-Limit", limit.to_s)

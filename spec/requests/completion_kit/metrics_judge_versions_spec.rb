@@ -171,6 +171,12 @@ RSpec.describe "CompletionKit metrics (judge versioning)", type: :request do
     expect(response.body).to include("Discard draft")
   end
 
+  it "renders the show page when show_change arrives as an array" do
+    edit_metric_via_form(instruction: "score it carefully")
+    get "/completion_kit/metrics/#{metric.id}?show_change[]=1"
+    expect(response).to have_http_status(:ok)
+  end
+
   it "publishes the latest draft, demoting the previous published version" do
     edit_metric_via_form(instruction: "v2 instruction")
     previously_published = CompletionKit::MetricVersion.published.where(metric_id: metric.id).first
