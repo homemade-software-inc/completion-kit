@@ -4165,6 +4165,35 @@ a.ck-metric-group-pill {
 .ck-responses-table .ck-metric-bar--compact { flex-wrap: wrap; row-gap: 3px; }
 
 
+.ck-compare-picker td:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ck-compare-picker th:nth-child(2),
+.ck-compare-picker td:nth-child(2) {
+  width: 9rem;
+  white-space: nowrap;
+}
+
+.ck-compare-picker th:nth-child(3),
+.ck-compare-picker td:nth-child(3) {
+  width: 13rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ck-compare-picker th:nth-child(4),
+.ck-compare-picker td:nth-child(4) {
+  width: 9rem;
+}
+
+.ck-compare-picker th:last-child,
+.ck-compare-picker td:last-child {
+  width: 8rem;
+}
+
 table.ck-runs-table {
   table-layout: fixed;
   width: 100%;

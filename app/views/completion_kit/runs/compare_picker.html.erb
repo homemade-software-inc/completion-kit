@@ -13,7 +13,7 @@
 </section>
 
 <% if @other_runs.any? %>
-  <table class="ck-results-table">
+  <table class="ck-results-table ck-compare-picker">
     <thead>
       <tr>
         <th scope="col">Run</th>
@@ -26,7 +26,7 @@
     <tbody>
       <% @other_runs.each do |other| %>
         <tr>
-          <td><%= link_to other.name, run_path(other), class: "ck-link" %></td>
+          <td><%= link_to other.name, run_path(other), class: "ck-link", title: other.name %></td>
           <td class="ck-meta-copy"><%= other.prompt&.version_label %></td>
           <td class="ck-meta-copy"><%= other.judge_model %></td>
           <td class="ck-meta-copy"><time datetime="<%= other.created_at.utc.iso8601 %>"><%= time_ago_in_words(other.created_at) %> ago</time></td>
