@@ -56,6 +56,13 @@ module CompletionKit
       self.class.where(family_key: family_key).order(version_number: :desc, created_at: :desc)
     end
 
+    BEHAVIORAL_ATTRS = %w[template llm_model].freeze
+
+    def behavioral_change?(attrs)
+      attrs = attrs.to_h.stringify_keys
+      BEHAVIORAL_ATTRS.any? { |attr| attrs.key?(attr) && attrs[attr].to_s != public_send(attr).to_s }
+    end
+
     def build_next_version(overrides = {})
       version = self.class.new(
         {

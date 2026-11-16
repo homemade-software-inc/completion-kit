@@ -103,7 +103,7 @@
             } %>
       <div class="ck-api-endpoint">
         <p class="ck-api-method"><span class="ck-chip ck-chip--soft">PATCH</span> /api/v1/prompts/:id</p>
-        <p class="ck-meta-copy">Update a prompt. Accepts same params as create. If the prompt has no runs it is updated in place; if it already has runs, a new published version is created and returned (with a new id), leaving the original unchanged.</p>
+        <p class="ck-meta-copy">Update a prompt. Accepts same params as create. If the prompt has no runs it is updated in place; if it already has runs, a new version is created and returned (with a new id), leaving the original unchanged. The new version is published unless you send <code>"publish": false</code>, which saves it as an unpublished draft you can run and compare first, then publish with <code>POST /api/v1/prompts/:id/publish</code>. With <code>"publish": false</code>, a template or model change to the published version is saved as a draft even when it has no runs, so what your app fetches doesn't change. <code>publish</code> must be <code>true</code> or <code>false</code>; any other value returns 422.</p>
         <%= render "completion_kit/api_reference/example", base_url: base_url, token: token, real_token: real_token, cmd: "curl -X PATCH #{base_url}/api/v1/prompts/1 \\\n  -H \"Authorization: Bearer #{token}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"template\": \"Summarize concisely: {{text}}\"}'" %>
       </div>
       <div class="ck-api-endpoint">

@@ -8,7 +8,7 @@
 <section class="ck-page-header">
   <div>
     <h1 class="ck-title">Compare with another run</h1>
-    <p class="ck-lead">Pick a run on the same dataset and prompt to see per-case score deltas side by side.</p>
+    <p class="ck-lead">Pick a run on the same dataset and prompt, from any version of the prompt, to see per-case score deltas side by side.</p>
   </div>
 </section>
 
@@ -17,6 +17,7 @@
     <thead>
       <tr>
         <th scope="col">Run</th>
+        <th scope="col">Prompt version</th>
         <th scope="col">Judge</th>
         <th scope="col">Created</th>
         <th scope="col"></th>
@@ -26,6 +27,7 @@
       <% @other_runs.each do |other| %>
         <tr>
           <td><%= link_to other.name, run_path(other), class: "ck-link" %></td>
+          <td class="ck-meta-copy"><%= other.prompt&.version_label %></td>
           <td class="ck-meta-copy"><%= other.judge_model %></td>
           <td class="ck-meta-copy"><time datetime="<%= other.created_at.utc.iso8601 %>"><%= time_ago_in_words(other.created_at) %> ago</time></td>
           <td class="ck-results-table__arrow"><%= link_to "Compare →", compare_run_path(@run, with: other.id), class: "ck-link" %></td>

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.3] - 2026-11-16
+
+### Added
+- **`PATCH /api/v1/prompts/:id` can save a draft.** Send `"publish": false` and an edit to a prompt that has runs is saved as an unpublished version, the same way the MCP `prompts_update` tool already works. A CI job can now create a candidate in the live prompt's family, run and compare it, and publish it with `POST /api/v1/prompts/:id/publish` on merge. With the flag, a template or model change to the published version is saved as a draft even when it has no runs, so what your app fetches doesn't change until you publish. `publish` must be `true` or `false` (or `"true"`, `"false"`, `1`, `0`); any other value returns 422 and changes nothing. Without the flag, the endpoint publishes as before.
+
+### Changed
+- **MCP `prompts_update` no longer changes the published version in place.** A template or model change to the published version now saves a draft even when the prompt has no runs, matching what already happened once it had runs. Name, description and tag edits, and edits to an unpublished draft, still apply in place.
+
+### Fixed
+- **Compare offers runs from every version of the prompt.** The picker used to list only runs of the exact same prompt version, so a run on v8 couldn't pick the v7 baseline from the list. It now lists runs on the same dataset from any version of the prompt and shows which version each run used.
+- **MCP `prompts_update` returns an error instead of raising when the new version is invalid.**
+
 ## [0.29.2] - 2026-10-24
 
 ### Fixed

@@ -104,6 +104,98 @@ RSpec.describe "API V1 Prompts", type: :request do
       expect(prompt.reload.template).not_to eq("Updated {{content}}")
     end
 
+    it "saves an unpublished draft version when publish is false" do
+      prompt = create(:completion_kit_prompt)
+      create(:completion_kit_run, prompt: prompt)
+
+      patch "/completion_kit/api/v1/prompts/#{prompt.id}",
+        params: {template: "Draft {{content}}", publish: false}.to_json, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body["version_number"]).to eq(2)
+      expect(body["current"]).to be false
+      expect(body["template"]).to eq("Draft {{content}}")
+      expect(prompt.reload.current).to be true
+      expect(CompletionKit::Prompt.current_for(prompt.family_key)).to eq(prompt)
+    end
+
+    it "still publishes when publish is true" do
+      prompt = create(:completion_kit_prompt)
+      create(:completion_kit_run, prompt: prompt)
+
+      patch "/completion_kit/api/v1/prompts/#{prompt.id}",
+        params: {template: "Live {{content}}", publish: true}.to_json, headers: headers
+
+      expect(JSON.parse(response.body)["current"]).to be true
+      expect(prompt.reload.current).to be false
+    end
+
+    it "saves a draft instead of editing a live prompt in place when publish is false and it has no runs" do
+      prompt = create(:completion_kit_prompt)
+
+      patch "/completion_kit/api/v1/prompts/#{prompt.id}",
+        params: {template: "Draft {{content}}", publish: false}.to_json, headers: headers
+
+      body = JSON.parse(response.body)
+      expect(body["id"]).not_to eq(prompt.id)
+      expect(body["current"]).to be false
+      expect(prompt.reload.template).not_to eq("Draft {{content}}")
+      expect(prompt.current).to be true
+    end
+
+    it "edits an unpublished draft in place when publish is false" do
+      prompt = create(:completion_kit_prompt)
+      create(:completion_kit_run, prompt: prompt)
+      draft = prompt.build_next_version(template: "First draft {{content}}")
+      draft.save!
+
+      patch "/completion_kit/api/v1/prompts/#{draft.id}",
+        params: {template: "Second draft {{content}}", publish: false}.to_json, headers: headers
+
+      body = JSON.parse(response.body)
+      expect(body["id"]).to eq(draft.id)
+      expect(body["current"]).to be false
+      expect(draft.reload.template).to eq("Second draft {{content}}")
+    end
+
+    it "publishes when publish is null or blank" do
+      [nil, ""].each do |value|
+        prompt = create(:completion_kit_prompt)
+        create(:completion_kit_run, prompt: prompt)
+
+        patch "/completion_kit/api/v1/prompts/#{prompt.id}",
+          params: {template: "Live {{content}}", publish: value}.to_json, headers: headers
+
+        expect(JSON.parse(response.body)["current"]).to be true
+      end
+    end
+
+    it "accepts the usual true and false spellings for publish" do
+      {"false" => false, "0" => false, 0 => false, "true" => true, "1" => true, 1 => true}.each do |value, published|
+        prompt = create(:completion_kit_prompt)
+        create(:completion_kit_run, prompt: prompt)
+
+        patch "/completion_kit/api/v1/prompts/#{prompt.id}",
+          params: {template: "Edit {{content}}", publish: value}.to_json, headers: headers
+
+        expect(JSON.parse(response.body)["current"]).to eq(published)
+      end
+    end
+
+    it "rejects a publish value it can't read without changing anything" do
+      prompt = create(:completion_kit_prompt)
+      create(:completion_kit_run, prompt: prompt)
+
+      expect do
+        patch "/completion_kit/api/v1/prompts/#{prompt.id}",
+          params: {template: "Edit {{content}}", publish: "False"}.to_json, headers: headers
+      end.not_to change(CompletionKit::Prompt, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["error"]).to include("publish must be true or false")
+    end
+
     it "returns 422 instead of 500 when re-versioning onto a model that can't generate" do
       CompletionKit::Model.create!(provider: "azure_foundry", model_id: "demoted-x",
         status: "active", supports_generation: false, supports_judging: false)

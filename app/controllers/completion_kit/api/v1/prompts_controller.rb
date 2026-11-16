@@ -25,12 +25,15 @@ module CompletionKit
         end
 
         def update
-          if @prompt.runs.exists?
+          publish = publish_flag
+          return render_error("publish must be true or false", status: :unprocessable_entity) if publish.nil?
+
+          if @prompt.runs.exists? || (!publish && @prompt.current? && @prompt.behavioral_change?(prompt_params))
             new_prompt = @prompt.build_next_version(prompt_params.to_h)
             if new_prompt.valid?
               CompletionKit::ApplicationRecord.transaction do
                 new_prompt.save!
-                new_prompt.publish!
+                new_prompt.publish! if publish
               end
               render json: new_prompt.reload
             else
@@ -67,6 +70,15 @@ module CompletionKit
 
         def prompt_params
           params.permit(:name, :description, :template, :llm_model, tag_names: [])
+        end
+
+        PUBLISH_VALUES = {"true" => true, "1" => true, "false" => false, "0" => false}.freeze
+
+        def publish_flag
+          value = params[:publish]
+          return true if value.blank? && value != false
+
+          PUBLISH_VALUES[value.to_s]
         end
       end
     end

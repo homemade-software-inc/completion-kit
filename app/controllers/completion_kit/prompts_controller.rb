@@ -65,13 +65,8 @@ module CompletionKit
 
     private
 
-    BEHAVIORAL_ATTRS = %w[template llm_model].freeze
-
     def behavioral_change?
-      permitted = prompt_params
-      BEHAVIORAL_ATTRS.any? do |attr|
-        permitted.key?(attr) && permitted[attr].to_s != @prompt.public_send(attr).to_s
-      end
+      @prompt.behavioral_change?(prompt_params)
     end
 
     def set_prompt

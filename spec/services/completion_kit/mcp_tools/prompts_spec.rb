@@ -72,6 +72,31 @@ RSpec.describe CompletionKit::McpTools::Prompts do
       expect(prompt.reload.current).to be true
     end
 
+    it "drafts a new version instead of editing a published prompt in place when it has no runs" do
+      result = described_class.call("prompts_update", {"id" => prompt.id, "template" => "New {{content}}"})
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["id"]).not_to eq(prompt.id)
+      expect(content["current"]).to be false
+      expect(prompt.reload.template).not_to eq("New {{content}}")
+      expect(prompt.current).to be true
+    end
+
+    it "edits an unpublished draft in place" do
+      draft = prompt.build_next_version(template: "First {{content}}")
+      draft.save!
+      result = described_class.call("prompts_update", {"id" => draft.id, "template" => "Second {{content}}"})
+      content = JSON.parse(result[:content].first[:text])
+      expect(content["id"]).to eq(draft.id)
+      expect(draft.reload.template).to eq("Second {{content}}")
+    end
+
+    it "returns an error instead of raising when the new version is invalid" do
+      create(:completion_kit_run, prompt: prompt)
+      result = described_class.call("prompts_update", {"id" => prompt.id, "name" => ""})
+      expect(result[:isError]).to be true
+      expect(CompletionKit::Prompt.count).to eq(1)
+    end
+
     it "returns error on invalid create" do
       result = described_class.call("prompts_create", {"name" => ""})
       expect(result[:isError]).to be true

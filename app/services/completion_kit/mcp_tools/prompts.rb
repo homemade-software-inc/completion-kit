@@ -28,7 +28,7 @@ module CompletionKit
           handler: :create
         },
         "prompts_update" => {
-          description: "Update a prompt. If the prompt already has runs, this creates a new DRAFT version (current=false) rather than editing in place or publishing. Promote it with prompts_publish, so an agent's edits don't go live without a gate. If it has no runs, it is updated in place.",
+          description: "Update a prompt. Changing the template or model of the published version, or editing any version that already has runs, creates a new DRAFT version (current=false) instead of changing it, so an agent's edits don't go live without a gate. Run and compare the draft, then promote it with prompts_publish. An unpublished draft with no runs, or a name, description or tag change on a published version with no runs, is updated in place.",
           inputSchema: {
             type: "object",
             properties: {
@@ -82,8 +82,10 @@ module CompletionKit
       def self.update(args)
         prompt = Prompt.find(args["id"])
         attrs = args.except("id").slice("name", "description", "template", "llm_model")
-        if prompt.runs.exists?
-          new_prompt = prompt.clone_as_new_version(attrs)
+        if prompt.runs.exists? || (prompt.current? && prompt.behavioral_change?(attrs))
+          new_prompt = prompt.build_next_version(attrs)
+          return error_result(new_prompt.errors.full_messages.join(", ")) unless new_prompt.save
+
           new_prompt.update!(tag_names: args["tag_names"]) if args.key?("tag_names")
           text_result(new_prompt.reload.as_json)
         elsif prompt.update(attrs)

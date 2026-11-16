@@ -88,9 +88,10 @@ module CompletionKit
     def compare
       other_id = params[:with]
       if other_id.blank?
-        @other_runs = Run.where(dataset_id: @run.dataset_id, prompt_id: @run.prompt_id)
+        @other_runs = Run.where(dataset_id: @run.dataset_id, prompt_id: comparable_prompt_ids)
                           .where.not(id: @run.id)
                           .display_scoped
+                          .includes(:prompt)
                           .order(created_at: :desc)
                           .limit(50)
         return render(:compare_picker)
@@ -170,6 +171,12 @@ module CompletionKit
     end
 
     private
+
+    def comparable_prompt_ids
+      return nil unless @run.prompt
+
+      @run.prompt.family_versions.select(:id)
+    end
 
     def set_run
       @run = Run.find(params[:id])

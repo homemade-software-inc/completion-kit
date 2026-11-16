@@ -136,6 +136,31 @@ RSpec.describe "CompletionKit responses", type: :request do
       expect(response.body).to include("Earlier run")
     end
 
+    it "lists runs from earlier versions of the same prompt in the picker" do
+      v2 = prompt.build_next_version(template: "Revised {{content}}")
+      v2.save!
+      v2.publish!
+      create(:completion_kit_run, prompt: prompt, dataset: run.dataset, name: "Baseline on v1")
+      newer = create(:completion_kit_run, prompt: v2, dataset: run.dataset, name: "Candidate on v2")
+      create(:completion_kit_run, prompt: create(:completion_kit_prompt), dataset: run.dataset, name: "Unrelated prompt")
+
+      get "/completion_kit/runs/#{newer.id}/compare"
+
+      expect(response.body).to include("Baseline on v1")
+      expect(response.body).to include(prompt.version_label)
+      expect(response.body).not_to include("Unrelated prompt")
+    end
+
+    it "lists other judge-only runs on the same dataset for a judge-only run" do
+      dataset = create(:completion_kit_dataset, csv_data: "input,actual_output\nhi,hello\n")
+      create(:completion_kit_run, prompt: nil, dataset: dataset, output_column: "actual_output", name: "Earlier scoring")
+      current = create(:completion_kit_run, prompt: nil, dataset: dataset, output_column: "actual_output", name: "Latest scoring")
+
+      get "/completion_kit/runs/#{current.id}/compare"
+
+      expect(response.body).to include("Earlier scoring")
+    end
+
     it "shows the no-other-runs empty state when there are no candidates" do
       other_prompt = create(:completion_kit_prompt)
       create(:completion_kit_run, prompt: other_prompt, name: "Different prompt")
