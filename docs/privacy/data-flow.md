@@ -81,7 +81,7 @@ themselves (a periodic job that deletes runs older than N days, for example).
 Vanilla engine rows have no tenant attribution. A host opts into multi-tenancy
 through `CompletionKit.config.tenant_scope` and `tenant_scope_columns`, which
 adds (host-supplied) tenant columns and the default scope at the model layer.
-See `README.md#multi-tenant-host-apps-advanced`.
+See the `tenant_scope` settings in `lib/completion_kit.rb`.
 
 ## 3. What ends up in `Rails.logger` and structured logs
 

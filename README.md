@@ -10,27 +10,50 @@
 
 Your prompts need tests too.
 
-Run every prompt against real data. Score each output with an LLM judge against criteria you define. Change anything: the prompt, the model, the temperature, the dataset. Re-run and see exactly what got better and what broke. When the scores tell you something's off, CompletionKit suggests an improved prompt based on the judge's actual feedback on your runs. You inspect the diff, apply it as a new version, and verify the improvement.
+Run every prompt against real data. Score each output against criteria you define, with an LLM judge or a plain check. Change anything: the prompt, the model, the temperature, the dataset. Re-run and see exactly what got better and what broke. When the scores tell you something's off, CompletionKit suggests an improved prompt based on the judge's feedback on your runs. You inspect the diff, apply it as a new version, and check the improvement.
 
 It's the difference between "this prompt seems to work" and "this prompt scores 4.3 out of 5 across 200 inputs, up from 3.8 last version."
 
 **[Start on completionkit.com →](https://completionkit.com)** | **[RubyGems](https://rubygems.org/gems/completion-kit)**
 
-> **Just want to use it?** [CompletionKit Cloud](https://completionkit.com) is the same engine, fully hosted — zero install, no Rails ops, plans at [completionkit.com/pricing](https://completionkit.com/pricing).
+![The CompletionKit dashboard, showing workspace totals, run activity over the last 14 days, the worst-scoring metric, version-over-version score changes, and recent runs](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/dashboard.png)
 
-![The CompletionKit dashboard — workspace totals, run activity over the last 14 days, the worst-scoring metric, version-over-version score changes, and recent runs](https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/screenshots/dashboard.png)
+## How it works
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/diagrams/workflow.png" alt="CompletionKit workflow: a prompt and a dataset feed a run against a model, an LLM judge scores each output on your rubric, low scores drive an AI-suggested rewrite, and the new prompt version re-runs so you can compare" width="820" />
+</p>
+
+It's a loop. Each pass leaves you with a score you can compare against the last one.
+
+1. **Create a prompt** with `{{variable}}` placeholders.
+2. **Upload a dataset.** A CSV whose column headers match the variable names.
+3. **Run it** against a model and score the outputs against your metrics.
+4. **Iterate.** Change the prompt, the model, the temperature, or the dataset and re-run. CompletionKit versions your prompts, so you can always compare against earlier results.
+5. **Get suggestions.** When scores drop, ask CompletionKit for an improved prompt. The suggestion comes from the judge's feedback on each response, not generic prompt advice. Inspect the diff and apply it as a new version.
+
+## Concepts
+
+- **Prompt.** A versioned template with `{{variable}}` placeholders. Editing a prompt that has already run creates a new version, so earlier results stay reproducible.
+- **Dataset.** A CSV of real inputs. Each row becomes one test case.
+- **Run.** One execution of a prompt against a dataset. It records every input (model, temperature, metrics) and stores every output and score.
+- **Response.** The model's output for one dataset row, with its scores attached.
+- **Metric.** What you score each response on. A judge metric has an instruction, evaluation steps and a 1 to 5 scale, and an LLM judge applies it. A check metric is a pass or fail test with no LLM involved: contains, does not contain, equals, regex, valid JSON, JSON field equals, length bounds, list overlap, number bounds, and number equals.
+- **Metric group.** A set of metrics you can apply to a run together.
+- **Tag.** A label for prompts, runs, metrics and datasets. Filter any list by tag (`?tag[]=...`).
+- **Provider credential.** An API key for a model provider. It is encrypted at rest and never returned through the API.
 
 ## Three ways to run it
 
-Same engine, same UI, same REST API and MCP server — pick the deployment that fits. The first two are stack-agnostic: you run CompletionKit as a product and talk to it over HTTP and MCP, whatever language your own app is written in. The third is for teams already building on Rails.
+Every option has the same engine, UI, REST API and MCP server. The first two work with any stack: you run CompletionKit as a product and talk to it over HTTP and MCP, whatever language your app is written in. The third is for teams already on Rails.
 
-### 1. Hosted — [completionkit.com](https://completionkit.com) (recommended)
+### 1. Hosted at [completionkit.com](https://completionkit.com) (recommended)
 
-The fastest path. Sign up and you're running on the same engine you'd self-host, without touching a Rails app. No `db:migrate`, no Puma, no Solid Queue, no provider key management — multi-tenant workspaces, your team logs in, you go. Plans at [completionkit.com/pricing](https://completionkit.com/pricing).
+Sign up and start testing prompts. There's no Rails app to run, no migrations, no job worker and no servers to keep up. Your whole team shares a workspace. Plans are at [completionkit.com/pricing](https://completionkit.com/pricing).
 
-### 2. Self-hosted — the bundled standalone app
+### 2. Self-hosted standalone app
 
-Run it on your own infra as a self-contained product. There's nothing to integrate and no Ruby to write — once it's up, you drive everything through the web UI, the REST API, and the MCP server, from whatever stack your own app is built in. It needs Postgres and a host that can run the app (Fly, Render, Heroku, Docker, …).
+Run it on your own servers as a self-contained product. There's nothing to integrate and no Ruby to write: once it's up, you drive it through the web UI, the REST API and the MCP server. It needs Postgres and a host that can run a Rails app.
 
 ```bash
 git clone https://github.com/homemade-software-inc/completion-kit.git
@@ -40,7 +63,7 @@ bin/rails completion_kit:install:migrations
 bin/rails db:migrate
 ```
 
-Run **both** a web server and a Solid Queue worker. In two terminals:
+Run a web server and a Solid Queue worker, in two terminals:
 
 ```bash
 bin/rails server
@@ -50,11 +73,11 @@ bin/rails server
 bin/jobs
 ```
 
-Or with [foreman](https://github.com/ddollar/foreman) in one terminal: `foreman start -f Procfile.dev`.
+Or run both in one terminal with [foreman](https://github.com/ddollar/foreman): `foreman start -f Procfile.dev`.
 
-Visit `http://localhost:3000`. Add a provider credential (Settings), create a prompt, upload a CSV dataset, and run it. See [Deploying self-hosted](#deploying-self-hosted) for the production-env setup.
+Visit `http://localhost:3000`. Add a provider credential under Settings, create a prompt, upload a CSV dataset, and run it. See [Deploying self-hosted](#deploying-self-hosted) when you're ready for production.
 
-### 3. Rails engine — mount into your existing Rails app
+### 3. Mounted in your Rails app
 
 ```ruby
 gem "completion-kit"
@@ -65,22 +88,24 @@ bin/rails generate completion_kit:install
 bin/rails db:migrate
 ```
 
-The engine mounts at `/completion_kit`. Generate / judge flows enqueue Active Job jobs (`CompletionKit::GenerateRowJob`, `CompletionKit::JudgeReviewJob`, `CompletionKit::RunCompletionCheckJob`), so your host app needs an Active Job adapter that actually processes them — Solid Queue, Sidekiq, GoodJob, etc. The `:async` adapter is **not** suitable for production: it runs jobs in the web Puma's thread pool with no durability and no retry, and a long LLM call will block request handling.
+The engine mounts at `/completion_kit`. Runs work through Active Job (`CompletionKit::GenerateRowJob`, `CompletionKit::JudgeReviewJob`, `CompletionKit::RunCompletionCheckJob` and others), so your app needs a real job backend such as Solid Queue, Sidekiq or GoodJob. Don't use the `:async` adapter in production. It runs jobs inside Puma's thread pool with no durability or retries, and a long LLM call will hold up web requests.
 
-**Host-app layout integration.** If your host app overrides the engine layout (e.g. `layout "application"` on engine controllers, or rendering engine views inside your own shell), include both the engine's stylesheet and JavaScript in that layout:
+#### Using your own layout
+
+If your app renders the engine's pages inside its own layout, include the engine's stylesheet and JavaScript there:
 
 ```erb
 <%= stylesheet_link_tag "completion_kit/application", media: "all" %>
 <%= javascript_include_tag "completion_kit/application", defer: true, nonce: true %>
 ```
 
-Without the JavaScript include, in-page behaviours silently fail: clickable table rows, dialogs, copy buttons, the API token reveal, the run form, live run status, live tag-breadcrumb updates, relative-time ticking, CSV row hover-expand, model-refresh progress, focus-first-error, and local-time formatting.
+Without the JavaScript, much of the UI quietly stops working: clickable rows, dialogs, copy buttons, the run form, live run status and local times among them.
 
-**Content Security Policy.** The engine's pages have no inline event handlers or inline scripts, and the engine layout puts the request nonce on its script tags, so the pages work under a nonce-based `script-src`. The views still use inline `style` attributes, so leave `style-src` out of the nonce directives and allow `'unsafe-inline'` there for now.
+#### Content Security Policy
 
-Use a nonce that lasts the whole session, not a fresh random one per request. Turbo Drive re-creates the scripts in each new page body with the nonce from the `csp-nonce` meta tag, but the browser keeps enforcing the policy header of the first page it loaded, so a per-request nonce blocks nonce scripts after the first Drive visit.
+The engine's pages have no inline scripts or inline event handlers, and the engine layout puts the request nonce on its script tags, so they work under a nonce-based `script-src`. The views still use inline `style` attributes, so keep `style-src` out of the nonce directives and allow `'unsafe-inline'` there for now.
 
-Keep a random nonce in the session, and skip it for API controllers so cookie-less API and MCP calls get no session cookie, as the example below does. The Rails default, `->(request) { request.session.id.to_s }`, also lasts the session, but it is empty on a brand-new visitor's first response, so a policy that admits scripts only by nonce blocks that first page's scripts until the session exists.
+Use a nonce that lasts the whole session. Turbo Drive re-creates scripts on each visit using the nonce from the `csp-nonce` meta tag, but the browser keeps enforcing the policy from the first page it loaded, so a fresh nonce per request blocks scripts after the first visit. The Rails default nonce, the session id, is empty on a new visitor's first response, so it blocks that first page's scripts. Keep a random nonce in the session instead, and skip API controllers so API and MCP calls don't get a session cookie:
 
 ```ruby
 Rails.application.configure do
@@ -101,25 +126,25 @@ end
 
 ## Providers
 
-CompletionKit discovers available models from each provider's API automatically.
+CompletionKit finds the available models from each provider's API.
 
 | Provider | Env vars | What it covers |
 |----------|----------|----------------|
-| **OpenAI** | `OPENAI_API_KEY` | GPT-5, GPT-4.1, GPT-4o, etc. |
+| **OpenAI** | `OPENAI_API_KEY` | GPT-5, GPT-4.1, GPT-4o and the rest |
 | **Anthropic** | `ANTHROPIC_API_KEY` | Claude Opus, Sonnet, Haiku |
-| **Ollama / local endpoint** | `OLLAMA_API_ENDPOINT` (default: `http://localhost:11434/v1`), `OLLAMA_API_KEY` (optional) | Any model you've `ollama pull`-ed, or any OpenAI-compatible local server (vLLM, LM Studio, llama.cpp) |
-| **OpenRouter** | `OPENROUTER_API_KEY` | 100+ models from 30+ providers through one API key |
-| **Azure AI Foundry** | No env var — add via the Providers UI / a `ProviderCredential` (`api_key` + `api_endpoint` required, `api_version` optional) | Azure OpenAI deployments and Foundry projects |
+| **Ollama or a local endpoint** | `OLLAMA_API_ENDPOINT` (default `http://localhost:11434/v1`), `OLLAMA_API_KEY` (optional) | Any model you've pulled with Ollama, or any OpenAI-compatible local server (vLLM, LM Studio, llama.cpp) |
+| **OpenRouter** | `OPENROUTER_API_KEY` | 100+ models from 30+ providers through one key |
+| **Azure AI Foundry** | None. Add it as a provider credential with `api_key` and `api_endpoint` (`api_version` is optional) | Azure OpenAI deployments and Foundry projects |
 
-Set these as environment variables or configure them in the generated initializer. You can also add provider credentials through the web UI under Settings.
+Set these as environment variables, in the generated initializer, or as provider credentials under Settings in the web UI.
 
-The Ollama key from `OLLAMA_API_KEY` or `config.ollama_api_key` goes only to the Ollama endpoint from `OLLAMA_API_ENDPOINT` or `config.ollama_api_endpoint`, or to `http://localhost:11434/v1` when neither is set and `config.allow_loopback_endpoints` is on, which is the default. A provider credential with no key of its own gets that key only while it points at that same endpoint. Point it anywhere else and CompletionKit sends no key, so store the key on the credential itself. A key stored on a credential always goes to that credential's endpoint. Two endpoints match when their scheme, host, port and path match. The case of the scheme and host, a default port written out, a trailing slash and a trailing `/v1` make no difference. A blank stored key counts as no key.
+The Ollama key from `OLLAMA_API_KEY` or `config.ollama_api_key` is only ever sent to the Ollama endpoint you configured, or to `http://localhost:11434/v1` when you configured none and loopback endpoints are allowed. A provider credential without its own key borrows that key only while it points at that same endpoint. Point it anywhere else and CompletionKit sends no key, so store the key on the credential. A key stored on a credential always goes to that credential's endpoint. Endpoints match on scheme, host, port and path; letter case, a written-out default port, a trailing slash and a trailing `/v1` don't count. A blank stored key counts as no key.
+
+Custom model endpoints and CSV imports by URL may reach the server's own loopback interface by default, so a local Ollama works out of the box. If the people using CompletionKit shouldn't reach services on the app server itself, set `config.allow_loopback_endpoints = false`. Private, link-local and reserved addresses are always refused.
 
 ### Encryption
 
-Provider API keys are encrypted at rest using [Active Record encryption](https://guides.rubyonrails.org/active_record_encryption.html). You need three encryption keys configured before the app will boot in production.
-
-Generate them:
+Provider API keys are encrypted at rest with [Active Record encryption](https://guides.rubyonrails.org/active_record_encryption.html). The app won't boot in production until three encryption keys are set. Generate them:
 
 ```bash
 bin/rails db:encryption:init
@@ -133,13 +158,13 @@ COMPLETION_KIT_ENCRYPTION_DETERMINISTIC_KEY=<generated value>
 COMPLETION_KIT_ENCRYPTION_KEY_DERIVATION_SALT=<generated value>
 ```
 
-Or add them to `config/credentials.yml.enc` under `active_record_encryption`. In development, the standalone app uses built-in fallback values so you can skip this step locally.
+You can put them in `config/credentials.yml.enc` under `active_record_encryption` instead. In development the standalone app falls back to built-in values, so you can skip this locally.
 
 ## Authentication
 
-CompletionKit requires authentication in any deployed environment. In development and test, routes are open by default (with a log warning); every other environment returns 403 until auth is configured.
+CompletionKit needs authentication anywhere it's deployed. In development and test the routes are open, with a warning in the log. Every other environment returns 403 until you configure one of these two modes.
 
-### Basic Auth (recommended for simple setups)
+### Basic auth
 
 ```ruby
 CompletionKit.configure do |c|
@@ -148,7 +173,7 @@ CompletionKit.configure do |c|
 end
 ```
 
-### Custom Auth (Devise, etc.)
+### Your own auth (Devise and the like)
 
 ```ruby
 CompletionKit.configure do |c|
@@ -156,11 +181,9 @@ CompletionKit.configure do |c|
 end
 ```
 
-Only one mode can be active.
+### Reviewer names
 
-### Reviewer name
-
-When someone records a verdict on a judge's score in the web UI, CompletionKit saves it under a reviewer name. Each reviewer keeps one verdict per response and metric, so give every person their own name. Otherwise their verdicts overwrite each other. Set `current_reviewer` to a callable that receives the controller and returns the signed-in person's name:
+When someone agrees or disagrees with a judge's score in the web UI, CompletionKit saves that verdict under a reviewer name. Each reviewer keeps one verdict per response and metric, so give each person their own name or their verdicts overwrite each other. Set `current_reviewer` to a callable that takes the controller and returns the signed-in person's name:
 
 ```ruby
 CompletionKit.configure do |c|
@@ -169,7 +192,9 @@ CompletionKit.configure do |c|
 end
 ```
 
-The callable must return a String or nil. Any other value, such as a user record, raises `CompletionKit::ConfigurationError`. If `current_reviewer` is unset or returns a blank value, verdicts are saved under `username`, or `"operator"` when no username is set. The web UI does not read the `X-Remote-User` header on its own. If a proxy in front of your app sets that header, pass it through:
+It must return a String or nil. Anything else, such as a user record, raises `CompletionKit::ConfigurationError`. When `current_reviewer` is unset or returns a blank value, verdicts go under `username`, or `"operator"` if there's no username.
+
+The web UI doesn't read the `X-Remote-User` header by itself. If a proxy in front of your app sets it, pass it through:
 
 ```ruby
 CompletionKit.configure do |c|
@@ -177,71 +202,46 @@ CompletionKit.configure do |c|
 end
 ```
 
-Only use this header when a trusted proxy always overwrites it. Otherwise any client can send it and claim any reviewer name.
+Only do this when a trusted proxy always overwrites that header. Otherwise any client can send it and claim any name.
 
 The REST API and the MCP server take the reviewer name from their own `created_by` parameter.
 
-## Rate limiting
+## Limits
 
-The REST API, the MCP endpoint, and the web UI are rate limited per IP, per minute. The defaults are generous; tune them in the initializer:
+### Rate limits
+
+The REST API, the MCP endpoint and the web UI are rate limited per IP, per minute. The defaults are generous:
 
 ```ruby
 CompletionKit.configure do |c|
-  c.api_rate_limit = 120  # REST API + MCP, requests per minute (default 120)
-  c.web_rate_limit = 300  # web UI, requests per minute (default 300)
+  c.api_rate_limit = 120  # REST API and MCP, requests per minute
+  c.web_rate_limit = 300  # web UI, requests per minute
 end
 ```
 
-Limiting uses `Rails.cache`. A shared cache store (Solid Cache, Redis) throttles accurately across multiple app instances; a per-process store still throttles each instance independently.
+Limits are counted in `Rails.cache`. A shared store such as Solid Cache or Redis counts across all your app instances. A per-process store limits each instance on its own.
 
-## Input limits
+### Input limits
 
-Uploads, prompt templates, and regex check patterns have limits, so one large or hostile input cannot tie up a worker. Tune them in the initializer:
+Uploads, prompt templates and regex checks have limits, so one huge or hostile input can't tie up a worker:
 
 ```ruby
 CompletionKit.configure do |c|
   c.max_upload_bytes = 25 * 1024 * 1024  # largest dataset CSV or import file (default 25 MB)
   c.max_template_bytes = 1024 * 1024     # largest prompt template (default 1 MB)
-  c.regex_timeout = 1.0                  # seconds a regex check may spend matching one row (default 1.0)
+  c.regex_timeout = 1.0                  # seconds a regex check may spend on one row (default 1.0)
 end
 ```
 
-A prompt whose template is over `max_template_bytes` fails validation when its template is saved. Prompts saved before a lower limit keep working until their template changes.
+A prompt over `max_template_bytes` fails validation when it's saved. Prompts saved before you lowered the limit keep working until their template changes.
 
-The first line of a dataset's CSV is its header row. A dataset fails validation when its CSV is saved with a header row that is blank or longer than 64 KB. The 64 KB limit is fixed, not a setting.
+A dataset fails validation when its header row is blank or longer than 64 KB (a fixed limit), or when the CSV isn't valid UTF-8. Export spreadsheets as UTF-8 CSV.
 
-A dataset also fails validation when its CSV is saved with bytes that are not valid UTF-8, so export spreadsheets as UTF-8 CSV.
-
-A regex check that runs past its time limit fails that row and says it timed out. The limit is `regex_timeout`, or your app's `Regexp.timeout` when that is shorter, so the engine never loosens a stricter limit your app set. The engine sets the limit on each pattern and never changes the process-wide `Regexp.timeout`. Set `regex_timeout` to a finite number of seconds of at least `0.001`, or to `nil` to use only `Regexp.timeout`. Any other value, such as `0` or `Float::INFINITY`, raises an `ArgumentError` when the initializer runs.
-
-## How it works
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/homemade-software-inc/completion-kit/main/docs/diagrams/workflow.png" alt="CompletionKit workflow: a prompt and a dataset feed a run against a model, an LLM judge scores each output on your rubric, low scores drive an AI-suggested rewrite, and the new prompt version re-runs so you can compare" width="820" />
-</p>
-
-It's a loop. Each pass leaves you with a score you can compare against the last one.
-
-1. **Create a prompt** with `{{variable}}` placeholders
-2. **Upload a dataset.** A CSV where column headers match the variable names.
-3. **Run it** against a model and score outputs with an LLM judge against criteria you define.
-4. **Iterate.** Change the prompt, the model, the temperature, or the dataset and re-run. CompletionKit versions your prompts so you can always compare against previous results.
-5. **Get suggestions.** When scores drop, ask CompletionKit for an AI-generated improvement. The suggestion is based on the judge's actual per-response feedback, not generic prompt-engineering advice. Inspect the diff and apply it as a new version.
-
-## Concepts
-
-- **Prompt.** A versioned template with `{{variable}}` placeholders. Editing a prompt that's already been run creates a new version, so earlier results stay reproducible.
-- **Dataset.** A CSV of real inputs. Each row becomes one test case.
-- **Run.** One execution of a prompt against a dataset. Captures every input (model, temperature, metrics) and stores all outputs and scores.
-- **Response.** The model's output for one dataset row, with reviews attached.
-- **Metric.** An evaluation dimension with a name, instruction, evaluation steps, and a 1-5 star scoring scale. The LLM judge uses this to score each response.
-- **Metric Group.** A reusable group of metrics you can apply to a run as a set.
-- **Tag.** A domain label you can attach to prompts, runs, metrics, and datasets. Auto-assigned from a 10-color palette. Filter any index page by tag (`?tag[]=...`).
-- **Provider Credential.** An API key for a model provider. Encrypted at rest, never returned through the API.
+A regex check that runs out of time fails that row and says so. The limit is `regex_timeout`, or your app's `Regexp.timeout` if that's shorter, so the engine never loosens a stricter limit you set. It sets the limit per pattern and never touches the process-wide `Regexp.timeout`. Set `regex_timeout` to at least `0.001` seconds, or to `nil` to rely on `Regexp.timeout` alone. Any other value, such as `0` or `Float::INFINITY`, raises an `ArgumentError` when the initializer runs.
 
 ## REST API
 
-Every resource is accessible via a bearer-token JSON API:
+Every resource is available through a JSON API with a bearer token:
 
 ```ruby
 CompletionKit.configure { |c| c.api_token = ENV["COMPLETION_KIT_API_TOKEN"] }
@@ -252,11 +252,11 @@ curl -H "Authorization: Bearer $TOKEN" \
   http://localhost:3000/completion_kit/api/v1/prompts
 ```
 
-Visit `/completion_kit/api_reference` in your running app for per-endpoint docs with copy-to-clipboard curl examples.
+Visit `/completion_kit/api_reference` in your running app for docs on every endpoint, with curl examples you can copy.
 
 ## MCP server
 
-CompletionKit runs a [Model Context Protocol](https://modelcontextprotocol.io) server at `/completion_kit/mcp`, exposing every resource as tools that MCP-aware clients (Claude Code, Cursor, etc.) can drive directly:
+CompletionKit runs a [Model Context Protocol](https://modelcontextprotocol.io) server at `/completion_kit/mcp`. It exposes every resource as tools that MCP clients such as Claude Code and Cursor can use directly:
 
 ```json
 {
@@ -269,21 +269,21 @@ CompletionKit runs a [Model Context Protocol](https://modelcontextprotocol.io) s
 }
 ```
 
-The in-app API reference page has install snippets you can copy straight into your MCP client config.
+The API reference page in the app has snippets you can paste into your MCP client's config.
 
 ## Deploying self-hosted
 
-Any Rails-friendly host works (Fly, Heroku, Render, Docker, etc.). Point it at a Postgres instance via `DATABASE_URL`, set your provider env vars, and run `cd standalone && bin/rails db:migrate` on each deploy.
+Any host that runs Rails will do: Fly, Render, Heroku, Docker and so on. Point it at Postgres with `DATABASE_URL`, set your provider env vars, and run `cd standalone && bin/rails db:migrate` on each deploy.
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `COMPLETION_KIT_API_TOKEN` | Bearer token for REST API and MCP | (none, API disabled) |
-| `COMPLETION_KIT_USERNAME` | Web UI login username | `admin` |
-| `COMPLETION_KIT_PASSWORD` | Web UI login password | (none, open in dev) |
+| `COMPLETION_KIT_API_TOKEN` | Bearer token for the REST API and MCP | None, so the API is off |
+| `COMPLETION_KIT_USERNAME` | Web UI username | `admin` |
+| `COMPLETION_KIT_PASSWORD` | Web UI password | None, so it's open in development only |
 
-You also need the three `COMPLETION_KIT_ENCRYPTION_*` keys from the [Encryption](#encryption) section above.
+You also need the three `COMPLETION_KIT_ENCRYPTION_*` keys from [Encryption](#encryption).
 
-When the gem ships a new migration, install it locally and commit before pushing:
+When a new gem version ships a migration, install it locally and commit it before you deploy:
 
 ```bash
 cd standalone
@@ -294,13 +294,13 @@ git add db/migrate/ && git commit -m "install new engine migration"
 
 ### Docker
 
-The standalone app ships a `Dockerfile`, so you can self-host it without a Ruby toolchain on the host. Build with the **repository root** as the context — the app depends on the engine source alongside it:
+The standalone app ships a `Dockerfile`, so you can run it without Ruby on the host. Build from the repository root, since the app needs the engine source next to it:
 
 ```bash
 docker build -f standalone/Dockerfile -t completion-kit .
 ```
 
-CompletionKit needs a Rails secret (`SECRET_KEY_BASE`) and three Active Record encryption keys. With Docker there's no Rails toolchain on the host to run `bin/rails db:encryption:init`, so generate them with `openssl`. Generate them **once** and keep them stable — if the encryption keys change, provider credentials already stored in the database can no longer be decrypted. Write everything to an env file:
+CompletionKit needs a Rails secret (`SECRET_KEY_BASE`) and the three encryption keys. Without Ruby on the host you can't run `bin/rails db:encryption:init`, so generate them with `openssl` and write everything to an env file:
 
 ```bash
 cat > completion-kit.env <<EOF
@@ -312,58 +312,25 @@ COMPLETION_KIT_ENCRYPTION_KEY_DERIVATION_SALT=$(openssl rand -hex 32)
 EOF
 ```
 
-`openssl rand` runs as the file is written, so each line gets a real random value. Keep `completion-kit.env` out of version control and back it up somewhere safe.
+Generate these **once** and keep them. If the encryption keys change, the provider keys already in the database can't be decrypted. Keep `completion-kit.env` out of version control and back it up somewhere safe.
 
-Run the web process and a job worker from the same image, both pointed at that file:
+Run the web process and a job worker from the same image and the same env file, so both share the same secrets:
 
 ```bash
 docker run -d -p 3000:3000 --env-file completion-kit.env completion-kit
 docker run -d --env-file completion-kit.env completion-kit ./bin/jobs
 ```
 
-Both processes must share the same `SECRET_KEY_BASE` and encryption keys — the single env file guarantees that. The web container runs `db:prepare` on boot, so migrations apply on first start and on every deploy.
-
-## Multi-tenant host apps (advanced)
-
-For hosts that mount CompletionKit in a multi-tenant app, two optional hooks scope engine records per tenant without forking the engine:
-
-```ruby
-CompletionKit.configure do |config|
-  config.tenant_scope = -> {
-    org = Current.organization&.id
-    org ? where(organization_id: org) : where("1=0")
-  }
-  config.tenant_scope_columns = [:organization_id]
-end
-```
-
-`tenant_scope` runs as each engine model's `default_scope` (use `unscoped` to bypass). `tenant_scope_columns` is appended to every engine uniqueness validation. Adding the tenant columns and composite unique indexes lives in your host migrations. Both defaults (`nil`, `[]`) are no-ops. The `completion_kit:mark_interrupted_runs_failed` rake task bypasses `tenant_scope` and marks in-flight runs in every tenant, so a host that also enforces tenancy in the database, for example with row-level security, must run it as a database role that can see every tenant's rows.
-
-Custom model endpoints and CSV imports by URL may reach the server's own loopback interface by default, so a local Ollama works out of the box. If the people using the engine should not reach services on the app server itself, set `config.allow_loopback_endpoints = false`. Private, link-local and reserved addresses are always refused.
-
-One hook lets a host apply its own display rule everywhere the engine lists, counts, or traverses runs, without overriding controllers or views:
-
-```ruby
-CompletionKit.configure do |config|
-  config.runs_display_scope = -> { where(created_at: 90.days.ago..) }
-  config.runs_display_footer_partial = "runs/display_notice"
-end
-```
-
-`runs_display_scope` is a callable evaluated against a `Run` relation, in the same bare-`where` style as `tenant_scope` (it runs via `instance_exec`, so write it zero-arg with the relation as `self`, like a Rails `scope` lambda). It must return a relation: a callable that returns `nil` or anything non-chainable raises when a list renders. The engine applies it through `Run.display_scoped` at every run list and count it owns (the runs index, prompt and dataset show pages, the compare picker, new-run tag defaults, the v1 API index and its `X-Total-Count`, the MCP `runs_list` tool, the dashboard and API reference recent-runs panels, the dashboard "Runs" stat-card count, and provider-credential usage stats) and through `Run.visible_run_ids` for child records that traverse runs (the metric trust-panel sample and the agreement examples shown on a metric page). Use it for a list-only display rule rather than a global `default_scope`, which would null `Run` associations everywhere they are traversed.
-
-Deliberately exempt, because they must still see every run: id-addressed single-run lookups (`runs#show`, the MCP `runs_get` tool, the v1 API show), delete-confirmation cascade counts, the auto-generated run-name counter, the dashboard's stat-card gate (it keys off the unscoped run total so a workspace whose runs the display scope excludes entirely still sees its activity cards rather than a blank dashboard), and the judge few-shot seeding that learns from corrected examples even on runs the display scope excludes.
-
-`runs_display_footer_partial` names a partial rendered below the runs list on the dashboard, the index, and the prompt and dataset show pages; it receives the shown runs as a `runs` local. When the display scope excludes every run one of those surfaces would list, the surface says "No runs to show." and the footer partial renders beneath it. The engine cannot know why your scope excludes runs, so use the partial to explain your display rule: your host owns that rule in `runs_display_scope` and is the only side that can describe or count what it left out. Both default to `nil` (no-ops), leaving standalone behaviour unchanged.
+The web container runs `db:prepare` on boot, so migrations apply on first start and on every deploy.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and pull request guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing and pull request guidelines.
 
 ## License
 
-CompletionKit 0.3.0 and later are licensed under the [Business Source License 1.1](LICENSE). You may use CompletionKit freely for any purpose, including production, except to offer it (or a derivative) to third parties as a hosted or managed service whose primary value is CompletionKit itself. Three years after each release, that version automatically re-licenses to GPL-3.
+CompletionKit 0.3.0 and later are licensed under the [Business Source License 1.1](LICENSE). You may use CompletionKit for any purpose, including production, except offering it (or a derivative) to others as a hosted or managed service whose main value is CompletionKit itself. Three years after each release, that version re-licenses to GPL-3.
 
 CompletionKit 0.2.x and earlier remain available under the [MIT License](https://github.com/homemade-software-inc/completion-kit/blob/v0.2.0/MIT-LICENSE).
 
-For alternative licensing, contact hello@homemade.software.
+For other licensing, contact hello@homemade.software.
