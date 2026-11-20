@@ -329,7 +329,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing and pull r
 
 ## License
 
-CompletionKit 0.3.0 and later are licensed under the [Business Source License 1.1](LICENSE). You may use CompletionKit for any purpose, including production, except offering it (or a derivative) to others as a hosted or managed service whose main value is CompletionKit itself. Three years after each release, that version re-licenses to GPL-3.
+CompletionKit 0.3.0 and later are licensed under the [Business Source License 1.1](LICENSE). You may use CompletionKit for any purpose, including production, except offering it (or a derivative) to others as a hosted or managed service whose main value is CompletionKit itself. Each version becomes GPL-3 three years after it's released. Versions 0.3.0 through 0.29.3 shipped with a fixed date and become GPL-3 on April 25, 2029.
 
 CompletionKit 0.2.x and earlier remain available under the [MIT License](https://github.com/homemade-software-inc/completion-kit/blob/v0.2.0/MIT-LICENSE).
 

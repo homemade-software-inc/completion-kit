@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Each version's GPL-3 date now runs from its own release.** The LICENSE Change Date is three years from the date each version is first publicly released. Versions 0.3.0 through 0.29.3 keep the 2029-04-25 date they shipped with.
+
 ## [0.29.3] - 2026-11-16
 
 ### Added
