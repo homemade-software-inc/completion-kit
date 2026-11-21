@@ -13,7 +13,7 @@ module CompletionKit
     attr_accessor :tenant_scope, :tenant_scope_columns
     attr_accessor :api_reference_authentication_partial
     attr_accessor :runs_display_scope, :runs_display_footer_partial
-    attr_accessor :api_rate_limit, :web_rate_limit, :max_upload_bytes
+    attr_accessor :api_rate_limit, :api_rate_limit_key, :web_rate_limit, :max_upload_bytes
     attr_accessor :max_template_bytes
     attr_reader :regex_timeout
     attr_accessor :allow_loopback_endpoints
@@ -33,6 +33,7 @@ module CompletionKit
       @medium_quality_threshold = 3
 
       @api_rate_limit = 120
+      @api_rate_limit_key = ->(request) { request.remote_ip }
       @web_rate_limit = 300
       @max_upload_bytes = 25 * 1024 * 1024
       @max_template_bytes = 1024 * 1024
