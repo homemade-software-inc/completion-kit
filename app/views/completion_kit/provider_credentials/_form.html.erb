@@ -2,7 +2,7 @@
   <% pc_delete_id = "ck_delete_provider_#{provider_credential.id}" %>
   <% pc_delete_confirm = "Delete the #{provider_credential.display_provider} provider and its discovered models? This can't be undone." %>
 <% end %>
-<%= form_with(model: provider_credential, local: true) do |form| %>
+<%= form_with(model: provider_credential, url: local_assigns[:url], local: true) do |form| %>
   <% if provider_credential.errors.any? %>
     <div class="ck-flash ck-flash--alert" role="alert">
       <p class="ck-flash__title"><%= pluralize(provider_credential.errors.count, "problem") %> prevented this provider credential from being saved.</p>
@@ -66,7 +66,9 @@
       <% if provider_credential.persisted? %>
         <%= ck_delete_trigger(form_id: pc_delete_id, label: "Delete provider", confirm: pc_delete_confirm) %>
       <% end %>
-      <%= link_to "Cancel", provider_credentials_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
+      <% unless local_assigns[:cancel_path] == false %>
+        <%= link_to "Cancel", local_assigns[:cancel_path] || provider_credentials_path, class: ck_button_classes(:light, variant: :outline), tabindex: "0" %>
+      <% end %>
       <%= form.submit(provider_credential.persisted? ? "Save provider" : "Create provider", class: ck_button_classes(:dark)) %>
     </div>
 
