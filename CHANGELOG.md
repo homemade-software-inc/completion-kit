@@ -5,9 +5,15 @@ All notable changes to CompletionKit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.30.0] - 2026-11-20
+
+### Added
+- **MCP tools declare `readOnlyHint`, `destructiveHint` and `openWorldHint` annotations.** Every tool is labelled as read-only or not, destructive or not, and whether it reaches outside the app, so MCP clients can decide which calls to confirm.
+- **`config.api_rate_limit_key` lets a host app choose what the API rate limit is keyed on.** It takes a callable that receives the request and returns the key. The default is still the remote IP.
 
 ### Changed
+- **MCP tool descriptions say what each tool does, what it returns and when to use it.** The descriptions are rewritten in plain words so a model can pick the right tool.
+- **The provider credential form partial accepts `url:` and `cancel_path:` locals.** A host app can post the form to its own URL, and `cancel_path: false` hides the Cancel link.
 - **Each version's GPL-3 date now runs from its own release.** The LICENSE Change Date is three years from the date each version is first publicly released. Versions 0.3.0 through 0.29.3 keep the 2029-04-25 date they shipped with.
 
 ## [0.29.3] - 2026-11-16
