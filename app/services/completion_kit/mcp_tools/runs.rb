@@ -83,25 +83,25 @@ module CompletionKit
         },
         "runs_generate" => {
           description: "Start a test run so it produces and scores responses. It is required for every run, including score-only runs (no prompt): it generates responses with the prompt when there is one, and otherwise copies the graded dataset column and grades it. In a prompt run each dataset row goes to the prompt's model, and in either kind of run each LLM-judged metric then scores the result with the run's judge model. LLM-judged metrics are skipped when the run has no judge model. These model calls go to the providers you configured, which may charge for them; checks run without a provider call. The work runs in the background, so poll runs_get until status is completed or failed, and do not call this tool again to check progress. Only a pending or failed run can start, and any refused start marks the run as failed. Calling it on a running or completed run therefore does not start it but marks that run as failed, and a second call would then delete its results. Restarting a failed run first deletes its earlier responses, their scores and any human verdicts on them. For a completed run use runs_rerun, runs_retry_failures or runs_regrade instead. It returns the run with its progress, or the reason it could not start, such as a missing provider key or an empty dataset.",
-          annotations: Base::DESTRUCTIVE,
+          annotations: Base::OPEN_WORLD_DESTRUCTIVE,
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :generate
         },
         "runs_regrade" => {
           description: "Re-score a test run's existing responses with its currently attached metrics, without regenerating. Use it after attaching or editing metrics on an already-generated run. It first clears every existing score and judge comment on the run's succeeded responses, including scores for metrics no longer attached, so the earlier scores are lost. If the run has checks but no judge model, its LLM-judged scores are cleared and not replaced. Human verdicts already recorded on the run are kept even though people gave them on the earlier scores, and agreement stats then pair them with the new scores. LLM-judged metrics call your judge model's provider; checks do not. The work runs in the background, so poll runs_get for progress. It returns the run, or an error when no configured provider serves the judge model, or when there is nothing to re-grade because the run has no succeeded responses, no metrics, or only LLM-judged metrics and no working judge model.",
-          annotations: Base::DESTRUCTIVE,
+          annotations: Base::OPEN_WORLD_DESTRUCTIVE,
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :regrade
         },
         "runs_rerun" => {
           description: "Copy a test run and start the copy, with the same prompt version, dataset, metrics, judge model, settings and tags, under a new automatic name. Use it when the judge changed and you want a clean run instead of mixing versions, or to repeat a test. The original run and its scores stay untouched. The copy runs in the background and calls your model providers the same way runs_generate does. To test a different prompt version, create a new run with runs_create instead. It returns the new run; poll runs_get with its id for progress. If the prompt's model or the judge model has no configured provider, or the dataset no longer has a column the run needs, it returns an error and creates nothing. If the copy is created but cannot start, for example because the dataset is empty, it returns the reason and the copy stays as a failed run.",
-          annotations: Base::ADDITIVE,
+          annotations: Base::OPEN_WORLD_ADDITIVE,
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :rerun
         },
         "runs_retry_failures" => {
           description: "Retry only the parts of a test run that failed, such as provider timeouts, rate limits or judge errors. Failed responses are generated again and failed scores are retried, while responses and scores that succeeded are left alone; optionally limit it to specific response ids via \"only\". It is refused when the judge has changed since the run executed, meaning a metric on the run now has a newer version than the one that scored it, because a retry would mix versions in the same run; use runs_rerun instead. The retries run in the background and call your model providers, except for checks. It returns the run with its progress, or the run unchanged when nothing failed.",
-          annotations: Base::ADDITIVE,
+          annotations: Base::OPEN_WORLD_ADDITIVE,
           inputSchema: {type: "object", properties: {id: {type: "integer"}, only: {type: "array", items: {type: "integer"}}}, required: ["id"]},
           handler: :retry_failures
         }

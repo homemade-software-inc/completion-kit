@@ -58,7 +58,7 @@ module CompletionKit
         },
         "prompts_suggest_improvement" => {
           description: "Suggest an improved version of a prompt, grounded in a run's test results and judge feedback. It reads up to 20 of the run's responses with their scores and reviews, then asks the prompt's own model, on your saved provider key, for reasoning plus a rewritten template that keeps the {{variables}}. It then tests the rewrite on up to 30 of the run's judge-scored rows and scores the new answers with the run's LLM-judge metrics and judge model. Returns suggestion_id, prompt_id, reasoning, suggested_template, original_template, validation (before and after averages and how many rows improved, regressed or stayed the same) and net_negative, which is true when the rewrite's average score fell or more rows got worse than better. If validation.tested is 0, nothing was checked and net_negative is false. That happens when the run has no LLM-judge metrics, has no judge-scored rows with both input and output, or every test call failed. It saves the result as a Suggestion. The prompt itself is not changed, so pass suggested_template to prompts_update to save it as a draft version. Requires a run that has a prompt (not a scoring-only run). Each call can make dozens of model calls on your saved provider keys and can take a while.",
-          annotations: Base::ADDITIVE,
+          annotations: Base::OPEN_WORLD_ADDITIVE,
           inputSchema: {
             type: "object",
             properties: {run_id: {type: "integer", description: "The run whose results ground the improvement."}},

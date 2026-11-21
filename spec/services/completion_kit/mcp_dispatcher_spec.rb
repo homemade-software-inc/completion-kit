@@ -40,7 +40,10 @@ RSpec.describe CompletionKit::McpDispatcher do
            metric_versions_publish metric_versions_dismiss provider_credentials_update provider_credentials_delete
            tags_update tags_delete agreements_create]
       end
-      let(:open_world_names) { %w[datasets_create_from_url provider_credentials_create provider_credentials_update] }
+      let(:open_world_names) do
+        %w[datasets_create_from_url provider_credentials_create provider_credentials_update prompts_suggest_improvement
+           runs_generate runs_regrade runs_rerun runs_retry_failures metrics_suggest_variants]
+      end
 
       it "declares readOnlyHint, destructiveHint and openWorldHint as booleans on every tool" do
         tools.each do |tool|

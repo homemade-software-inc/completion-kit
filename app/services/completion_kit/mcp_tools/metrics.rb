@@ -95,7 +95,7 @@ module CompletionKit
         },
         "metrics_suggest_variants" => {
           description: "Get AI suggestions to improve an LLM judge that disagrees with people. It sends the judge's current instruction and rubric, plus up to 8 recent responses where a person disagreed with the judge's score and up to 6 that a person marked borderline (each input and output cut to 200 characters), to your own model provider. The model is asked for rewrites of the instruction, the rubric or both that close the gap. Each rewrite is saved as a draft metric version with source \"suggestion\", and earlier suggestion drafts are kept. The live judge does not change until you publish a draft with metric_versions_publish. Nothing tests a draft before you publish it. Once it is live and people have recorded verdicts on it with agreements_create, judges_compare shows whether it agrees with people more often than the version it replaced. Returns the saved drafts. It works best after you have recorded disagreements with agreements_create. Checks are refused, because they are exact and have nothing to suggest. count defaults to 1 and is capped at 3. model picks the model that writes the rewrites and defaults to your judge model. The call uses your provider key and runs while you wait. It fails with an error if no judging model is set up or the model you name is unknown. If the model's reply can't be read, nothing is saved and you get a \"no parseable variants\" error. A call your provider refuses, such as one with a bad key, usually ends in that same error.",
-          annotations: Base::ADDITIVE,
+          annotations: Base::OPEN_WORLD_ADDITIVE,
           inputSchema: {
             type: "object",
             properties: {
