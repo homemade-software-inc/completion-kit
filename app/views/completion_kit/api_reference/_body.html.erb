@@ -372,11 +372,9 @@
       <div class="ck-api-endpoint" style="padding-top: 1rem;">
         <p class="ck-kicker" style="margin-bottom: 0.5rem;">MCP tools</p>
         <div class="ck-mcp-tools">
-          <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_list</code><span class="ck-mcp-tool__desc">List all tags</span></div>
-          <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_get</code><span class="ck-mcp-tool__desc">Get a tag by ID</span></div>
-          <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_create</code><span class="ck-mcp-tool__desc">Create a tag (name required)</span></div>
-          <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_update</code><span class="ck-mcp-tool__desc">Update a tag's name</span></div>
-          <div class="ck-mcp-tool"><code class="ck-mcp-tool__name">tags_delete</code><span class="ck-mcp-tool__desc">Delete a tag and remove all its taggings</span></div>
+          <% CompletionKit::McpTools::Tags.definitions.each do |tool| %>
+            <div class="ck-mcp-tool"><code class="ck-mcp-tool__name"><%= tool[:name] %></code><span class="ck-mcp-tool__desc"><%= tool[:description] %></span></div>
+          <% end %>
         </div>
         <p class="ck-meta-copy" style="margin-top: 0.75rem;">The existing <code>metrics_create</code>, <code>metrics_update</code>, <code>prompts_create</code>, <code>prompts_update</code>, <code>runs_create</code>, <code>runs_update</code>, <code>datasets_create</code>, <code>datasets_create_from_url</code>, <code>datasets_update</code>, <code>metric_groups_create</code>, and <code>metric_groups_update</code> tools all accept a <code>tag_names</code> parameter with the same auto-create and replace semantics as the REST API.</p>
       </div>

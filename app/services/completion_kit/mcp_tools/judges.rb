@@ -5,7 +5,8 @@ module CompletionKit
 
       TOOLS = {
         "judges_replay" => {
-          description: "Create a scoring run for the current judge over a dataset's existing outputs (wraps runs_create with prompt_id omitted and output_column supplied). This only sets up the run; call runs_generate to actually re-judge the outputs so you can compare against human verdicts.",
+          description: "Check an LLM judge against outputs you already have: set up a scoring run that grades a dataset column of existing outputs with one metric's current judge and the judge_model you name (wraps runs_create with prompt_id omitted and output_column supplied, defaulting to actual_output). This only sets up the run; call runs_generate to actually re-judge the outputs so you can compare against human verdicts. It returns the new run.",
+          annotations: Base::ADDITIVE,
           inputSchema: {
             type: "object",
             properties: {
@@ -20,7 +21,8 @@ module CompletionKit
           handler: :replay
         },
         "judges_compare" => {
-          description: "Compare two versions of one metric's agreement stats side by side. Requires metric_id, metric_version_a_id, and metric_version_b_id (both versions must belong to that metric). Unavailable for check metrics.",
+          description: "Compare two versions of one metric's LLM judge to see which agrees more with human reviewers. It computes stats from the agreement verdicts already recorded under each version and saves nothing; verdicts on runs older than the account's history window are not counted. It requires metric_id, metric_version_a_id, and metric_version_b_id (both versions must belong to that metric). It returns, for each version, the number of verdicts, the agreement rate with its confidence range, borderline rate, mean absolute error and kappa, plus the change from A to B and a recommendation. The recommendation is need_more_data under 30 verdicts combined, recommend when B's agreement rate beats A's by more than 3 points, hold when it trails A's by more than 3 points, and no_change otherwise or when one version has no verdicts. It is unavailable for check metrics.",
+          annotations: Base::READ_ONLY,
           inputSchema: {
             type: "object",
             properties: {

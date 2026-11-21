@@ -4,6 +4,12 @@ module CompletionKit
       DEFAULT_PAGE_LIMIT = 50
       MAX_PAGE_LIMIT = 500
 
+      READ_ONLY = {readOnlyHint: true, destructiveHint: false, openWorldHint: false}.freeze
+      ADDITIVE = {readOnlyHint: false, destructiveHint: false, openWorldHint: false}.freeze
+      DESTRUCTIVE = {readOnlyHint: false, destructiveHint: true, openWorldHint: false}.freeze
+      OPEN_WORLD_ADDITIVE = {readOnlyHint: false, destructiveHint: false, openWorldHint: true}.freeze
+      OPEN_WORLD_DESTRUCTIVE = {readOnlyHint: false, destructiveHint: true, openWorldHint: true}.freeze
+
       def page_bounds(args)
         limit = args["limit"].to_i
         limit = DEFAULT_PAGE_LIMIT if limit <= 0
@@ -14,7 +20,7 @@ module CompletionKit
       end
 
       def definitions
-        self::TOOLS.map { |name, config| {name: name, description: config[:description], inputSchema: config[:inputSchema]} }
+        self::TOOLS.map { |name, config| {name: name, description: config[:description], inputSchema: config[:inputSchema], annotations: config[:annotations]} }
       end
 
       def call(name, arguments)

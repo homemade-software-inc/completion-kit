@@ -32,6 +32,42 @@ RSpec.describe CompletionKit::McpDispatcher do
       expect(result[:tools].first).to have_key(:inputSchema)
     end
 
+    describe "tool annotations" do
+      let(:tools) { described_class.dispatch("tools/list", nil)[:tools] }
+      let(:destructive_names) do
+        %w[prompts_create prompts_update prompts_delete prompts_publish runs_update runs_delete runs_generate runs_regrade
+           datasets_update datasets_delete metrics_update metrics_delete metric_groups_update metric_groups_delete
+           metric_versions_publish metric_versions_dismiss provider_credentials_update provider_credentials_delete
+           tags_update tags_delete agreements_create]
+      end
+      let(:open_world_names) { %w[datasets_create_from_url provider_credentials_create provider_credentials_update] }
+
+      it "declares readOnlyHint, destructiveHint and openWorldHint as booleans on every tool" do
+        tools.each do |tool|
+          hints = tool[:annotations]
+          expect(hints).to be_a(Hash), "#{tool[:name]} has no annotations"
+          %i[readOnlyHint destructiveHint openWorldHint].each do |key|
+            expect([true, false]).to include(hints[key]), "#{tool[:name]} #{key} is not a boolean"
+          end
+        end
+      end
+
+      it "never marks a read-only tool destructive" do
+        tools.select { |t| t[:annotations][:readOnlyHint] }.each do |tool|
+          expect(tool[:annotations][:destructiveHint]).to be(false), tool[:name]
+        end
+      end
+
+      it "matches the agreed classification" do
+        expect(tools.select { |t| t[:annotations][:destructiveHint] }.map { |t| t[:name] }).to match_array(destructive_names)
+        expect(tools.select { |t| t[:annotations][:openWorldHint] }.map { |t| t[:name] }).to match_array(open_world_names)
+      end
+
+      it "keeps every description free of em dashes" do
+        tools.each { |tool| expect(tool[:description]).not_to include("\u2014"), tool[:name] }
+      end
+    end
+
     it "matches the tool count the gemspec advertises on the public gem page" do
       gemspec_path = File.expand_path("../../../completion-kit.gemspec", __dir__)
       advertised = File.read(gemspec_path)[/MCP server with (\d+) tools/, 1]

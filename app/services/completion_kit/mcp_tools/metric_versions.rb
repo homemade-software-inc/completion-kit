@@ -5,7 +5,8 @@ module CompletionKit
 
       TOOLS = {
         "metric_versions_list" => {
-          description: "List every MetricVersion (drafts + published) for a metric, newest first. Each row carries version_number, state, source, current flag, and timestamps.",
+          description: "List every version of one metric's judge or check, drafts and published, newest first. Use it to see how a judge changed over time, find drafts suggested by metrics_suggest_variants or saved from edits in the web app, or pick an older version to restore with metric_versions_publish. Each row carries id, version_number, state (draft or published), source, the current flag marking the live version, and timestamps, plus that version's instruction and rubric bands (judges) or check_config (checks). source is edit or suggestion for versions made those ways, and null for a version saved automatically the first time the metric scored a response or got a verdict. The current version can differ from the metric's live definition if metrics_update changed the metric after that version was saved.",
+          annotations: Base::READ_ONLY,
           inputSchema: {
             type: "object",
             properties: {
@@ -16,7 +17,8 @@ module CompletionKit
           handler: :list
         },
         "metric_versions_publish" => {
-          description: "Publish a MetricVersion as the live version of its metric. Works for both 'draft → published' and 'revert to an older published version → current'. Transactionally flips current, demotes peers, and writes the version's instruction + rubric_bands back onto the metric so the judge grades against it.",
+          description: "Make a metric version the live judge or check that scores new AI responses. It works both to publish a draft and to switch back to an older published version. In one step it marks this version current, marks every other version of the metric not current, and writes this version's instruction and rubric bands (or check_config, for a check) onto the metric, replacing what the metric had. Responses already scored keep their scores. Rescore a run with runs_regrade if you want new ones. Human verdicts stay with the version they were given on. Other published versions stay saved, so you can switch back by publishing one, but a live definition that was never saved as a version is lost. A check version with an invalid check_config is refused. Returns the published version.",
+          annotations: Base::DESTRUCTIVE,
           inputSchema: {
             type: "object",
             properties: {
@@ -27,7 +29,8 @@ module CompletionKit
           handler: :publish
         },
         "metric_versions_dismiss" => {
-          description: "Destroy a draft MetricVersion (use for either source: 'edit' or source: 'suggestion'). Published versions are refused. To demote a published version, publish a different one as current instead.",
+          description: "Permanently delete a draft version of a metric, whether it came from an edit in the web app or from metrics_suggest_variants. Use it to throw away a suggested judge rewrite you don't want. Published versions are refused. To stop using a published version, publish a different one as current instead. This cannot be undone. Returns the deleted version's id with destroyed: true.",
+          annotations: Base::DESTRUCTIVE,
           inputSchema: {
             type: "object",
             properties: {

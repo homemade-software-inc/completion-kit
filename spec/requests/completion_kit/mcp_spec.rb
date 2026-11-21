@@ -44,6 +44,13 @@ RSpec.describe "MCP endpoint", type: :request do
       expect(JSON.parse(response.body)["result"]["tools"]).to be_an(Array)
     end
 
+    it "publishes safety annotations on every tool in the unauthenticated tools/list" do
+      post mcp_path, params: {jsonrpc: "2.0", method: "tools/list", id: 2}.to_json, headers: no_auth
+      tools = JSON.parse(response.body)["result"]["tools"]
+      expect(tools).not_to be_empty
+      tools.each { |tool| expect(tool["annotations"]).to include("readOnlyHint", "destructiveHint", "openWorldHint") }
+    end
+
     it "returns 401 for a data method (tools/call) without token" do
       post mcp_path, params: {jsonrpc: "2.0", method: "tools/call", id: 3, params: {name: "prompts_list", arguments: {}}}.to_json, headers: no_auth
       expect(response).to have_http_status(:unauthorized)

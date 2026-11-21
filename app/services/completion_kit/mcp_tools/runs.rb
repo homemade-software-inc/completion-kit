@@ -22,19 +22,20 @@ module CompletionKit
 
       TOOLS = {
         "runs_list" => {
-          description: "List all runs",
+          description: "List your test runs, newest first. A run tests one prompt version against a dataset, or grades existing outputs, and scores each response with your metrics. It returns each run's id, name, status (pending, running, completed or failed), prompt and dataset ids, judge model, average score (1 to 5, 5 is best), check pass rate, per-metric averages and progress. Runs older than the account's history window may be left out. Use it to find a run's id or see recent results, then call runs_get for one run.",
+          annotations: Base::READ_ONLY,
           inputSchema: {type: "object", properties: {}, required: []},
           handler: :list
         },
         "runs_get" => {
-          description: "Get a run by ID, including \"metric_averages\": a per-metric breakdown with each metric's " \
-                       "average score (or pass rate for checks), how many rows it graded, and how many scored low. " \
-                       "Use this to find the metric dragging a prompt down without listing responses.",
+          description: "Get one test run's results by id: status, progress, average score (1 to 5, 5 is best), check pass rate, the ids of failed responses, any failure reason, and \"metric_averages\", a per-metric breakdown with each metric's average score (or pass rate for checks), how many rows it graded, and how many scored low. Use this to see how a prompt scored and to find the metric dragging a prompt down without listing responses. Poll it after runs_generate, runs_regrade or runs_rerun until status is completed or failed. The result includes a warning when no metrics are attached or when the judge's scores are not reproducible.",
+          annotations: Base::READ_ONLY,
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :get
         },
         "runs_create" => {
-          description: "Create a run. Omit prompt_id and provide output_column to score existing outputs by grading a pre-existing dataset column instead of generating new ones.",
+          description: "Set up a test run that scores a prompt's responses on a dataset. Give prompt_id and dataset_id to test a prompt: each dataset row fills the prompt's variables, the prompt's model answers it, and that answer gets scored. Omit prompt_id and provide output_column to score existing outputs by grading a pre-existing dataset column instead of generating new ones. Attach metrics with metric_ids or metric_group_id, and set judge_model, or LLM-judged metrics are skipped; with no metrics the run scores nothing. It fails if the dataset is missing a column the run needs, such as one the prompt uses, or if no configured provider serves judge_model. This only creates the run; call runs_generate to start it. It returns the new run, with a warning if no metrics are attached or if judge_temperature is above 0, which makes scores irreproducible.",
+          annotations: Base::ADDITIVE,
           inputSchema: {
             type: "object",
             properties: {
@@ -54,7 +55,8 @@ module CompletionKit
           handler: :create
         },
         "runs_update" => {
-          description: "Update a run",
+          description: "Change a test run's settings: name, dataset, judge model, temperature, judge temperature, max tokens, output and expected columns, metrics or tags. The prompt cannot be changed. Passing metric_ids or metric_group_id replaces the run's whole metric list, and tag_names replaces all of its tags. It does not regenerate or rescore anything, and existing responses and scores stay as they are; call runs_regrade to rescore with the new metrics, or runs_rerun for a fresh run. It returns the updated run with the same warnings as runs_get.",
+          annotations: Base::DESTRUCTIVE,
           inputSchema: {
             type: "object",
             properties: {
@@ -74,27 +76,32 @@ module CompletionKit
           handler: :update
         },
         "runs_delete" => {
-          description: "Delete a run",
+          description: "Permanently delete a test run and everything in it: its generated responses, their scores and judge feedback, the human agreement verdicts recorded on it (which also drops them from the judge's agreement stats), and any prompt suggestions made from it. This cannot be undone. The prompt, dataset and metrics are kept. Confirm with the user before calling. It returns a short confirmation message.",
+          annotations: Base::DESTRUCTIVE,
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :delete
         },
         "runs_generate" => {
-          description: "Start a run. Required for every run, including score-only runs (no prompt): generates responses with the prompt when there is one, otherwise copies the graded dataset column and grades it.",
+          description: "Start a test run so it produces and scores responses. It is required for every run, including score-only runs (no prompt): it generates responses with the prompt when there is one, and otherwise copies the graded dataset column and grades it. In a prompt run each dataset row goes to the prompt's model, and in either kind of run each LLM-judged metric then scores the result with the run's judge model. LLM-judged metrics are skipped when the run has no judge model. These model calls go to the providers you configured, which may charge for them; checks run without a provider call. The work runs in the background, so poll runs_get until status is completed or failed, and do not call this tool again to check progress. Only a pending or failed run can start, and any refused start marks the run as failed. Calling it on a running or completed run therefore does not start it but marks that run as failed, and a second call would then delete its results. Restarting a failed run first deletes its earlier responses, their scores and any human verdicts on them. For a completed run use runs_rerun, runs_retry_failures or runs_regrade instead. It returns the run with its progress, or the reason it could not start, such as a missing provider key or an empty dataset.",
+          annotations: Base::DESTRUCTIVE,
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :generate
         },
         "runs_regrade" => {
-          description: "Re-grade a run's existing responses with its currently attached metrics, without regenerating. Use after attaching or editing metrics on an already-generated run.",
+          description: "Re-score a test run's existing responses with its currently attached metrics, without regenerating. Use it after attaching or editing metrics on an already-generated run. It first clears every existing score and judge comment on the run's succeeded responses, including scores for metrics no longer attached, so the earlier scores are lost. If the run has checks but no judge model, its LLM-judged scores are cleared and not replaced. Human verdicts already recorded on the run are kept even though people gave them on the earlier scores, and agreement stats then pair them with the new scores. LLM-judged metrics call your judge model's provider; checks do not. The work runs in the background, so poll runs_get for progress. It returns the run, or an error when no configured provider serves the judge model, or when there is nothing to re-grade because the run has no succeeded responses, no metrics, or only LLM-judged metrics and no working judge model.",
+          annotations: Base::DESTRUCTIVE,
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :regrade
         },
         "runs_rerun" => {
-          description: "Create and start a fresh copy of a run with the same prompt, dataset, metrics, and settings. Use when the judge changed and you want a clean run instead of mixing versions.",
+          description: "Copy a test run and start the copy, with the same prompt version, dataset, metrics, judge model, settings and tags, under a new automatic name. Use it when the judge changed and you want a clean run instead of mixing versions, or to repeat a test. The original run and its scores stay untouched. The copy runs in the background and calls your model providers the same way runs_generate does. To test a different prompt version, create a new run with runs_create instead. It returns the new run; poll runs_get with its id for progress. If the prompt's model or the judge model has no configured provider, or the dataset no longer has a column the run needs, it returns an error and creates nothing. If the copy is created but cannot start, for example because the dataset is empty, it returns the reason and the copy stays as a failed run.",
+          annotations: Base::ADDITIVE,
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :rerun
         },
         "runs_retry_failures" => {
-          description: "Re-run only the failed responses of a run, optionally limited to specific response ids via \"only\".",
+          description: "Retry only the parts of a test run that failed, such as provider timeouts, rate limits or judge errors. Failed responses are generated again and failed scores are retried, while responses and scores that succeeded are left alone; optionally limit it to specific response ids via \"only\". It is refused when the judge has changed since the run executed, meaning a metric on the run now has a newer version than the one that scored it, because a retry would mix versions in the same run; use runs_rerun instead. The retries run in the background and call your model providers, except for checks. It returns the run with its progress, or the run unchanged when nothing failed.",
+          annotations: Base::ADDITIVE,
           inputSchema: {type: "object", properties: {id: {type: "integer"}, only: {type: "array", items: {type: "integer"}}}, required: ["id"]},
           handler: :retry_failures
         }

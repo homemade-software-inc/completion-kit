@@ -5,7 +5,8 @@ module CompletionKit
 
       TOOLS = {
         "agreements_list" => {
-          description: "List agreements. Filter by run_id, response_id, metric_id, or created_by.",
+          description: "List human reviews of the LLM judge's scores: each agree, disagree or borderline verdict, with any corrected score and note. Filter by run_id, response_id, metric_id, or created_by. Use it to see where people disagreed with the judge before improving a metric's rubric. It returns each verdict, oldest first, with its run, response, metric and metric version ids, who recorded it and when.",
+          annotations: Base::READ_ONLY,
           inputSchema: {
             type: "object",
             properties: {
@@ -19,7 +20,8 @@ module CompletionKit
           handler: :list
         },
         "agreements_create" => {
-          description: "Upsert an agreement for (run, response, metric, created_by). Verdict is one of agree, disagree, borderline. corrected_score (1..5) is required when verdict is 'disagree'.",
+          description: "Record whether a person agrees with the LLM judge's score on one response for one metric, so you can measure how far to trust the judge. The response must belong to the given run. Verdict is one of agree, disagree, borderline. corrected_score (1..5) is required when verdict is 'disagree'. This upserts an agreement for (run, response, metric, created_by): a new verdict with the same created_by (default \"mcp\") replaces the earlier one, including its corrected score and note, and leaving either out clears it. The verdict is filed under the metric's current judge version, which is the version judges_compare counts it for, even when an earlier version scored that response. It works only for llm_judge metrics, because checks have nothing to calibrate. It returns the saved verdict.",
+          annotations: Base::DESTRUCTIVE,
           inputSchema: {
             type: "object",
             properties: {

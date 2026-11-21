@@ -5,17 +5,20 @@ module CompletionKit
 
       TOOLS = {
         "tags_list" => {
-          description: "List all tags",
+          description: "List every tag in CompletionKit, in name order. Returns each tag's id, name, color and timestamps. Tags label prompts, datasets, metrics, metric groups and runs. Use this to see which labels exist, or to find a tag's ID before renaming or deleting it.",
+          annotations: Base::READ_ONLY,
           inputSchema: {type: "object", properties: {}, required: []},
           handler: :list
         },
         "tags_get" => {
-          description: "Get a tag by ID",
+          description: "Get one tag by ID. Returns its id, name, color and timestamps. Use it to check a tag's current name before you rename it or pass it in tag_names.",
+          annotations: Base::READ_ONLY,
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :get
         },
         "tags_create" => {
-          description: "Create a tag. Color is auto-assigned.",
+          description: "Create a tag for labelling prompts, datasets, metrics, metric groups and runs. The name is trimmed and lowercased. It may contain only the letters a to z, digits, spaces, hyphens and underscores (accented and non-Latin letters are rejected), can be up to 64 characters, and must not match an existing tag. Color is auto-assigned. Returns the new tag. You don't need this tool before tagging a record, because the create and update tools for those records take tag_names and create missing tags for you.",
+          annotations: Base::ADDITIVE,
           inputSchema: {
             type: "object",
             properties: {name: {type: "string"}},
@@ -24,7 +27,8 @@ module CompletionKit
           handler: :create
         },
         "tags_update" => {
-          description: "Rename a tag.",
+          description: "Rename a tag. Pass the new name; leaving it out returns an error. The name follows the same rules as tags_create and can't match another tag, because tags are not merged. The new name shows at once on every prompt, dataset, metric, metric group and run that carries the tag. Returns the updated tag.",
+          annotations: Base::DESTRUCTIVE,
           inputSchema: {
             type: "object",
             properties: {id: {type: "integer"}, name: {type: "string"}},
@@ -33,7 +37,8 @@ module CompletionKit
           handler: :update
         },
         "tags_delete" => {
-          description: "Delete a tag. Removes the tag from every linked metric, prompt, run, and dataset.",
+          description: "Delete a tag. Removes the tag from every linked metric, metric group, prompt, run, and dataset; those records themselves are kept. This cannot be undone. Use tags_update instead if you only want to rename it. Returns a confirmation message.",
+          annotations: Base::DESTRUCTIVE,
           inputSchema: {type: "object", properties: {id: {type: "integer"}}, required: ["id"]},
           handler: :delete
         }
